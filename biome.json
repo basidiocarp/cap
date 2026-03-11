@@ -1,0 +1,127 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.15/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              {
+                "source": [
+                  ":NODE:",
+                  ":PACKAGE:"
+                ],
+                "type": true
+              },
+              {
+                "source": [
+                  ":NODE:",
+                  ":PACKAGE:"
+                ],
+                "type": false
+              },
+              ":BLANK_LINE:",
+              {
+                "source": [
+                  ":ALIAS:",
+                  ":PATH:"
+                ],
+                "type": true
+              },
+              {
+                "source": [
+                  ":ALIAS:",
+                  ":PATH:"
+                ],
+                "type": false
+              }
+            ],
+            "identifierOrder": "natural"
+          }
+        },
+        "useSortedAttributes": "on",
+        "useSortedKeys": "on",
+        "useSortedProperties": "on"
+      }
+    },
+    "enabled": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "!**/*.gql.ts",
+      "!.mesh",
+      "!.next",
+      "!node_modules",
+      "!**/*.config.ts",
+      "!**/*.config.js",
+      "!**/*.config.mjs",
+      "!*.json",
+      "!.oxlintrc.json",
+      "!.oxfmtrc.json"
+    ]
+  },
+  "formatter": {
+    "attributePosition": "multiline",
+    "bracketSameLine": false,
+    "bracketSpacing": true,
+    "enabled": true,
+    "expand": "auto",
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 140,
+    "useEditorconfig": true
+  },
+  "javascript": {
+    "formatter": {
+      "arrowParentheses": "always",
+      "attributePosition": "multiline",
+      "bracketSameLine": false,
+      "bracketSpacing": true,
+      "jsxQuoteStyle": "single",
+      "quoteProperties": "asNeeded",
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "es5"
+    }
+  },
+  "json": {
+    "formatter": {
+      "bracketSpacing": true,
+      "expand": "always",
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "lineWidth": 80
+    },
+    "linter": {
+      "enabled": true
+    },
+    "parser": {
+      "allowComments": true
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "style": {
+        "useImportType": {
+          "level": "error",
+          "options": {
+            "style": "separatedType"
+          }
+        }
+      }
+    }
+  },
+  "vcs": {
+    "clientKind": "git",
+    "enabled": true,
+    "useIgnoreFile": true
+  }
+}

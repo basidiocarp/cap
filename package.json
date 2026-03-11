@@ -1,0 +1,47 @@
+{
+  "name": "cap",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@mantine/charts": "^8.3.16",
+    "@mantine/core": "^8.3.16",
+    "@mantine/dates": "^8.3.16",
+    "@mantine/hooks": "^8.3.16",
+    "@mantine/modals": "^8.3.16",
+    "@mantine/notifications": "^8.3.16",
+    "@mantine/nprogress": "^8.3.16",
+    "@mantine/spotlight": "^8.3.16",
+    "@mantine/tiptap": "^8.3.16",
+    "@tiptap/extension-link": "^3.20.1",
+    "@tiptap/pm": "^3.20.1",
+    "@tiptap/react": "^3.20.1",
+    "@tiptap/starter-kit": "^3.20.1",
+    "dayjs": "^1.11.19",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "recharts": "^3.8.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.6",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "globals": "^16.5.0",
+    "postcss": "^8.5.8",
+    "postcss-preset-mantine": "^1.18.0",
+    "postcss-simple-vars": "^7.0.1",
+    "typescript": "~5.9.3",
+    "vite": "^8.0.0-beta.13"
+  },
+  "overrides": {
+    "vite": "^8.0.0-beta.13"
+  }
+}
