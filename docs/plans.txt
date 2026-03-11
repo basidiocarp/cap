@@ -1,0 +1,41 @@
+The performance issues strengthen the case for building your own thin integration layer rather than depending on claude-mem directly. Specifically:
+
+Drop claude-mem as a direct dependency — its ChromaDB + Python stack is the root of the CPU issues
+Use basidiocarp/hyphae as your memory backend (same MCP interface, but Rust-native, zero deps)
+Use basidiocarp/mycelium for token compression at the CLI proxy layer
+Use oraios/serena for semantic code retrieval and editing
+
+Write a small TypeScript or Rust hook (inspired by claude-mem's session capture pattern, but writing to hyphae)
+    — this is essentially a "clean room" reimplementation of the best part of claude-mem without inheriting its performance baggage
+
+This gives you everything claude-mem offers, minus the instability, and with the complementary tools wired in cleanly.
+Would you like help mapping out what that integration architecture would look like in practice?
+
+Part 1: Is claude-mem's UI Worth Keeping?
+The short answer: Yes, conditionally — but it's more a "nice to have" than a must-have, and you wouldn't need to fork claude-mem to get the same thing.
+
+What claude-mem's UI actually is
+claude-mem has a Web Viewer UI — a real-time memory stream dashboard running at http://localhost:37777. It's the open-source tier. There's also a planned Pro "Memory Stream" UI (enhanced filtering, timeline scrubbing, search) that hasn't shipped yet. Key features of the open viewer:
+
+Real-time observation feed of everything Claude does
+Timeline search (/claude-mem-timeline <query>)
+Session summaries + recent observations view
+OpenClaw gateway integration (Telegram/Discord/Slack feeds)
+Why it does have real value
+Benefit	Why It Matters
+Transparency	You can actually see what memories are being stored, edited, or forgotten — critical for debugging when context goes wrong
+Timeline scrubbing	Lets you audit a session's decision trail — invaluable when an AI makes a bad architectural call and you want to know why
+Search across memory	Much easier than querying a DB by hand
+Observation feeds	Piping to Telegram/Slack for async monitoring is genuinely useful on long-running sessions
+The problem with keeping it
+The UI is tightly coupled to the claude-mem backend — it queries localhost:37777 which is the claude-mem worker API, which is the same service responsible for the ChromaDB/CPU spike issues. You can't keep the UI without also running the worker. And the worker is where the performance problems live.
+
+Better alternative
+Build a thin UI layer that talks to hyphae instead. hyphae already exposes all the data you'd need:
+
+hyphae stats / hyphae_memory_stats — global counts
+hyphae topics — all topic buckets
+hyphae recall — search
+hyphae memoir inspect — graph neighborhood visualization
+hyphae_memory_health — per-topic hygiene audit
+A simple web UI (even just a local React/Svelte app or a Vite dev server) that calls hyphae serve (the MCP server) or wraps the CLI would give you everything claude-mem's UI does, without the Python process or the JSONL bloat bug.
