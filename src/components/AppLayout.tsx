@@ -1,13 +1,13 @@
 import { AppShell, Group, NavLink, Text, Title } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconBrain, IconChartBar, IconDashboard, IconNetwork } from '@tabler/icons-react'
-import { NavLink as RouterNavLink, Outlet, useLocation } from 'react-router-dom'
+import { Outlet, NavLink as RouterNavLink, useLocation } from 'react-router-dom'
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', path: '/', icon: IconDashboard },
-  { label: 'Memories', path: '/memories', icon: IconBrain },
-  { label: 'Memoirs', path: '/memoirs', icon: IconNetwork },
-  { label: 'Analytics', path: '/analytics', icon: IconChartBar },
+  { icon: IconDashboard, label: 'Dashboard', path: '/' },
+  { icon: IconBrain, label: 'Memories', path: '/memories' },
+  { icon: IconNetwork, label: 'Memoirs', path: '/memoirs' },
+  { icon: IconChartBar, label: 'Analytics', path: '/analytics' },
 ]
 
 export function AppLayout() {
@@ -26,8 +26,8 @@ export function AppLayout() {
           px='md'
         >
           <Title
-            order={3}
             onClick={toggle}
+            order={3}
             style={{ cursor: 'pointer' }}
           >
             cap

@@ -1,10 +1,9 @@
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 
+import type { ConceptLinkRow, ConceptRow, HealthResult, MemoirRow, MemoryRow, StatsResult, TopicSummary } from './types.ts'
 import { getDb } from './db.ts'
 import { logger } from './logger.ts'
-
-import type { ConceptLinkRow, ConceptRow, HealthResult, MemoirRow, MemoryRow, StatsResult, TopicSummary } from './types.ts'
 
 const exec = promisify(execFile)
 const HYPHAE_BIN = process.env.HYPHAE_BIN ?? 'hyphae'
@@ -108,7 +107,7 @@ export function memoirShow(name: string): { memoir: MemoirRow; concepts: Concept
   const memoir = db.prepare('SELECT * FROM memoirs WHERE name = ?').get(name) as MemoirRow | undefined
   if (!memoir) return null
   const concepts = db.prepare('SELECT * FROM concepts WHERE memoir_id = ? ORDER BY confidence DESC').all(memoir.id) as ConceptRow[]
-  return { memoir, concepts }
+  return { concepts, memoir }
 }
 
 export function memoirInspect(
@@ -159,12 +158,12 @@ export function memoirInspect(
             concept: linkedConcept,
             direction: 'outgoing',
             link: {
+              created_at: row.created_at,
               id: row.id,
+              relation: row.relation,
               source_id: row.source_id,
               target_id: row.target_id,
-              relation: row.relation,
               weight: row.weight,
-              created_at: row.created_at,
             },
           })
         }
@@ -179,12 +178,12 @@ export function memoirInspect(
             concept: linkedConcept,
             direction: 'incoming',
             link: {
+              created_at: row.created_at,
               id: row.id,
+              relation: row.relation,
               source_id: row.source_id,
               target_id: row.target_id,
-              relation: row.relation,
               weight: row.weight,
-              created_at: row.created_at,
             },
           })
         }
@@ -230,8 +229,8 @@ export function memoirSearchAll(query: string): ConceptRow[] {
 async function runCli(args: string[]): Promise<string> {
   logger.debug({ args, bin: HYPHAE_BIN }, 'Executing hyphae CLI')
   const { stdout } = await exec(HYPHAE_BIN, args, {
-    timeout: 10_000,
     env: { ...process.env, NO_COLOR: '1' },
+    timeout: 10_000,
   })
   return stdout.trim()
 }

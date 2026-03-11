@@ -3,7 +3,6 @@ import { useDebouncedValue } from '@mantine/hooks'
 import { useCallback, useEffect, useState } from 'react'
 
 import type { Memory, TopicSummary } from '../lib/api'
-
 import { hyphaeApi } from '../lib/api'
 
 function parseKeywords(raw: string): string[] {
@@ -16,11 +15,16 @@ function parseKeywords(raw: string): string[] {
 
 function importanceColor(importance: string): string {
   switch (importance) {
-    case 'Critical': return 'red'
-    case 'High': return 'orange'
-    case 'Medium': return 'blue'
-    case 'Low': return 'gray'
-    default: return 'gray'
+    case 'Critical':
+      return 'red'
+    case 'High':
+      return 'orange'
+    case 'Medium':
+      return 'blue'
+    case 'Low':
+      return 'gray'
+    default:
+      return 'gray'
   }
 }
 
@@ -35,7 +39,11 @@ export function Memories() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    hyphaeApi.topics().then(setTopics).catch(() => {}).finally(() => setTopicsLoading(false))
+    hyphaeApi
+      .topics()
+      .then(setTopics)
+      .catch(() => {})
+      .finally(() => setTopicsLoading(false))
   }, [])
 
   const search = useCallback(async () => {
@@ -91,22 +99,39 @@ export function Memories() {
         />
       </Group>
 
-      {error && <Alert color='red' title='Error'>{error}</Alert>}
+      {error && (
+        <Alert
+          color='red'
+          title='Error'
+        >
+          {error}
+        </Alert>
+      )}
 
       {loading && (
-        <Group justify='center' mt='md'>
+        <Group
+          justify='center'
+          mt='md'
+        >
           <Loader size='sm' />
         </Group>
       )}
 
       {!loading && memories.length === 0 && !error && (
-        <Text c='dimmed' mt='md'>
+        <Text
+          c='dimmed'
+          mt='md'
+        >
           {debouncedQuery || selectedTopic ? 'No results found.' : 'Search or select a topic to browse memories.'}
         </Text>
       )}
 
       {memories.length > 0 && (
-        <Card padding='lg' shadow='sm' withBorder>
+        <Card
+          padding='lg'
+          shadow='sm'
+          withBorder
+        >
           <Table highlightOnHover>
             <Table.Thead>
               <Table.Tr>
@@ -122,26 +147,54 @@ export function Memories() {
               {memories.map((m) => (
                 <Table.Tr key={m.id}>
                   <Table.Td maw={400}>
-                    <Text lineClamp={2} size='sm'>{m.summary}</Text>
+                    <Text
+                      lineClamp={2}
+                      size='sm'
+                    >
+                      {m.summary}
+                    </Text>
                   </Table.Td>
                   <Table.Td>
-                    <Badge size='sm' variant='light'>{m.topic}</Badge>
+                    <Badge
+                      size='sm'
+                      variant='light'
+                    >
+                      {m.topic}
+                    </Badge>
                   </Table.Td>
                   <Table.Td>
-                    <Badge color={importanceColor(m.importance)} size='sm'>{m.importance}</Badge>
+                    <Badge
+                      color={importanceColor(m.importance)}
+                      size='sm'
+                    >
+                      {m.importance}
+                    </Badge>
                   </Table.Td>
                   <Table.Td>
                     <Text size='sm'>{m.weight.toFixed(3)}</Text>
                   </Table.Td>
                   <Table.Td>
                     <Group gap={4}>
-                      {parseKeywords(m.keywords).slice(0, 3).map((kw) => (
-                        <Badge key={kw} size='xs' variant='outline'>{kw}</Badge>
-                      ))}
+                      {parseKeywords(m.keywords)
+                        .slice(0, 3)
+                        .map((kw) => (
+                          <Badge
+                            key={kw}
+                            size='xs'
+                            variant='outline'
+                          >
+                            {kw}
+                          </Badge>
+                        ))}
                     </Group>
                   </Table.Td>
                   <Table.Td>
-                    <Text c='dimmed' size='xs'>{new Date(m.created_at).toLocaleDateString()}</Text>
+                    <Text
+                      c='dimmed'
+                      size='xs'
+                    >
+                      {new Date(m.created_at).toLocaleDateString()}
+                    </Text>
                   </Table.Td>
                 </Table.Tr>
               ))}

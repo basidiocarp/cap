@@ -10,8 +10,8 @@ const MYCELIUM_BIN = process.env.MYCELIUM_BIN ?? 'mycelium'
 async function run(args: string[]): Promise<string> {
   logger.debug({ args, bin: MYCELIUM_BIN }, 'Executing mycelium CLI')
   const { stdout } = await exec(MYCELIUM_BIN, args, {
-    timeout: 10_000,
     env: { ...process.env, NO_COLOR: '1' },
+    timeout: 10_000,
   })
   return stdout.trim()
 }

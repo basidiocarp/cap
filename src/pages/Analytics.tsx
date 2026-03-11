@@ -29,14 +29,24 @@ export function Analytics() {
 
   if (loading) {
     return (
-      <Group justify='center' mt='xl'>
+      <Group
+        justify='center'
+        mt='xl'
+      >
         <Loader />
       </Group>
     )
   }
 
   if (error) {
-    return <Alert color='red' title='Error'>{error}</Alert>
+    return (
+      <Alert
+        color='red'
+        title='Error'
+      >
+        {error}
+      </Alert>
+    )
   }
 
   if (!gain) {
@@ -58,57 +68,131 @@ export function Analytics() {
 
       <Grid>
         <Grid.Col span={{ base: 6, md: 3 }}>
-          <Card padding='lg' shadow='sm' withBorder>
-            <Text c='dimmed' size='xs'>Total Commands</Text>
+          <Card
+            padding='lg'
+            shadow='sm'
+            withBorder
+          >
+            <Text
+              c='dimmed'
+              size='xs'
+            >
+              Total Commands
+            </Text>
             <Title order={3}>{gain.total_commands?.toLocaleString() ?? '\u2014'}</Title>
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 6, md: 3 }}>
-          <Card padding='lg' shadow='sm' withBorder>
-            <Text c='dimmed' size='xs'>Tokens Saved</Text>
+          <Card
+            padding='lg'
+            shadow='sm'
+            withBorder
+          >
+            <Text
+              c='dimmed'
+              size='xs'
+            >
+              Tokens Saved
+            </Text>
             <Title order={3}>{gain.total_saved?.toLocaleString() ?? '\u2014'}</Title>
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 6, md: 3 }}>
-          <Card padding='lg' shadow='sm' withBorder>
-            <Text c='dimmed' size='xs'>Avg Savings</Text>
+          <Card
+            padding='lg'
+            shadow='sm'
+            withBorder
+          >
+            <Text
+              c='dimmed'
+              size='xs'
+            >
+              Avg Savings
+            </Text>
             <Title order={3}>{gain.avg_savings_pct?.toFixed(1) ?? '\u2014'}%</Title>
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 6, md: 3 }}>
-          <Card padding='lg' shadow='sm' withBorder>
-            <Text c='dimmed' size='xs'>Input Tokens</Text>
+          <Card
+            padding='lg'
+            shadow='sm'
+            withBorder
+          >
+            <Text
+              c='dimmed'
+              size='xs'
+            >
+              Input Tokens
+            </Text>
             <Title order={3}>{gain.total_input?.toLocaleString() ?? '\u2014'}</Title>
           </Card>
         </Grid.Col>
       </Grid>
 
       {dailyData.length > 0 && (
-        <Card padding='lg' shadow='sm' withBorder>
-          <Title mb='md' order={4}>Daily Token Savings</Title>
-          <ResponsiveContainer height={300} width='100%'>
+        <Card
+          padding='lg'
+          shadow='sm'
+          withBorder
+        >
+          <Title
+            mb='md'
+            order={4}
+          >
+            Daily Token Savings
+          </Title>
+          <ResponsiveContainer
+            height={300}
+            width='100%'
+          >
             <LineChart data={dailyData}>
               <CartesianGrid strokeDasharray='3 3' />
               <XAxis dataKey='date' />
               <YAxis />
               <Tooltip />
-              <Line dataKey='saved' name='Tokens Saved' stroke='#339af0' strokeWidth={2} type='monotone' />
+              <Line
+                dataKey='saved'
+                name='Tokens Saved'
+                stroke='#339af0'
+                strokeWidth={2}
+                type='monotone'
+              />
             </LineChart>
           </ResponsiveContainer>
         </Card>
       )}
 
       {commandData.length > 0 && (
-        <Card padding='lg' shadow='sm' withBorder>
-          <Title mb='md' order={4}>Savings by Command</Title>
-          <ResponsiveContainer height={300} width='100%'>
+        <Card
+          padding='lg'
+          shadow='sm'
+          withBorder
+        >
+          <Title
+            mb='md'
+            order={4}
+          >
+            Savings by Command
+          </Title>
+          <ResponsiveContainer
+            height={300}
+            width='100%'
+          >
             <BarChart data={commandData}>
               <CartesianGrid strokeDasharray='3 3' />
               <XAxis dataKey='cmd' />
               <YAxis />
               <Tooltip />
-              <Bar dataKey='input' fill='#868e96' name='Input Tokens' />
-              <Bar dataKey='output' fill='#339af0' name='Output Tokens' />
+              <Bar
+                dataKey='input'
+                fill='#868e96'
+                name='Input Tokens'
+              />
+              <Bar
+                dataKey='output'
+                fill='#339af0'
+                name='Output Tokens'
+              />
             </BarChart>
           </ResponsiveContainer>
         </Card>

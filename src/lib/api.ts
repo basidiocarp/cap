@@ -109,15 +109,7 @@ export interface ConceptInspection {
 // --- API ---
 
 export const hyphaeApi = {
-  stats: () => get<Stats>('/hyphae/stats'),
-  topics: () => get<TopicSummary[]>('/hyphae/topics'),
-  topicMemories: (topic: string, limit?: number) =>
-    get<Memory[]>(`/hyphae/topics/${encodeURIComponent(topic)}/memories`, { limit: limit ? String(limit) : '' }),
-  recall: (q: string, topic?: string, limit?: number) =>
-    get<Memory[]>('/hyphae/recall', { q, topic: topic ?? '', limit: limit ? String(limit) : '' }),
-  memory: (id: string) => get<Memory>(`/hyphae/memories/${encodeURIComponent(id)}`),
   health: (topic?: string) => get<HealthResult[]>('/hyphae/health', { topic: topic ?? '' }),
-  memoirs: () => get<Memoir[]>('/hyphae/memoirs'),
   memoir: (name: string) => get<MemoirDetail>(`/hyphae/memoirs/${encodeURIComponent(name)}`),
   memoirInspect: (memoir: string, concept: string, depth?: number) =>
     get<ConceptInspection>(`/hyphae/memoirs/${encodeURIComponent(memoir)}/inspect/${encodeURIComponent(concept)}`, {
@@ -125,6 +117,14 @@ export const hyphaeApi = {
     }),
   memoirSearch: (memoir: string, q: string) => get<Concept[]>(`/hyphae/memoirs/${encodeURIComponent(memoir)}/search`, { q }),
   memoirSearchAll: (q: string) => get<Concept[]>('/hyphae/memoirs/search-all', { q }),
+  memoirs: () => get<Memoir[]>('/hyphae/memoirs'),
+  memory: (id: string) => get<Memory>(`/hyphae/memories/${encodeURIComponent(id)}`),
+  recall: (q: string, topic?: string, limit?: number) =>
+    get<Memory[]>('/hyphae/recall', { limit: limit ? String(limit) : '', q, topic: topic ?? '' }),
+  stats: () => get<Stats>('/hyphae/stats'),
+  topicMemories: (topic: string, limit?: number) =>
+    get<Memory[]>(`/hyphae/topics/${encodeURIComponent(topic)}/memories`, { limit: limit ? String(limit) : '' }),
+  topics: () => get<TopicSummary[]>('/hyphae/topics'),
 }
 
 export const myceliumApi = {

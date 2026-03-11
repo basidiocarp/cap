@@ -2,7 +2,6 @@ import { Alert, Badge, Card, Group, Loader, Stack, Table, Text, TextInput, Title
 import { useCallback, useEffect, useState } from 'react'
 
 import type { Concept, ConceptInspection, Memoir, MemoirDetail } from '../lib/api'
-
 import { hyphaeApi } from '../lib/api'
 
 function parseLabels(raw: string): Array<{ namespace: string; value: string }> {
@@ -15,13 +14,20 @@ function parseLabels(raw: string): Array<{ namespace: string; value: string }> {
 
 function relationColor(relation: string): string {
   switch (relation) {
-    case 'DependsOn': return 'orange'
-    case 'PartOf': return 'blue'
-    case 'Contradicts': return 'red'
-    case 'Refines': return 'green'
-    case 'CausedBy': return 'yellow'
-    case 'SupersededBy': return 'pink'
-    default: return 'gray'
+    case 'DependsOn':
+      return 'orange'
+    case 'PartOf':
+      return 'blue'
+    case 'Contradicts':
+      return 'red'
+    case 'Refines':
+      return 'green'
+    case 'CausedBy':
+      return 'yellow'
+    case 'SupersededBy':
+      return 'pink'
+    default:
+      return 'gray'
   }
 }
 
@@ -80,7 +86,10 @@ export function Memoirs() {
 
   if (loading) {
     return (
-      <Group justify='center' mt='xl'>
+      <Group
+        justify='center'
+        mt='xl'
+      >
         <Loader />
       </Group>
     )
@@ -91,14 +100,29 @@ export function Memoirs() {
       <Title order={2}>Memoirs</Title>
 
       {error && (
-        <Alert color='red' onClose={() => setError(null)} title='Error' withCloseButton>
+        <Alert
+          color='red'
+          onClose={() => setError(null)}
+          title='Error'
+          withCloseButton
+        >
           {error}
         </Alert>
       )}
 
       <Group align='start'>
-        <Card miw={250} padding='lg' shadow='sm' withBorder>
-          <Title mb='sm' order={5}>Knowledge Graphs</Title>
+        <Card
+          miw={250}
+          padding='lg'
+          shadow='sm'
+          withBorder
+        >
+          <Title
+            mb='sm'
+            order={5}
+          >
+            Knowledge Graphs
+          </Title>
           {memoirs.length > 0 ? (
             <Stack gap='xs'>
               {memoirs.map((m) => (
@@ -112,12 +136,22 @@ export function Memoirs() {
                   })}
                 >
                   <Text size='sm'>{m.name}</Text>
-                  <Text c='dimmed' size='xs'>{m.description}</Text>
+                  <Text
+                    c='dimmed'
+                    size='xs'
+                  >
+                    {m.description}
+                  </Text>
                 </UnstyledButton>
               ))}
             </Stack>
           ) : (
-            <Text c='dimmed' size='sm'>No memoirs found</Text>
+            <Text
+              c='dimmed'
+              size='sm'
+            >
+              No memoirs found
+            </Text>
           )}
         </Card>
 
@@ -125,12 +159,30 @@ export function Memoirs() {
           {detailLoading && <Loader size='sm' />}
 
           {detail && (
-            <Card padding='lg' shadow='sm' withBorder>
-              <Group justify='space-between' mb='sm'>
+            <Card
+              padding='lg'
+              shadow='sm'
+              withBorder
+            >
+              <Group
+                justify='space-between'
+                mb='sm'
+              >
                 <Title order={4}>{detail.memoir.name}</Title>
-                <Badge size='sm' variant='light'>{detail.concepts.length} concepts</Badge>
+                <Badge
+                  size='sm'
+                  variant='light'
+                >
+                  {detail.concepts.length} concepts
+                </Badge>
               </Group>
-              <Text c='dimmed' mb='md' size='sm'>{detail.memoir.description}</Text>
+              <Text
+                c='dimmed'
+                mb='md'
+                size='sm'
+              >
+                {detail.memoir.description}
+              </Text>
 
               {detail.concepts.length > 0 ? (
                 <Table highlightOnHover>
@@ -150,10 +202,20 @@ export function Memoirs() {
                         style={{ cursor: 'pointer' }}
                       >
                         <Table.Td>
-                          <Text fw={500} size='sm'>{c.name}</Text>
+                          <Text
+                            fw={500}
+                            size='sm'
+                          >
+                            {c.name}
+                          </Text>
                         </Table.Td>
                         <Table.Td maw={300}>
-                          <Text lineClamp={2} size='sm'>{c.definition}</Text>
+                          <Text
+                            lineClamp={2}
+                            size='sm'
+                          >
+                            {c.definition}
+                          </Text>
                         </Table.Td>
                         <Table.Td>
                           <Text size='sm'>{(c.confidence * 100).toFixed(0)}%</Text>
@@ -161,7 +223,11 @@ export function Memoirs() {
                         <Table.Td>
                           <Group gap={4}>
                             {parseLabels(c.labels).map((l) => (
-                              <Badge key={`${l.namespace}:${l.value}`} size='xs' variant='outline'>
+                              <Badge
+                                key={`${l.namespace}:${l.value}`}
+                                size='xs'
+                                variant='outline'
+                              >
                                 {l.namespace}:{l.value}
                               </Badge>
                             ))}
@@ -172,14 +238,28 @@ export function Memoirs() {
                   </Table.Tbody>
                 </Table>
               ) : (
-                <Text c='dimmed' size='sm'>No concepts yet</Text>
+                <Text
+                  c='dimmed'
+                  size='sm'
+                >
+                  No concepts yet
+                </Text>
               )}
             </Card>
           )}
 
           {selected && (
-            <Card padding='lg' shadow='sm' withBorder>
-              <Title mb='sm' order={5}>Inspect Concept</Title>
+            <Card
+              padding='lg'
+              shadow='sm'
+              withBorder
+            >
+              <Title
+                mb='sm'
+                order={5}
+              >
+                Inspect Concept
+              </Title>
               <TextInput
                 mb='sm'
                 onChange={(e) => setInspectConcept(e.currentTarget.value)}
@@ -190,10 +270,22 @@ export function Memoirs() {
               {inspectLoading && <Loader size='sm' />}
               {inspection && (
                 <Stack gap='sm'>
-                  <Card bg='dark.6' padding='sm' withBorder>
-                    <Text fw={600} size='sm'>{inspection.concept.name}</Text>
+                  <Card
+                    bg='dark.6'
+                    padding='sm'
+                    withBorder
+                  >
+                    <Text
+                      fw={600}
+                      size='sm'
+                    >
+                      {inspection.concept.name}
+                    </Text>
                     <Text size='sm'>{inspection.concept.definition}</Text>
-                    <Text c='dimmed' size='xs'>
+                    <Text
+                      c='dimmed'
+                      size='xs'
+                    >
                       Confidence: {(inspection.concept.confidence * 100).toFixed(0)}% | Revision: {inspection.concept.revision}
                     </Text>
                   </Card>
@@ -216,25 +308,48 @@ export function Memoirs() {
                             style={{ cursor: 'pointer' }}
                           >
                             <Table.Td>
-                              <Badge color={n.direction === 'outgoing' ? 'blue' : 'green'} size='xs'>
+                              <Badge
+                                color={n.direction === 'outgoing' ? 'blue' : 'green'}
+                                size='xs'
+                              >
                                 {n.direction === 'outgoing' ? '\u2192' : '\u2190'}
                               </Badge>
                             </Table.Td>
                             <Table.Td>
-                              <Badge color={relationColor(n.link.relation)} size='xs'>{n.link.relation}</Badge>
+                              <Badge
+                                color={relationColor(n.link.relation)}
+                                size='xs'
+                              >
+                                {n.link.relation}
+                              </Badge>
                             </Table.Td>
                             <Table.Td>
-                              <Text fw={500} size='sm'>{n.concept.name}</Text>
+                              <Text
+                                fw={500}
+                                size='sm'
+                              >
+                                {n.concept.name}
+                              </Text>
                             </Table.Td>
                             <Table.Td maw={300}>
-                              <Text lineClamp={1} size='sm'>{n.concept.definition}</Text>
+                              <Text
+                                lineClamp={1}
+                                size='sm'
+                              >
+                                {n.concept.definition}
+                              </Text>
                             </Table.Td>
                           </Table.Tr>
                         ))}
                       </Table.Tbody>
                     </Table>
                   ) : (
-                    <Text c='dimmed' size='sm'>No connections found</Text>
+                    <Text
+                      c='dimmed'
+                      size='sm'
+                    >
+                      No connections found
+                    </Text>
                   )}
                 </Stack>
               )}

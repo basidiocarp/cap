@@ -1,11 +1,9 @@
+import type { Database as DatabaseType } from 'better-sqlite3'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-
 import Database from 'better-sqlite3'
 
 import { logger } from './logger.ts'
-
-import type { Database as DatabaseType } from 'better-sqlite3'
 
 const DEFAULT_DB_PATH = join(homedir(), '.local', 'share', 'hyphae', 'hyphae.db')
 
