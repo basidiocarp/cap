@@ -1,0 +1,180 @@
+import { Alert, Badge, Card, Group, Loader, Stack, Table, Text, TextInput, Title } from '@mantine/core'
+import { useDebouncedValue } from '@mantine/hooks'
+import { IconSearch } from '@tabler/icons-react'
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+import type { SearchResult } from '../lib/api'
+import { rhizomeApi } from '../lib/api'
+
+function kindColor(kind: string): string {
+  switch (kind) {
+    case 'Function':
+      return 'mycelium'
+    case 'Class':
+    case 'Struct':
+      return 'spore'
+    case 'Enum':
+      return 'substrate'
+    case 'Interface':
+    case 'Trait':
+      return 'lichen'
+    case 'Constant':
+      return 'gill'
+    case 'Import':
+      return 'chitin'
+    default:
+      return 'chitin'
+  }
+}
+
+export function SymbolSearch() {
+  const navigate = useNavigate()
+  const [query, setQuery] = useState('')
+  const [debouncedQuery] = useDebouncedValue(query, 400)
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const search = useCallback(async () => {
+    setError(null)
+    if (debouncedQuery.trim()) {
+      setLoading(true)
+      try {
+        const data = await rhizomeApi.search(debouncedQuery)
+        setResults(data)
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Search failed')
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      setResults([])
+    }
+  }, [debouncedQuery])
+
+  useEffect(() => {
+    search()
+  }, [search])
+
+  return (
+    <Stack>
+      <Title order={2}>Symbol Search</Title>
+
+      <TextInput
+        leftSection={<IconSearch size={16} />}
+        onChange={(e) => setQuery(e.currentTarget.value)}
+        placeholder='Search symbols across your project...'
+        value={query}
+      />
+
+      {error && (
+        <Alert
+          color='decay'
+          title='Error'
+        >
+          {error}
+        </Alert>
+      )}
+
+      {loading && (
+        <Group
+          justify='center'
+          mt='md'
+        >
+          <Loader size='sm' />
+        </Group>
+      )}
+
+      {!loading && !error && debouncedQuery.trim() && results.length > 0 && (
+        <Text
+          c='dimmed'
+          size='sm'
+        >
+          Found {results.length} symbols matching &apos;{debouncedQuery}&apos;
+        </Text>
+      )}
+
+      {!loading && results.length === 0 && !error && (
+        <Text
+          c='dimmed'
+          mt='md'
+        >
+          {debouncedQuery.trim()
+            ? `No symbols found matching '${debouncedQuery}'`
+            : 'Search for functions, classes, types across your project'}
+        </Text>
+      )}
+
+      {results.length > 0 && (
+        <Card
+          padding='lg'
+          shadow='sm'
+          withBorder
+        >
+          <Table highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Symbol Name</Table.Th>
+                <Table.Th>Kind</Table.Th>
+                <Table.Th>File Path</Table.Th>
+                <Table.Th>Line</Table.Th>
+                <Table.Th>Signature</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {results.map((r) => (
+                <Table.Tr
+                  key={`${r.file}:${r.line}:${r.name}`}
+                  onClick={() => navigate(`/code?file=${encodeURIComponent(r.file)}&symbol=${encodeURIComponent(r.name)}`)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <Table.Td>
+                    <Text
+                      fw={500}
+                      size='sm'
+                    >
+                      {r.name}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge
+                      color={kindColor(r.kind)}
+                      size='sm'
+                      variant='light'
+                    >
+                      {r.kind}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td maw={300}>
+                    <Text
+                      c='dimmed'
+                      lineClamp={1}
+                      size='sm'
+                    >
+                      {r.file}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size='sm'>{r.line}</Text>
+                  </Table.Td>
+                  <Table.Td maw={350}>
+                    {r.signature && (
+                      <Text
+                        ff='monospace'
+                        lineClamp={1}
+                        size='xs'
+                      >
+                        {r.signature}
+                      </Text>
+                    )}
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Card>
+      )}
+    </Stack>
+  )
+}
