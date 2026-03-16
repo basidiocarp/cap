@@ -224,6 +224,46 @@ export function memoirSearchAll(query: string): ConceptRow[] {
     .all(query) as ConceptRow[]
 }
 
+// --- Analytics (cached) ---
+
+let analyticsCache: { data: ReturnType<typeof computeAnalytics>; ts: number } | null = null
+const ANALYTICS_TTL = 60_000
+
+function computeAnalytics() {
+  const db = getDb()
+
+  const total = (db.prepare('SELECT COUNT(*) as count FROM memories').get() as { count: number }).count
+  const recalled = (db.prepare('SELECT COUNT(*) as count FROM memories WHERE access_count > 0').get() as { count: number }).count
+  const created_last_7d = (
+    db.prepare("SELECT COUNT(*) as count FROM memories WHERE created_at > datetime('now', '-7 days')").get() as { count: number }
+  ).count
+  const decayed = (db.prepare('SELECT COUNT(*) as count FROM memories WHERE weight < 0.3').get() as { count: number }).count
+  const total_memoirs = (db.prepare('SELECT COUNT(*) as count FROM memoirs').get() as { count: number }).count
+  const total_concepts = (db.prepare('SELECT COUNT(*) as count FROM concepts').get() as { count: number }).count
+
+  const top_topics = db
+    .prepare('SELECT topic as name, COUNT(*) as count, AVG(weight) as avg_weight FROM memories GROUP BY topic ORDER BY count DESC LIMIT 10')
+    .all() as { name: string; count: number; avg_weight: number }[]
+
+  return {
+    lifecycle: { created_last_7d, decayed, pruned: 0 },
+    memoir_stats: { code_memoirs: total_memoirs, total: total_memoirs, total_concepts },
+    memory_utilization: { rate: total > 0 ? recalled / total : 0, recalled, total },
+    search_stats: { empty_results: 0, hit_rate: 0, total_searches: 0 },
+    top_topics,
+  }
+}
+
+export function getAnalytics() {
+  const now = Date.now()
+  if (analyticsCache && now - analyticsCache.ts < ANALYTICS_TTL) {
+    return analyticsCache.data
+  }
+  const data = computeAnalytics()
+  analyticsCache = { data, ts: now }
+  return data
+}
+
 // --- Writes: shell out to CLI ---
 
 async function runCli(args: string[]): Promise<string> {

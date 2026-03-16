@@ -65,6 +65,10 @@ app.get('/memoirs/:name/search', (c) => {
   return c.json(hyphae.memoirSearch(c.req.param('name'), query))
 })
 
+app.get('/analytics', (c) => {
+  return c.json(hyphae.getAnalytics())
+})
+
 // --- Writes (shell to CLI) ---
 
 app.post('/store', async (c) => {

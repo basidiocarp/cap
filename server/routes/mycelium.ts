@@ -16,4 +16,13 @@ app.get('/gain/history', async (c) => {
   return c.json(data)
 })
 
+app.get('/analytics', async (c) => {
+  try {
+    const data = await mycelium.getAnalytics()
+    return c.json(data)
+  } catch (err) {
+    return c.json({ error: err instanceof Error ? err.message : 'Failed to get analytics' }, 500)
+  }
+})
+
 export default app

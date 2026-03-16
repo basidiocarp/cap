@@ -172,9 +172,32 @@ export interface HoverInfo {
   content: string
 }
 
+export interface HyphaeAnalytics {
+  lifecycle: { created_last_7d: number; decayed: number; pruned: number }
+  memoir_stats: { code_memoirs: number; total: number; total_concepts: number }
+  memory_utilization: { rate: number; recalled: number; total: number }
+  search_stats: { empty_results: number; hit_rate: number; total_searches: number }
+  top_topics: { avg_weight: number; count: number; name: string }[]
+}
+
+export interface MyceliumAnalytics {
+  filter_hit_rate: { filtered: number; passthrough: number; rate: number }
+  savings_by_category: { category: string; commands: number; rate: number; tokens_saved: number }[]
+  savings_trend: { commands: number; date: string; tokens_saved: number }[]
+  top_commands: { avg_savings: number; command: string; count: number }[]
+}
+
+export interface RhizomeAnalytics {
+  available: boolean
+  backend_usage: { lsp: number; treesitter: number }
+  languages: { files_parsed: number; language: string; symbols_extracted: number }[]
+  tool_calls: { avg_duration_ms: number; count: number; tool: string }[]
+}
+
 // --- API ---
 
 export const hyphaeApi = {
+  analytics: () => get<HyphaeAnalytics>('/hyphae/analytics'),
   health: (topic?: string) => get<HealthResult[]>('/hyphae/health', { topic: topic ?? '' }),
   memoir: (name: string) => get<MemoirDetail>(`/hyphae/memoirs/${encodeURIComponent(name)}`),
   memoirInspect: (memoir: string, concept: string, depth?: number) =>
@@ -194,11 +217,13 @@ export const hyphaeApi = {
 }
 
 export const myceliumApi = {
+  analytics: () => get<MyceliumAnalytics>('/mycelium/analytics'),
   gain: () => get('/mycelium/gain'),
   gainHistory: () => get('/mycelium/gain/history'),
 }
 
 export const rhizomeApi = {
+  analytics: () => get<RhizomeAnalytics>('/rhizome/analytics'),
   definition: (file: string, symbol: string) => get<SymbolDefinition>('/rhizome/definition', { file, symbol }),
   diagnostics: (file?: string) => get<DiagnosticItem[]>('/rhizome/diagnostics', { file: file ?? '' }),
   files: (path?: string, depth?: number) => get<FileNode[]>('/rhizome/files', { depth: depth ? String(depth) : '', path: path ?? '' }),

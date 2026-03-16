@@ -86,6 +86,43 @@ function buildFileTree(files: string[], basePath: string | undefined, maxDepth: 
   return rootChildren
 }
 
+// Analytics bypasses availability middleware — returns data even when Rhizome is down
+app.get('/analytics', async (c) => {
+  if (!rhizome.isAvailable()) {
+    return c.json({
+      available: false,
+      backend_usage: { lsp: 0, treesitter: 0 },
+      languages: [],
+      tool_calls: [],
+    })
+  }
+
+  try {
+    const languages = ['rust', 'typescript', 'javascript', 'python', 'go', 'java', 'c', 'cpp', 'ruby']
+    return c.json({
+      available: true,
+      backend_usage: { lsp: 0, treesitter: 1 },
+      languages: languages.map((lang) => ({
+        files_parsed: 0,
+        language: lang,
+        symbols_extracted: 0,
+      })),
+      tool_calls: [
+        { avg_duration_ms: 0, count: 0, tool: 'get_symbols' },
+        { avg_duration_ms: 0, count: 0, tool: 'search_symbols' },
+        { avg_duration_ms: 0, count: 0, tool: 'get_definition' },
+        { avg_duration_ms: 0, count: 0, tool: 'find_references' },
+        { avg_duration_ms: 0, count: 0, tool: 'get_diagnostics' },
+        { avg_duration_ms: 0, count: 0, tool: 'get_hover_info' },
+      ],
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    logger.error({ err }, 'Rhizome analytics failed')
+    return c.json({ error: message }, 500)
+  }
+})
+
 // All endpoints require Rhizome availability
 app.use('*', async (c, next) => {
   if (!rhizome.isAvailable()) {
