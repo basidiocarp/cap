@@ -1,8 +1,12 @@
-import { Alert, Badge, Button, Card, Group, Loader, Stack, Text, Title } from '@mantine/core'
+import { Alert, Badge, Button, Group, Stack, Text, Title } from '@mantine/core'
 import { IconAlertCircle, IconAlertTriangle, IconInfoCircle, IconRefresh } from '@tabler/icons-react'
 import { useNavigate } from 'react-router-dom'
 
 import type { DiagnosticItem } from '../lib/api'
+import { EmptyState } from '../components/EmptyState'
+import { ErrorAlert } from '../components/ErrorAlert'
+import { PageLoader } from '../components/PageLoader'
+import { SectionCard } from '../components/SectionCard'
 import { useDiagnostics, useRhizomeStatus } from '../lib/queries'
 
 const severityConfig = {
@@ -64,14 +68,7 @@ export function Diagnostics() {
         </Button>
       </Group>
 
-      {error && (
-        <Alert
-          color='decay'
-          title='Error'
-        >
-          {error instanceof Error ? error.message : 'Failed to fetch diagnostics'}
-        </Alert>
-      )}
+      <ErrorAlert error={error} />
 
       {status && !isLsp && (
         <Alert
@@ -82,16 +79,9 @@ export function Diagnostics() {
         </Alert>
       )}
 
-      {loading && (
-        <Group
-          justify='center'
-          p='xl'
-        >
-          <Loader />
-        </Group>
-      )}
+      {loading && <PageLoader />}
 
-      {!loading && !error && isLsp && diagnostics.length === 0 && <Text c='dimmed'>No diagnostics found</Text>}
+      {!loading && !error && isLsp && diagnostics.length === 0 && <EmptyState>No diagnostics found</EmptyState>}
 
       {!loading &&
         sortedFiles.map((file) => {
@@ -99,10 +89,9 @@ export function Diagnostics() {
           const counts = countBySeverity(items)
 
           return (
-            <Card
+            <SectionCard
               key={file}
               padding='md'
-              withBorder
             >
               <Group mb='sm'>
                 <Text
@@ -199,7 +188,7 @@ export function Diagnostics() {
                     )
                   })}
               </Stack>
-            </Card>
+            </SectionCard>
           )
         })}
     </Stack>

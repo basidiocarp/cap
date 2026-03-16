@@ -1,17 +1,14 @@
-import { Alert, Badge, Card, Group, Loader, Select, Stack, Table, Text, TextInput, Title } from '@mantine/core'
+import { Badge, Group, Select, Stack, Table, Text, TextInput, Title } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { useState } from 'react'
 
 import type { Memory } from '../lib/api'
+import { EmptyState } from '../components/EmptyState'
+import { ErrorAlert } from '../components/ErrorAlert'
+import { PageLoader } from '../components/PageLoader'
+import { SectionCard } from '../components/SectionCard'
+import { parseJsonArray } from '../lib/parse'
 import { useRecall, useTopicMemories, useTopics } from '../lib/queries'
-
-function parseKeywords(raw: string): string[] {
-  try {
-    return JSON.parse(raw) as string[]
-  } catch {
-    return []
-  }
-}
 
 function importanceColor(importance: string): string {
   switch (importance) {
@@ -66,39 +63,23 @@ export function Memories() {
         />
       </Group>
 
-      {error && (
-        <Alert
-          color='decay'
-          title='Error'
-        >
-          {error instanceof Error ? error.message : 'Search failed'}
-        </Alert>
-      )}
+      <ErrorAlert error={error} />
 
       {loading && (
-        <Group
-          justify='center'
+        <PageLoader
           mt='md'
-        >
-          <Loader size='sm' />
-        </Group>
+          size='sm'
+        />
       )}
 
       {!loading && memories.length === 0 && !error && (
-        <Text
-          c='dimmed'
-          mt='md'
-        >
+        <EmptyState mt='md'>
           {debouncedQuery || selectedTopic ? 'No results found.' : 'Search or select a topic to browse memories.'}
-        </Text>
+        </EmptyState>
       )}
 
       {memories.length > 0 && (
-        <Card
-          padding='lg'
-          shadow='sm'
-          withBorder
-        >
+        <SectionCard>
           <Table highlightOnHover>
             <Table.Thead>
               <Table.Tr>
@@ -142,7 +123,7 @@ export function Memories() {
                   </Table.Td>
                   <Table.Td>
                     <Group gap={4}>
-                      {parseKeywords(m.keywords)
+                      {parseJsonArray<string>(m.keywords)
                         .slice(0, 3)
                         .map((kw) => (
                           <Badge
@@ -167,7 +148,7 @@ export function Memories() {
               ))}
             </Table.Tbody>
           </Table>
-        </Card>
+        </SectionCard>
       )}
     </Stack>
   )

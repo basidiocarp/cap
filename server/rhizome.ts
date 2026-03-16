@@ -127,7 +127,6 @@ export class RhizomeClient {
         this.handleExit()
       })
 
-      // Send MCP initialize request with id 0
       const initId = 0
       const initRequest = {
         id: initId,
@@ -148,7 +147,6 @@ export class RhizomeClient {
       this.pending.set(initId, {
         reject,
         resolve: () => {
-          // Send initialized notification (no id — it's a notification)
           this.send({ jsonrpc: '2.0', method: 'notifications/initialized' })
           logger.debug('Rhizome MCP initialized')
           resolve()
@@ -169,8 +167,7 @@ export class RhizomeClient {
 
   private processBuffer(): void {
     const lines = this.stdoutBuffer.split('\n')
-    // Keep the last (possibly incomplete) chunk
-    this.stdoutBuffer = lines.pop() ?? ''
+    this.stdoutBuffer = lines.pop() ?? '' // last chunk may be incomplete
 
     for (const line of lines) {
       const trimmed = line.trim()
@@ -209,8 +206,8 @@ export class RhizomeClient {
 
       const text = result?.content?.[0]?.text
       if (text !== undefined) {
-        // Attempt to parse as JSON; return raw string if not valid JSON
         try {
+          // parse as JSON, fall back to raw string
           pending.resolve(JSON.parse(text))
         } catch {
           pending.resolve(text)

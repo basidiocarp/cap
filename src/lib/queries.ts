@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 
 import { hyphaeApi, myceliumApi, rhizomeApi, statusApi } from './api'
 
-// --- Hyphae ---
+// Hyphae
 
 export const hyphaeKeys = {
   analytics: () => ['hyphae', 'analytics'] as const,
@@ -70,7 +70,7 @@ export function useHyphaeAnalytics() {
   return useQuery({ queryFn: () => hyphaeApi.analytics(), queryKey: hyphaeKeys.analytics() })
 }
 
-// --- Mycelium ---
+// Mycelium
 
 export const myceliumKeys = {
   analytics: () => ['mycelium', 'analytics'] as const,
@@ -85,16 +85,35 @@ export function useMyceliumAnalytics() {
   return useQuery({ queryFn: () => myceliumApi.analytics(), queryKey: myceliumKeys.analytics() })
 }
 
-// --- Rhizome ---
+// Rhizome
 
 export const rhizomeKeys = {
   analytics: () => ['rhizome', 'analytics'] as const,
+  annotations: (file: string) => ['rhizome', 'annotations', file] as const,
+  complexity: (file: string) => ['rhizome', 'complexity', file] as const,
   definition: (file: string, symbol: string) => ['rhizome', 'definition', file, symbol] as const,
   diagnostics: (file?: string) => ['rhizome', 'diagnostics', file] as const,
   files: (path?: string, depth?: number) => ['rhizome', 'files', path, depth] as const,
   search: (pattern: string, path?: string) => ['rhizome', 'search', pattern, path] as const,
   status: () => ['rhizome', 'status'] as const,
   symbols: (file: string) => ['rhizome', 'symbols', file] as const,
+  tests: (file: string) => ['rhizome', 'tests', file] as const,
+}
+
+export function useAnnotations(file: string) {
+  return useQuery({
+    enabled: !!file,
+    queryFn: () => rhizomeApi.annotations(file),
+    queryKey: rhizomeKeys.annotations(file),
+  })
+}
+
+export function useComplexity(file: string) {
+  return useQuery({
+    enabled: !!file,
+    queryFn: () => rhizomeApi.complexity(file),
+    queryKey: rhizomeKeys.complexity(file),
+  })
 }
 
 export function useRhizomeStatus() {
@@ -148,7 +167,7 @@ export function useRhizomeAnalytics() {
   return useQuery({ queryFn: () => rhizomeApi.analytics(), queryKey: rhizomeKeys.analytics() })
 }
 
-// --- Status ---
+// Status
 
 export const statusKeys = {
   ecosystem: () => ['status', 'ecosystem'] as const,

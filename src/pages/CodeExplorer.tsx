@@ -3,7 +3,6 @@ import {
   Alert,
   Badge,
   Box,
-  Card,
   Code,
   Group,
   Loader,
@@ -11,6 +10,7 @@ import {
   ScrollArea,
   Stack,
   Table,
+  Tabs,
   Text,
   TextInput,
   Title,
@@ -22,32 +22,32 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-import type { FileNode } from '../lib/api'
+import type { Annotation, ComplexityResult, FileNode } from '../lib/api'
+import { EmptyState } from '../components/EmptyState'
+import { ErrorAlert } from '../components/ErrorAlert'
+import { PageLoader } from '../components/PageLoader'
+import { SectionCard } from '../components/SectionCard'
 import { rhizomeApi } from '../lib/api'
-import { rhizomeKeys, useDefinition, useFileTree, useRhizomeStatus, useSymbols } from '../lib/queries'
+import { symbolKindColor } from '../lib/colors'
+import { rhizomeKeys, useAnnotations, useComplexity, useDefinition, useFileTree, useRhizomeStatus, useSymbols } from '../lib/queries'
 
-function symbolKindColor(kind: string): string {
-  switch (kind.toLowerCase()) {
-    case 'function':
-    case 'method':
-      return 'mycelium'
-    case 'class':
-    case 'struct':
-      return 'spore'
-    case 'enum':
+function annotationColor(kind: string): string {
+  switch (kind.toUpperCase()) {
+    case 'TODO':
       return 'substrate'
-    case 'interface':
-    case 'trait':
-      return 'lichen'
-    case 'constant':
-    case 'const':
+    case 'FIXME':
       return 'gill'
-    case 'import':
-    case 'use':
-      return 'chitin'
+    case 'HACK':
+      return 'decay'
     default:
       return 'chitin'
   }
+}
+
+function complexityColor(score: number): string {
+  if (score < 5) return 'green'
+  if (score <= 10) return 'yellow'
+  return 'red'
 }
 
 function FileTreeNode({
@@ -115,15 +115,16 @@ export function CodeExplorer() {
   const [error, setError] = useState<string | null>(null)
   const [loadedDirs, setLoadedDirs] = useState<Set<string>>(new Set())
 
-  // Queries
   const { data: statusData } = useRhizomeStatus()
   const unavailable = statusData ? !statusData.available : false
   const { data: initialTree, isLoading: treeLoading } = useFileTree(undefined, 2)
   const { data: symbols = [], isLoading: symbolsLoading } = useSymbols(selectedFile ?? '')
   const { data: definition, isLoading: defLoading } = useDefinition(selectedFile ?? '', expandedSymbol ?? '')
+  const { data: annotations = [], isLoading: annotationsLoading } = useAnnotations(selectedFile ?? '')
+  const { data: complexity = [], isLoading: complexityLoading } = useComplexity(selectedFile ?? '')
 
-  // Build tree map from initial query
   useEffect(() => {
+    // index initial tree into a path → children map
     if (!initialTree) return
     const tree = new Map<string, FileNode[]>()
     tree.set('', initialTree)
@@ -140,8 +141,8 @@ export function CodeExplorer() {
     setLoadedDirs(new Set(tree.keys()))
   }, [initialTree])
 
-  // Auto-expand to file from URL params
   useEffect(() => {
+    // expand tree to file/symbol from URL params
     if (!fileParam || treeLoading || unavailable) return
     const parts = fileParam.split('/')
     const dirs: string[] = []
@@ -235,25 +236,16 @@ export function CodeExplorer() {
     return (
       <Stack>
         <Title order={2}>Code Explorer</Title>
-        <Alert
-          color='decay'
+        <ErrorAlert
+          error='The Rhizome code intelligence service is not available. Make sure it is running and configured correctly to explore code symbols.'
           title='Rhizome Unavailable'
-        >
-          The Rhizome code intelligence service is not available. Make sure it is running and configured correctly to explore code symbols.
-        </Alert>
+        />
       </Stack>
     )
   }
 
   if (treeLoading) {
-    return (
-      <Group
-        justify='center'
-        mt='xl'
-      >
-        <Loader />
-      </Group>
-    )
+    return <PageLoader />
   }
 
   const rootNodes = fileTree.get('') ?? []
@@ -262,16 +254,11 @@ export function CodeExplorer() {
     <Stack>
       <Title order={2}>Code Explorer</Title>
 
-      {error && (
-        <Alert
-          color='decay'
-          onClose={() => setError(null)}
-          title='Error'
-          withCloseButton
-        >
-          {error}
-        </Alert>
-      )}
+      <ErrorAlert
+        error={error}
+        onClose={() => setError(null)}
+        withCloseButton
+      />
 
       <Group align='start'>
         <ActionIcon
@@ -284,12 +271,7 @@ export function CodeExplorer() {
         </ActionIcon>
 
         <Box display={{ base: treeOpen ? 'block' : 'none', sm: 'block' }}>
-          <Card
-            miw={280}
-            padding='lg'
-            shadow='sm'
-            withBorder
-          >
+          <SectionCard miw={280}>
             <Title
               mb='sm'
               order={5}
@@ -313,15 +295,10 @@ export function CodeExplorer() {
                   ))}
                 </Stack>
               ) : (
-                <Text
-                  c='dimmed'
-                  size='sm'
-                >
-                  No files found
-                </Text>
+                <EmptyState>No files found</EmptyState>
               )}
             </ScrollArea>
-          </Card>
+          </SectionCard>
         </Box>
 
         <Stack style={{ flex: 1 }}>
@@ -344,11 +321,7 @@ export function CodeExplorer() {
               {symbolsLoading && <Loader size='sm' />}
 
               {!symbolsLoading && filteredSymbols.length > 0 && (
-                <Card
-                  padding='lg'
-                  shadow='sm'
-                  withBorder
-                >
+                <SectionCard>
                   <Table highlightOnHover>
                     <Table.Thead>
                       <Table.Tr>
@@ -450,34 +423,145 @@ export function CodeExplorer() {
                       ))}
                     </Table.Tbody>
                   </Table>
-                </Card>
+                </SectionCard>
               )}
 
               {!symbolsLoading && filteredSymbols.length === 0 && symbols.length > 0 && (
-                <Text
-                  c='dimmed'
-                  size='sm'
-                >
-                  No symbols match "{symbolFilter}"
-                </Text>
+                <EmptyState>No symbols match "{symbolFilter}"</EmptyState>
               )}
 
-              {!symbolsLoading && symbols.length === 0 && (
-                <Text
-                  c='dimmed'
-                  size='sm'
-                >
-                  No symbols found in this file
-                </Text>
-              )}
+              {!symbolsLoading && symbols.length === 0 && <EmptyState>No symbols found in this file</EmptyState>}
+
+              <SectionCard>
+                <Tabs defaultValue='annotations'>
+                  <Tabs.List>
+                    <Tabs.Tab value='annotations'>
+                      Annotations{' '}
+                      {!annotationsLoading && annotations.length > 0 && (
+                        <Badge
+                          ml={4}
+                          size='xs'
+                          variant='light'
+                        >
+                          {annotations.length}
+                        </Badge>
+                      )}
+                    </Tabs.Tab>
+                    <Tabs.Tab value='complexity'>
+                      Complexity{' '}
+                      {!complexityLoading && complexity.length > 0 && (
+                        <Badge
+                          ml={4}
+                          size='xs'
+                          variant='light'
+                        >
+                          {complexity.length}
+                        </Badge>
+                      )}
+                    </Tabs.Tab>
+                  </Tabs.List>
+
+                  <Tabs.Panel
+                    pt='sm'
+                    value='annotations'
+                  >
+                    {annotationsLoading && <Loader size='sm' />}
+                    {!annotationsLoading && annotations.length === 0 && (
+                      <Text
+                        c='dimmed'
+                        size='sm'
+                      >
+                        No TODO, FIXME, or HACK comments found
+                      </Text>
+                    )}
+                    {!annotationsLoading && annotations.length > 0 && (
+                      <Stack gap='xs'>
+                        {annotations.map((a, i) => (
+                          <Alert
+                            color={annotationColor(a.kind)}
+                            key={`${a.kind}-${a.line}-${a.message}`}
+                            p='xs'
+                            variant='light'
+                          >
+                            <Group gap='xs'>
+                              <Badge
+                                color={annotationColor(a.kind)}
+                                size='xs'
+                                variant='filled'
+                              >
+                                {a.kind}
+                              </Badge>
+                              <Text
+                                c='dimmed'
+                                ff='monospace'
+                                size='xs'
+                              >
+                                L{a.line}
+                              </Text>
+                              <Text size='sm'>{a.message}</Text>
+                            </Group>
+                          </Alert>
+                        ))}
+                      </Stack>
+                    )}
+                  </Tabs.Panel>
+
+                  <Tabs.Panel
+                    pt='sm'
+                    value='complexity'
+                  >
+                    {complexityLoading && <Loader size='sm' />}
+                    {!complexityLoading && complexity.length === 0 && (
+                      <Text
+                        c='dimmed'
+                        size='sm'
+                      >
+                        No complexity data available
+                      </Text>
+                    )}
+                    {!complexityLoading && complexity.length > 0 && (
+                      <Table highlightOnHover>
+                        <Table.Thead>
+                          <Table.Tr>
+                            <Table.Th>Function</Table.Th>
+                            <Table.Th>Line</Table.Th>
+                            <Table.Th>Complexity</Table.Th>
+                          </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>
+                          {complexity.map((c) => (
+                            <Table.Tr key={`${c.name}-${c.line}`}>
+                              <Table.Td>
+                                <Text
+                                  ff='monospace'
+                                  size='sm'
+                                >
+                                  {c.name}
+                                </Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size='sm'>{c.line}</Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Badge
+                                  color={complexityColor(c.complexity)}
+                                  size='sm'
+                                  variant='light'
+                                >
+                                  {c.complexity}
+                                </Badge>
+                              </Table.Td>
+                            </Table.Tr>
+                          ))}
+                        </Table.Tbody>
+                      </Table>
+                    )}
+                  </Tabs.Panel>
+                </Tabs>
+              </SectionCard>
             </>
           ) : (
-            <Text
-              c='dimmed'
-              size='sm'
-            >
-              Select a file to explore its symbols
-            </Text>
+            <EmptyState>Select a file to explore its symbols</EmptyState>
           )}
         </Stack>
       </Group>

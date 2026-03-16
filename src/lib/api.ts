@@ -14,7 +14,7 @@ async function get<T = unknown>(path: string, params?: Record<string, string>): 
   return res.json() as Promise<T>
 }
 
-// --- Types matching server/types.ts ---
+// Types (mirrors server/types.ts)
 
 export interface Memory {
   id: string
@@ -146,8 +146,17 @@ export interface RhizomeStatus {
   languages: string[]
 }
 
+export interface LspInfo {
+  available: boolean
+  bin: string
+  language: string
+  name: string
+  running: boolean
+}
+
 export interface EcosystemStatus {
   hyphae: { available: boolean; memories: number; memoirs: number; version: string | null }
+  lsps: LspInfo[]
   mycelium: { available: boolean; version: string | null }
   rhizome: RhizomeStatus
 }
@@ -172,6 +181,32 @@ export interface HoverInfo {
   content: string
 }
 
+export interface Annotation {
+  file: string
+  kind: string
+  line: number
+  message: string
+}
+
+export interface ComplexityResult {
+  complexity: number
+  file: string
+  line: number
+  name: string
+}
+
+export interface DependencyEdge {
+  callee: string
+  caller: string
+  line: number
+}
+
+export interface TestFunction {
+  file: string
+  line: number
+  name: string
+}
+
 export interface HyphaeAnalytics {
   lifecycle: { created_last_7d: number; decayed: number; pruned: number }
   memoir_stats: { code_memoirs: number; total: number; total_concepts: number }
@@ -194,7 +229,7 @@ export interface RhizomeAnalytics {
   tool_calls: { avg_duration_ms: number; count: number; tool: string }[]
 }
 
-// --- API ---
+// API clients
 
 export const hyphaeApi = {
   analytics: () => get<HyphaeAnalytics>('/hyphae/analytics'),
@@ -224,7 +259,10 @@ export const myceliumApi = {
 
 export const rhizomeApi = {
   analytics: () => get<RhizomeAnalytics>('/rhizome/analytics'),
+  annotations: (file: string) => get<Annotation[]>('/rhizome/annotations', { file }),
+  complexity: (file: string) => get<ComplexityResult[]>('/rhizome/complexity', { file }),
   definition: (file: string, symbol: string) => get<SymbolDefinition>('/rhizome/definition', { file, symbol }),
+  dependencies: (file: string) => get<DependencyEdge[]>('/rhizome/dependencies', { file }),
   diagnostics: (file?: string) => get<DiagnosticItem[]>('/rhizome/diagnostics', { file: file ?? '' }),
   files: (path?: string, depth?: number) => get<FileNode[]>('/rhizome/files', { depth: depth ? String(depth) : '', path: path ?? '' }),
   hover: (file: string, line: number, column: number) =>
@@ -235,6 +273,7 @@ export const rhizomeApi = {
   status: () => get<RhizomeStatus>('/rhizome/status'),
   structure: (file: string, depth?: number) => get<RhizomeSymbol[]>('/rhizome/structure', { depth: depth ? String(depth) : '', file }),
   symbols: (file: string) => get<RhizomeSymbol[]>('/rhizome/symbols', { file }),
+  tests: (file: string) => get<TestFunction[]>('/rhizome/tests', { file }),
 }
 
 export const statusApi = {

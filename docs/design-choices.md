@@ -2,22 +2,21 @@
 
 ## Color Palette
 
-Cap's color system is built around fungal biology, creating semantic meaning that maps directly to the data being
-visualized. Every color name is drawn from the mycological ecosystem that ties the monorepo together.
+Every color name comes from fungal biology, matching the monorepo's mycological naming. The names carry domain meaning: a developer reading `color='decay'` on a health bar knows what it means without checking a style guide.
 
 ### Palette Reference
 
-| Name          | Hex Range (0–9)       | Inspiration                       | UI Mapping                                                              |
-|---------------|-----------------------|-----------------------------------|-------------------------------------------------------------------------|
-| **mycelium**  | `#e6fcf5` → `#087f5b` | Underground fungal network        | Primary color, healthy states, growth indicators, positive trends       |
-| **spore**     | `#f3f0ff` → `#5f3dc4` | Reproductive dispersal            | Accent, knowledge graph edges, outgoing connections                     |
-| **substrate** | `#fff8e1` → `#ff6f00` | Growth medium / earth             | Warnings, medium-priority items, weight decay caution                   |
-| **chitin**    | `#f0f4f8` → `#102a43` | Fungal cell wall structure        | Neutral/secondary, borders, low-priority items, structural UI           |
-| **gill**      | `#fff0f0` → `#9c3535` | Mushroom lamellae (underside)     | Critical alerts, errors, contradictions, destructive actions            |
-| **hymenium**  | `#fef9e7` → `#86620d` | Spore-bearing surface             | Highlights, confidence scores, gold accents                             |
-| **fruiting**  | `#fff3e0` → `#e65100` | Visible mushroom body (the "cap") | High-priority items, dependencies, active sessions                      |
-| **decay**     | `#fbe9e7` → `#5c1a0b` | Decomposition cycle               | Error states, fading memories, superseded concepts, low health          |
-| **lichen**    | `#e0f7fa` → `#006064` | Symbiotic organism                | Symbiotic links, medium importance, search results, "part of" relations |
+| Name | Hex Range (0–9) | Inspiration | UI Mapping |
+|------|------------------|-------------|------------|
+| mycelium | `#e6fcf5` → `#087f5b` | Underground fungal network | Primary, healthy states, growth, positive trends |
+| spore | `#f3f0ff` → `#5f3dc4` | Reproductive dispersal | Accent, graph edges, outgoing connections |
+| substrate | `#fff8e1` → `#ff6f00` | Growth medium / earth | Warnings, medium-priority, weight decay caution |
+| chitin | `#f0f4f8` → `#102a43` | Fungal cell wall | Neutral/secondary, borders, structural UI |
+| gill | `#fff0f0` → `#9c3535` | Mushroom lamellae | Critical alerts, errors, destructive actions |
+| hymenium | `#fef9e7` → `#86620d` | Spore-bearing surface | Highlights, confidence scores, gold accents |
+| fruiting | `#fff3e0` → `#e65100` | Visible mushroom body ("cap") | High-priority, dependencies, active sessions |
+| decay | `#fbe9e7` → `#5c1a0b` | Decomposition cycle | Errors, fading memories, superseded concepts |
+| lichen | `#e0f7fa` → `#006064` | Symbiotic organism | Symbiotic links, search results, "part of" relations |
 
 ### Semantic Color Assignments
 
@@ -63,37 +62,26 @@ visualized. Every color name is drawn from the mycological ecosystem that ties t
 | Line stroke / Output bars | `#0ca678` | `mycelium.7` — primary data, token savings |
 | Input bars                | `#627d98` | `chitin.5` — secondary/reference data      |
 
-### Why Fungal Naming?
+### Why fungal naming?
 
-1. **Consistency** — The entire monorepo uses mycological naming (mycelium, hyphae, cap, spore, rhizome). The color
-   palette extends this into the visual layer.
+The monorepo already uses mycological names (mycelium, hyphae, cap, spore, rhizome); the palette extends that into the visual layer. Generic names like "red" carry no domain meaning, but `decay` on a health bar is self-documenting.
 
-2. **Semantic clarity** — Generic names like "red" and "blue" carry no domain meaning. `decay` immediately communicates
-   what the color represents in context. A developer reading `color='decay'` in a health progress bar understands the
-   intent without checking a style guide.
-
-3. **Dark mode native** — Each palette was designed as a 10-shade tuple (Mantine convention) with dark-mode readability
-   as the primary target. Shade indices 5–7 are optimized for contrast against dark backgrounds.
+Each palette is a 10-shade Mantine tuple designed for dark mode first. Shade indices 5–7 are optimized for contrast against dark backgrounds.
 
 ## Typography
 
-| Role      | Font                    | Rationale                                                                                   |
-|-----------|-------------------------|---------------------------------------------------------------------------------------------|
-| Body      | Roboto                  | Clean, highly legible at small sizes, excellent for data-dense dashboards                   |
-| Headings  | Roboto                  | Consistency with body text, weight differentiation (500) provides hierarchy                 |
-| Monospace | JetBrains Mono Variable | Purpose-built for code and data, ligatures for readability, variable weight for flexibility |
+| Role | Font | Rationale |
+|------|------|-----------|
+| Body | Roboto | Legible at small sizes, good for data-dense dashboards |
+| Headings | Roboto | Same family as body; weight 500 provides hierarchy |
+| Monospace | JetBrains Mono Variable | Built for code, ligatures, variable weight |
 
 ## Architecture Decisions
 
 ### Direct SQLite for reads, CLI for writes
 
-Cap reads hyphae's SQLite database directly (read-only, WAL mode) for maximum performance on the read path. Write
-operations (store, forget, consolidate) shell out to the hyphae CLI to reuse its validation logic without duplicating it
-in TypeScript. See `docs/plans.txt` for the full rationale.
+Cap reads Hyphae's SQLite database directly (read-only, WAL mode) for fast queries. Writes (store, forget, consolidate) shell out to the `hyphae` CLI so validation logic stays in one place.
 
 ### Mantine as component library
 
-Mantine v8 provides a complete dark-mode component system with minimal configuration. The `createTheme` +
-`mergeThemeOverrides` pattern allows modular theme composition (typography, colors, spacing, etc. in separate files). If
-Mantine becomes a performance bottleneck, the semantic color names make migration straightforward — the color
-assignments are the contract, not the framework.
+Mantine v8 gives us a dark-mode component system out of the box. Theme composition uses `createTheme` + `mergeThemeOverrides` with separate files for typography, colors, spacing, etc. The semantic color names (`decay`, `mycelium`, not `red`, `green`) are the contract; if we swap the component library later, the color assignments carry over.

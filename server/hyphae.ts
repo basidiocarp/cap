@@ -1,14 +1,9 @@
-import { execFile } from 'node:child_process'
-import { promisify } from 'node:util'
-
 import type { ConceptLinkRow, ConceptRow, HealthResult, MemoirRow, MemoryRow, StatsResult, TopicSummary } from './types.ts'
 import { getDb } from './db.ts'
-import { logger } from './logger.ts'
+import { cached } from './lib/cache.ts'
+import { createCliRunner } from './lib/cli.ts'
 
-const exec = promisify(execFile)
-const HYPHAE_BIN = process.env.HYPHAE_BIN ?? 'hyphae'
-
-// --- Reads: direct SQLite ---
+// Reads: direct SQLite
 
 export function getStats(): StatsResult {
   const db = getDb()
@@ -126,7 +121,6 @@ export function memoirInspect(
 
   const neighbors: Array<{ concept: ConceptRow; link: ConceptLinkRow; direction: 'outgoing' | 'incoming' }> = []
 
-  // BFS up to depth
   const visited = new Set<string>([concept.id])
   let frontier = [concept.id]
 
@@ -224,10 +218,7 @@ export function memoirSearchAll(query: string): ConceptRow[] {
     .all(query) as ConceptRow[]
 }
 
-// --- Analytics (cached) ---
-
-let analyticsCache: { data: ReturnType<typeof computeAnalytics>; ts: number } | null = null
-const ANALYTICS_TTL = 60_000
+// Analytics (60s cache)
 
 function computeAnalytics() {
   const db = getDb()
@@ -254,26 +245,11 @@ function computeAnalytics() {
   }
 }
 
-export function getAnalytics() {
-  const now = Date.now()
-  if (analyticsCache && now - analyticsCache.ts < ANALYTICS_TTL) {
-    return analyticsCache.data
-  }
-  const data = computeAnalytics()
-  analyticsCache = { data, ts: now }
-  return data
-}
+export const getAnalytics = cached(computeAnalytics, 60_000)
 
-// --- Writes: shell out to CLI ---
+// Writes: shell out to CLI
 
-async function runCli(args: string[]): Promise<string> {
-  logger.debug({ args, bin: HYPHAE_BIN }, 'Executing hyphae CLI')
-  const { stdout } = await exec(HYPHAE_BIN, args, {
-    env: { ...process.env, NO_COLOR: '1' },
-    timeout: 10_000,
-  })
-  return stdout.trim()
-}
+const runCli = createCliRunner(process.env.HYPHAE_BIN ?? 'hyphae', 'hyphae')
 
 export async function store(topic: string, summary: string, importance?: string, keywords?: string[]) {
   const args = ['store', '-t', topic, '-c', summary]

@@ -1,7 +1,11 @@
-import { Alert, Badge, Card, Grid, Group, Loader, Progress, Stack, Table, Text, Title } from '@mantine/core'
+import { Badge, Card, Grid, Group, Progress, Stack, Table, Text, Title } from '@mantine/core'
 import { useQueries } from '@tanstack/react-query'
 
 import type { HealthResult, Stats, TopicSummary } from '../lib/api'
+import { EmptyState } from '../components/EmptyState'
+import { ErrorAlert } from '../components/ErrorAlert'
+import { PageLoader } from '../components/PageLoader'
+import { SectionCard } from '../components/SectionCard'
 import { hyphaeApi, myceliumApi } from '../lib/api'
 import { hyphaeKeys, myceliumKeys } from '../lib/queries'
 
@@ -24,25 +28,11 @@ export function Dashboard() {
   const gain = gainQuery.data as Record<string, unknown> | undefined
 
   if (loading) {
-    return (
-      <Group
-        justify='center'
-        mt='xl'
-      >
-        <Loader />
-      </Group>
-    )
+    return <PageLoader />
   }
 
   if (error) {
-    return (
-      <Alert
-        color='decay'
-        title='Error'
-      >
-        {error instanceof Error ? error.message : 'Failed to load'}
-      </Alert>
-    )
+    return <ErrorAlert error={error instanceof Error ? error : new Error('Failed to load')} />
   }
 
   return (
@@ -118,17 +108,7 @@ export function Dashboard() {
 
       <Grid>
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <Card
-            padding='lg'
-            shadow='sm'
-            withBorder
-          >
-            <Title
-              mb='sm'
-              order={4}
-            >
-              Topics
-            </Title>
+          <SectionCard title='Topics'>
             {topics.length > 0 ? (
               <Table highlightOnHover>
                 <Table.Thead>
@@ -149,28 +129,13 @@ export function Dashboard() {
                 </Table.Tbody>
               </Table>
             ) : (
-              <Text
-                c='dimmed'
-                size='sm'
-              >
-                No topics yet
-              </Text>
+              <EmptyState>No topics yet</EmptyState>
             )}
-          </Card>
+          </SectionCard>
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <Card
-            padding='lg'
-            shadow='sm'
-            withBorder
-          >
-            <Title
-              mb='sm'
-              order={4}
-            >
-              Memory Health
-            </Title>
+          <SectionCard title='Memory Health'>
             {health.length > 0 ? (
               <Stack gap='sm'>
                 {health.map((h) => (
@@ -215,14 +180,9 @@ export function Dashboard() {
                 ))}
               </Stack>
             ) : (
-              <Text
-                c='dimmed'
-                size='sm'
-              >
-                No health data
-              </Text>
+              <EmptyState>No health data</EmptyState>
             )}
-          </Card>
+          </SectionCard>
         </Grid.Col>
       </Grid>
     </Stack>

@@ -1,16 +1,13 @@
-import { Alert, Card, Grid, Group, Loader, RingProgress, Stack, Table, Tabs, Text, Title } from '@mantine/core'
+import { BarChart, LineChart, PieChart } from '@mantine/charts'
+import { Alert, Card, Grid, Group, RingProgress, Stack, Table, Tabs, Text, Title } from '@mantine/core'
 import { IconBrain, IconChartBar, IconCode, IconNetwork } from '@tabler/icons-react'
-import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { HyphaeAnalytics, MyceliumAnalytics, RhizomeAnalytics } from '../lib/api'
+import { PageLoader } from '../components/PageLoader'
+import { SectionCard } from '../components/SectionCard'
 import { useHyphaeAnalytics, useMyceliumAnalytics, useRhizomeAnalytics } from '../lib/queries'
 
-const COLOR_HYPHAE = '#36b37e'
-const COLOR_MYCELIUM = '#ff7452'
-const COLOR_NEUTRAL = '#627d98'
-const COLOR_RHIZOME = '#6554c0'
-
-const PIE_COLORS = [COLOR_RHIZOME, COLOR_MYCELIUM, COLOR_HYPHAE, COLOR_NEUTRAL, '#00b8d9', '#ff5630']
+const PIE_COLORS = ['spore.6', 'fruiting.6', 'mycelium.6', 'chitin.5', 'lichen.6', 'gill.6']
 
 function KpiCard({ accent, label, value }: { accent: string; label: string; value: string }) {
   return (
@@ -26,8 +23,8 @@ function KpiCard({ accent, label, value }: { accent: string; label: string; valu
         {label}
       </Text>
       <Title
+        c={accent}
         order={3}
-        style={{ color: accent }}
       >
         {value}
       </Title>
@@ -57,81 +54,31 @@ function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
       </Text>
 
       {data.savings_trend.length > 0 && (
-        <Card
-          padding='lg'
-          shadow='sm'
-          withBorder
-        >
-          <Title
-            mb='md'
-            order={4}
-          >
-            Savings Trend
-          </Title>
-          <ResponsiveContainer
-            height={300}
-            width='100%'
-          >
-            <LineChart data={data.savings_trend}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <XAxis dataKey='date' />
-              <YAxis />
-              <Tooltip />
-              <Line
-                dataKey='tokens_saved'
-                name='Tokens Saved'
-                stroke={COLOR_MYCELIUM}
-                strokeWidth={2}
-                type='monotone'
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
+        <SectionCard title='Savings Trend'>
+          <LineChart
+            curveType='monotone'
+            data={data.savings_trend}
+            dataKey='date'
+            h={300}
+            series={[{ color: 'fruiting.6', name: 'tokens_saved' }]}
+            strokeWidth={2}
+          />
+        </SectionCard>
       )}
 
       {data.savings_by_category.length > 0 && (
-        <Card
-          padding='lg'
-          shadow='sm'
-          withBorder
-        >
-          <Title
-            mb='md'
-            order={4}
-          >
-            Savings by Category
-          </Title>
-          <ResponsiveContainer
-            height={300}
-            width='100%'
-          >
-            <BarChart data={data.savings_by_category}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <XAxis dataKey='category' />
-              <YAxis />
-              <Tooltip />
-              <Bar
-                dataKey='tokens_saved'
-                fill={COLOR_MYCELIUM}
-                name='Tokens Saved'
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
+        <SectionCard title='Savings by Category'>
+          <BarChart
+            data={data.savings_by_category}
+            dataKey='category'
+            h={300}
+            series={[{ color: 'fruiting.6', name: 'tokens_saved' }]}
+          />
+        </SectionCard>
       )}
 
       {data.top_commands.length > 0 && (
-        <Card
-          padding='lg'
-          shadow='sm'
-          withBorder
-        >
-          <Title
-            mb='md'
-            order={4}
-          >
-            Top Commands
-          </Title>
+        <SectionCard title='Top Commands'>
           <Table striped>
             <Table.Thead>
               <Table.Tr>
@@ -150,7 +97,7 @@ function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
               ))}
             </Table.Tbody>
           </Table>
-        </Card>
+        </SectionCard>
       )}
     </Stack>
   )
@@ -174,17 +121,7 @@ function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
     <Stack>
       <Grid>
         <Grid.Col span={{ base: 12, md: 4 }}>
-          <Card
-            padding='lg'
-            shadow='sm'
-            withBorder
-          >
-            <Title
-              mb='md'
-              order={4}
-            >
-              Memory Utilization
-            </Title>
+          <SectionCard title='Memory Utilization'>
             <Group justify='center'>
               <RingProgress
                 label={
@@ -196,7 +133,7 @@ function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
                     {utilizationPct}%
                   </Text>
                 }
-                sections={[{ color: COLOR_HYPHAE, value: utilizationPct }]}
+                sections={[{ color: 'mycelium.7', value: utilizationPct }]}
                 size={140}
               />
             </Group>
@@ -208,28 +145,28 @@ function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
             >
               {data.memory_utilization.recalled} recalled / {data.memory_utilization.total} total
             </Text>
-          </Card>
+          </SectionCard>
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 8 }}>
           <Grid>
             <Grid.Col span={{ base: 12, md: 4 }}>
               <KpiCard
-                accent={COLOR_HYPHAE}
+                accent='mycelium.7'
                 label='Created (7d)'
                 value={data.lifecycle.created_last_7d.toLocaleString()}
               />
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 4 }}>
               <KpiCard
-                accent={COLOR_NEUTRAL}
+                accent='chitin.5'
                 label='Decayed'
                 value={data.lifecycle.decayed.toLocaleString()}
               />
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 4 }}>
               <KpiCard
-                accent={COLOR_NEUTRAL}
+                accent='chitin.5'
                 label='Pruned'
                 value={data.lifecycle.pruned.toLocaleString()}
               />
@@ -247,17 +184,7 @@ function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
       </Grid>
 
       {data.top_topics.length > 0 && (
-        <Card
-          padding='lg'
-          shadow='sm'
-          withBorder
-        >
-          <Title
-            mb='md'
-            order={4}
-          >
-            Top Topics
-          </Title>
+        <SectionCard title='Top Topics'>
           <Table striped>
             <Table.Thead>
               <Table.Tr>
@@ -276,7 +203,7 @@ function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
               ))}
             </Table.Tbody>
           </Table>
-        </Card>
+        </SectionCard>
       )}
     </Stack>
   )
@@ -305,6 +232,12 @@ function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null }) {
     )
   }
 
+  const pieData = data.tool_calls.map((tc, idx) => ({
+    color: PIE_COLORS[idx % PIE_COLORS.length],
+    name: tc.tool,
+    value: tc.count,
+  }))
+
   return (
     <Stack>
       <Text
@@ -315,56 +248,18 @@ function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null }) {
       </Text>
 
       {data.tool_calls.length > 0 && (
-        <Card
-          padding='lg'
-          shadow='sm'
-          withBorder
-        >
-          <Title
-            mb='md'
-            order={4}
-          >
-            Tool Call Distribution
-          </Title>
-          <ResponsiveContainer
-            height={300}
-            width='100%'
-          >
-            <PieChart>
-              <Pie
-                cx='50%'
-                cy='50%'
-                data={data.tool_calls}
-                dataKey='count'
-                label={({ name }) => name}
-                nameKey='tool'
-                outerRadius={100}
-              >
-                {data.tool_calls.map((_entry, idx) => (
-                  <Cell
-                    fill={PIE_COLORS[idx % PIE_COLORS.length]}
-                    key={_entry.tool}
-                  />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </Card>
+        <SectionCard title='Tool Call Distribution'>
+          <PieChart
+            data={pieData}
+            size={250}
+            withLabels
+            withTooltip
+          />
+        </SectionCard>
       )}
 
       {data.languages.length > 0 && (
-        <Card
-          padding='lg'
-          shadow='sm'
-          withBorder
-        >
-          <Title
-            mb='md'
-            order={4}
-          >
-            Languages
-          </Title>
+        <SectionCard title='Languages'>
           <Table striped>
             <Table.Thead>
               <Table.Tr>
@@ -383,7 +278,7 @@ function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null }) {
               ))}
             </Table.Tbody>
           </Table>
-        </Card>
+        </SectionCard>
       )}
     </Stack>
   )
@@ -406,33 +301,26 @@ export function Analytics() {
     <Stack>
       <Title order={2}>Analytics</Title>
 
-      {loading && (
-        <Group
-          justify='center'
-          mt='xl'
-        >
-          <Loader />
-        </Group>
-      )}
+      {loading && <PageLoader mt='xl' />}
 
       <Grid>
         <Grid.Col span={{ base: 12, md: 4 }}>
           <KpiCard
-            accent={COLOR_MYCELIUM}
+            accent='fruiting.6'
             label='Total Tokens Saved'
             value={totalTokensSaved != null ? totalTokensSaved.toLocaleString() : '\u2014'}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, md: 4 }}>
           <KpiCard
-            accent={COLOR_HYPHAE}
+            accent='mycelium.7'
             label='Memory Utilization'
             value={memoryUtilization != null ? `${memoryUtilization}%` : '\u2014'}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, md: 4 }}>
           <KpiCard
-            accent={COLOR_RHIZOME}
+            accent='spore.6'
             label='Languages Indexed'
             value={languagesIndexed != null ? languagesIndexed.toLocaleString() : '\u2014'}
           />

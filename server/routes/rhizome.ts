@@ -1,13 +1,26 @@
+import type { Context } from 'hono'
 import { execSync } from 'node:child_process'
 import { extname } from 'node:path'
 import { Hono } from 'hono'
 
+import { requireQuery } from '../lib/params.ts'
 import { logger } from '../logger.ts'
 import { rhizome } from '../rhizome.ts'
 
 const app = new Hono()
 
 const PROJECT_DIR = process.env.RHIZOME_PROJECT ?? process.cwd()
+
+async function rhizomeTool(c: Context, tool: string, args: Record<string, unknown>): Promise<Response> {
+  try {
+    const result = await rhizome.callTool(tool, args)
+    return c.json(result)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    logger.error({ err }, `Rhizome ${tool} failed`)
+    return c.json({ error: message }, 500)
+  }
+}
 
 const EXT_LANGUAGE: Record<string, string> = {
   '.c': 'c',
@@ -86,7 +99,7 @@ function buildFileTree(files: string[], basePath: string | undefined, maxDepth: 
   return rootChildren
 }
 
-// Analytics bypasses availability middleware — returns data even when Rhizome is down
+// Analytics skips availability middleware so it returns data even when Rhizome is down
 app.get('/analytics', async (c) => {
   if (!rhizome.isAvailable()) {
     return c.json({
@@ -123,7 +136,7 @@ app.get('/analytics', async (c) => {
   }
 })
 
-// All endpoints require Rhizome availability
+// Everything below requires Rhizome to be running
 app.use('*', async (c, next) => {
   if (!rhizome.isAvailable()) {
     return c.json({ available: false, error: 'Rhizome not installed' }, 503)
@@ -140,125 +153,85 @@ app.get('/status', (c) => {
 })
 
 app.get('/symbols', async (c) => {
-  const file = c.req.query('file')
-  if (!file) return c.json({ error: 'Missing required parameter: file' }, 400)
-
-  try {
-    const result = await rhizome.callTool('get_symbols', { file })
-    return c.json(result)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    logger.error({ err }, 'Rhizome get_symbols failed')
-    return c.json({ error: message }, 500)
-  }
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  return rhizomeTool(c, 'get_symbols', { file })
 })
 
 app.get('/structure', async (c) => {
-  const file = c.req.query('file')
-  if (!file) return c.json({ error: 'Missing required parameter: file' }, 400)
-
-  try {
-    const args: Record<string, unknown> = { file }
-    const depth = c.req.query('depth')
-    if (depth) args.depth = Number(depth)
-    const result = await rhizome.callTool('get_structure', args)
-    return c.json(result)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    logger.error({ err }, 'Rhizome get_structure failed')
-    return c.json({ error: message }, 500)
-  }
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  const args: Record<string, unknown> = { file }
+  const depth = c.req.query('depth')
+  if (depth) args.depth = Number(depth)
+  return rhizomeTool(c, 'get_structure', args)
 })
 
 app.get('/definition', async (c) => {
-  const file = c.req.query('file')
-  const symbol = c.req.query('symbol')
-  if (!file) return c.json({ error: 'Missing required parameter: file' }, 400)
-  if (!symbol) return c.json({ error: 'Missing required parameter: symbol' }, 400)
-
-  try {
-    const result = await rhizome.callTool('get_definition', { file, symbol })
-    return c.json(result)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    logger.error({ err }, 'Rhizome get_definition failed')
-    return c.json({ error: message }, 500)
-  }
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  const symbol = requireQuery(c, 'symbol')
+  if (symbol instanceof Response) return symbol
+  return rhizomeTool(c, 'get_definition', { file, symbol })
 })
 
 app.get('/search', async (c) => {
-  const pattern = c.req.query('pattern')
-  if (!pattern) return c.json({ error: 'Missing required parameter: pattern' }, 400)
-
-  try {
-    const args: Record<string, unknown> = { pattern }
-    const searchPath = c.req.query('path')
-    if (searchPath) args.path = searchPath
-    const result = await rhizome.callTool('search_symbols', args)
-    return c.json(result)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    logger.error({ err }, 'Rhizome search_symbols failed')
-    return c.json({ error: message }, 500)
-  }
+  const pattern = requireQuery(c, 'pattern')
+  if (pattern instanceof Response) return pattern
+  const args: Record<string, unknown> = { pattern }
+  const searchPath = c.req.query('path')
+  if (searchPath) args.path = searchPath
+  return rhizomeTool(c, 'search_symbols', args)
 })
 
 app.get('/references', async (c) => {
-  const file = c.req.query('file')
-  const line = c.req.query('line')
-  const column = c.req.query('column')
-  if (!file) return c.json({ error: 'Missing required parameter: file' }, 400)
-  if (!line) return c.json({ error: 'Missing required parameter: line' }, 400)
-  if (!column) return c.json({ error: 'Missing required parameter: column' }, 400)
-
-  try {
-    const result = await rhizome.callTool('find_references', {
-      column: Number(column),
-      file,
-      line: Number(line),
-    })
-    return c.json(result)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    logger.error({ err }, 'Rhizome find_references failed')
-    return c.json({ error: message }, 500)
-  }
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  const line = requireQuery(c, 'line')
+  if (line instanceof Response) return line
+  const column = requireQuery(c, 'column')
+  if (column instanceof Response) return column
+  return rhizomeTool(c, 'find_references', { column: Number(column), file, line: Number(line) })
 })
 
 app.get('/diagnostics', async (c) => {
   const file = c.req.query('file')
   if (!file) return c.json([])
-
-  try {
-    const result = await rhizome.callTool('get_diagnostics', { file })
-    return c.json(result)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    logger.error({ err }, 'Rhizome get_diagnostics failed')
-    return c.json({ error: message }, 500)
-  }
+  return rhizomeTool(c, 'get_diagnostics', { file })
 })
 
 app.get('/hover', async (c) => {
-  const file = c.req.query('file')
-  const line = c.req.query('line')
-  const column = c.req.query('column')
-  if (!file) return c.json({ error: 'Missing required parameter: file' }, 400)
-  if (!line) return c.json({ error: 'Missing required parameter: line' }, 400)
-  if (!column) return c.json({ error: 'Missing required parameter: column' }, 400)
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  const line = requireQuery(c, 'line')
+  if (line instanceof Response) return line
+  const column = requireQuery(c, 'column')
+  if (column instanceof Response) return column
+  return rhizomeTool(c, 'get_hover_info', { column: Number(column), file, line: Number(line) })
+})
 
-  try {
-    const result = await rhizome.callTool('get_hover_info', {
-      column: Number(column),
-      file,
-      line: Number(line),
-    })
-    return c.json(result)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    logger.error({ err }, 'Rhizome get_hover_info failed')
-    return c.json({ error: message }, 500)
-  }
+app.get('/annotations', async (c) => {
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  return rhizomeTool(c, 'get_annotations', { file })
+})
+
+app.get('/complexity', async (c) => {
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  return rhizomeTool(c, 'get_complexity', { file })
+})
+
+app.get('/dependencies', async (c) => {
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  return rhizomeTool(c, 'get_dependencies', { file })
+})
+
+app.get('/tests', async (c) => {
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  return rhizomeTool(c, 'get_tests', { file })
 })
 
 app.get('/files', (c) => {

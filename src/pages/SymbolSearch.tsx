@@ -1,31 +1,15 @@
-import { Alert, Badge, Card, Group, Loader, Stack, Table, Text, TextInput, Title } from '@mantine/core'
+import { Badge, Stack, Table, Text, TextInput, Title } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { IconSearch } from '@tabler/icons-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { EmptyState } from '../components/EmptyState'
+import { ErrorAlert } from '../components/ErrorAlert'
+import { PageLoader } from '../components/PageLoader'
+import { SectionCard } from '../components/SectionCard'
+import { symbolKindColor } from '../lib/colors'
 import { useSymbolSearch } from '../lib/queries'
-
-function kindColor(kind: string): string {
-  switch (kind) {
-    case 'Function':
-      return 'mycelium'
-    case 'Class':
-    case 'Struct':
-      return 'spore'
-    case 'Enum':
-      return 'substrate'
-    case 'Interface':
-    case 'Trait':
-      return 'lichen'
-    case 'Constant':
-      return 'gill'
-    case 'Import':
-      return 'chitin'
-    default:
-      return 'chitin'
-  }
-}
 
 export function SymbolSearch() {
   const navigate = useNavigate()
@@ -45,22 +29,13 @@ export function SymbolSearch() {
         value={query}
       />
 
-      {error && (
-        <Alert
-          color='decay'
-          title='Error'
-        >
-          {error instanceof Error ? error.message : 'Search failed'}
-        </Alert>
-      )}
+      <ErrorAlert error={error} />
 
       {loading && (
-        <Group
-          justify='center'
+        <PageLoader
           mt='md'
-        >
-          <Loader size='sm' />
-        </Group>
+          size='sm'
+        />
       )}
 
       {!loading && !error && debouncedQuery.trim() && results.length > 0 && (
@@ -73,22 +48,15 @@ export function SymbolSearch() {
       )}
 
       {!loading && results.length === 0 && !error && (
-        <Text
-          c='dimmed'
-          mt='md'
-        >
+        <EmptyState mt='md'>
           {debouncedQuery.trim()
             ? `No symbols found matching '${debouncedQuery}'`
             : 'Search for functions, classes, types across your project'}
-        </Text>
+        </EmptyState>
       )}
 
       {results.length > 0 && (
-        <Card
-          padding='lg'
-          shadow='sm'
-          withBorder
-        >
+        <SectionCard>
           <Table highlightOnHover>
             <Table.Thead>
               <Table.Tr>
@@ -116,7 +84,7 @@ export function SymbolSearch() {
                   </Table.Td>
                   <Table.Td>
                     <Badge
-                      color={kindColor(r.kind)}
+                      color={symbolKindColor(r.kind)}
                       size='sm'
                       variant='light'
                     >
@@ -150,7 +118,7 @@ export function SymbolSearch() {
               ))}
             </Table.Tbody>
           </Table>
-        </Card>
+        </SectionCard>
       )}
     </Stack>
   )

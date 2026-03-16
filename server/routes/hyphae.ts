@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 
 import * as hyphae from '../hyphae.ts'
+import { requireQuery } from '../lib/params.ts'
 
 const app = new Hono()
 
@@ -18,8 +19,8 @@ app.get('/topics/:topic/memories', (c) => {
 })
 
 app.get('/recall', (c) => {
-  const query = c.req.query('q')
-  if (!query) return c.json({ error: 'Missing query parameter "q"' }, 400)
+  const query = requireQuery(c, 'q')
+  if (query instanceof Response) return query
   const topic = c.req.query('topic')
   const limit = c.req.query('limit')
   return c.json(hyphae.recall(query, topic ?? undefined, limit ? Number(limit) : undefined))
@@ -41,8 +42,8 @@ app.get('/memoirs', (c) => {
 })
 
 app.get('/memoirs/search-all', (c) => {
-  const query = c.req.query('q')
-  if (!query) return c.json({ error: 'Missing query parameter "q"' }, 400)
+  const query = requireQuery(c, 'q')
+  if (query instanceof Response) return query
   return c.json(hyphae.memoirSearchAll(query))
 })
 
@@ -60,8 +61,8 @@ app.get('/memoirs/:name/inspect/:concept', (c) => {
 })
 
 app.get('/memoirs/:name/search', (c) => {
-  const query = c.req.query('q')
-  if (!query) return c.json({ error: 'Missing query parameter "q"' }, 400)
+  const query = requireQuery(c, 'q')
+  if (query instanceof Response) return query
   return c.json(hyphae.memoirSearch(c.req.param('name'), query))
 })
 
@@ -69,7 +70,7 @@ app.get('/analytics', (c) => {
   return c.json(hyphae.getAnalytics())
 })
 
-// --- Writes (shell to CLI) ---
+// Writes (shell to CLI)
 
 app.post('/store', async (c) => {
   const body = await c.req.json<{ topic: string; summary: string; importance?: string; keywords?: string[] }>()

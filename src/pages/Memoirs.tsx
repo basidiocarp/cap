@@ -1,16 +1,13 @@
-import { Alert, Badge, Card, Group, Loader, Stack, Table, Text, TextInput, Title, UnstyledButton } from '@mantine/core'
+import { Badge, Group, Loader, Stack, Table, Text, TextInput, Title, UnstyledButton } from '@mantine/core'
 import { useState } from 'react'
 
 import type { Concept } from '../lib/api'
+import { EmptyState } from '../components/EmptyState'
+import { ErrorAlert } from '../components/ErrorAlert'
+import { PageLoader } from '../components/PageLoader'
+import { SectionCard } from '../components/SectionCard'
+import { parseJsonArray } from '../lib/parse'
 import { useMemoir, useMemoirInspect, useMemoirs } from '../lib/queries'
-
-function parseLabels(raw: string): Array<{ namespace: string; value: string }> {
-  try {
-    return JSON.parse(raw) as Array<{ namespace: string; value: string }>
-  } catch {
-    return []
-  }
-}
 
 function relationColor(relation: string): string {
   switch (relation) {
@@ -54,43 +51,24 @@ export function Memoirs() {
   }
 
   if (memoirsLoading) {
-    return (
-      <Group
-        justify='center'
-        mt='xl'
-      >
-        <Loader />
-      </Group>
-    )
+    return <PageLoader />
   }
 
   return (
     <Stack>
       <Title order={2}>Memoirs</Title>
 
-      {error && (
-        <Alert
-          color='decay'
-          title='Error'
-          withCloseButton
-        >
-          {error instanceof Error ? error.message : 'Failed to load memoirs'}
-        </Alert>
-      )}
+      <ErrorAlert
+        error={error}
+        withCloseButton
+      />
 
       <Group align='start'>
-        <Card
+        <SectionCard
           miw={250}
-          padding='lg'
-          shadow='sm'
-          withBorder
+          title='Knowledge Graphs'
+          titleOrder={5}
         >
-          <Title
-            mb='sm'
-            order={5}
-          >
-            Knowledge Graphs
-          </Title>
           {memoirs.length > 0 ? (
             <Stack gap='xs'>
               {memoirs.map((m) => (
@@ -114,24 +92,15 @@ export function Memoirs() {
               ))}
             </Stack>
           ) : (
-            <Text
-              c='dimmed'
-              size='sm'
-            >
-              No memoirs found
-            </Text>
+            <EmptyState>No memoirs found</EmptyState>
           )}
-        </Card>
+        </SectionCard>
 
         <Stack style={{ flex: 1 }}>
           {detailLoading && <Loader size='sm' />}
 
           {detail && (
-            <Card
-              padding='lg'
-              shadow='sm'
-              withBorder
-            >
+            <SectionCard>
               <Group
                 justify='space-between'
                 mb='sm'
@@ -190,7 +159,7 @@ export function Memoirs() {
                         </Table.Td>
                         <Table.Td>
                           <Group gap={4}>
-                            {parseLabels(c.labels).map((l) => (
+                            {parseJsonArray<{ namespace: string; value: string }>(c.labels).map((l) => (
                               <Badge
                                 key={`${l.namespace}:${l.value}`}
                                 size='xs'
@@ -206,28 +175,16 @@ export function Memoirs() {
                   </Table.Tbody>
                 </Table>
               ) : (
-                <Text
-                  c='dimmed'
-                  size='sm'
-                >
-                  No concepts yet
-                </Text>
+                <EmptyState>No concepts yet</EmptyState>
               )}
-            </Card>
+            </SectionCard>
           )}
 
           {selected && (
-            <Card
-              padding='lg'
-              shadow='sm'
-              withBorder
+            <SectionCard
+              title='Inspect Concept'
+              titleOrder={5}
             >
-              <Title
-                mb='sm'
-                order={5}
-              >
-                Inspect Concept
-              </Title>
               <TextInput
                 mb='sm'
                 onChange={(e) => setInspectConcept(e.currentTarget.value)}
@@ -238,10 +195,9 @@ export function Memoirs() {
               {inspectLoading && <Loader size='sm' />}
               {inspection && (
                 <Stack gap='sm'>
-                  <Card
+                  <SectionCard
                     bg='chitin.9'
                     padding='sm'
-                    withBorder
                   >
                     <Text
                       fw={600}
@@ -256,7 +212,7 @@ export function Memoirs() {
                     >
                       Confidence: {(inspection.concept.confidence * 100).toFixed(0)}% | Revision: {inspection.concept.revision}
                     </Text>
-                  </Card>
+                  </SectionCard>
 
                   {inspection.neighbors.length > 0 ? (
                     <Table>
@@ -312,16 +268,11 @@ export function Memoirs() {
                       </Table.Tbody>
                     </Table>
                   ) : (
-                    <Text
-                      c='dimmed'
-                      size='sm'
-                    >
-                      No connections found
-                    </Text>
+                    <EmptyState>No connections found</EmptyState>
                   )}
                 </Stack>
               )}
-            </Card>
+            </SectionCard>
           )}
         </Stack>
       </Group>
