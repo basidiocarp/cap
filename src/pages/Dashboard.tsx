@@ -1,33 +1,27 @@
 import { Alert, Badge, Card, Grid, Group, Loader, Progress, Stack, Table, Text, Title } from '@mantine/core'
-import { useEffect, useState } from 'react'
+import { useQueries } from '@tanstack/react-query'
 
 import type { HealthResult, Stats, TopicSummary } from '../lib/api'
 import { hyphaeApi, myceliumApi } from '../lib/api'
+import { hyphaeKeys, myceliumKeys } from '../lib/queries'
 
 export function Dashboard() {
-  const [stats, setStats] = useState<Stats | null>(null)
-  const [topics, setTopics] = useState<TopicSummary[]>([])
-  const [health, setHealth] = useState<HealthResult[]>([])
-  const [gain, setGain] = useState<Record<string, unknown> | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [statsQuery, topicsQuery, healthQuery, gainQuery] = useQueries({
+    queries: [
+      { queryFn: () => hyphaeApi.stats(), queryKey: hyphaeKeys.stats() },
+      { queryFn: () => hyphaeApi.topics(), queryKey: hyphaeKeys.topics() },
+      { queryFn: () => hyphaeApi.health(), queryKey: hyphaeKeys.health() },
+      { queryFn: () => myceliumApi.gain(), queryKey: myceliumKeys.gain() },
+    ],
+  })
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [s, t, h, g] = await Promise.allSettled([hyphaeApi.stats(), hyphaeApi.topics(), hyphaeApi.health(), myceliumApi.gain()])
-        if (s.status === 'fulfilled') setStats(s.value)
-        if (t.status === 'fulfilled') setTopics(t.value)
-        if (h.status === 'fulfilled') setHealth(h.value)
-        if (g.status === 'fulfilled') setGain(g.value as Record<string, unknown>)
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load')
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
-  }, [])
+  const loading = statsQuery.isLoading || topicsQuery.isLoading || healthQuery.isLoading || gainQuery.isLoading
+  const error = statsQuery.error || topicsQuery.error || healthQuery.error || gainQuery.error
+
+  const stats = statsQuery.data as Stats | undefined
+  const topics = (topicsQuery.data ?? []) as TopicSummary[]
+  const health = (healthQuery.data ?? []) as HealthResult[]
+  const gain = gainQuery.data as Record<string, unknown> | undefined
 
   if (loading) {
     return (
@@ -46,7 +40,7 @@ export function Dashboard() {
         color='decay'
         title='Error'
       >
-        {error}
+        {error instanceof Error ? error.message : 'Failed to load'}
       </Alert>
     )
   }

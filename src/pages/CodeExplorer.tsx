@@ -18,11 +18,13 @@ import {
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconChevronRight, IconFile, IconFolder, IconFolderOpen, IconLayoutSidebar } from '@tabler/icons-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-import type { FileNode, RhizomeSymbol, SymbolDefinition } from '../lib/api'
+import type { FileNode } from '../lib/api'
 import { rhizomeApi } from '../lib/api'
+import { rhizomeKeys, useDefinition, useFileTree, useRhizomeStatus, useSymbols } from '../lib/queries'
 
 function symbolKindColor(kind: string): string {
   switch (kind.toLowerCase()) {
@@ -101,105 +103,42 @@ export function CodeExplorer() {
   const [searchParams] = useSearchParams()
   const fileParam = searchParams.get('file')
   const symbolParam = searchParams.get('symbol')
+  const queryClient = useQueryClient()
 
   const [treeOpen, { toggle: toggleTree }] = useDisclosure(false)
   const [fileTree, setFileTree] = useState<Map<string, FileNode[]>>(new Map())
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
-  const [symbols, setSymbols] = useState<RhizomeSymbol[]>([])
   const [symbolFilter, setSymbolFilter] = useState('')
   const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null)
-  const [definition, setDefinition] = useState<SymbolDefinition | null>(null)
   const [showFullDef, setShowFullDef] = useState(false)
-  const [treeLoading, setTreeLoading] = useState(true)
-  const [symbolsLoading, setSymbolsLoading] = useState(false)
-  const [defLoading, setDefLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [unavailable, setUnavailable] = useState(false)
   const [loadedDirs, setLoadedDirs] = useState<Set<string>>(new Set())
 
-  // Check rhizome availability on mount
+  // Queries
+  const { data: statusData } = useRhizomeStatus()
+  const unavailable = statusData ? !statusData.available : false
+  const { data: initialTree, isLoading: treeLoading } = useFileTree(undefined, 2)
+  const { data: symbols = [], isLoading: symbolsLoading } = useSymbols(selectedFile ?? '')
+  const { data: definition, isLoading: defLoading } = useDefinition(selectedFile ?? '', expandedSymbol ?? '')
+
+  // Build tree map from initial query
   useEffect(() => {
-    rhizomeApi
-      .status()
-      .then((status) => {
-        if (!status.available) {
-          setUnavailable(true)
-          setTreeLoading(false)
+    if (!initialTree) return
+    const tree = new Map<string, FileNode[]>()
+    tree.set('', initialTree)
+    const indexChildren = (items: FileNode[]) => {
+      for (const node of items) {
+        if (node.type === 'dir' && node.children) {
+          tree.set(node.path, node.children)
+          indexChildren(node.children)
         }
-      })
-      .catch(() => {
-        setUnavailable(true)
-        setTreeLoading(false)
-      })
-  }, [])
-
-  // Load initial file tree
-  useEffect(() => {
-    if (unavailable) return
-    rhizomeApi
-      .files(undefined, 2)
-      .then((nodes) => {
-        const tree = new Map<string, FileNode[]>()
-        tree.set('', nodes)
-        // Index children from depth-2 response
-        const indexChildren = (items: FileNode[]) => {
-          for (const node of items) {
-            if (node.type === 'dir' && node.children) {
-              tree.set(node.path, node.children)
-              indexChildren(node.children)
-            }
-          }
-        }
-        indexChildren(nodes)
-        setFileTree(tree)
-        setLoadedDirs(new Set(tree.keys()))
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load file tree'))
-      .finally(() => setTreeLoading(false))
-  }, [unavailable])
-
-  const loadDefinition = useCallback(async (file: string, symbolName: string) => {
-    setDefLoading(true)
-    setShowFullDef(false)
-    try {
-      const data = await rhizomeApi.definition(file, symbolName)
-      setDefinition(data)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load definition')
-    } finally {
-      setDefLoading(false)
-    }
-  }, [])
-
-  const loadSymbols = useCallback(
-    async (filePath: string) => {
-      setSelectedFile(filePath)
-      setSymbols([])
-      setExpandedSymbol(null)
-      setDefinition(null)
-      setShowFullDef(false)
-      setSymbolFilter('')
-      setSymbolsLoading(true)
-      try {
-        const data = await rhizomeApi.symbols(filePath)
-        setSymbols(data)
-        // If symbol param matches, auto-expand it
-        if (symbolParam && filePath === fileParam) {
-          const match = data.find((s) => s.name === symbolParam)
-          if (match) {
-            setExpandedSymbol(match.name)
-            loadDefinition(filePath, match.name)
-          }
-        }
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load symbols')
-      } finally {
-        setSymbolsLoading(false)
       }
-    },
-    [fileParam, symbolParam, loadDefinition]
-  )
+    }
+    indexChildren(initialTree)
+    setFileTree(tree)
+    setLoadedDirs(new Set(tree.keys()))
+  }, [initialTree])
 
   // Auto-expand to file from URL params
   useEffect(() => {
@@ -214,8 +153,11 @@ export function CodeExplorer() {
       for (const d of dirs) next.add(d)
       return next
     })
-    loadSymbols(fileParam)
-  }, [fileParam, treeLoading, unavailable, loadSymbols])
+    setSelectedFile(fileParam)
+    setSymbolFilter('')
+    setExpandedSymbol(symbolParam ?? null)
+    setShowFullDef(false)
+  }, [fileParam, symbolParam, treeLoading, unavailable])
 
   const handleExpand = useCallback(
     async (dirPath: string) => {
@@ -228,10 +170,12 @@ export function CodeExplorer() {
         }
         return next
       })
-      // Lazy load children if not already loaded
       if (!loadedDirs.has(dirPath)) {
         try {
-          const children = await rhizomeApi.files(dirPath, 1)
+          const children = await queryClient.fetchQuery({
+            queryFn: () => rhizomeApi.files(dirPath, 1),
+            queryKey: rhizomeKeys.files(dirPath, 1),
+          })
           setFileTree((prev) => {
             const next = new Map(prev)
             next.set(dirPath, children)
@@ -247,23 +191,27 @@ export function CodeExplorer() {
         }
       }
     },
-    [loadedDirs]
+    [loadedDirs, queryClient]
   )
+
+  const loadSymbols = useCallback((filePath: string) => {
+    setSelectedFile(filePath)
+    setExpandedSymbol(null)
+    setShowFullDef(false)
+    setSymbolFilter('')
+  }, [])
 
   const handleSymbolClick = useCallback(
     (symbolName: string) => {
       if (expandedSymbol === symbolName) {
         setExpandedSymbol(null)
-        setDefinition(null)
         setShowFullDef(false)
       } else {
         setExpandedSymbol(symbolName)
-        if (selectedFile) {
-          loadDefinition(selectedFile, symbolName)
-        }
+        setShowFullDef(false)
       }
     },
-    [expandedSymbol, selectedFile, loadDefinition]
+    [expandedSymbol]
   )
 
   const filteredSymbols = useMemo(() => {

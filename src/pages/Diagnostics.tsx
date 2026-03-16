@@ -1,10 +1,9 @@
 import { Alert, Badge, Button, Card, Group, Loader, Stack, Text, Title } from '@mantine/core'
 import { IconAlertCircle, IconAlertTriangle, IconInfoCircle, IconRefresh } from '@tabler/icons-react'
-import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import type { DiagnosticItem, RhizomeStatus } from '../lib/api'
-import { rhizomeApi } from '../lib/api'
+import type { DiagnosticItem } from '../lib/api'
+import { useDiagnostics, useRhizomeStatus } from '../lib/queries'
 
 const severityConfig = {
   error: { color: 'gill', icon: IconAlertCircle, order: 0 },
@@ -41,41 +40,11 @@ function groupByFile(items: DiagnosticItem[]): Record<string, DiagnosticItem[]> 
 
 export function Diagnostics() {
   const navigate = useNavigate()
-  const [diagnostics, setDiagnostics] = useState<DiagnosticItem[]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [status, setStatus] = useState<RhizomeStatus | null>(null)
+  const { data: status } = useRhizomeStatus()
+  const isLsp = status?.backend === 'lsp'
+  const { data: diagnostics = [], error: diagError, isLoading: loading, refetch } = useDiagnostics()
 
-  const fetchDiagnostics = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const items = await rhizomeApi.diagnostics()
-      setDiagnostics(items)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch diagnostics')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    async function init() {
-      try {
-        const s = await rhizomeApi.status()
-        setStatus(s)
-        if (s.backend === 'lsp') {
-          await fetchDiagnostics()
-        } else {
-          setLoading(false)
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to check rhizome status')
-        setLoading(false)
-      }
-    }
-    init()
-  }, [fetchDiagnostics])
+  const error = diagError
 
   const grouped = groupByFile(diagnostics)
   const sortedFiles = Object.keys(grouped).sort()
@@ -85,10 +54,10 @@ export function Diagnostics() {
       <Group justify='space-between'>
         <Title order={2}>Diagnostics</Title>
         <Button
-          disabled={status?.backend !== 'lsp'}
+          disabled={!isLsp}
           leftSection={<IconRefresh size={16} />}
           loading={loading}
-          onClick={fetchDiagnostics}
+          onClick={() => refetch()}
           variant='light'
         >
           Refresh
@@ -100,11 +69,11 @@ export function Diagnostics() {
           color='decay'
           title='Error'
         >
-          {error}
+          {error instanceof Error ? error.message : 'Failed to fetch diagnostics'}
         </Alert>
       )}
 
-      {status && status.backend !== 'lsp' && (
+      {status && !isLsp && (
         <Alert
           color='substrate'
           title='LSP Backend Required'
@@ -122,7 +91,7 @@ export function Diagnostics() {
         </Group>
       )}
 
-      {!loading && !error && status?.backend === 'lsp' && diagnostics.length === 0 && <Text c='dimmed'>No diagnostics found</Text>}
+      {!loading && !error && isLsp && diagnostics.length === 0 && <Text c='dimmed'>No diagnostics found</Text>}
 
       {!loading &&
         sortedFiles.map((file) => {

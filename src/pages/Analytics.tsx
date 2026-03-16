@@ -1,10 +1,9 @@
 import { Alert, Card, Grid, Group, Loader, RingProgress, Stack, Table, Tabs, Text, Title } from '@mantine/core'
 import { IconBrain, IconChartBar, IconCode, IconNetwork } from '@tabler/icons-react'
-import { useEffect, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { HyphaeAnalytics, MyceliumAnalytics, RhizomeAnalytics } from '../lib/api'
-import { hyphaeApi, myceliumApi, rhizomeApi } from '../lib/api'
+import { useHyphaeAnalytics, useMyceliumAnalytics, useRhizomeAnalytics } from '../lib/queries'
 
 const COLOR_HYPHAE = '#36b37e'
 const COLOR_MYCELIUM = '#ff7452'
@@ -391,18 +390,11 @@ function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null }) {
 }
 
 export function Analytics() {
-  const [hyphaeData, setHyphaeData] = useState<HyphaeAnalytics | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [myceliumData, setMyceliumData] = useState<MyceliumAnalytics | null>(null)
-  const [rhizomeData, setRhizomeData] = useState<RhizomeAnalytics | null>(null)
+  const { data: hyphaeData = null, isLoading: hyphaeLoading } = useHyphaeAnalytics()
+  const { data: myceliumData = null, isLoading: myceliumLoading } = useMyceliumAnalytics()
+  const { data: rhizomeData = null, isLoading: rhizomeLoading } = useRhizomeAnalytics()
 
-  useEffect(() => {
-    Promise.allSettled([
-      hyphaeApi.analytics().then(setHyphaeData),
-      myceliumApi.analytics().then(setMyceliumData),
-      rhizomeApi.analytics().then(setRhizomeData),
-    ]).finally(() => setLoading(false))
-  }, [])
+  const loading = hyphaeLoading || myceliumLoading || rhizomeLoading
 
   const totalTokensSaved = myceliumData ? myceliumData.savings_by_category.reduce((sum, c) => sum + c.tokens_saved, 0) : null
 

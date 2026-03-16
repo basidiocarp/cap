@@ -1,8 +1,8 @@
 import { Alert, Badge, Card, Group, Loader, Stack, Table, Text, TextInput, Title, UnstyledButton } from '@mantine/core'
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 
-import type { Concept, ConceptInspection, Memoir, MemoirDetail } from '../lib/api'
-import { hyphaeApi } from '../lib/api'
+import type { Concept } from '../lib/api'
+import { useMemoir, useMemoirInspect, useMemoirs } from '../lib/queries'
 
 function parseLabels(raw: string): Array<{ namespace: string; value: string }> {
   try {
@@ -32,59 +32,28 @@ function relationColor(relation: string): string {
 }
 
 export function Memoirs() {
-  const [memoirs, setMemoirs] = useState<Memoir[]>([])
   const [selected, setSelected] = useState<string | null>(null)
-  const [detail, setDetail] = useState<MemoirDetail | null>(null)
   const [inspectConcept, setInspectConcept] = useState('')
-  const [inspection, setInspection] = useState<ConceptInspection | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [detailLoading, setDetailLoading] = useState(false)
-  const [inspectLoading, setInspectLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    hyphaeApi
-      .memoirs()
-      .then(setMemoirs)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load memoirs'))
-      .finally(() => setLoading(false))
-  }, [])
+  const { data: memoirs = [], error: memoirsError, isLoading: memoirsLoading } = useMemoirs()
+  const { data: detail, isLoading: detailLoading } = useMemoir(selected ?? '')
+  const { data: inspection, isLoading: inspectLoading } = useMemoirInspect(selected ?? '', inspectConcept, 2)
 
-  const loadDetail = useCallback(async (name: string) => {
+  const error = memoirsError
+
+  function handleSelectMemoir(name: string) {
     setSelected(name)
-    setDetail(null)
-    setInspection(null)
     setInspectConcept('')
-    setDetailLoading(true)
-    try {
-      const data = await hyphaeApi.memoir(name)
-      setDetail(data)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load memoir')
-    } finally {
-      setDetailLoading(false)
-    }
-  }, [])
+  }
 
-  const inspect = useCallback(
-    async (conceptName?: string) => {
-      const name = conceptName ?? inspectConcept
-      if (!selected || !name.trim()) return
-      setInspectLoading(true)
+  function handleInspect(conceptName?: string) {
+    const name = conceptName ?? inspectConcept
+    if (selected && name.trim()) {
       setInspectConcept(name)
-      try {
-        const data = await hyphaeApi.memoirInspect(selected, name, 2)
-        setInspection(data)
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Inspect failed')
-      } finally {
-        setInspectLoading(false)
-      }
-    },
-    [selected, inspectConcept]
-  )
+    }
+  }
 
-  if (loading) {
+  if (memoirsLoading) {
     return (
       <Group
         justify='center'
@@ -102,11 +71,10 @@ export function Memoirs() {
       {error && (
         <Alert
           color='decay'
-          onClose={() => setError(null)}
           title='Error'
           withCloseButton
         >
-          {error}
+          {error instanceof Error ? error.message : 'Failed to load memoirs'}
         </Alert>
       )}
 
@@ -128,7 +96,7 @@ export function Memoirs() {
               {memoirs.map((m) => (
                 <UnstyledButton
                   key={m.id}
-                  onClick={() => loadDetail(m.name)}
+                  onClick={() => handleSelectMemoir(m.name)}
                   style={(theme) => ({
                     borderRadius: theme.radius.sm,
                     fontWeight: selected === m.name ? 700 : 400,
@@ -198,7 +166,7 @@ export function Memoirs() {
                     {detail.concepts.map((c: Concept) => (
                       <Table.Tr
                         key={c.id}
-                        onClick={() => inspect(c.name)}
+                        onClick={() => handleInspect(c.name)}
                         style={{ cursor: 'pointer' }}
                       >
                         <Table.Td>
@@ -263,7 +231,7 @@ export function Memoirs() {
               <TextInput
                 mb='sm'
                 onChange={(e) => setInspectConcept(e.currentTarget.value)}
-                onKeyDown={(e) => e.key === 'Enter' && inspect()}
+                onKeyDown={(e) => e.key === 'Enter' && handleInspect()}
                 placeholder='Concept name (or click a row above)...'
                 value={inspectConcept}
               />
@@ -304,7 +272,7 @@ export function Memoirs() {
                         {inspection.neighbors.map((n) => (
                           <Table.Tr
                             key={n.link.id}
-                            onClick={() => inspect(n.concept.name)}
+                            onClick={() => handleInspect(n.concept.name)}
                             style={{ cursor: 'pointer' }}
                           >
                             <Table.Td>

@@ -1,9 +1,9 @@
 import { Alert, Badge, Card, Group, Loader, Select, Stack, Table, Text, TextInput, Title } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 
-import type { Memory, TopicSummary } from '../lib/api'
-import { hyphaeApi } from '../lib/api'
+import type { Memory } from '../lib/api'
+import { useRecall, useTopicMemories, useTopics } from '../lib/queries'
 
 function parseKeywords(raw: string): string[] {
   try {
@@ -29,53 +29,20 @@ function importanceColor(importance: string): string {
 }
 
 export function Memories() {
-  const [topics, setTopics] = useState<TopicSummary[]>([])
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [debouncedQuery] = useDebouncedValue(query, 400)
-  const [memories, setMemories] = useState<Memory[]>([])
-  const [loading, setLoading] = useState(false)
-  const [topicsLoading, setTopicsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    hyphaeApi
-      .topics()
-      .then(setTopics)
-      .catch(() => {})
-      .finally(() => setTopicsLoading(false))
-  }, [])
+  const { data: topics = [], isLoading: topicsLoading } = useTopics()
 
-  const search = useCallback(async () => {
-    setError(null)
-    if (debouncedQuery.trim()) {
-      setLoading(true)
-      try {
-        const data = await hyphaeApi.recall(debouncedQuery, selectedTopic ?? undefined, 30)
-        setMemories(data)
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Search failed')
-      } finally {
-        setLoading(false)
-      }
-    } else if (selectedTopic) {
-      setLoading(true)
-      try {
-        const data = await hyphaeApi.topicMemories(selectedTopic, 50)
-        setMemories(data)
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load memories')
-      } finally {
-        setLoading(false)
-      }
-    } else {
-      setMemories([])
-    }
-  }, [debouncedQuery, selectedTopic])
+  const recallQuery = useRecall(debouncedQuery, selectedTopic ?? undefined, 30)
+  const topicQuery = useTopicMemories(selectedTopic ?? '', 50)
 
-  useEffect(() => {
-    search()
-  }, [search])
+  const hasQuery = !!debouncedQuery.trim()
+  const activeQuery = hasQuery ? recallQuery : selectedTopic ? topicQuery : null
+  const memories: Memory[] = activeQuery?.data ?? []
+  const loading = activeQuery?.isLoading ?? false
+  const error = activeQuery?.error
 
   return (
     <Stack>
@@ -104,7 +71,7 @@ export function Memories() {
           color='decay'
           title='Error'
         >
-          {error}
+          {error instanceof Error ? error.message : 'Search failed'}
         </Alert>
       )}
 

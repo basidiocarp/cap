@@ -1,11 +1,10 @@
 import { Alert, Badge, Card, Group, Loader, Stack, Table, Text, TextInput, Title } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { IconSearch } from '@tabler/icons-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import type { SearchResult } from '../lib/api'
-import { rhizomeApi } from '../lib/api'
+import { useSymbolSearch } from '../lib/queries'
 
 function kindColor(kind: string): string {
   switch (kind) {
@@ -32,30 +31,8 @@ export function SymbolSearch() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [debouncedQuery] = useDebouncedValue(query, 400)
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
-  const search = useCallback(async () => {
-    setError(null)
-    if (debouncedQuery.trim()) {
-      setLoading(true)
-      try {
-        const data = await rhizomeApi.search(debouncedQuery)
-        setResults(data)
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Search failed')
-      } finally {
-        setLoading(false)
-      }
-    } else {
-      setResults([])
-    }
-  }, [debouncedQuery])
-
-  useEffect(() => {
-    search()
-  }, [search])
+  const { data: results = [], error, isLoading: loading } = useSymbolSearch(debouncedQuery)
 
   return (
     <Stack>
@@ -73,7 +50,7 @@ export function SymbolSearch() {
           color='decay'
           title='Error'
         >
-          {error}
+          {error instanceof Error ? error.message : 'Search failed'}
         </Alert>
       )}
 

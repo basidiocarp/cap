@@ -1,9 +1,7 @@
 import { Alert, Badge, Button, Card, Grid, Group, Loader, Stack, Text, Title } from '@mantine/core'
 import { IconCircleCheck, IconCircleX, IconRefresh } from '@tabler/icons-react'
-import { useCallback, useEffect, useState } from 'react'
 
-import type { EcosystemStatus } from '../lib/api'
-import { statusApi } from '../lib/api'
+import { useEcosystemStatus } from '../lib/queries'
 
 function AvailabilityBadge({ available }: { available: boolean }) {
   return (
@@ -18,29 +16,9 @@ function AvailabilityBadge({ available }: { available: boolean }) {
 }
 
 export function Status() {
-  const [status, setStatus] = useState<EcosystemStatus | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { data: status, error, isLoading, refetch } = useEcosystemStatus()
 
-  const fetchStatus = useCallback(async () => {
-    try {
-      const data = await statusApi.ecosystem()
-      setStatus(data)
-      setError(null)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load ecosystem status')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchStatus()
-    const interval = setInterval(fetchStatus, 30_000)
-    return () => clearInterval(interval)
-  }, [fetchStatus])
-
-  if (loading) {
+  if (isLoading) {
     return (
       <Group
         justify='center'
@@ -57,7 +35,7 @@ export function Status() {
         <Title order={2}>Ecosystem Status</Title>
         <Button
           leftSection={<IconRefresh size={16} />}
-          onClick={fetchStatus}
+          onClick={() => refetch()}
           size='sm'
           variant='subtle'
         >
@@ -68,11 +46,9 @@ export function Status() {
       {error && (
         <Alert
           color='decay'
-          onClose={() => setError(null)}
           title='Error'
-          withCloseButton
         >
-          {error}
+          {error instanceof Error ? error.message : 'Failed to load ecosystem status'}
         </Alert>
       )}
 
