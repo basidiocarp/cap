@@ -1,8 +1,8 @@
-import { createTheme, rem } from '@mantine/core';
+import { createTheme, rem } from '@mantine/core'
 
 export const themeTypography = createTheme({
-  fontFamily: 'Poppins, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-  fontFamilyMonospace: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace',
+  fontFamily: 'Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif',
+  fontFamilyMonospace: "'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   fontSizes: {
     lg: rem(18),
     md: rem(16),
@@ -12,38 +12,14 @@ export const themeTypography = createTheme({
   },
   fontSmoothing: true,
   headings: {
-    fontFamily: 'Zodiak, Georgia, Times New Roman, serif',
+    fontFamily: 'Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif',
     sizes: {
-      h1: {
-        fontSize: `clamp(${rem(35)}, 5vw, ${rem(40)})`,
-        fontWeight: '400',
-        lineHeight: `clamp(${rem(40)}, 5.5vw, ${rem(45)})`,
-      },
-      h2: {
-        fontSize: `clamp(${rem(25)}, 4vw, ${rem(30)})`,
-        fontWeight: '400',
-        lineHeight: `clamp(${rem(30)}, 4.5vw, ${rem(35)})`,
-      },
-      h3: {
-        fontSize: `clamp(${rem(22)}, 3.5vw, ${rem(28)})`,
-        fontWeight: '400',
-        lineHeight: `clamp(${rem(27)}, 4vw, ${rem(33)})`,
-      },
-      h4: {
-        fontSize: `clamp(${rem(18)}, 2.5vw, ${rem(20)})`,
-        fontWeight: '400',
-        lineHeight: `clamp(${rem(23)}, 3vw, ${rem(28)})`,
-      },
-      h5: {
-        fontSize: `clamp(${rem(18)}, 2.5vw, ${rem(20)})`,
-        fontWeight: '400',
-        lineHeight: `clamp(${rem(23)}, 3.5vw, ${rem(32)})`,
-      },
-      h6: {
-        fontSize: `clamp(${rem(18)}, 2.5vw, ${rem(20)})`,
-        fontWeight: '400',
-        lineHeight: `clamp(${rem(23)}, 3vw, ${rem(28)})`,
-      },
+      h1: { fontSize: rem(32), fontWeight: '500', lineHeight: rem(40) },
+      h2: { fontSize: rem(26), fontWeight: '500', lineHeight: rem(34) },
+      h3: { fontSize: rem(22), fontWeight: '500', lineHeight: rem(30) },
+      h4: { fontSize: rem(18), fontWeight: '500', lineHeight: rem(26) },
+      h5: { fontSize: rem(16), fontWeight: '500', lineHeight: rem(24) },
+      h6: { fontSize: rem(14), fontWeight: '500', lineHeight: rem(20) },
     },
   },
   lineHeights: {
@@ -53,4 +29,4 @@ export const themeTypography = createTheme({
     xl: rem(28),
     xs: rem(18),
   },
-});
+})

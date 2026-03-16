@@ -15,19 +15,19 @@ function parseLabels(raw: string): Array<{ namespace: string; value: string }> {
 function relationColor(relation: string): string {
   switch (relation) {
     case 'DependsOn':
-      return 'orange'
+      return 'fruiting'
     case 'PartOf':
-      return 'blue'
+      return 'lichen'
     case 'Contradicts':
-      return 'red'
+      return 'gill'
     case 'Refines':
-      return 'green'
+      return 'mycelium'
     case 'CausedBy':
-      return 'yellow'
+      return 'substrate'
     case 'SupersededBy':
-      return 'pink'
+      return 'decay'
     default:
-      return 'gray'
+      return 'chitin'
   }
 }
 
@@ -101,7 +101,7 @@ export function Memoirs() {
 
       {error && (
         <Alert
-          color='red'
+          color='decay'
           onClose={() => setError(null)}
           title='Error'
           withCloseButton
@@ -271,7 +271,7 @@ export function Memoirs() {
               {inspection && (
                 <Stack gap='sm'>
                   <Card
-                    bg='dark.6'
+                    bg='chitin.9'
                     padding='sm'
                     withBorder
                   >
@@ -309,7 +309,7 @@ export function Memoirs() {
                           >
                             <Table.Td>
                               <Badge
-                                color={n.direction === 'outgoing' ? 'blue' : 'green'}
+                                color={n.direction === 'outgoing' ? 'spore' : 'lichen'}
                                 size='xs'
                               >
                                 {n.direction === 'outgoing' ? '\u2192' : '\u2190'}

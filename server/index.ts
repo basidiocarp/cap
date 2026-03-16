@@ -6,6 +6,8 @@ import { cors } from 'hono/cors'
 import { logger } from './logger.ts'
 import hyphaeRoutes from './routes/hyphae.ts'
 import myceliumRoutes from './routes/mycelium.ts'
+import rhizomeRoutes from './routes/rhizome.ts'
+import statusRoutes from './routes/status.ts'
 
 const app = new Hono()
 
@@ -25,6 +27,8 @@ app.onError((err, c) => {
 
 app.route('/api/hyphae', hyphaeRoutes)
 app.route('/api/mycelium', myceliumRoutes)
+app.route('/api/rhizome', rhizomeRoutes)
+app.route('/api/status', statusRoutes)
 
 app.get('/api/health', (c) => c.json({ status: 'ok' }))
 

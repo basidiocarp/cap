@@ -41,7 +41,7 @@ export function Analytics() {
   if (error) {
     return (
       <Alert
-        color='red'
+        color='decay'
         title='Error'
       >
         {error}
@@ -153,7 +153,7 @@ export function Analytics() {
               <Line
                 dataKey='saved'
                 name='Tokens Saved'
-                stroke='#339af0'
+                stroke='#0ca678'
                 strokeWidth={2}
                 type='monotone'
               />
@@ -185,12 +185,12 @@ export function Analytics() {
               <Tooltip />
               <Bar
                 dataKey='input'
-                fill='#868e96'
+                fill='#627d98'
                 name='Input Tokens'
               />
               <Bar
                 dataKey='output'
-                fill='#339af0'
+                fill='#0ca678'
                 name='Output Tokens'
               />
             </BarChart>

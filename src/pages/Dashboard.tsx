@@ -43,7 +43,7 @@ export function Dashboard() {
   if (error) {
     return (
       <Alert
-        color='red'
+        color='decay'
         title='Error'
       >
         {error}
@@ -189,7 +189,7 @@ export function Dashboard() {
                       <Group gap='xs'>
                         {h.critical_count > 0 && (
                           <Badge
-                            color='red'
+                            color='gill'
                             size='xs'
                           >
                             {h.critical_count} critical
@@ -197,7 +197,7 @@ export function Dashboard() {
                         )}
                         {h.high_count > 0 && (
                           <Badge
-                            color='orange'
+                            color='fruiting'
                             size='xs'
                           >
                             {h.high_count} high
@@ -205,7 +205,7 @@ export function Dashboard() {
                         )}
                         {h.low_weight_count > 0 && (
                           <Badge
-                            color='yellow'
+                            color='substrate'
                             size='xs'
                           >
                             {h.low_weight_count} fading
@@ -214,7 +214,7 @@ export function Dashboard() {
                       </Group>
                     </Group>
                     <Progress
-                      color={h.avg_weight > 0.7 ? 'green' : h.avg_weight > 0.4 ? 'yellow' : 'red'}
+                      color={h.avg_weight > 0.7 ? 'mycelium' : h.avg_weight > 0.4 ? 'substrate' : 'decay'}
                       value={h.avg_weight * 100}
                     />
                   </div>

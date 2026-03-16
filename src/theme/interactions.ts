@@ -1,9 +1,9 @@
-import { createTheme } from '@mantine/core';
+import { createTheme } from '@mantine/core'
 
 export const themeInteractions = createTheme({
   activeClassName: 'mantine-active',
-  cursorType: 'default',
+  cursorType: 'pointer',
   focusClassName: '',
   focusRing: 'auto',
-  respectReducedMotion: false,
-});
+  respectReducedMotion: true,
+})

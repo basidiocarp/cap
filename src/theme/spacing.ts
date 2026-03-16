@@ -1,4 +1,4 @@
-import { createTheme } from '@mantine/core';
+import { createTheme } from '@mantine/core'
 
 export const themeSpacing = createTheme({
   breakpoints: {
@@ -23,4 +23,4 @@ export const themeSpacing = createTheme({
     xl: 'calc(2rem * var(--mantine-scale))',
     xs: 'calc(0.625rem * var(--mantine-scale))',
   },
-});
+})

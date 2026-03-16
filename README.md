@@ -1,73 +1,60 @@
-# React + TypeScript + Vite
+# Cap
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Web dashboard for the [claude-mycelium](https://github.com/williamnewton/claude-mycelium) ecosystem. Browse Hyphae memories, explore knowledge graphs, view Mycelium token savings, and inspect code intelligence via Rhizome — all from one interface.
 
-Currently, two official plugins are available:
+## Pages
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+| Route | Page | Description |
+|-------|------|-------------|
+| `/` | Dashboard | Memory stats, topic breakdown, health overview |
+| `/memories` | Memories | Full-text search and filter memories |
+| `/memoirs` | Memoirs | Knowledge graph explorer with concept inspection |
+| `/code` | Code Explorer | File tree + symbol outline powered by Rhizome |
+| `/symbols` | Symbol Search | Global symbol search across the project |
+| `/diagnostics` | Diagnostics | LSP diagnostics viewer (requires LSP backend) |
+| `/analytics` | Analytics | Token savings charts from Mycelium |
+| `/status` | Status | Ecosystem health for all three tools |
 
-## React Compiler
+## Quick Start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev:all    # Starts frontend (localhost:5173) + backend (localhost:3001)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+npm run dev           # Frontend only (Vite, localhost:5173)
+npm run dev:server    # Backend only (Hono, localhost:3001)
+npm run dev:all       # Both concurrently
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+npm run build         # Production build (tsc -b && vite build)
+npm run preview       # Preview production build
+npm run lint          # Biome check + auto-fix
 ```
+
+## Stack
+
+- **Frontend**: React 19, Mantine UI 8, React Router 7, Recharts, Vite 8, TypeScript 5.9
+- **Backend**: Hono 4, better-sqlite3 (read-only), Pino logging
+- **Linting**: Biome (not ESLint/Prettier)
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3001` | Backend server port |
+| `HYPHAE_DB` | `~/.local/share/hyphae/hyphae.db` | Path to Hyphae database |
+| `HYPHAE_BIN` | `hyphae` | Hyphae CLI binary path |
+| `MYCELIUM_BIN` | `mycelium` | Mycelium CLI binary path |
+| `RHIZOME_BIN` | `rhizome` | Rhizome CLI binary path |
+| `RHIZOME_PROJECT` | `process.cwd()` | Project root for Rhizome analysis |
+
+## Ecosystem
+
+Cap integrates three tools from the claude-mycelium ecosystem:
+
+- **[Mycelium](https://github.com/williamnewton/claude-mycelium)** — Token compression proxy
+- **[Hyphae](https://github.com/williamnewton/claude-mycelium)** — Persistent memory system (SQLite-backed)
+- **[Rhizome](https://github.com/williamnewton/claude-mycelium)** — Code intelligence via tree-sitter/LSP (MCP over stdio)

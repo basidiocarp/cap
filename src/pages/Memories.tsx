@@ -16,15 +16,15 @@ function parseKeywords(raw: string): string[] {
 function importanceColor(importance: string): string {
   switch (importance) {
     case 'Critical':
-      return 'red'
+      return 'gill'
     case 'High':
-      return 'orange'
+      return 'fruiting'
     case 'Medium':
-      return 'blue'
+      return 'lichen'
     case 'Low':
-      return 'gray'
+      return 'chitin'
     default:
-      return 'gray'
+      return 'chitin'
   }
 }
 
@@ -101,7 +101,7 @@ export function Memories() {
 
       {error && (
         <Alert
-          color='red'
+          color='decay'
           title='Error'
         >
           {error}

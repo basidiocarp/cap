@@ -1,5 +1,6 @@
-import { allComponentStyles } from './components';
+import { mergeThemeOverrides } from '@mantine/core'
 
-export const themeComponentStyles = allComponentStyles;
+import { buttonStyles } from './components/button'
+import { textStyles } from './components/text'
 
-export { allComponentStyles, buttonStyles, textStyles } from './components';
+export const themeComponentStyles = mergeThemeOverrides(buttonStyles, textStyles)

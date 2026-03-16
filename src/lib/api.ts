@@ -106,6 +106,72 @@ export interface ConceptInspection {
   neighbors: ConceptNeighbor[]
 }
 
+export interface SymbolLocation {
+  column_end: number
+  column_start: number
+  file_path: string
+  line_end: number
+  line_start: number
+}
+
+export interface RhizomeSymbol {
+  children?: RhizomeSymbol[]
+  doc_comment: string | null
+  kind: string
+  location: SymbolLocation
+  name: string
+  signature: string | null
+}
+
+export interface FileNode {
+  children?: FileNode[]
+  language?: string
+  name: string
+  path: string
+  type: 'dir' | 'file'
+}
+
+export interface DiagnosticItem {
+  code: string | null
+  column: number
+  file: string
+  line: number
+  message: string
+  severity: 'error' | 'hint' | 'info' | 'warning'
+}
+
+export interface RhizomeStatus {
+  available: boolean
+  backend: 'lsp' | 'tree-sitter' | null
+  languages: string[]
+}
+
+export interface EcosystemStatus {
+  hyphae: { available: boolean; memories: number; memoirs: number; version: string | null }
+  mycelium: { available: boolean; version: string | null }
+  rhizome: RhizomeStatus
+}
+
+export interface SearchResult {
+  file: string
+  kind: string
+  line: number
+  name: string
+  signature: string | null
+}
+
+export interface SymbolDefinition {
+  body: string
+  doc_comment: string | null
+  kind: string
+  name: string
+  signature: string | null
+}
+
+export interface HoverInfo {
+  content: string
+}
+
 // --- API ---
 
 export const hyphaeApi = {
@@ -130,4 +196,22 @@ export const hyphaeApi = {
 export const myceliumApi = {
   gain: () => get('/mycelium/gain'),
   gainHistory: () => get('/mycelium/gain/history'),
+}
+
+export const rhizomeApi = {
+  definition: (file: string, symbol: string) => get<SymbolDefinition>('/rhizome/definition', { file, symbol }),
+  diagnostics: (file?: string) => get<DiagnosticItem[]>('/rhizome/diagnostics', { file: file ?? '' }),
+  files: (path?: string, depth?: number) => get<FileNode[]>('/rhizome/files', { depth: depth ? String(depth) : '', path: path ?? '' }),
+  hover: (file: string, line: number, column: number) =>
+    get<HoverInfo>('/rhizome/hover', { column: String(column), file, line: String(line) }),
+  references: (file: string, line: number, column: number) =>
+    get<SymbolLocation[]>('/rhizome/references', { column: String(column), file, line: String(line) }),
+  search: (pattern: string, path?: string) => get<SearchResult[]>('/rhizome/search', { path: path ?? '', pattern }),
+  status: () => get<RhizomeStatus>('/rhizome/status'),
+  structure: (file: string, depth?: number) => get<RhizomeSymbol[]>('/rhizome/structure', { depth: depth ? String(depth) : '', file }),
+  symbols: (file: string) => get<RhizomeSymbol[]>('/rhizome/symbols', { file }),
+}
+
+export const statusApi = {
+  ecosystem: () => get<EcosystemStatus>('/status'),
 }

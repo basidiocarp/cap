@@ -1,13 +1,32 @@
 import { AppShell, Group, NavLink, Text, Title } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconBrain, IconChartBar, IconDashboard, IconNetwork } from '@tabler/icons-react'
+import { IconBrain, IconBug, IconChartBar, IconCode, IconDashboard, IconHeartbeat, IconNetwork, IconSearch } from '@tabler/icons-react'
 import { Outlet, NavLink as RouterNavLink, useLocation } from 'react-router-dom'
 
-const NAV_ITEMS = [
-  { icon: IconDashboard, label: 'Dashboard', path: '/' },
-  { icon: IconBrain, label: 'Memories', path: '/memories' },
-  { icon: IconNetwork, label: 'Memoirs', path: '/memoirs' },
-  { icon: IconChartBar, label: 'Analytics', path: '/analytics' },
+const NAV_SECTIONS = [
+  {
+    items: [
+      { icon: IconDashboard, label: 'Dashboard', path: '/' },
+      { icon: IconBrain, label: 'Memories', path: '/memories' },
+      { icon: IconNetwork, label: 'Memoirs', path: '/memoirs' },
+    ],
+    label: 'Memory',
+  },
+  {
+    items: [
+      { icon: IconCode, label: 'Code Explorer', path: '/code' },
+      { icon: IconSearch, label: 'Symbols', path: '/symbols' },
+      { icon: IconBug, label: 'Diagnostics', path: '/diagnostics' },
+    ],
+    label: 'Code',
+  },
+  {
+    items: [
+      { icon: IconChartBar, label: 'Analytics', path: '/analytics' },
+      { icon: IconHeartbeat, label: 'Status', path: '/status' },
+    ],
+    label: 'System',
+  },
 ]
 
 export function AppLayout() {
@@ -36,21 +55,36 @@ export function AppLayout() {
             c='dimmed'
             size='sm'
           >
-            memory dashboard
+            ecosystem dashboard
           </Text>
         </Group>
       </AppShell.Header>
 
       <AppShell.Navbar p='xs'>
-        {NAV_ITEMS.map((item) => (
-          <NavLink
-            active={location.pathname === item.path}
-            component={RouterNavLink}
-            key={item.path}
-            label={item.label}
-            leftSection={<item.icon size={18} />}
-            to={item.path}
-          />
+        {NAV_SECTIONS.map((section) => (
+          <div key={section.label}>
+            <Text
+              c='dimmed'
+              fw={700}
+              mb={4}
+              ml='sm'
+              mt='md'
+              size='xs'
+              tt='uppercase'
+            >
+              {section.label}
+            </Text>
+            {section.items.map((item) => (
+              <NavLink
+                active={location.pathname === item.path}
+                component={RouterNavLink}
+                key={item.path}
+                label={item.label}
+                leftSection={<item.icon size={18} />}
+                to={item.path}
+              />
+            ))}
+          </div>
         ))}
       </AppShell.Navbar>
 
