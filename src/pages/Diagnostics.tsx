@@ -7,6 +7,7 @@ import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
+import { onActivate } from '../lib/keyboard'
 import { useDiagnostics, useRhizomeStatus } from '../lib/queries'
 
 const severityConfig = {
@@ -95,9 +96,9 @@ export function Diagnostics() {
             >
               <Group mb='sm'>
                 <Text
+                  ff='monospace'
                   fw={600}
                   size='sm'
-                  style={{ fontFamily: 'monospace' }}
                 >
                   {file}
                 </Text>
@@ -141,7 +142,7 @@ export function Diagnostics() {
 
               <Stack gap='xs'>
                 {items
-                  .sort((a, b) => severityConfig[a.severity].order - severityConfig[b.severity].order || a.line - b.line)
+                  .toSorted((a, b) => severityConfig[a.severity].order - severityConfig[b.severity].order || a.line - b.line)
                   .map((item) => {
                     const config = severityConfig[item.severity]
                     const Icon = config.icon
@@ -151,7 +152,9 @@ export function Diagnostics() {
                         gap='sm'
                         key={`${item.file}:${item.line}:${item.column}:${item.severity}:${item.message}`}
                         onClick={() => navigate(`/code?file=${encodeURIComponent(item.file)}&line=${item.line}`)}
+                        onKeyDown={onActivate(() => navigate(`/code?file=${encodeURIComponent(item.file)}&line=${item.line}`))}
                         style={{ cursor: 'pointer' }}
+                        tabIndex={0}
                         wrap='nowrap'
                       >
                         <Badge
@@ -164,16 +167,18 @@ export function Diagnostics() {
                         </Badge>
                         <Text
                           c='dimmed'
+                          ff='monospace'
                           size='sm'
-                          style={{ fontFamily: 'monospace', whiteSpace: 'nowrap' }}
+                          style={{ whiteSpace: 'nowrap' }}
                         >
                           {item.line}:{item.column}
                         </Text>
                         {item.code && (
                           <Text
                             c='dimmed'
+                            ff='monospace'
                             size='xs'
-                            style={{ fontFamily: 'monospace', whiteSpace: 'nowrap' }}
+                            style={{ whiteSpace: 'nowrap' }}
                           >
                             [{item.code}]
                           </Text>

@@ -7,23 +7,9 @@ import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
+import { importanceColor } from '../lib/colors'
 import { parseJsonArray } from '../lib/parse'
 import { useRecall, useTopicMemories, useTopics } from '../lib/queries'
-
-function importanceColor(importance: string): string {
-  switch (importance) {
-    case 'Critical':
-      return 'gill'
-    case 'High':
-      return 'fruiting'
-    case 'Medium':
-      return 'lichen'
-    case 'Low':
-      return 'chitin'
-    default:
-      return 'chitin'
-  }
-}
 
 export function Memories() {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null)

@@ -28,4 +28,5 @@ dist-ssr
 /.plans/rhizome-integration.md
 /CLAUDE.md
 /.claude/settings.json
-/.plans/cross-tool-analytics.md
+/.plans/
+/.rhizome/cache.json

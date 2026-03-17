@@ -1,16 +1,14 @@
-import { execFile, execFileSync } from 'node:child_process'
+import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { Hono } from 'hono'
 
 import { getDb } from '../db.ts'
 import { cachedAsync } from '../lib/cache.ts'
+import { HYPHAE_BIN, MYCELIUM_BIN } from '../lib/config.ts'
 import { logger } from '../logger.ts'
 import { rhizome } from '../rhizome.ts'
 
 const exec = promisify(execFile)
-
-const HYPHAE_BIN = process.env.HYPHAE_BIN ?? 'hyphae'
-const MYCELIUM_BIN = process.env.MYCELIUM_BIN ?? 'mycelium'
 
 // Common language servers and their binary names
 const LSP_SERVERS: { bin: string; language: string; name: string }[] = [
@@ -37,6 +35,8 @@ interface LspInfo {
   name: string
   running: boolean
 }
+
+type PromiseFilled<T> = { status: 'fulfilled'; value: T }
 
 interface StatusResult {
   hyphae: { available: boolean; memories: number; memoirs: number; version: string | null }
@@ -88,33 +88,36 @@ function checkRhizome(): StatusResult['rhizome'] {
   }
 }
 
-function checkLsps(): LspInfo[] {
-  return LSP_SERVERS.map((server) => {
-    let available = false
-    let running = false
-    try {
-      execFileSync('which', [server.bin], { stdio: 'ignore', timeout: 1000 })
-      available = true
-    } catch {
-      // not installed
-    }
-    if (available) {
+async function checkLsps(): Promise<LspInfo[]> {
+  const results = await Promise.allSettled(
+    LSP_SERVERS.map(async (server) => {
+      let available = false
+      let running = false
       try {
-        execFileSync('pgrep', ['-x', server.bin], { stdio: 'ignore', timeout: 1000 })
-        running = true
+        await exec('which', [server.bin], { timeout: 1000 })
+        available = true
       } catch {
-        // installed but no active process
+        // not installed
       }
-    }
-    return { available, bin: server.bin, language: server.language, name: server.name, running }
-  })
+      if (available) {
+        try {
+          await exec('pgrep', ['-x', server.bin], { timeout: 1000 })
+          running = true
+        } catch {
+          // installed but no active process
+        }
+      }
+      return { available, bin: server.bin, language: server.language, name: server.name, running }
+    })
+  )
+  return results.filter((r): r is PromiseFilled<LspInfo> => r.status === 'fulfilled').map((r) => r.value)
 }
 
 async function fetchStatus(): Promise<StatusResult> {
   const [myceliumResult, hyphaeResult] = await Promise.allSettled([checkMycelium(), checkHyphae()])
   return {
     hyphae: hyphaeResult.status === 'fulfilled' ? hyphaeResult.value : { available: false, memoirs: 0, memories: 0, version: null },
-    lsps: checkLsps(),
+    lsps: await checkLsps(),
     mycelium: myceliumResult.status === 'fulfilled' ? myceliumResult.value : { available: false, version: null },
     rhizome: checkRhizome(),
   }

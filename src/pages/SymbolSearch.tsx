@@ -9,6 +9,7 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { symbolKindColor } from '../lib/colors'
+import { onActivate } from '../lib/keyboard'
 import { useSymbolSearch } from '../lib/queries'
 
 export function SymbolSearch() {
@@ -72,7 +73,9 @@ export function SymbolSearch() {
                 <Table.Tr
                   key={`${r.file}:${r.line}:${r.name}`}
                   onClick={() => navigate(`/code?file=${encodeURIComponent(r.file)}&symbol=${encodeURIComponent(r.name)}`)}
+                  onKeyDown={onActivate(() => navigate(`/code?file=${encodeURIComponent(r.file)}&symbol=${encodeURIComponent(r.name)}`))}
                   style={{ cursor: 'pointer' }}
+                  tabIndex={0}
                 >
                   <Table.Td>
                     <Text

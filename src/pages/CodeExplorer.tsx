@@ -20,7 +20,7 @@ import {
 import { useDisclosure } from '@mantine/hooks'
 import { IconChevronRight, IconFile, IconFolder, IconFolderOpen, IconLayoutSidebar } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import type { FileNode } from '../lib/api'
@@ -29,7 +29,8 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { rhizomeApi } from '../lib/api'
-import { symbolKindColor } from '../lib/colors'
+import { annotationColor, complexityColor, symbolKindColor } from '../lib/colors'
+import { onActivate } from '../lib/keyboard'
 import {
   rhizomeKeys,
   useAnnotations,
@@ -42,25 +43,6 @@ import {
   useRhizomeStatus,
   useSymbols,
 } from '../lib/queries'
-
-function annotationColor(kind: string): string {
-  switch (kind.toUpperCase()) {
-    case 'TODO':
-      return 'substrate'
-    case 'FIXME':
-      return 'gill'
-    case 'HACK':
-      return 'decay'
-    default:
-      return 'chitin'
-  }
-}
-
-function complexityColor(score: number): string {
-  if (score < 5) return 'green'
-  if (score <= 10) return 'yellow'
-  return 'red'
-}
 
 function FileTreeNode({
   expanded,
@@ -250,15 +232,13 @@ export function CodeExplorer() {
     return displaySymbols.filter((s) => s.name.toLowerCase().includes(q))
   }, [displaySymbols, symbolFilter])
 
-  const defPreview = useMemo(() => {
-    if (!definition?.body) return ''
+  const { defPreview, hasMoreLines } = useMemo(() => {
+    if (!definition?.body) return { defPreview: '', hasMoreLines: false }
     const lines = definition.body.split('\n')
-    return lines.slice(0, 20).join('\n')
-  }, [definition])
-
-  const hasMoreLines = useMemo(() => {
-    if (!definition?.body) return false
-    return definition.body.split('\n').length > 20
+    return {
+      defPreview: lines.slice(0, 20).join('\n'),
+      hasMoreLines: lines.length > 20,
+    }
   }, [definition])
 
   if (unavailable) {
@@ -410,11 +390,12 @@ export function CodeExplorer() {
                     </Table.Thead>
                     <Table.Tbody>
                       {filteredSymbols.map((sym) => (
-                        <>
+                        <Fragment key={sym.name}>
                           <Table.Tr
-                            key={sym.name}
                             onClick={() => handleSymbolClick(sym.name)}
+                            onKeyDown={onActivate(() => handleSymbolClick(sym.name))}
                             style={{ cursor: 'pointer' }}
+                            tabIndex={0}
                           >
                             <Table.Td>
                               <Group gap='xs'>
@@ -465,7 +446,7 @@ export function CodeExplorer() {
                             </Table.Td>
                           </Table.Tr>
                           {expandedSymbol === sym.name && (
-                            <Table.Tr key={`${sym.name}-def`}>
+                            <Table.Tr>
                               <Table.Td colSpan={4}>
                                 {defLoading ? (
                                   <Loader size='sm' />
@@ -496,7 +477,7 @@ export function CodeExplorer() {
                               </Table.Td>
                             </Table.Tr>
                           )}
-                        </>
+                        </Fragment>
                       ))}
                     </Table.Tbody>
                   </Table>
@@ -570,7 +551,7 @@ export function CodeExplorer() {
                     )}
                     {!annotationsLoading && annotations.length > 0 && (
                       <Stack gap='xs'>
-                        {annotations.map((a, i) => (
+                        {annotations.map((a) => (
                           <Alert
                             color={annotationColor(a.kind)}
                             key={`${a.kind}-${a.line}-${a.message}`}

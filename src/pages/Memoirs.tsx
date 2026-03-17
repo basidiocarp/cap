@@ -6,27 +6,10 @@ import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
+import { relationColor } from '../lib/colors'
+import { onActivate } from '../lib/keyboard'
 import { parseJsonArray } from '../lib/parse'
 import { useMemoir, useMemoirInspect, useMemoirs } from '../lib/queries'
-
-function relationColor(relation: string): string {
-  switch (relation) {
-    case 'DependsOn':
-      return 'fruiting'
-    case 'PartOf':
-      return 'lichen'
-    case 'Contradicts':
-      return 'gill'
-    case 'Refines':
-      return 'mycelium'
-    case 'CausedBy':
-      return 'substrate'
-    case 'SupersededBy':
-      return 'decay'
-    default:
-      return 'chitin'
-  }
-}
 
 export function Memoirs() {
   const [selected, setSelected] = useState<string | null>(null)
@@ -136,7 +119,9 @@ export function Memoirs() {
                       <Table.Tr
                         key={c.id}
                         onClick={() => handleInspect(c.name)}
+                        onKeyDown={onActivate(() => handleInspect(c.name))}
                         style={{ cursor: 'pointer' }}
+                        tabIndex={0}
                       >
                         <Table.Td>
                           <Text
@@ -229,7 +214,9 @@ export function Memoirs() {
                           <Table.Tr
                             key={n.link.id}
                             onClick={() => handleInspect(n.concept.name)}
+                            onKeyDown={onActivate(() => handleInspect(n.concept.name))}
                             style={{ cursor: 'pointer' }}
+                            tabIndex={0}
                           >
                             <Table.Td>
                               <Badge

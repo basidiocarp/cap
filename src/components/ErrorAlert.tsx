@@ -6,7 +6,7 @@ export function ErrorAlert({
   title = 'Error',
   withCloseButton,
 }: {
-  error: Error | string | null
+  error: Error | string | null | undefined
   onClose?: () => void
   title?: string
   withCloseButton?: boolean

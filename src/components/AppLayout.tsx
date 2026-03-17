@@ -87,7 +87,7 @@ export function AppLayout() {
             </Text>
             {section.items.map((item) => (
               <NavLink
-                active={location.pathname === item.path}
+                active={item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)}
                 component={RouterNavLink}
                 key={item.path}
                 label={item.label}

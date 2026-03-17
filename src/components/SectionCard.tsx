@@ -11,13 +11,14 @@ export function SectionCard({
   children: ReactNode
   title?: string
   titleOrder?: 1 | 2 | 3 | 4 | 5 | 6
-} & Omit<CardProps, 'children'>) {
+} & Omit<CardProps, 'children' | 'styles'>) {
   return (
     <Card
       padding='lg'
       shadow='sm'
       withBorder
       {...rest}
+      styles={{ root: { overflow: 'visible' } }}
     >
       {title && (
         <Title

@@ -1,41 +1,18 @@
 import { BarChart, LineChart, PieChart } from '@mantine/charts'
-import { Alert, Badge, Card, Grid, Group, RingProgress, Stack, Table, Tabs, Text, Title } from '@mantine/core'
+import { Alert, Badge, Box, Grid, Group, RingProgress, Stack, Table, Tabs, Text, Title } from '@mantine/core'
 import { IconBrain, IconChartBar, IconCode, IconNetwork } from '@tabler/icons-react'
 
 import type { EcosystemStatus, HyphaeAnalytics, MyceliumAnalytics, RhizomeAnalytics } from '../lib/api'
+import { KpiCard } from '../components/KpiCard'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
+import { weightColor } from '../lib/colors'
 import { useEcosystemStatus, useHyphaeAnalytics, useMyceliumAnalytics, useRhizomeAnalytics } from '../lib/queries'
 
 const PIE_COLORS = ['spore.6', 'fruiting.6', 'mycelium.6', 'chitin.5', 'lichen.6', 'gill.6']
 
-function weightColor(w: number): string {
-  if (w > 0.7) return 'mycelium.7'
-  if (w >= 0.3) return 'substrate.6'
-  return 'decay.5'
-}
-
-function KpiCard({ accent, label, value }: { accent: string; label: string; value: string }) {
-  return (
-    <Card
-      padding='lg'
-      shadow='sm'
-      withBorder
-    >
-      <Text
-        c='dimmed'
-        size='xs'
-      >
-        {label}
-      </Text>
-      <Title
-        c={accent}
-        order={3}
-      >
-        {value}
-      </Title>
-    </Card>
-  )
+function ChartBox({ children }: { children: React.ReactNode }) {
+  return <Box py='xs'>{children}</Box>
 }
 
 function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
@@ -72,42 +49,47 @@ function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
             accent='spore.6'
             label='Overall Savings Rate'
             value={`${(data.total_stats.overall_rate * 100).toFixed(1)}%`}
-          />
+          >
+            <Text
+              c='dimmed'
+              mt='xs'
+              size='xs'
+            >
+              {data.filter_hit_rate.filtered.toLocaleString()} filtered ({(data.filter_hit_rate.rate * 100).toFixed(1)}% hit rate)
+            </Text>
+          </KpiCard>
         </Grid.Col>
       </Grid>
 
-      <Text
-        c='dimmed'
-        size='sm'
-      >
-        {data.filter_hit_rate.filtered.toLocaleString()} commands filtered ({(data.filter_hit_rate.rate * 100).toFixed(1)}% hit rate)
-      </Text>
-
       {data.savings_trend.length > 0 && (
         <SectionCard title='Savings Trend'>
-          <LineChart
-            curveType='monotone'
-            data={data.savings_trend}
-            dataKey='date'
-            h={300}
-            series={[{ color: 'mycelium.6', name: 'tokens_saved' }]}
-            strokeWidth={2}
-          />
+          <ChartBox>
+            <LineChart
+              curveType='monotone'
+              data={data.savings_trend}
+              dataKey='date'
+              h={300}
+              series={[{ color: 'mycelium.6', name: 'tokens_saved' }]}
+              strokeWidth={2}
+            />
+          </ChartBox>
         </SectionCard>
       )}
 
       {data.savings_by_category.length > 0 && (
         <SectionCard title='Savings by Category'>
-          <BarChart
-            data={data.savings_by_category}
-            dataKey='category'
-            h={300}
-            series={[
-              { color: 'chitin.5', name: 'tokens_input' },
-              { color: 'mycelium.6', name: 'tokens_saved' },
-            ]}
-            type='stacked'
-          />
+          <ChartBox>
+            <BarChart
+              data={data.savings_by_category}
+              dataKey='category'
+              h={300}
+              series={[
+                { color: 'chitin.5', name: 'tokens_input' },
+                { color: 'mycelium.6', name: 'tokens_saved' },
+              ]}
+              type='stacked'
+            />
+          </ChartBox>
         </SectionCard>
       )}
 
@@ -166,7 +148,10 @@ function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
     <Stack>
       <Grid>
         <Grid.Col span={{ base: 12, md: 4 }}>
-          <SectionCard title='Memory Utilization'>
+          <SectionCard
+            h='100%'
+            title='Memory Utilization'
+          >
             <Group justify='center'>
               <RingProgress
                 label={
@@ -194,74 +179,82 @@ function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 8 }}>
-          <Grid>
-            <Grid.Col span={{ base: 6, md: 3 }}>
-              <KpiCard
-                accent='mycelium.7'
-                label='Created (7d)'
-                value={data.lifecycle.created_last_7d.toLocaleString()}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 3 }}>
-              <KpiCard
-                accent='mycelium.6'
-                label='Created (30d)'
-                value={data.lifecycle.created_last_30d.toLocaleString()}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 3 }}>
-              <KpiCard
-                accent='chitin.5'
-                label='Decayed'
-                value={data.lifecycle.decayed.toLocaleString()}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 3 }}>
-              <KpiCard
-                accent='chitin.5'
-                label='Pruned'
-                value={data.lifecycle.pruned.toLocaleString()}
-              />
-            </Grid.Col>
-          </Grid>
-
-          <SectionCard
-            mt='md'
-            title='Avg Weight'
+          <Stack
+            gap='md'
+            h='100%'
           >
-            <Group>
-              <Title
-                c={weightColor(data.lifecycle.avg_weight)}
-                order={3}
-              >
-                {data.lifecycle.avg_weight.toFixed(2)}
-              </Title>
-              <Text
-                c='dimmed'
-                size='sm'
-              >
-                (min: {data.lifecycle.min_weight.toFixed(2)})
-              </Text>
-            </Group>
-          </SectionCard>
+            <Grid>
+              <Grid.Col span={{ base: 6, md: 3 }}>
+                <KpiCard
+                  accent='mycelium.7'
+                  label='Created (7d)'
+                  value={data.lifecycle.created_last_7d.toLocaleString()}
+                />
+              </Grid.Col>
+              <Grid.Col span={{ base: 6, md: 3 }}>
+                <KpiCard
+                  accent='mycelium.6'
+                  label='Created (30d)'
+                  value={data.lifecycle.created_last_30d.toLocaleString()}
+                />
+              </Grid.Col>
+              <Grid.Col span={{ base: 6, md: 3 }}>
+                <KpiCard
+                  accent='chitin.5'
+                  label='Decayed'
+                  value={data.lifecycle.decayed.toLocaleString()}
+                />
+              </Grid.Col>
+              <Grid.Col span={{ base: 6, md: 3 }}>
+                <KpiCard
+                  accent='chitin.5'
+                  label='Pruned'
+                  value={data.lifecycle.pruned.toLocaleString()}
+                />
+              </Grid.Col>
+            </Grid>
+
+            <SectionCard
+              style={{ flex: 1 }}
+              title='Avg Weight'
+            >
+              <Group>
+                <Title
+                  c={weightColor(data.lifecycle.avg_weight)}
+                  order={3}
+                >
+                  {data.lifecycle.avg_weight.toFixed(2)}
+                </Title>
+                <Text
+                  c='dimmed'
+                  size='sm'
+                >
+                  (min: {data.lifecycle.min_weight.toFixed(2)})
+                </Text>
+              </Group>
+            </SectionCard>
+          </Stack>
         </Grid.Col>
       </Grid>
 
       <SectionCard title='Importance Distribution'>
-        <BarChart
-          data={importanceData}
-          dataKey='label'
-          h={80}
-          orientation='vertical'
-          series={[
-            { color: 'gill.6', name: 'critical' },
-            { color: 'mycelium.6', name: 'high' },
-            { color: 'substrate.6', name: 'medium' },
-            { color: 'decay.5', name: 'low' },
-            { color: 'chitin.5', name: 'ephemeral' },
-          ]}
-          type='stacked'
-        />
+        <ChartBox>
+          <BarChart
+            data={importanceData}
+            dataKey='label'
+            h={120}
+            orientation='vertical'
+            series={[
+              { color: 'gill.6', name: 'critical' },
+              { color: 'mycelium.6', name: 'high' },
+              { color: 'substrate.6', name: 'medium' },
+              { color: 'decay.5', name: 'low' },
+              { color: 'chitin.5', name: 'ephemeral' },
+            ]}
+            type='stacked'
+            withLegend
+          />
+        </ChartBox>
       </SectionCard>
 
       <Grid>
@@ -361,33 +354,31 @@ function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null }) {
           />
         </Grid.Col>
         <Grid.Col span={{ base: 12, md: 4 }}>
-          <Card
-            padding='lg'
-            shadow='sm'
-            withBorder
+          <KpiCard
+            accent='chitin.5'
+            label='Backend Status'
+            value={data.backend_usage.lsp ? 'LSP' : data.backend_usage.treesitter ? 'Tree-sitter' : 'None'}
           >
-            <Text
-              c='dimmed'
-              mb='xs'
-              size='xs'
+            <Group
+              gap='xs'
+              mt='xs'
             >
-              Backend Status
-            </Text>
-            <Group gap='xs'>
               <Badge
                 color={data.backend_usage.treesitter ? 'mycelium' : 'decay'}
+                size='xs'
                 variant='filled'
               >
-                Tree-sitter: {data.backend_usage.treesitter ? 'Active' : 'Inactive'}
+                Tree-sitter
               </Badge>
               <Badge
                 color={data.backend_usage.lsp ? 'mycelium' : 'decay'}
+                size='xs'
                 variant='filled'
               >
-                LSP: {data.backend_usage.lsp ? 'Active' : 'Inactive'}
+                LSP
               </Badge>
             </Group>
-          </Card>
+          </KpiCard>
         </Grid.Col>
       </Grid>
 
@@ -409,12 +400,15 @@ function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null }) {
 
       {data.tool_calls.length > 0 && (
         <SectionCard title='Tool Call Distribution'>
-          <PieChart
-            data={pieData}
-            size={250}
-            withLabels
-            withTooltip
-          />
+          <Group justify='center'>
+            <PieChart
+              data={pieData}
+              mx='auto'
+              size={250}
+              withLabels
+              withTooltip
+            />
+          </Group>
         </SectionCard>
       )}
 

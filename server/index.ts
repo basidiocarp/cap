@@ -4,7 +4,9 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
 import { closeDb } from './db.ts'
+import { CORS_ORIGIN } from './lib/config.ts'
 import { logger } from './logger.ts'
+import { rhizome } from './rhizome.ts'
 import hyphaeRoutes from './routes/hyphae.ts'
 import myceliumRoutes from './routes/mycelium.ts'
 import rhizomeRoutes from './routes/rhizome.ts'
@@ -21,7 +23,7 @@ export function createApp(): Hono {
     logger.info({ method: c.req.method, ms, path: c.req.path, status: c.res.status }, `${c.req.method} ${c.req.path}`)
   })
 
-  app.use('*', cors({ origin: 'http://localhost:5173' }))
+  app.use('*', cors({ origin: CORS_ORIGIN }))
 
   app.onError((err, c) => {
     logger.error({ err, method: c.req.method, path: c.req.path }, 'Request error')
@@ -48,6 +50,7 @@ serve({ fetch: app.fetch, port })
 
 function shutdown() {
   logger.info('Shutting down')
+  rhizome.destroy()
   closeDb()
   process.exit(0)
 }

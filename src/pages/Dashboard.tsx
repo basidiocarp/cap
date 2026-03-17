@@ -1,9 +1,10 @@
-import { Badge, Card, Grid, Group, Progress, Stack, Table, Text, Title } from '@mantine/core'
+import { Badge, Grid, Group, Progress, Stack, Table, Text, Title } from '@mantine/core'
 import { useQueries } from '@tanstack/react-query'
 
 import type { HealthResult, Stats, TopicSummary } from '../lib/api'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
+import { KpiCard } from '../components/KpiCard'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { hyphaeApi, myceliumApi } from '../lib/api'
@@ -42,73 +43,42 @@ export function Dashboard() {
       {stats && (
         <Grid>
           <Grid.Col span={{ base: 6, md: 3 }}>
-            <Card
-              padding='lg'
-              shadow='sm'
-              withBorder
-            >
-              <Text
-                c='dimmed'
-                size='xs'
-              >
-                Memories
-              </Text>
-              <Title order={3}>{stats.total_memories}</Title>
-            </Card>
+            <KpiCard
+              accent='mycelium.7'
+              label='Memories'
+              value={String(stats.total_memories)}
+            />
           </Grid.Col>
           <Grid.Col span={{ base: 6, md: 3 }}>
-            <Card
-              padding='lg'
-              shadow='sm'
-              withBorder
-            >
-              <Text
-                c='dimmed'
-                size='xs'
-              >
-                Topics
-              </Text>
-              <Title order={3}>{stats.total_topics}</Title>
-            </Card>
+            <KpiCard
+              accent='spore.6'
+              label='Topics'
+              value={String(stats.total_topics)}
+            />
           </Grid.Col>
           <Grid.Col span={{ base: 6, md: 3 }}>
-            <Card
-              padding='lg'
-              shadow='sm'
-              withBorder
-            >
-              <Text
-                c='dimmed'
-                size='xs'
-              >
-                Avg Weight
-              </Text>
-              <Title order={3}>{stats.avg_weight?.toFixed(3) ?? '—'}</Title>
-            </Card>
+            <KpiCard
+              accent='substrate.6'
+              label='Avg Weight'
+              value={stats.avg_weight?.toFixed(3) ?? '\u2014'}
+            />
           </Grid.Col>
           <Grid.Col span={{ base: 6, md: 3 }}>
-            <Card
-              padding='lg'
-              shadow='sm'
-              withBorder
-            >
-              <Text
-                c='dimmed'
-                size='xs'
-              >
-                Token Savings
-              </Text>
-              <Title order={3}>
-                {gain && typeof gain.avg_savings_pct === 'number' ? `${(gain.avg_savings_pct as number).toFixed(1)}%` : '—'}
-              </Title>
-            </Card>
+            <KpiCard
+              accent='fruiting.6'
+              label='Token Savings'
+              value={gain && typeof gain.avg_savings_pct === 'number' ? `${(gain.avg_savings_pct as number).toFixed(1)}%` : '\u2014'}
+            />
           </Grid.Col>
         </Grid>
       )}
 
       <Grid>
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <SectionCard title='Topics'>
+          <SectionCard
+            h='100%'
+            title='Topics'
+          >
             {topics.length > 0 ? (
               <Table highlightOnHover>
                 <Table.Thead>
@@ -135,7 +105,10 @@ export function Dashboard() {
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <SectionCard title='Memory Health'>
+          <SectionCard
+            h='100%'
+            title='Memory Health'
+          >
             {health.length > 0 ? (
               <Stack gap='sm'>
                 {health.map((h) => (

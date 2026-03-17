@@ -1,12 +1,30 @@
 import { cachedAsync } from './lib/cache.ts'
 import { createCliRunner } from './lib/cli.ts'
+import { MYCELIUM_BIN } from './lib/config.ts'
 
-const run = createCliRunner(process.env.MYCELIUM_BIN ?? 'mycelium', 'mycelium')
+const run = createCliRunner(MYCELIUM_BIN, 'mycelium')
+
+interface GainCliOutput {
+  by_command?: [string, number, number, number][]
+  by_day?: [string, number][]
+  total_commands?: number
+  total_input?: number
+  total_saved?: number
+}
+
+function parseGainOutput(raw: unknown): GainCliOutput {
+  if (raw && typeof raw === 'object') return raw as GainCliOutput
+  return {}
+}
 
 export async function getGain(format: 'json' | 'text' = 'json') {
   const raw = await run(['gain', '--format', format])
   if (format === 'json') {
-    return JSON.parse(raw)
+    try {
+      return parseGainOutput(JSON.parse(raw))
+    } catch {
+      throw new Error('Invalid JSON from mycelium gain')
+    }
   }
   return { raw }
 }
@@ -14,50 +32,67 @@ export async function getGain(format: 'json' | 'text' = 'json') {
 export async function getGainHistory(format: 'json' | 'text' = 'json') {
   const raw = await run(['gain', '--history', '--format', format])
   if (format === 'json') {
-    return JSON.parse(raw)
+    try {
+      return parseGainOutput(JSON.parse(raw))
+    } catch {
+      throw new Error('Invalid JSON from mycelium gain')
+    }
   }
   return { raw }
 }
 
 async function computeAnalytics() {
-  const [gain, history] = await Promise.allSettled([getGain('json'), getGainHistory('json')])
+  try {
+    const [gain, history] = await Promise.allSettled([getGain('json'), getGainHistory('json')])
 
-  const gainData = gain.status === 'fulfilled' ? gain.value : null
-  const historyData = history.status === 'fulfilled' ? history.value : null
+    const gainData = gain.status === 'fulfilled' ? gain.value : null
+    const historyData = history.status === 'fulfilled' ? history.value : null
 
-  const byCommand = (gainData as any)?.by_command ?? []
-  const savings_by_category = byCommand.map((cmd: any[]) => ({
-    category: cmd[0] ?? 'unknown',
-    commands: 1,
-    rate: cmd[3] ?? 0,
-    tokens_saved: (cmd[1] ?? 0) - (cmd[2] ?? 0),
-  }))
-
-  const byDay = (historyData as any)?.by_day ?? (gainData as any)?.by_day ?? []
-  const savings_trend = byDay.map((entry: any[]) => ({
-    commands: 0,
-    date: entry[0],
-    tokens_saved: entry[1] ?? 0,
-  }))
-
-  const totalCommands = (gainData as any)?.total_commands ?? 0
-  const totalSaved = (gainData as any)?.total_saved ?? 0
-  const filtered = totalSaved > 0 ? totalCommands : 0
-  const passthrough = totalCommands - filtered
-
-  const top_commands = byCommand
-    .map((cmd: any[]) => ({
-      avg_savings: cmd[3] ?? 0,
-      command: cmd[0] ?? 'unknown',
-      count: 1,
+    const byCommand = gainData?.by_command ?? []
+    const savings_by_category = byCommand.map((cmd: [string, number, number, number]) => ({
+      category: cmd[0] ?? 'unknown',
+      commands: 1,
+      rate: cmd[3] ?? 0,
+      tokens_input: cmd[1] ?? 0,
+      tokens_saved: (cmd[1] ?? 0) - (cmd[2] ?? 0),
     }))
-    .slice(0, 10)
 
-  return {
-    filter_hit_rate: { filtered, passthrough, rate: totalCommands > 0 ? filtered / totalCommands : 0 },
-    savings_by_category,
-    savings_trend,
-    top_commands,
+    const byDay = historyData?.by_day ?? gainData?.by_day ?? []
+    const savings_trend = byDay.map((entry: [string, number]) => ({
+      commands: 0,
+      date: entry[0],
+      tokens_saved: entry[1] ?? 0,
+    }))
+
+    const totalCommands = gainData?.total_commands ?? 0
+    const totalInput = gainData?.total_input ?? 0
+    const totalSaved = gainData?.total_saved ?? 0
+    const filtered = totalSaved > 0 ? totalCommands : 0
+    const passthrough = totalCommands - filtered
+
+    const top_commands = byCommand
+      .map((cmd: [string, number, number, number]) => ({
+        avg_savings_percent: cmd[3] ?? 0,
+        command: cmd[0] ?? 'unknown',
+        count: 1,
+      }))
+      .sort((a: { count: number }, b: { count: number }) => b.count - a.count)
+      .slice(0, 10)
+
+    return {
+      filter_hit_rate: { filtered, passthrough, rate: totalCommands > 0 ? filtered / totalCommands : 0 },
+      savings_by_category,
+      savings_trend,
+      top_commands,
+      total_stats: {
+        overall_rate: totalInput > 0 ? totalSaved / totalInput : 0,
+        total_commands: totalCommands,
+        total_tokens_input: totalInput,
+        total_tokens_saved: totalSaved,
+      },
+    }
+  } catch {
+    return null
   }
 }
 

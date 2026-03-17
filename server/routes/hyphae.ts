@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 
 import * as hyphae from '../hyphae.ts'
-import { requireQuery } from '../lib/params.ts'
+import { clampParam, requireQuery } from '../lib/params.ts'
 
 const app = new Hono()
 
@@ -15,7 +15,8 @@ app.get('/topics', (c) => {
 
 app.get('/topics/:topic/memories', (c) => {
   const limit = c.req.query('limit')
-  return c.json(hyphae.getMemoriesByTopic(c.req.param('topic'), limit ? Number(limit) : undefined))
+  const clampedLimit = clampParam(limit, 20, 200)
+  return c.json(hyphae.getMemoriesByTopic(c.req.param('topic'), clampedLimit))
 })
 
 app.get('/recall', (c) => {
@@ -23,7 +24,8 @@ app.get('/recall', (c) => {
   if (query instanceof Response) return query
   const topic = c.req.query('topic')
   const limit = c.req.query('limit')
-  return c.json(hyphae.recall(query, topic ?? undefined, limit ? Number(limit) : undefined))
+  const clampedLimit = clampParam(limit, 20, 200)
+  return c.json(hyphae.recall(query, topic ?? undefined, clampedLimit))
 })
 
 app.get('/memories/:id', (c) => {
@@ -55,7 +57,8 @@ app.get('/memoirs/:name', (c) => {
 
 app.get('/memoirs/:name/inspect/:concept', (c) => {
   const depth = c.req.query('depth')
-  const data = hyphae.memoirInspect(c.req.param('name'), c.req.param('concept'), depth ? Number(depth) : undefined)
+  const clampedDepth = clampParam(depth, 2, 5)
+  const data = hyphae.memoirInspect(c.req.param('name'), c.req.param('concept'), clampedDepth)
   if (!data) return c.json({ error: 'Not found' }, 404)
   return c.json(data)
 })
@@ -72,8 +75,23 @@ app.get('/analytics', (c) => {
 
 // Writes (shell to CLI)
 
+const VALID_IMPORTANCE = new Set(['critical', 'high', 'medium', 'low', 'ephemeral'])
+
 app.post('/store', async (c) => {
   const body = await c.req.json<{ topic: string; summary: string; importance?: string; keywords?: string[] }>()
+
+  if (!body.topic?.trim() || !body.summary?.trim()) {
+    return c.json({ error: 'topic and summary are required' }, 400)
+  }
+
+  if (body.importance && !VALID_IMPORTANCE.has(body.importance.toLowerCase())) {
+    return c.json({ error: `Invalid importance. Must be one of: ${[...VALID_IMPORTANCE].join(', ')}` }, 400)
+  }
+
+  if (body.keywords && !Array.isArray(body.keywords)) {
+    return c.json({ error: 'keywords must be an array' }, 400)
+  }
+
   const result = await hyphae.store(body.topic, body.summary, body.importance, body.keywords)
   return c.json({ result })
 })
@@ -85,6 +103,11 @@ app.delete('/memories/:id', async (c) => {
 
 app.post('/consolidate', async (c) => {
   const body = await c.req.json<{ topic: string; keep_originals?: boolean }>()
+
+  if (!body.topic?.trim()) {
+    return c.json({ error: 'topic is required' }, 400)
+  }
+
   const result = await hyphae.consolidate(body.topic, body.keep_originals)
   return c.json({ result })
 })

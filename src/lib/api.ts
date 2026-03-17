@@ -9,7 +9,10 @@ async function get<T = unknown>(path: string, params?: Record<string, string>): 
   }
   const res = await fetch(url.toString())
   if (!res.ok) {
-    throw new Error(`API error: ${res.status} ${res.statusText}`)
+    const body = await res.json().catch(() => null)
+    const message =
+      body && typeof body === 'object' && 'error' in body && typeof body.error === 'string' ? body.error : `${res.status} ${res.statusText}`
+    throw new Error(message)
   }
   return res.json() as Promise<T>
 }
@@ -22,12 +25,17 @@ async function post<T = unknown>(path: string, body?: Record<string, unknown>): 
     method: 'POST',
   })
   if (!res.ok) {
-    throw new Error(`API error: ${res.status} ${res.statusText}`)
+    const responseBody = await res.json().catch(() => null)
+    const message =
+      responseBody && typeof responseBody === 'object' && 'error' in responseBody && typeof responseBody.error === 'string'
+        ? responseBody.error
+        : `${res.status} ${res.statusText}`
+    throw new Error(message)
   }
   return res.json() as Promise<T>
 }
 
-// Types (mirrors server/types.ts)
+// Types (mirrors server/types.ts MemoryRow)
 
 export interface Memory {
   id: string
@@ -42,6 +50,7 @@ export interface Memory {
   keywords: string
   importance: string
   source_type: string
+  source_data: string | null
   related_ids: string
 }
 
@@ -270,6 +279,14 @@ export interface EnclosingClass {
   name: string
 }
 
+export interface GainResult {
+  avg_savings_pct?: number
+  by_command?: [string, number, number, number][]
+  total_commands?: number
+  total_input?: number
+  total_saved?: number
+}
+
 export interface ExportedSymbol {
   kind: string
   line: number
@@ -332,8 +349,8 @@ export const hyphaeApi = {
 
 export const myceliumApi = {
   analytics: () => get<MyceliumAnalytics>('/mycelium/analytics'),
-  gain: () => get('/mycelium/gain'),
-  gainHistory: () => get('/mycelium/gain/history'),
+  gain: () => get<GainResult>('/mycelium/gain'),
+  gainHistory: () => get<GainResult>('/mycelium/gain/history'),
 }
 
 export const rhizomeApi = {

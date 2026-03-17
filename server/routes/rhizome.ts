@@ -1,16 +1,18 @@
 import type { Context } from 'hono'
-import { execSync } from 'node:child_process'
+import { execFile } from 'node:child_process'
 import { extname } from 'node:path'
+import { promisify } from 'node:util'
 import { Hono } from 'hono'
 
 import { cachedAsync } from '../lib/cache.ts'
-import { requireQuery } from '../lib/params.ts'
+import { RHIZOME_PROJECT } from '../lib/config.ts'
+import { parseNumberParam, requireQuery } from '../lib/params.ts'
 import { logger } from '../logger.ts'
 import { rhizome } from '../rhizome.ts'
 
-const app = new Hono()
+const exec = promisify(execFile)
 
-const PROJECT_DIR = process.env.RHIZOME_PROJECT ?? process.cwd()
+const app = new Hono()
 
 async function rhizomeTool(c: Context, tool: string, args: Record<string, unknown>): Promise<Response> {
   try {
@@ -222,8 +224,8 @@ app.get('/structure', async (c) => {
   const file = requireQuery(c, 'file')
   if (file instanceof Response) return file
   const args: Record<string, unknown> = { file }
-  const depth = c.req.query('depth')
-  if (depth) args.depth = Number(depth)
+  const depth = parseNumberParam(c.req.query('depth'))
+  if (depth !== undefined) args.depth = depth
   return rhizomeTool(c, 'get_structure', args)
 })
 
@@ -251,7 +253,12 @@ app.get('/references', async (c) => {
   if (line instanceof Response) return line
   const column = requireQuery(c, 'column')
   if (column instanceof Response) return column
-  return rhizomeTool(c, 'find_references', { column: Number(column), file, line: Number(line) })
+  const lineNum = parseNumberParam(line)
+  const colNum = parseNumberParam(column)
+  if (lineNum === undefined || colNum === undefined) {
+    return c.json({ error: 'line and column must be valid numbers' }, 400)
+  }
+  return rhizomeTool(c, 'find_references', { column: colNum, file, line: lineNum })
 })
 
 app.get('/diagnostics', async (c) => {
@@ -267,7 +274,12 @@ app.get('/hover', async (c) => {
   if (line instanceof Response) return line
   const column = requireQuery(c, 'column')
   if (column instanceof Response) return column
-  return rhizomeTool(c, 'get_hover_info', { column: Number(column), file, line: Number(line) })
+  const lineNum = parseNumberParam(line)
+  const colNum = parseNumberParam(column)
+  if (lineNum === undefined || colNum === undefined) {
+    return c.json({ error: 'line and column must be valid numbers' }, 400)
+  }
+  return rhizomeTool(c, 'get_hover_info', { column: colNum, file, line: lineNum })
 })
 
 app.get('/annotations', async (c) => {
@@ -294,17 +306,18 @@ app.get('/tests', async (c) => {
   return rhizomeTool(c, 'get_tests', { file })
 })
 
-app.get('/files', (c) => {
+app.get('/files', async (c) => {
   try {
     const basePath = c.req.query('path')
-    const depth = Number(c.req.query('depth') ?? '2')
+    const depthParam = parseNumberParam(c.req.query('depth'))
+    const depth = depthParam ?? 2
 
-    const output = execSync('git ls-files --cached --others --exclude-standard', {
-      cwd: PROJECT_DIR,
-      encoding: 'utf-8',
+    const { stdout } = await exec('git', ['ls-files', '--cached', '--others', '--exclude-standard'], {
+      cwd: RHIZOME_PROJECT,
+      timeout: 5000,
     })
 
-    const files = output.trim().split('\n').filter(Boolean)
+    const files = stdout.trim().split('\n').filter(Boolean)
     const tree = buildFileTree(files, basePath, depth)
     return c.json(tree)
   } catch (err) {
@@ -319,7 +332,11 @@ app.get('/scope', async (c) => {
   if (file instanceof Response) return file
   const line = requireQuery(c, 'line')
   if (line instanceof Response) return line
-  return rhizomeTool(c, 'get_scope', { file, line: Number(line) })
+  const lineNum = parseNumberParam(line)
+  if (lineNum === undefined) {
+    return c.json({ error: 'line must be a valid number' }, 400)
+  }
+  return rhizomeTool(c, 'get_scope', { file, line: lineNum })
 })
 
 app.get('/exports', async (c) => {
@@ -349,8 +366,8 @@ app.get('/symbol-body', async (c) => {
   const symbol = requireQuery(c, 'symbol')
   if (symbol instanceof Response) return symbol
   const args: Record<string, unknown> = { file, symbol }
-  const line = c.req.query('line')
-  if (line) args.line = Number(line)
+  const line = parseNumberParam(c.req.query('line'))
+  if (line !== undefined) args.line = line
   return rhizomeTool(c, 'get_symbol_body', args)
 })
 
@@ -365,7 +382,11 @@ app.get('/enclosing-class', async (c) => {
   if (file instanceof Response) return file
   const line = requireQuery(c, 'line')
   if (line instanceof Response) return line
-  return rhizomeTool(c, 'get_enclosing_class', { file, line: Number(line) })
+  const lineNum = parseNumberParam(line)
+  if (lineNum === undefined) {
+    return c.json({ error: 'line must be a valid number' }, 400)
+  }
+  return rhizomeTool(c, 'get_enclosing_class', { file, line: lineNum })
 })
 
 app.get('/parameters', async (c) => {

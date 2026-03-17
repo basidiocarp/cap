@@ -1,8 +1,9 @@
-import { Group, Loader } from '@mantine/core'
 import { lazy, Suspense } from 'react'
 import { Route, Routes } from 'react-router-dom'
 
 import { AppLayout } from './components/AppLayout'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { PageLoader } from './components/PageLoader'
 import { Dashboard } from './pages/Dashboard'
 
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })))
@@ -14,63 +15,54 @@ const Settings = lazy(() => import('./pages/Settings').then((m) => ({ default: m
 const Status = lazy(() => import('./pages/Status').then((m) => ({ default: m.Status })))
 const SymbolSearch = lazy(() => import('./pages/SymbolSearch').then((m) => ({ default: m.SymbolSearch })))
 
-function PageLoader() {
-  return (
-    <Group
-      justify='center'
-      mt='xl'
-    >
-      <Loader />
-    </Group>
-  )
-}
-
 export function App() {
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-        <Route
-          element={<AppLayout />}
-          path='/'
-        >
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
           <Route
-            element={<Dashboard />}
-            index
-          />
-          <Route
-            element={<Memories />}
-            path='memories'
-          />
-          <Route
-            element={<Memoirs />}
-            path='memoirs'
-          />
-          <Route
-            element={<Analytics />}
-            path='analytics'
-          />
-          <Route
-            element={<CodeExplorer />}
-            path='code'
-          />
-          <Route
-            element={<Diagnostics />}
-            path='diagnostics'
-          />
-          <Route
-            element={<Settings />}
-            path='settings'
-          />
-          <Route
-            element={<Status />}
-            path='status'
-          />
-          <Route
-            element={<SymbolSearch />}
-            path='symbols'
-          />
-        </Route>
-      </Routes>
-    </Suspense>
+            element={<AppLayout />}
+            path='/'
+          >
+            <Route
+              element={<Dashboard />}
+              index
+            />
+            <Route
+              element={<Memories />}
+              path='memories'
+            />
+            <Route
+              element={<Memoirs />}
+              path='memoirs'
+            />
+            <Route
+              element={<Analytics />}
+              path='analytics'
+            />
+            <Route
+              element={<CodeExplorer />}
+              path='code'
+            />
+            <Route
+              element={<Diagnostics />}
+              path='diagnostics'
+            />
+            <Route
+              element={<Settings />}
+              path='settings'
+            />
+            <Route
+              element={<Status />}
+              path='status'
+            />
+            <Route
+              element={<SymbolSearch />}
+              path='symbols'
+            />
+          </Route>
+        </Routes>
+      </Suspense>
+    </ErrorBoundary>
   )
 }

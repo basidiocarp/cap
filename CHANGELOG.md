@@ -1,5 +1,41 @@
 # Changelog
 
+## v0.3.0
+
+### Features
+- Error boundary wrapping all routes with retry button, prevents white-screen on chunk load failure
+- LSP status detection on the Status page: shows installed and running language servers
+- Shared `KpiCard` component for consistent metric cards across Dashboard and Analytics
+- Keyboard utility (`onActivate`) for accessible interactive table rows
+- Shared config module centralizing all binary paths and environment defaults
+
+### Security
+- Input validation on POST `/store`, `/consolidate`: rejects empty fields, validates importance against allowlist, type-checks keywords array
+- Prune threshold validation: must be a finite number between 0 and 1
+- Clamped `limit` (max 200) and `depth` (max 5) query parameters to prevent expensive queries
+- NaN-safe numeric parameter parsing across all Rhizome route endpoints
+
+### Improvements
+- Converted blocking `execSync` to async in `/files` endpoint and LSP status checks
+- Fixed `cachedAsync` thundering herd: concurrent cache misses now share a single in-flight promise
+- Typed Mycelium CLI output: replaced 7 `as any` casts with `GainCliOutput` interface and type guard
+- Typed `myceliumApi.gain()` return: added `GainResult` interface, removed untyped `unknown`
+- API error messages now read server response body instead of generic HTTP status text
+- Fixed `SectionCard` overflow: `overflow: visible` on card root prevents chart tooltip clipping
+- Prevented silent `styles` override on `SectionCard` by excluding it from passthrough props
+- Fixed `.sort()` mutation in Diagnostics: replaced with immutable `.toSorted()`
+- Consolidated 5 color-mapping functions into `lib/colors.ts`, removed duplicates from pages
+- Merged duplicate `defPreview`/`hasMoreLines` useMemo in CodeExplorer into single memo
+- Dashboard uses shared `KpiCard` with accent colors and `h='100%'` for equal-height grid cards
+- Nav sidebar supports sub-route highlighting via `startsWith` matching
+- Diagnostics uses Mantine `ff='monospace'` instead of inline style
+- Removed duplicate `PageLoader` from App.tsx, imports shared component
+- Added `source_data` field to frontend `Memory` type to match backend `MemoryRow`
+- Keyboard accessibility on clickable table rows across CodeExplorer, SymbolSearch, Diagnostics, and Memoirs
+- Graceful shutdown calls `rhizome.destroy()` before closing database
+- CORS origin configurable via `CORS_ORIGIN` environment variable
+- Centralized `HYPHAE_BIN`, `MYCELIUM_BIN`, `RHIZOME_BIN` in shared config
+
 ## v0.2.0
 
 ### Features

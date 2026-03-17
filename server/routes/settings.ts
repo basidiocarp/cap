@@ -4,9 +4,8 @@ import { join } from 'node:path'
 import { Hono } from 'hono'
 
 import { createCliRunner } from '../lib/cli.ts'
+import { HYPHAE_BIN } from '../lib/config.ts'
 import { logger } from '../logger.ts'
-
-const HYPHAE_BIN = process.env.HYPHAE_BIN ?? 'hyphae'
 
 const runHyphae = createCliRunner(HYPHAE_BIN, 'hyphae')
 
@@ -133,8 +132,13 @@ app.post('/hyphae/prune', async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}))
     const args = ['prune']
+
     if (body.threshold != null) {
-      args.push('--threshold', String(body.threshold))
+      const t = Number(body.threshold)
+      if (!Number.isFinite(t) || t < 0 || t > 1) {
+        return c.json({ error: 'threshold must be a number between 0 and 1' }, 400)
+      }
+      args.push('--threshold', String(t))
     }
 
     const stdout = await runHyphae(args)
