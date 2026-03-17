@@ -1,6 +1,16 @@
 import { AppShell, Group, NavLink, Text, Title } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconBrain, IconBug, IconChartBar, IconCode, IconDashboard, IconHeartbeat, IconNetwork, IconSearch } from '@tabler/icons-react'
+import {
+  IconBrain,
+  IconBug,
+  IconChartBar,
+  IconCode,
+  IconDashboard,
+  IconHeartbeat,
+  IconNetwork,
+  IconSearch,
+  IconSettings,
+} from '@tabler/icons-react'
 import { Outlet, NavLink as RouterNavLink, useLocation } from 'react-router-dom'
 
 const NAV_SECTIONS = [
@@ -24,6 +34,7 @@ const NAV_SECTIONS = [
     items: [
       { icon: IconChartBar, label: 'Analytics', path: '/analytics' },
       { icon: IconHeartbeat, label: 'Status', path: '/status' },
+      { icon: IconSettings, label: 'Settings', path: '/settings' },
     ],
     label: 'System',
   },
