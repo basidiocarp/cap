@@ -8,6 +8,7 @@ import {
   Loader,
   NavLink,
   ScrollArea,
+  SegmentedControl,
   Stack,
   Table,
   Tabs,
@@ -22,14 +23,25 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-import type { Annotation, ComplexityResult, FileNode } from '../lib/api'
+import type { FileNode } from '../lib/api'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { rhizomeApi } from '../lib/api'
 import { symbolKindColor } from '../lib/colors'
-import { rhizomeKeys, useAnnotations, useComplexity, useDefinition, useFileTree, useRhizomeStatus, useSymbols } from '../lib/queries'
+import {
+  rhizomeKeys,
+  useAnnotations,
+  useCallSites,
+  useComplexity,
+  useDefinition,
+  useExports,
+  useFileSummary,
+  useFileTree,
+  useRhizomeStatus,
+  useSymbols,
+} from '../lib/queries'
 
 function annotationColor(kind: string): string {
   switch (kind.toUpperCase()) {
@@ -110,6 +122,7 @@ export function CodeExplorer() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [symbolFilter, setSymbolFilter] = useState('')
+  const [symbolMode, setSymbolMode] = useState<'all' | 'exports'>('all')
   const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null)
   const [showFullDef, setShowFullDef] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -121,7 +134,10 @@ export function CodeExplorer() {
   const { data: symbols = [], isLoading: symbolsLoading } = useSymbols(selectedFile ?? '')
   const { data: definition, isLoading: defLoading } = useDefinition(selectedFile ?? '', expandedSymbol ?? '')
   const { data: annotations = [], isLoading: annotationsLoading } = useAnnotations(selectedFile ?? '')
+  const { data: callSites = [], isLoading: callSitesLoading } = useCallSites(selectedFile ?? '')
   const { data: complexity = [], isLoading: complexityLoading } = useComplexity(selectedFile ?? '')
+  const { data: exports = [], isLoading: exportsLoading } = useExports(selectedFile ?? '')
+  const { data: fileSummary, isLoading: summaryLoading } = useFileSummary(selectedFile ?? '')
 
   useEffect(() => {
     // index initial tree into a path → children map
@@ -215,11 +231,24 @@ export function CodeExplorer() {
     [expandedSymbol]
   )
 
+  const displaySymbols = useMemo(() => {
+    if (symbolMode === 'exports') {
+      return exports.map((e) => ({
+        doc_comment: null,
+        kind: e.kind,
+        location: { column_end: 0, column_start: 0, file_path: selectedFile ?? '', line_end: e.line, line_start: e.line },
+        name: e.name,
+        signature: e.signature,
+      }))
+    }
+    return symbols
+  }, [exports, selectedFile, symbolMode, symbols])
+
   const filteredSymbols = useMemo(() => {
-    if (!symbolFilter.trim()) return symbols
+    if (!symbolFilter.trim()) return displaySymbols
     const q = symbolFilter.toLowerCase()
-    return symbols.filter((s) => s.name.toLowerCase().includes(q))
-  }, [symbols, symbolFilter])
+    return displaySymbols.filter((s) => s.name.toLowerCase().includes(q))
+  }, [displaySymbols, symbolFilter])
 
   const defPreview = useMemo(() => {
     if (!definition?.body) return ''
@@ -312,15 +341,63 @@ export function CodeExplorer() {
                 {selectedFile}
               </Text>
 
+              {!summaryLoading && fileSummary && (
+                <Stack gap={4}>
+                  <Text
+                    c='dimmed'
+                    size='sm'
+                  >
+                    {fileSummary.language} · {fileSummary.lines} lines · {fileSummary.functions} functions · {fileSummary.types} types ·{' '}
+                    {fileSummary.exports} exports · {fileSummary.imports} imports
+                  </Text>
+                  {fileSummary.description && (
+                    <Text
+                      c='dimmed'
+                      size='sm'
+                    >
+                      {fileSummary.description}
+                    </Text>
+                  )}
+                </Stack>
+              )}
+
+              <Group gap='sm'>
+                <SegmentedControl
+                  data={[
+                    { label: 'All', value: 'all' },
+                    {
+                      label: (
+                        <Group gap={4}>
+                          <span>Exports only</span>
+                          {!exportsLoading && exports.length > 0 && (
+                            <Badge
+                              color='mycelium'
+                              size='xs'
+                              variant='light'
+                            >
+                              {exports.length}
+                            </Badge>
+                          )}
+                        </Group>
+                      ),
+                      value: 'exports',
+                    },
+                  ]}
+                  onChange={(v) => setSymbolMode(v as 'all' | 'exports')}
+                  size='xs'
+                  value={symbolMode}
+                />
+              </Group>
+
               <TextInput
                 onChange={(e) => setSymbolFilter(e.currentTarget.value)}
                 placeholder='Filter symbols...'
                 value={symbolFilter}
               />
 
-              {symbolsLoading && <Loader size='sm' />}
+              {(symbolsLoading || (symbolMode === 'exports' && exportsLoading)) && <Loader size='sm' />}
 
-              {!symbolsLoading && filteredSymbols.length > 0 && (
+              {!(symbolsLoading || (symbolMode === 'exports' && exportsLoading)) && filteredSymbols.length > 0 && (
                 <SectionCard>
                   <Table highlightOnHover>
                     <Table.Thead>
@@ -426,11 +503,15 @@ export function CodeExplorer() {
                 </SectionCard>
               )}
 
-              {!symbolsLoading && filteredSymbols.length === 0 && symbols.length > 0 && (
-                <EmptyState>No symbols match "{symbolFilter}"</EmptyState>
-              )}
+              {!(symbolsLoading || (symbolMode === 'exports' && exportsLoading)) &&
+                filteredSymbols.length === 0 &&
+                displaySymbols.length > 0 && <EmptyState>No symbols match "{symbolFilter}"</EmptyState>}
 
-              {!symbolsLoading && symbols.length === 0 && <EmptyState>No symbols found in this file</EmptyState>}
+              {!(symbolsLoading || (symbolMode === 'exports' && exportsLoading)) && displaySymbols.length === 0 && (
+                <EmptyState>
+                  {symbolMode === 'exports' ? 'No exported symbols found in this file' : 'No symbols found in this file'}
+                </EmptyState>
+              )}
 
               <SectionCard>
                 <Tabs defaultValue='annotations'>
@@ -456,6 +537,19 @@ export function CodeExplorer() {
                           variant='light'
                         >
                           {complexity.length}
+                        </Badge>
+                      )}
+                    </Tabs.Tab>
+                    <Tabs.Tab value='callSites'>
+                      Call Sites{' '}
+                      {!callSitesLoading && callSites.length > 0 && (
+                        <Badge
+                          color='spore'
+                          ml={4}
+                          size='xs'
+                          variant='light'
+                        >
+                          {callSites.length}
                         </Badge>
                       )}
                     </Tabs.Tab>
@@ -550,6 +644,58 @@ export function CodeExplorer() {
                                 >
                                   {c.complexity}
                                 </Badge>
+                              </Table.Td>
+                            </Table.Tr>
+                          ))}
+                        </Table.Tbody>
+                      </Table>
+                    )}
+                  </Tabs.Panel>
+
+                  <Tabs.Panel
+                    pt='sm'
+                    value='callSites'
+                  >
+                    {callSitesLoading && <Loader size='sm' />}
+                    {!callSitesLoading && callSites.length === 0 && (
+                      <Text
+                        c='dimmed'
+                        size='sm'
+                      >
+                        No call sites found
+                      </Text>
+                    )}
+                    {!callSitesLoading && callSites.length > 0 && (
+                      <Table highlightOnHover>
+                        <Table.Thead>
+                          <Table.Tr>
+                            <Table.Th>Caller</Table.Th>
+                            <Table.Th>Line</Table.Th>
+                            <Table.Th>Call Expression</Table.Th>
+                          </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>
+                          {callSites.map((cs) => (
+                            <Table.Tr key={`${cs.caller}-${cs.line}-${cs.call_expression}`}>
+                              <Table.Td>
+                                <Text
+                                  ff='monospace'
+                                  size='sm'
+                                >
+                                  {cs.caller}
+                                </Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text size='sm'>{cs.line}</Text>
+                              </Table.Td>
+                              <Table.Td>
+                                <Text
+                                  ff='monospace'
+                                  lineClamp={1}
+                                  size='xs'
+                                >
+                                  {cs.call_expression}
+                                </Text>
                               </Table.Td>
                             </Table.Tr>
                           ))}
