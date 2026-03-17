@@ -221,24 +221,27 @@ export interface TestFunction {
 }
 
 export interface HyphaeAnalytics {
-  lifecycle: { created_last_7d: number; decayed: number; pruned: number }
-  memoir_stats: { code_memoirs: number; total: number; total_concepts: number }
+  importance_distribution: { critical: number; ephemeral: number; high: number; low: number; medium: number }
+  lifecycle: { avg_weight: number; created_last_7d: number; created_last_30d: number; decayed: number; min_weight: number; pruned: number }
+  memoir_stats: { code_memoirs: number; total: number; total_concepts: number; total_links: number }
   memory_utilization: { rate: number; recalled: number; total: number }
   search_stats: { empty_results: number; hit_rate: number; total_searches: number }
-  top_topics: { avg_weight: number; count: number; name: string }[]
+  top_topics: { avg_weight: number; count: number; latest_created_at: string; name: string }[]
 }
 
 export interface MyceliumAnalytics {
   filter_hit_rate: { filtered: number; passthrough: number; rate: number }
-  savings_by_category: { category: string; commands: number; rate: number; tokens_saved: number }[]
+  savings_by_category: { category: string; commands: number; rate: number; tokens_input: number; tokens_saved: number }[]
   savings_trend: { commands: number; date: string; tokens_saved: number }[]
-  top_commands: { avg_savings: number; command: string; count: number }[]
+  top_commands: { avg_savings_percent: number; command: string; count: number }[]
+  total_stats: { overall_rate: number; total_commands: number; total_tokens_input: number; total_tokens_saved: number }
 }
 
 export interface RhizomeAnalytics {
   available: boolean
-  backend_usage: { lsp: number; treesitter: number }
-  languages: { files_parsed: number; language: string; symbols_extracted: number }[]
+  backend_usage: { lsp: boolean; treesitter: boolean }
+  languages: { detection: string; language: string }[]
+  supported_tools: string[]
   tool_calls: { avg_duration_ms: number; count: number; tool: string }[]
 }
 

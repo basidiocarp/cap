@@ -92,7 +92,7 @@ function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
                 <Table.Tr key={cmd.command}>
                   <Table.Td>{cmd.command}</Table.Td>
                   <Table.Td>{cmd.count.toLocaleString()}</Table.Td>
-                  <Table.Td>{(cmd.avg_savings * 100).toFixed(1)}%</Table.Td>
+                  <Table.Td>{cmd.avg_savings_percent.toFixed(1)}%</Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -244,7 +244,7 @@ function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null }) {
         c='dimmed'
         size='sm'
       >
-        Tree-sitter: {data.backend_usage.treesitter.toLocaleString()} calls, LSP: {data.backend_usage.lsp.toLocaleString()} calls
+        Tree-sitter: {data.backend_usage.treesitter ? 'active' : 'inactive'}, LSP: {data.backend_usage.lsp ? 'active' : 'inactive'}
       </Text>
 
       {data.tool_calls.length > 0 && (
@@ -264,16 +264,14 @@ function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null }) {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Language</Table.Th>
-                <Table.Th>Files Parsed</Table.Th>
-                <Table.Th>Symbols Extracted</Table.Th>
+                <Table.Th>Detection</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {data.languages.map((lang) => (
                 <Table.Tr key={lang.language}>
                   <Table.Td>{lang.language}</Table.Td>
-                  <Table.Td>{lang.files_parsed.toLocaleString()}</Table.Td>
-                  <Table.Td>{lang.symbols_extracted.toLocaleString()}</Table.Td>
+                  <Table.Td>{lang.detection}</Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
