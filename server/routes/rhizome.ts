@@ -3,6 +3,7 @@ import { execSync } from 'node:child_process'
 import { extname } from 'node:path'
 import { Hono } from 'hono'
 
+import { cachedAsync } from '../lib/cache.ts'
 import { requireQuery } from '../lib/params.ts'
 import { logger } from '../logger.ts'
 import { rhizome } from '../rhizome.ts'
@@ -252,6 +253,68 @@ app.get('/files', (c) => {
     logger.error({ err }, 'File listing failed')
     return c.json({ error: message }, 500)
   }
+})
+
+app.get('/scope', async (c) => {
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  const line = requireQuery(c, 'line')
+  if (line instanceof Response) return line
+  return rhizomeTool(c, 'get_scope', { file, line: Number(line) })
+})
+
+app.get('/exports', async (c) => {
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  return rhizomeTool(c, 'get_exports', { file })
+})
+
+app.get('/call-sites', async (c) => {
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  const args: Record<string, unknown> = { file }
+  const fn = c.req.query('function')
+  if (fn) args.function = fn
+  return rhizomeTool(c, 'get_call_sites', args)
+})
+
+app.get('/summary', async (c) => {
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  return rhizomeTool(c, 'summarize_file', { file })
+})
+
+app.get('/symbol-body', async (c) => {
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  const symbol = requireQuery(c, 'symbol')
+  if (symbol instanceof Response) return symbol
+  const args: Record<string, unknown> = { file, symbol }
+  const line = c.req.query('line')
+  if (line) args.line = Number(line)
+  return rhizomeTool(c, 'get_symbol_body', args)
+})
+
+app.get('/type-definitions', async (c) => {
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  return rhizomeTool(c, 'get_type_definitions', { file })
+})
+
+app.get('/enclosing-class', async (c) => {
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  const line = requireQuery(c, 'line')
+  if (line instanceof Response) return line
+  return rhizomeTool(c, 'get_enclosing_class', { file, line: Number(line) })
+})
+
+app.get('/parameters', async (c) => {
+  const file = requireQuery(c, 'file')
+  if (file instanceof Response) return file
+  const symbol = requireQuery(c, 'symbol')
+  if (symbol instanceof Response) return symbol
+  return rhizomeTool(c, 'get_parameters', { file, symbol })
 })
 
 export default app
