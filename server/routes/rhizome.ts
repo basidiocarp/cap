@@ -100,36 +100,95 @@ function buildFileTree(files: string[], basePath: string | undefined, maxDepth: 
   return rootChildren
 }
 
+const SUPPORTED_TOOLS = [
+  'find_references',
+  'get_annotations',
+  'get_call_sites',
+  'get_complexity',
+  'get_definition',
+  'get_dependencies',
+  'get_diagnostics',
+  'get_doc_comments',
+  'get_enclosing_class',
+  'get_exports',
+  'get_file_outline',
+  'get_hover_info',
+  'get_implementations',
+  'get_parameters',
+  'get_project_structure',
+  'get_scope',
+  'get_signature',
+  'get_symbol_body',
+  'get_symbols',
+  'get_structure',
+  'get_tests',
+  'get_type_definitions',
+  'go_to_definition',
+  'rename_symbol',
+  'search_symbols',
+  'summarize_file',
+] as const
+
+const SUPPORTED_LANGUAGES = [
+  'bash',
+  'c',
+  'cpp',
+  'csharp',
+  'css',
+  'dart',
+  'elixir',
+  'go',
+  'haskell',
+  'html',
+  'java',
+  'javascript',
+  'json',
+  'julia',
+  'kotlin',
+  'lua',
+  'markdown',
+  'objective-c',
+  'ocaml',
+  'perl',
+  'php',
+  'python',
+  'r',
+  'ruby',
+  'rust',
+  'scala',
+  'swift',
+  'terraform',
+  'toml',
+  'typescript',
+  'yaml',
+  'zig',
+] as const
+
+const UNAVAILABLE_RESPONSE = {
+  available: false,
+  backend_usage: { lsp: false, treesitter: false },
+  languages: [],
+  supported_tools: [],
+  tool_calls: [],
+}
+
+const getAnalytics = cachedAsync(async () => {
+  if (!rhizome.isAvailable()) return UNAVAILABLE_RESPONSE
+
+  return {
+    available: true,
+    backend_usage: { lsp: false, treesitter: true },
+    languages: SUPPORTED_LANGUAGES.map((language) => ({ detection: 'tree-sitter', language })),
+    supported_tools: [...SUPPORTED_TOOLS],
+    tool_calls: SUPPORTED_TOOLS.map((tool) => ({ avg_duration_ms: 0, count: 0, tool })),
+  }
+}, 60_000)
+
 // Analytics skips availability middleware so it returns data even when Rhizome is down
 app.get('/analytics', async (c) => {
-  if (!rhizome.isAvailable()) {
-    return c.json({
-      available: false,
-      backend_usage: { lsp: 0, treesitter: 0 },
-      languages: [],
-      tool_calls: [],
-    })
-  }
-
   try {
-    const languages = ['rust', 'typescript', 'javascript', 'python', 'go', 'java', 'c', 'cpp', 'ruby']
-    return c.json({
-      available: true,
-      backend_usage: { lsp: 0, treesitter: 1 },
-      languages: languages.map((lang) => ({
-        files_parsed: 0,
-        language: lang,
-        symbols_extracted: 0,
-      })),
-      tool_calls: [
-        { avg_duration_ms: 0, count: 0, tool: 'get_symbols' },
-        { avg_duration_ms: 0, count: 0, tool: 'search_symbols' },
-        { avg_duration_ms: 0, count: 0, tool: 'get_definition' },
-        { avg_duration_ms: 0, count: 0, tool: 'find_references' },
-        { avg_duration_ms: 0, count: 0, tool: 'get_diagnostics' },
-        { avg_duration_ms: 0, count: 0, tool: 'get_hover_info' },
-      ],
-    })
+    const data = await getAnalytics()
+    return c.json(data)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     logger.error({ err }, 'Rhizome analytics failed')
