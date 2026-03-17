@@ -228,17 +228,72 @@ function computeAnalytics() {
   const created_last_7d = (
     db.prepare("SELECT COUNT(*) as count FROM memories WHERE created_at > datetime('now', '-7 days')").get() as { count: number }
   ).count
+  const created_last_30d = (
+    db.prepare("SELECT COUNT(*) as count FROM memories WHERE created_at > datetime('now', '-30 days')").get() as { count: number }
+  ).count
   const decayed = (db.prepare('SELECT COUNT(*) as count FROM memories WHERE weight < 0.3').get() as { count: number }).count
+
+  let avg_weight = 0
+  let min_weight = 0
+  try {
+    const weightStats = db.prepare('SELECT AVG(weight) as avg_weight, MIN(weight) as min_weight FROM memories').get() as {
+      avg_weight: number | null
+      min_weight: number | null
+    }
+    avg_weight = weightStats.avg_weight ?? 0
+    min_weight = weightStats.min_weight ?? 0
+  } catch {
+    // fallback defaults already set
+  }
+
   const total_memoirs = (db.prepare('SELECT COUNT(*) as count FROM memoirs').get() as { count: number }).count
   const total_concepts = (db.prepare('SELECT COUNT(*) as count FROM concepts').get() as { count: number }).count
 
+  let code_memoirs = 0
+  try {
+    code_memoirs = (db.prepare("SELECT COUNT(*) as count FROM memoirs WHERE name LIKE 'code:%'").get() as { count: number }).count
+  } catch {
+    code_memoirs = 0
+  }
+
+  let total_links = 0
+  try {
+    total_links = (db.prepare('SELECT COUNT(*) as count FROM concept_links').get() as { count: number }).count
+  } catch {
+    total_links = 0
+  }
+
   const top_topics = db
-    .prepare('SELECT topic as name, COUNT(*) as count, AVG(weight) as avg_weight FROM memories GROUP BY topic ORDER BY count DESC LIMIT 10')
-    .all() as { name: string; count: number; avg_weight: number }[]
+    .prepare(
+      'SELECT topic as name, COUNT(*) as count, AVG(weight) as avg_weight, MAX(created_at) as latest_created_at FROM memories GROUP BY topic ORDER BY count DESC LIMIT 10'
+    )
+    .all() as { avg_weight: number; count: number; latest_created_at: string; name: string }[]
+
+  const importance_distribution: { critical: number; ephemeral: number; high: number; low: number; medium: number } = {
+    critical: 0,
+    ephemeral: 0,
+    high: 0,
+    low: 0,
+    medium: 0,
+  }
+  try {
+    const rows = db.prepare('SELECT importance, COUNT(*) as count FROM memories GROUP BY importance').all() as {
+      count: number
+      importance: string
+    }[]
+    for (const row of rows) {
+      if (row.importance in importance_distribution) {
+        importance_distribution[row.importance as keyof typeof importance_distribution] = row.count
+      }
+    }
+  } catch {
+    // fallback defaults already set
+  }
 
   return {
-    lifecycle: { created_last_7d, decayed, pruned: 0 },
-    memoir_stats: { code_memoirs: total_memoirs, total: total_memoirs, total_concepts },
+    importance_distribution,
+    lifecycle: { avg_weight, created_last_7d, created_last_30d, decayed, min_weight, pruned: 0 },
+    memoir_stats: { code_memoirs, total: total_memoirs, total_concepts, total_links },
     memory_utilization: { rate: total > 0 ? recalled / total : 0, recalled, total },
     search_stats: { empty_results: 0, hit_rate: 0, total_searches: 0 },
     top_topics,

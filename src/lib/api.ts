@@ -14,6 +14,19 @@ async function get<T = unknown>(path: string, params?: Record<string, string>): 
   return res.json() as Promise<T>
 }
 
+async function post<T = unknown>(path: string, body?: Record<string, unknown>): Promise<T> {
+  const url = new URL(`${BASE}${path}`, window.location.origin)
+  const res = await fetch(url.toString(), {
+    body: body ? JSON.stringify(body) : undefined,
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
+  })
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status} ${res.statusText}`)
+  }
+  return res.json() as Promise<T>
+}
+
 // Types (mirrors server/types.ts)
 
 export interface Memory {
@@ -229,6 +242,69 @@ export interface RhizomeAnalytics {
   tool_calls: { avg_duration_ms: number; count: number; tool: string }[]
 }
 
+export interface EcosystemSettings {
+  hyphae: { config_path: string | null; db_path: string; db_size_bytes: number }
+  mycelium: { config_path: string | null; filters: { hyphae: { enabled: boolean }; rhizome: { enabled: boolean } } }
+  rhizome: { auto_export: boolean; config_path: string | null; languages_enabled: number }
+}
+
+export interface PruneResult {
+  message: string
+  pruned: number
+}
+
+export interface CallSite {
+  call_expression: string
+  caller: string
+  file: string
+  line: number
+}
+
+export interface EnclosingClass {
+  kind: string
+  line_end: number
+  line_start: number
+  name: string
+}
+
+export interface ExportedSymbol {
+  kind: string
+  line: number
+  name: string
+  signature: string | null
+}
+
+export interface FileSummary {
+  description: string
+  exports: number
+  functions: number
+  imports: number
+  language: string
+  lines: number
+  types: number
+}
+
+export interface ParameterInfo {
+  default_value: string | null
+  name: string
+  type: string | null
+}
+
+export interface ScopeVariable {
+  kind: string
+  line: number
+  name: string
+  type: string | null
+}
+
+export interface SymbolBody {
+  body: string
+  kind: string
+  line_end: number
+  line_start: number
+  name: string
+}
+
 // API clients
 
 export const hyphaeApi = {
@@ -260,20 +336,34 @@ export const myceliumApi = {
 export const rhizomeApi = {
   analytics: () => get<RhizomeAnalytics>('/rhizome/analytics'),
   annotations: (file: string) => get<Annotation[]>('/rhizome/annotations', { file }),
+  callSites: (file: string, fn?: string) => get<CallSite[]>('/rhizome/call-sites', { file, function: fn ?? '' }),
   complexity: (file: string) => get<ComplexityResult[]>('/rhizome/complexity', { file }),
   definition: (file: string, symbol: string) => get<SymbolDefinition>('/rhizome/definition', { file, symbol }),
   dependencies: (file: string) => get<DependencyEdge[]>('/rhizome/dependencies', { file }),
   diagnostics: (file?: string) => get<DiagnosticItem[]>('/rhizome/diagnostics', { file: file ?? '' }),
+  enclosingClass: (file: string, line: number) => get<EnclosingClass>('/rhizome/enclosing-class', { file, line: String(line) }),
+  exports: (file: string) => get<ExportedSymbol[]>('/rhizome/exports', { file }),
   files: (path?: string, depth?: number) => get<FileNode[]>('/rhizome/files', { depth: depth ? String(depth) : '', path: path ?? '' }),
   hover: (file: string, line: number, column: number) =>
     get<HoverInfo>('/rhizome/hover', { column: String(column), file, line: String(line) }),
+  parameters: (file: string, symbol: string) => get<ParameterInfo[]>('/rhizome/parameters', { file, symbol }),
   references: (file: string, line: number, column: number) =>
     get<SymbolLocation[]>('/rhizome/references', { column: String(column), file, line: String(line) }),
+  scope: (file: string, line: number) => get<ScopeVariable[]>('/rhizome/scope', { file, line: String(line) }),
   search: (pattern: string, path?: string) => get<SearchResult[]>('/rhizome/search', { path: path ?? '', pattern }),
   status: () => get<RhizomeStatus>('/rhizome/status'),
   structure: (file: string, depth?: number) => get<RhizomeSymbol[]>('/rhizome/structure', { depth: depth ? String(depth) : '', file }),
+  summary: (file: string) => get<FileSummary>('/rhizome/summary', { file }),
+  symbolBody: (file: string, symbol: string, line?: number) =>
+    get<SymbolBody>('/rhizome/symbol-body', { file, line: line ? String(line) : '', symbol }),
   symbols: (file: string) => get<RhizomeSymbol[]>('/rhizome/symbols', { file }),
   tests: (file: string) => get<TestFunction[]>('/rhizome/tests', { file }),
+  typeDefinitions: (file: string) => get<RhizomeSymbol[]>('/rhizome/type-definitions', { file }),
+}
+
+export const settingsApi = {
+  get: () => get<EcosystemSettings>('/settings'),
+  pruneHyphae: (threshold?: number) => post<PruneResult>('/settings/hyphae/prune', threshold !== undefined ? { threshold } : undefined),
 }
 
 export const statusApi = {
