@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 
-import { hyphaeApi, myceliumApi, rhizomeApi, statusApi } from './api'
+import { hyphaeApi, myceliumApi, rhizomeApi, settingsApi, statusApi } from './api'
 
 // Hyphae
 
@@ -90,14 +90,20 @@ export function useMyceliumAnalytics() {
 export const rhizomeKeys = {
   analytics: () => ['rhizome', 'analytics'] as const,
   annotations: (file: string) => ['rhizome', 'annotations', file] as const,
+  callSites: (file: string, fn?: string) => ['rhizome', 'callSites', file, fn] as const,
   complexity: (file: string) => ['rhizome', 'complexity', file] as const,
   definition: (file: string, symbol: string) => ['rhizome', 'definition', file, symbol] as const,
   diagnostics: (file?: string) => ['rhizome', 'diagnostics', file] as const,
+  exports: (file: string) => ['rhizome', 'exports', file] as const,
   files: (path?: string, depth?: number) => ['rhizome', 'files', path, depth] as const,
+  scope: (file: string, line: number) => ['rhizome', 'scope', file, line] as const,
   search: (pattern: string, path?: string) => ['rhizome', 'search', pattern, path] as const,
   status: () => ['rhizome', 'status'] as const,
+  summary: (file: string) => ['rhizome', 'summary', file] as const,
+  symbolBody: (file: string, symbol: string, line?: number) => ['rhizome', 'symbolBody', file, symbol, line] as const,
   symbols: (file: string) => ['rhizome', 'symbols', file] as const,
   tests: (file: string) => ['rhizome', 'tests', file] as const,
+  typeDefinitions: (file: string) => ['rhizome', 'typeDefinitions', file] as const,
 }
 
 export function useAnnotations(file: string) {
@@ -167,6 +173,46 @@ export function useRhizomeAnalytics() {
   return useQuery({ queryFn: () => rhizomeApi.analytics(), queryKey: rhizomeKeys.analytics() })
 }
 
+export function useCallSites(file: string, fn?: string) {
+  return useQuery({
+    enabled: !!file,
+    queryFn: () => rhizomeApi.callSites(file, fn),
+    queryKey: rhizomeKeys.callSites(file, fn),
+  })
+}
+
+export function useExports(file: string) {
+  return useQuery({
+    enabled: !!file,
+    queryFn: () => rhizomeApi.exports(file),
+    queryKey: rhizomeKeys.exports(file),
+  })
+}
+
+export function useScope(file: string, line: number) {
+  return useQuery({
+    enabled: !!file && line > 0,
+    queryFn: () => rhizomeApi.scope(file, line),
+    queryKey: rhizomeKeys.scope(file, line),
+  })
+}
+
+export function useFileSummary(file: string) {
+  return useQuery({
+    enabled: !!file,
+    queryFn: () => rhizomeApi.summary(file),
+    queryKey: rhizomeKeys.summary(file),
+  })
+}
+
+export function useSymbolBody(file: string, symbol: string, line?: number) {
+  return useQuery({
+    enabled: !!file && !!symbol,
+    queryFn: () => rhizomeApi.symbolBody(file, symbol, line),
+    queryKey: rhizomeKeys.symbolBody(file, symbol, line),
+  })
+}
+
 // Status
 
 export const statusKeys = {
@@ -178,5 +224,25 @@ export function useEcosystemStatus() {
     queryFn: () => statusApi.ecosystem(),
     queryKey: statusKeys.ecosystem(),
     refetchInterval: 30_000,
+  })
+}
+
+// Settings
+
+export const settingsKeys = {
+  get: () => ['settings'] as const,
+}
+
+export function useSettings() {
+  return useQuery({
+    queryFn: () => settingsApi.get(),
+    queryKey: settingsKeys.get(),
+    staleTime: 60_000,
+  })
+}
+
+export function usePruneHyphae() {
+  return useMutation({
+    mutationFn: (threshold?: number) => settingsApi.pruneHyphae(threshold),
   })
 }
