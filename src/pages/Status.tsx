@@ -1,7 +1,8 @@
-import { Badge, Button, Grid, Group, Stack, Table, Text, Title } from '@mantine/core'
+import { Badge, Button, Card, Grid, Group, Stack, Table, Text, Title } from '@mantine/core'
 import { IconCircleCheck, IconCircleX, IconRefresh } from '@tabler/icons-react'
 
 import type { EcosystemStatus } from '../lib/api'
+import { EcosystemFlow } from '../components/EcosystemFlow'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
@@ -13,6 +14,7 @@ function AvailabilityBadge({ available }: { available: boolean }) {
       color={available ? 'mycelium' : 'decay'}
       leftSection={available ? <IconCircleCheck size={12} /> : <IconCircleX size={12} />}
       size='sm'
+      variant='light'
     >
       {available ? 'Available' : 'Unavailable'}
     </Badge>
@@ -139,6 +141,22 @@ export function Status() {
 
       {status && (
         <>
+          <Card
+            p='md'
+            shadow='sm'
+            withBorder
+          >
+            <Title
+              mb='sm'
+              order={4}
+            >
+              Ecosystem Architecture
+            </Title>
+            <div style={{ height: 400 }}>
+              <EcosystemFlow />
+            </div>
+          </Card>
+
           <Grid>
             <Grid.Col span={{ base: 12, md: 4 }}>
               <ToolCard

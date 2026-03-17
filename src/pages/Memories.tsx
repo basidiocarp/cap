@@ -100,6 +100,7 @@ export function Memories() {
                     <Badge
                       color={importanceColor(m.importance)}
                       size='sm'
+                      variant='light'
                     >
                       {m.importance}
                     </Badge>

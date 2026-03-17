@@ -123,6 +123,7 @@ export function Dashboard() {
                           <Badge
                             color='gill'
                             size='xs'
+                            variant='light'
                           >
                             {h.critical_count} critical
                           </Badge>
@@ -131,6 +132,7 @@ export function Dashboard() {
                           <Badge
                             color='fruiting'
                             size='xs'
+                            variant='light'
                           >
                             {h.high_count} high
                           </Badge>
@@ -139,6 +141,7 @@ export function Dashboard() {
                           <Badge
                             color='substrate'
                             size='xs'
+                            variant='light'
                           >
                             {h.low_weight_count} fading
                           </Badge>

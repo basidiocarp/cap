@@ -1,26 +1,8 @@
-import {
-  ActionIcon,
-  Alert,
-  Badge,
-  Box,
-  Code,
-  Group,
-  Loader,
-  NavLink,
-  ScrollArea,
-  SegmentedControl,
-  Stack,
-  Table,
-  Tabs,
-  Text,
-  TextInput,
-  Title,
-  UnstyledButton,
-} from '@mantine/core'
+import { ActionIcon, Badge, Box, Group, Loader, ScrollArea, SegmentedControl, Stack, Text, TextInput, Title } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconChevronRight, IconFile, IconFolder, IconFolderOpen, IconLayoutSidebar } from '@tabler/icons-react'
+import { IconLayoutSidebar } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import type { FileNode } from '../lib/api'
@@ -29,8 +11,6 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { rhizomeApi } from '../lib/api'
-import { annotationColor, complexityColor, symbolKindColor } from '../lib/colors'
-import { onActivate } from '../lib/keyboard'
 import {
   rhizomeKeys,
   useAnnotations,
@@ -43,55 +23,9 @@ import {
   useRhizomeStatus,
   useSymbols,
 } from '../lib/queries'
-
-function FileTreeNode({
-  expanded,
-  fileTree,
-  level,
-  node,
-  onExpand,
-  onSelect,
-  selectedFile,
-}: {
-  expanded: Set<string>
-  fileTree: Map<string, FileNode[]>
-  level: number
-  node: FileNode
-  onExpand: (path: string) => void
-  onSelect: (path: string) => void
-  selectedFile: string | null
-}) {
-  const isDir = node.type === 'dir'
-  const isExpanded = expanded.has(node.path)
-  const children = fileTree.get(node.path)
-
-  return (
-    <>
-      <NavLink
-        active={!isDir && selectedFile === node.path}
-        label={node.name}
-        leftSection={isDir ? isExpanded ? <IconFolderOpen size={16} /> : <IconFolder size={16} /> : <IconFile size={16} />}
-        onClick={() => (isDir ? onExpand(node.path) : onSelect(node.path))}
-        opened={isDir ? isExpanded : undefined}
-        style={{ paddingLeft: level * 12 }}
-      />
-      {isDir &&
-        isExpanded &&
-        children?.map((child) => (
-          <FileTreeNode
-            expanded={expanded}
-            fileTree={fileTree}
-            key={child.path}
-            level={level + 1}
-            node={child}
-            onExpand={onExpand}
-            onSelect={onSelect}
-            selectedFile={selectedFile}
-          />
-        ))}
-    </>
-  )
-}
+import { FileDetailTabs } from './code-explorer/FileDetailTabs'
+import { FileTreeNode } from './code-explorer/FileTreeNode'
+import { SymbolTable } from './code-explorer/SymbolTable'
 
 export function CodeExplorer() {
   const [searchParams] = useSearchParams()
@@ -378,110 +312,17 @@ export function CodeExplorer() {
               {(symbolsLoading || (symbolMode === 'exports' && exportsLoading)) && <Loader size='sm' />}
 
               {!(symbolsLoading || (symbolMode === 'exports' && exportsLoading)) && filteredSymbols.length > 0 && (
-                <SectionCard>
-                  <Table highlightOnHover>
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>Name</Table.Th>
-                        <Table.Th>Kind</Table.Th>
-                        <Table.Th>Line</Table.Th>
-                        <Table.Th>Signature</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {filteredSymbols.map((sym) => (
-                        <Fragment key={sym.name}>
-                          <Table.Tr
-                            onClick={() => handleSymbolClick(sym.name)}
-                            onKeyDown={onActivate(() => handleSymbolClick(sym.name))}
-                            style={{ cursor: 'pointer' }}
-                            tabIndex={0}
-                          >
-                            <Table.Td>
-                              <Group gap='xs'>
-                                <IconChevronRight
-                                  size={14}
-                                  style={{
-                                    transform: expandedSymbol === sym.name ? 'rotate(90deg)' : 'none',
-                                    transition: 'transform 150ms',
-                                  }}
-                                />
-                                <Text
-                                  fw={500}
-                                  size='sm'
-                                >
-                                  {sym.name}
-                                </Text>
-                              </Group>
-                            </Table.Td>
-                            <Table.Td>
-                              <Badge
-                                color={symbolKindColor(sym.kind)}
-                                size='sm'
-                                variant='light'
-                              >
-                                {sym.kind}
-                              </Badge>
-                            </Table.Td>
-                            <Table.Td>
-                              <Text size='sm'>{sym.location.line_start}</Text>
-                            </Table.Td>
-                            <Table.Td maw={300}>
-                              {sym.signature ? (
-                                <Text
-                                  ff='monospace'
-                                  lineClamp={1}
-                                  size='xs'
-                                >
-                                  {sym.signature}
-                                </Text>
-                              ) : (
-                                <Text
-                                  c='dimmed'
-                                  size='xs'
-                                >
-                                  —
-                                </Text>
-                              )}
-                            </Table.Td>
-                          </Table.Tr>
-                          {expandedSymbol === sym.name && (
-                            <Table.Tr>
-                              <Table.Td colSpan={4}>
-                                {defLoading ? (
-                                  <Loader size='sm' />
-                                ) : definition ? (
-                                  <Stack gap='xs'>
-                                    {definition.doc_comment && (
-                                      <Text
-                                        c='dimmed'
-                                        size='xs'
-                                        style={{ whiteSpace: 'pre-wrap' }}
-                                      >
-                                        {definition.doc_comment}
-                                      </Text>
-                                    )}
-                                    <Code block>{showFullDef ? definition.body : defPreview}</Code>
-                                    {hasMoreLines && (
-                                      <UnstyledButton onClick={() => setShowFullDef((v) => !v)}>
-                                        <Text
-                                          c='mycelium'
-                                          size='xs'
-                                        >
-                                          {showFullDef ? 'Show preview' : 'View full definition'}
-                                        </Text>
-                                      </UnstyledButton>
-                                    )}
-                                  </Stack>
-                                ) : null}
-                              </Table.Td>
-                            </Table.Tr>
-                          )}
-                        </Fragment>
-                      ))}
-                    </Table.Tbody>
-                  </Table>
-                </SectionCard>
+                <SymbolTable
+                  definition={definition}
+                  defLoading={defLoading}
+                  defPreview={defPreview}
+                  expandedSymbol={expandedSymbol}
+                  filteredSymbols={filteredSymbols}
+                  hasMoreLines={hasMoreLines}
+                  onSymbolClick={handleSymbolClick}
+                  onToggleFullDef={() => setShowFullDef((v) => !v)}
+                  showFullDef={showFullDef}
+                />
               )}
 
               {!(symbolsLoading || (symbolMode === 'exports' && exportsLoading)) &&
@@ -494,198 +335,15 @@ export function CodeExplorer() {
                 </EmptyState>
               )}
 
-              <SectionCard>
-                <Tabs defaultValue='annotations'>
-                  <Tabs.List>
-                    <Tabs.Tab value='annotations'>
-                      Annotations{' '}
-                      {!annotationsLoading && annotations.length > 0 && (
-                        <Badge
-                          ml={4}
-                          size='xs'
-                          variant='light'
-                        >
-                          {annotations.length}
-                        </Badge>
-                      )}
-                    </Tabs.Tab>
-                    <Tabs.Tab value='complexity'>
-                      Complexity{' '}
-                      {!complexityLoading && complexity.length > 0 && (
-                        <Badge
-                          ml={4}
-                          size='xs'
-                          variant='light'
-                        >
-                          {complexity.length}
-                        </Badge>
-                      )}
-                    </Tabs.Tab>
-                    <Tabs.Tab value='callSites'>
-                      Call Sites{' '}
-                      {!callSitesLoading && callSites.length > 0 && (
-                        <Badge
-                          color='spore'
-                          ml={4}
-                          size='xs'
-                          variant='light'
-                        >
-                          {callSites.length}
-                        </Badge>
-                      )}
-                    </Tabs.Tab>
-                  </Tabs.List>
-
-                  <Tabs.Panel
-                    pt='sm'
-                    value='annotations'
-                  >
-                    {annotationsLoading && <Loader size='sm' />}
-                    {!annotationsLoading && annotations.length === 0 && (
-                      <Text
-                        c='dimmed'
-                        size='sm'
-                      >
-                        No TODO, FIXME, or HACK comments found
-                      </Text>
-                    )}
-                    {!annotationsLoading && annotations.length > 0 && (
-                      <Stack gap='xs'>
-                        {annotations.map((a) => (
-                          <Alert
-                            color={annotationColor(a.kind)}
-                            key={`${a.kind}-${a.line}-${a.message}`}
-                            p='xs'
-                            variant='light'
-                          >
-                            <Group gap='xs'>
-                              <Badge
-                                color={annotationColor(a.kind)}
-                                size='xs'
-                                variant='filled'
-                              >
-                                {a.kind}
-                              </Badge>
-                              <Text
-                                c='dimmed'
-                                ff='monospace'
-                                size='xs'
-                              >
-                                L{a.line}
-                              </Text>
-                              <Text size='sm'>{a.message}</Text>
-                            </Group>
-                          </Alert>
-                        ))}
-                      </Stack>
-                    )}
-                  </Tabs.Panel>
-
-                  <Tabs.Panel
-                    pt='sm'
-                    value='complexity'
-                  >
-                    {complexityLoading && <Loader size='sm' />}
-                    {!complexityLoading && complexity.length === 0 && (
-                      <Text
-                        c='dimmed'
-                        size='sm'
-                      >
-                        No complexity data available
-                      </Text>
-                    )}
-                    {!complexityLoading && complexity.length > 0 && (
-                      <Table highlightOnHover>
-                        <Table.Thead>
-                          <Table.Tr>
-                            <Table.Th>Function</Table.Th>
-                            <Table.Th>Line</Table.Th>
-                            <Table.Th>Complexity</Table.Th>
-                          </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>
-                          {complexity.map((c) => (
-                            <Table.Tr key={`${c.name}-${c.line}`}>
-                              <Table.Td>
-                                <Text
-                                  ff='monospace'
-                                  size='sm'
-                                >
-                                  {c.name}
-                                </Text>
-                              </Table.Td>
-                              <Table.Td>
-                                <Text size='sm'>{c.line}</Text>
-                              </Table.Td>
-                              <Table.Td>
-                                <Badge
-                                  color={complexityColor(c.complexity)}
-                                  size='sm'
-                                  variant='light'
-                                >
-                                  {c.complexity}
-                                </Badge>
-                              </Table.Td>
-                            </Table.Tr>
-                          ))}
-                        </Table.Tbody>
-                      </Table>
-                    )}
-                  </Tabs.Panel>
-
-                  <Tabs.Panel
-                    pt='sm'
-                    value='callSites'
-                  >
-                    {callSitesLoading && <Loader size='sm' />}
-                    {!callSitesLoading && callSites.length === 0 && (
-                      <Text
-                        c='dimmed'
-                        size='sm'
-                      >
-                        No call sites found
-                      </Text>
-                    )}
-                    {!callSitesLoading && callSites.length > 0 && (
-                      <Table highlightOnHover>
-                        <Table.Thead>
-                          <Table.Tr>
-                            <Table.Th>Caller</Table.Th>
-                            <Table.Th>Line</Table.Th>
-                            <Table.Th>Call Expression</Table.Th>
-                          </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>
-                          {callSites.map((cs) => (
-                            <Table.Tr key={`${cs.caller}-${cs.line}-${cs.call_expression}`}>
-                              <Table.Td>
-                                <Text
-                                  ff='monospace'
-                                  size='sm'
-                                >
-                                  {cs.caller}
-                                </Text>
-                              </Table.Td>
-                              <Table.Td>
-                                <Text size='sm'>{cs.line}</Text>
-                              </Table.Td>
-                              <Table.Td>
-                                <Text
-                                  ff='monospace'
-                                  lineClamp={1}
-                                  size='xs'
-                                >
-                                  {cs.call_expression}
-                                </Text>
-                              </Table.Td>
-                            </Table.Tr>
-                          ))}
-                        </Table.Tbody>
-                      </Table>
-                    )}
-                  </Tabs.Panel>
-                </Tabs>
-              </SectionCard>
+              <FileDetailTabs
+                annotations={annotations}
+                annotationsLoading={annotationsLoading}
+                callSites={callSites}
+                callSitesLoading={callSitesLoading}
+                complexity={complexity}
+                complexityLoading={complexityLoading}
+                selectedFile={selectedFile}
+              />
             </>
           ) : (
             <EmptyState>Select a file to explore its symbols</EmptyState>

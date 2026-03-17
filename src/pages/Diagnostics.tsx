@@ -106,7 +106,7 @@ export function Diagnostics() {
                   <Badge
                     color='gill'
                     size='sm'
-                    variant='filled'
+                    variant='light'
                   >
                     {counts.error} {counts.error === 1 ? 'error' : 'errors'}
                   </Badge>
@@ -115,7 +115,7 @@ export function Diagnostics() {
                   <Badge
                     color='substrate'
                     size='sm'
-                    variant='filled'
+                    variant='light'
                   >
                     {counts.warning} {counts.warning === 1 ? 'warning' : 'warnings'}
                   </Badge>

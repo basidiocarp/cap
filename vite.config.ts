@@ -9,8 +9,8 @@ export default defineConfig({
           if (id.includes('@mantine/core') || id.includes('@mantine/hooks') || id.includes('@mantine/notifications')) {
             return 'mantine'
           }
-          if (id.includes('recharts') || id.includes('d3-') || id.includes('victory-vendor')) {
-            return 'recharts'
+          if (id.includes('@mantine/charts') || id.includes('recharts') || id.includes('d3-') || id.includes('victory-vendor')) {
+            return 'charts'
           }
           if (
             id.includes('react-dom') ||

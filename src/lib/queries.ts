@@ -93,6 +93,7 @@ export const rhizomeKeys = {
   callSites: (file: string, fn?: string) => ['rhizome', 'callSites', file, fn] as const,
   complexity: (file: string) => ['rhizome', 'complexity', file] as const,
   definition: (file: string, symbol: string) => ['rhizome', 'definition', file, symbol] as const,
+  dependencies: (file: string) => ['rhizome', 'dependencies', file] as const,
   diagnostics: (file?: string) => ['rhizome', 'diagnostics', file] as const,
   exports: (file: string) => ['rhizome', 'exports', file] as const,
   files: (path?: string, depth?: number) => ['rhizome', 'files', path, depth] as const,
@@ -119,6 +120,14 @@ export function useComplexity(file: string) {
     enabled: !!file,
     queryFn: () => rhizomeApi.complexity(file),
     queryKey: rhizomeKeys.complexity(file),
+  })
+}
+
+export function useDependencies(file: string) {
+  return useQuery({
+    enabled: !!file,
+    queryFn: () => rhizomeApi.dependencies(file),
+    queryKey: rhizomeKeys.dependencies(file),
   })
 }
 

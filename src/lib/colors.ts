@@ -83,3 +83,5 @@ export function complexityColor(score: number): string {
   if (score <= 10) return 'yellow'
   return 'red'
 }
+
+export const PIE_COLORS = ['spore.6', 'fruiting.6', 'mycelium.6', 'chitin.5', 'lichen.6', 'gill.6']

@@ -2,6 +2,7 @@ import { Badge, Group, Loader, Stack, Table, Text, TextInput, Title, UnstyledBut
 import { useState } from 'react'
 
 import type { Concept } from '../lib/api'
+import { ConceptGraph } from '../components/ConceptGraph'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
@@ -146,9 +147,10 @@ export function Memoirs() {
                           <Group gap={4}>
                             {parseJsonArray<{ namespace: string; value: string }>(c.labels).map((l) => (
                               <Badge
+                                color='spore'
                                 key={`${l.namespace}:${l.value}`}
                                 size='xs'
-                                variant='outline'
+                                variant='light'
                               >
                                 {l.namespace}:{l.value}
                               </Badge>
@@ -162,6 +164,20 @@ export function Memoirs() {
               ) : (
                 <EmptyState>No concepts yet</EmptyState>
               )}
+            </SectionCard>
+          )}
+
+          {selected && inspectConcept && (
+            <SectionCard
+              title='Knowledge Graph'
+              titleOrder={5}
+            >
+              <ConceptGraph
+                concept={inspectConcept}
+                depth={2}
+                memoir={selected}
+                onNodeClick={(name) => setInspectConcept(name)}
+              />
             </SectionCard>
           )}
 
@@ -185,14 +201,20 @@ export function Memoirs() {
                     padding='sm'
                   >
                     <Text
+                      c='white'
                       fw={600}
                       size='sm'
                     >
                       {inspection.concept.name}
                     </Text>
-                    <Text size='sm'>{inspection.concept.definition}</Text>
                     <Text
-                      c='dimmed'
+                      c='gray.3'
+                      size='sm'
+                    >
+                      {inspection.concept.definition}
+                    </Text>
+                    <Text
+                      c='gray.4'
                       size='xs'
                     >
                       Confidence: {(inspection.concept.confidence * 100).toFixed(0)}% | Revision: {inspection.concept.revision}
@@ -222,6 +244,7 @@ export function Memoirs() {
                               <Badge
                                 color={n.direction === 'outgoing' ? 'spore' : 'lichen'}
                                 size='xs'
+                                variant='light'
                               >
                                 {n.direction === 'outgoing' ? '\u2192' : '\u2190'}
                               </Badge>
@@ -230,6 +253,7 @@ export function Memoirs() {
                               <Badge
                                 color={relationColor(n.link.relation)}
                                 size='xs'
+                                variant='light'
                               >
                                 {n.link.relation}
                               </Badge>
