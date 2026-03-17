@@ -1,13 +1,19 @@
 import { BarChart, LineChart, PieChart } from '@mantine/charts'
-import { Alert, Card, Grid, Group, RingProgress, Stack, Table, Tabs, Text, Title } from '@mantine/core'
+import { Alert, Badge, Card, Grid, Group, RingProgress, Stack, Table, Tabs, Text, Title } from '@mantine/core'
 import { IconBrain, IconChartBar, IconCode, IconNetwork } from '@tabler/icons-react'
 
-import type { HyphaeAnalytics, MyceliumAnalytics, RhizomeAnalytics } from '../lib/api'
+import type { EcosystemStatus, HyphaeAnalytics, MyceliumAnalytics, RhizomeAnalytics } from '../lib/api'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
-import { useHyphaeAnalytics, useMyceliumAnalytics, useRhizomeAnalytics } from '../lib/queries'
+import { useEcosystemStatus, useHyphaeAnalytics, useMyceliumAnalytics, useRhizomeAnalytics } from '../lib/queries'
 
 const PIE_COLORS = ['spore.6', 'fruiting.6', 'mycelium.6', 'chitin.5', 'lichen.6', 'gill.6']
+
+function weightColor(w: number): string {
+  if (w > 0.7) return 'mycelium.7'
+  if (w >= 0.3) return 'substrate.6'
+  return 'decay.5'
+}
 
 function KpiCard({ accent, label, value }: { accent: string; label: string; value: string }) {
   return (
@@ -46,6 +52,30 @@ function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
 
   return (
     <Stack>
+      <Grid>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <KpiCard
+            accent='chitin.5'
+            label='Total Commands'
+            value={data.total_stats.total_commands.toLocaleString()}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <KpiCard
+            accent='mycelium.7'
+            label='Total Tokens Saved'
+            value={data.total_stats.total_tokens_saved.toLocaleString()}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <KpiCard
+            accent='spore.6'
+            label='Overall Savings Rate'
+            value={`${(data.total_stats.overall_rate * 100).toFixed(1)}%`}
+          />
+        </Grid.Col>
+      </Grid>
+
       <Text
         c='dimmed'
         size='sm'
@@ -60,7 +90,7 @@ function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
             data={data.savings_trend}
             dataKey='date'
             h={300}
-            series={[{ color: 'fruiting.6', name: 'tokens_saved' }]}
+            series={[{ color: 'mycelium.6', name: 'tokens_saved' }]}
             strokeWidth={2}
           />
         </SectionCard>
@@ -72,7 +102,11 @@ function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
             data={data.savings_by_category}
             dataKey='category'
             h={300}
-            series={[{ color: 'fruiting.6', name: 'tokens_saved' }]}
+            series={[
+              { color: 'chitin.5', name: 'tokens_input' },
+              { color: 'mycelium.6', name: 'tokens_saved' },
+            ]}
+            type='stacked'
           />
         </SectionCard>
       )}
@@ -117,6 +151,17 @@ function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
 
   const utilizationPct = Math.round(data.memory_utilization.rate * 100)
 
+  const importanceData = [
+    {
+      critical: data.importance_distribution.critical,
+      ephemeral: data.importance_distribution.ephemeral,
+      high: data.importance_distribution.high,
+      label: 'Importance',
+      low: data.importance_distribution.low,
+      medium: data.importance_distribution.medium,
+    },
+  ]
+
   return (
     <Stack>
       <Grid>
@@ -150,21 +195,28 @@ function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
 
         <Grid.Col span={{ base: 12, md: 8 }}>
           <Grid>
-            <Grid.Col span={{ base: 12, md: 4 }}>
+            <Grid.Col span={{ base: 6, md: 3 }}>
               <KpiCard
                 accent='mycelium.7'
                 label='Created (7d)'
                 value={data.lifecycle.created_last_7d.toLocaleString()}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 4 }}>
+            <Grid.Col span={{ base: 6, md: 3 }}>
+              <KpiCard
+                accent='mycelium.6'
+                label='Created (30d)'
+                value={data.lifecycle.created_last_30d.toLocaleString()}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 6, md: 3 }}>
               <KpiCard
                 accent='chitin.5'
                 label='Decayed'
                 value={data.lifecycle.decayed.toLocaleString()}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 4 }}>
+            <Grid.Col span={{ base: 6, md: 3 }}>
               <KpiCard
                 accent='chitin.5'
                 label='Pruned'
@@ -173,13 +225,66 @@ function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
             </Grid.Col>
           </Grid>
 
-          <Text
-            c='dimmed'
+          <SectionCard
             mt='md'
-            size='sm'
+            title='Avg Weight'
           >
-            {data.memoir_stats.total} memoirs, {data.memoir_stats.total_concepts.toLocaleString()} concepts
-          </Text>
+            <Group>
+              <Title
+                c={weightColor(data.lifecycle.avg_weight)}
+                order={3}
+              >
+                {data.lifecycle.avg_weight.toFixed(2)}
+              </Title>
+              <Text
+                c='dimmed'
+                size='sm'
+              >
+                (min: {data.lifecycle.min_weight.toFixed(2)})
+              </Text>
+            </Group>
+          </SectionCard>
+        </Grid.Col>
+      </Grid>
+
+      <SectionCard title='Importance Distribution'>
+        <BarChart
+          data={importanceData}
+          dataKey='label'
+          h={80}
+          orientation='vertical'
+          series={[
+            { color: 'gill.6', name: 'critical' },
+            { color: 'mycelium.6', name: 'high' },
+            { color: 'substrate.6', name: 'medium' },
+            { color: 'decay.5', name: 'low' },
+            { color: 'chitin.5', name: 'ephemeral' },
+          ]}
+          type='stacked'
+        />
+      </SectionCard>
+
+      <Grid>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <KpiCard
+            accent='spore.6'
+            label='Code Memoirs'
+            value={data.memoir_stats.code_memoirs.toLocaleString()}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <KpiCard
+            accent='lichen.6'
+            label='Total Concepts'
+            value={data.memoir_stats.total_concepts.toLocaleString()}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <KpiCard
+            accent='lichen.6'
+            label='Total Links'
+            value={data.memoir_stats.total_links.toLocaleString()}
+          />
         </Grid.Col>
       </Grid>
 
@@ -240,12 +345,67 @@ function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null }) {
 
   return (
     <Stack>
-      <Text
-        c='dimmed'
-        size='sm'
-      >
-        Tree-sitter: {data.backend_usage.treesitter ? 'active' : 'inactive'}, LSP: {data.backend_usage.lsp ? 'active' : 'inactive'}
-      </Text>
+      <Grid>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <KpiCard
+            accent='spore.6'
+            label='Supported Tools'
+            value={data.supported_tools.length.toLocaleString()}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <KpiCard
+            accent='lichen.6'
+            label='Languages'
+            value={data.languages.length.toLocaleString()}
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <Card
+            padding='lg'
+            shadow='sm'
+            withBorder
+          >
+            <Text
+              c='dimmed'
+              mb='xs'
+              size='xs'
+            >
+              Backend Status
+            </Text>
+            <Group gap='xs'>
+              <Badge
+                color={data.backend_usage.treesitter ? 'mycelium' : 'decay'}
+                variant='filled'
+              >
+                Tree-sitter: {data.backend_usage.treesitter ? 'Active' : 'Inactive'}
+              </Badge>
+              <Badge
+                color={data.backend_usage.lsp ? 'mycelium' : 'decay'}
+                variant='filled'
+              >
+                LSP: {data.backend_usage.lsp ? 'Active' : 'Inactive'}
+              </Badge>
+            </Group>
+          </Card>
+        </Grid.Col>
+      </Grid>
+
+      {data.supported_tools.length > 0 && (
+        <SectionCard title='Supported Tools'>
+          <Group gap='xs'>
+            {data.supported_tools.map((tool) => (
+              <Badge
+                color='spore'
+                key={tool}
+                variant='light'
+              >
+                {tool}
+              </Badge>
+            ))}
+          </Group>
+        </SectionCard>
+      )}
 
       {data.tool_calls.length > 0 && (
         <SectionCard title='Tool Call Distribution'>
@@ -282,14 +442,128 @@ function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null }) {
   )
 }
 
+function EcosystemTab({ data }: { data: EcosystemStatus | null }) {
+  if (!data) {
+    return (
+      <Alert
+        color='yellow'
+        title='Unavailable'
+      >
+        Ecosystem status data is not available.
+      </Alert>
+    )
+  }
+
+  return (
+    <Stack>
+      <SectionCard title='Service Status'>
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Stack gap='xs'>
+              <Badge
+                color={data.mycelium.available ? 'mycelium' : 'decay'}
+                size='lg'
+                variant='filled'
+              >
+                Mycelium: {data.mycelium.available ? 'Connected' : 'Not Connected'}
+              </Badge>
+              {data.mycelium.version && (
+                <Text
+                  c='dimmed'
+                  size='xs'
+                >
+                  v{data.mycelium.version}
+                </Text>
+              )}
+            </Stack>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Stack gap='xs'>
+              <Badge
+                color={data.hyphae.available ? 'mycelium' : 'decay'}
+                size='lg'
+                variant='filled'
+              >
+                Hyphae: {data.hyphae.available ? 'Connected' : 'Not Connected'}
+              </Badge>
+              {data.hyphae.available && (
+                <Text
+                  c='dimmed'
+                  size='xs'
+                >
+                  {data.hyphae.memories} memories, {data.hyphae.memoirs} memoirs
+                  {data.hyphae.version ? ` · v${data.hyphae.version}` : ''}
+                </Text>
+              )}
+            </Stack>
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Stack gap='xs'>
+              <Badge
+                color={data.rhizome.available ? 'mycelium' : 'decay'}
+                size='lg'
+                variant='filled'
+              >
+                Rhizome: {data.rhizome.available ? 'Connected' : 'Not Connected'}
+              </Badge>
+              {data.rhizome.available && (
+                <Text
+                  c='dimmed'
+                  size='xs'
+                >
+                  {data.rhizome.languages.length} languages
+                </Text>
+              )}
+            </Stack>
+          </Grid.Col>
+        </Grid>
+      </SectionCard>
+
+      <SectionCard title='Integration Connections'>
+        <Stack gap='sm'>
+          <Group>
+            <Badge
+              color={data.mycelium.available && data.hyphae.available ? 'mycelium' : 'decay'}
+              variant='light'
+            >
+              Mycelium → Hyphae
+            </Badge>
+            <Text
+              c='dimmed'
+              size='sm'
+            >
+              {data.mycelium.available && data.hyphae.available ? 'Context chunking active' : 'Not connected'}
+            </Text>
+          </Group>
+          <Group>
+            <Badge
+              color={data.rhizome.available && data.hyphae.available ? 'mycelium' : 'decay'}
+              variant='light'
+            >
+              Rhizome → Hyphae
+            </Badge>
+            <Text
+              c='dimmed'
+              size='sm'
+            >
+              {data.rhizome.available && data.hyphae.available ? 'Code memoir export active' : 'Not connected'}
+            </Text>
+          </Group>
+        </Stack>
+      </SectionCard>
+    </Stack>
+  )
+}
+
 export function Analytics() {
+  const { data: ecosystemData = null, isLoading: ecosystemLoading } = useEcosystemStatus()
   const { data: hyphaeData = null, isLoading: hyphaeLoading } = useHyphaeAnalytics()
   const { data: myceliumData = null, isLoading: myceliumLoading } = useMyceliumAnalytics()
   const { data: rhizomeData = null, isLoading: rhizomeLoading } = useRhizomeAnalytics()
 
-  const loading = hyphaeLoading || myceliumLoading || rhizomeLoading
+  const loading = ecosystemLoading || hyphaeLoading || myceliumLoading || rhizomeLoading
 
-  const totalTokensSaved = myceliumData ? myceliumData.savings_by_category.reduce((sum, c) => sum + c.tokens_saved, 0) : null
+  const totalTokensSaved = myceliumData ? myceliumData.total_stats.total_tokens_saved : null
 
   const memoryUtilization = hyphaeData ? Math.round(hyphaeData.memory_utilization.rate * 100) : null
 
@@ -378,13 +652,7 @@ export function Analytics() {
           pt='md'
           value='ecosystem'
         >
-          <Alert
-            color='lichen'
-            title='Coming Soon'
-            variant='light'
-          >
-            Cross-tool correlation analytics coming soon. This will show how using multiple ecosystem tools together impacts efficiency.
-          </Alert>
+          <EcosystemTab data={ecosystemData} />
         </Tabs.Panel>
       </Tabs>
     </Stack>
