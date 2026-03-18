@@ -5,6 +5,7 @@ import { Hono } from 'hono'
 
 import { createCliRunner } from '../lib/cli.ts'
 import { HYPHAE_BIN } from '../lib/config.ts'
+import { activateMode, loadModes } from '../lib/modes.ts'
 import { logger } from '../logger.ts'
 
 const runHyphae = createCliRunner(HYPHAE_BIN, 'hyphae')
@@ -149,6 +150,31 @@ app.post('/hyphae/prune', async (c) => {
   } catch (err) {
     logger.error({ err }, 'Prune failed')
     return c.json({ error: 'Prune operation failed' }, 500)
+  }
+})
+
+app.get('/modes', (c) => {
+  try {
+    return c.json(loadModes())
+  } catch (err) {
+    logger.error({ err }, 'Failed to load modes')
+    return c.json({ error: 'Failed to load modes' }, 500)
+  }
+})
+
+app.post('/modes/activate', async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}))
+    const mode = body.mode
+    if (!mode || typeof mode !== 'string') {
+      return c.json({ error: 'Missing required field: mode' }, 400)
+    }
+    const updated = activateMode(mode)
+    return c.json(updated)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to activate mode'
+    logger.error({ err }, 'Mode activation failed')
+    return c.json({ error: message }, 400)
   }
 })
 

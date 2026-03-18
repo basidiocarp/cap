@@ -398,8 +398,21 @@ export const rhizomeApi = {
   typeDefinitions: (file: string) => get<RhizomeSymbol[]>('/rhizome/type-definitions', { file }),
 }
 
+export interface Mode {
+  description: string
+  hyphae_tools: string[]
+  rhizome_tools: string[]
+}
+
+export interface ModeConfig {
+  active: string
+  modes: Record<string, Mode>
+}
+
 export const settingsApi = {
+  activateMode: (mode: string) => post<ModeConfig>('/settings/modes/activate', { mode }),
   get: () => get<EcosystemSettings>('/settings'),
+  getModes: () => get<ModeConfig>('/settings/modes'),
   pruneHyphae: (threshold?: number) => post<PruneResult>('/settings/hyphae/prune', threshold !== undefined ? { threshold } : undefined),
 }
 

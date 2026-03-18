@@ -1,12 +1,12 @@
-import { Alert, Badge, Button, Grid, Group, NumberInput, Stack, Text, Title } from '@mantine/core'
-import { IconBrain, IconCode, IconDatabase, IconSettings } from '@tabler/icons-react'
+import { Alert, Badge, Button, Grid, Group, NumberInput, SegmentedControl, Stack, Text, Title } from '@mantine/core'
+import { IconBrain, IconCode, IconDatabase, IconSettings, IconShield } from '@tabler/icons-react'
 import { useState } from 'react'
 
 import type { EcosystemSettings } from '../lib/api'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
-import { usePruneHyphae, useSettings } from '../lib/queries'
+import { useActivateMode, useModes, usePruneHyphae, useSettings } from '../lib/queries'
 
 function formatBytes(bytes: number): string {
   if (bytes >= 1024 * 1024) {
@@ -164,6 +164,53 @@ function RhizomeCard({ settings }: { settings: EcosystemSettings['rhizome'] }) {
   )
 }
 
+const MODE_COLORS: Record<string, string> = {
+  develop: 'mycelium',
+  explore: 'lichen',
+  review: 'spore',
+}
+
+function ModeSelector() {
+  const { data: modeConfig } = useModes()
+  const activate = useActivateMode()
+
+  if (!modeConfig) return null
+
+  const modeNames = Object.keys(modeConfig.modes)
+  const activeMode = modeConfig.modes[modeConfig.active]
+
+  return (
+    <SectionCard>
+      <Group mb='md'>
+        <IconShield size={20} />
+        <Title order={4}>Operational Mode</Title>
+        <Badge
+          color={MODE_COLORS[modeConfig.active] ?? 'gray'}
+          size='sm'
+        >
+          {modeConfig.active}
+        </Badge>
+      </Group>
+      <Stack gap='sm'>
+        <SegmentedControl
+          color={MODE_COLORS[modeConfig.active] ?? 'gray'}
+          data={modeNames.map((name) => ({ label: name.charAt(0).toUpperCase() + name.slice(1), value: name }))}
+          onChange={(value) => activate.mutate(value)}
+          value={modeConfig.active}
+        />
+        {activeMode && (
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            {activeMode.description}
+          </Text>
+        )}
+      </Stack>
+    </SectionCard>
+  )
+}
+
 export function Settings() {
   const { data: settings, error, isLoading } = useSettings()
 
@@ -176,6 +223,8 @@ export function Settings() {
       <Title order={2}>Settings</Title>
 
       <ErrorAlert error={error} />
+
+      <ModeSelector />
 
       {settings && (
         <Grid>

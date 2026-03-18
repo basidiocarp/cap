@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { hyphaeApi, myceliumApi, rhizomeApi, settingsApi, statusApi } from './api'
 
@@ -249,6 +249,7 @@ export function useEcosystemStatus() {
 
 export const settingsKeys = {
   get: () => ['settings'] as const,
+  modes: () => ['settings', 'modes'] as const,
 }
 
 export function useSettings() {
@@ -262,5 +263,23 @@ export function useSettings() {
 export function usePruneHyphae() {
   return useMutation({
     mutationFn: (threshold?: number) => settingsApi.pruneHyphae(threshold),
+  })
+}
+
+export function useModes() {
+  return useQuery({
+    queryFn: () => settingsApi.getModes(),
+    queryKey: settingsKeys.modes(),
+    staleTime: 30_000,
+  })
+}
+
+export function useActivateMode() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (mode: string) => settingsApi.activateMode(mode),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: settingsKeys.modes() })
+    },
   })
 }
