@@ -1,29 +1,21 @@
 import { Hono } from 'hono'
 
-import { cachedAsync } from '../lib/cache.ts'
+import { cached } from '../lib/cache.ts'
 import { aggregateUsage, scanAllSessions, usageTrend } from '../lib/usage.ts'
-import { logger } from '../logger.ts'
 
-const getUsageData = cachedAsync(() => {
-  try {
-    return scanAllSessions()
-  } catch (err) {
-    logger.error({ err }, 'Failed to scan sessions')
-    return []
-  }
-}, 60_000)
+const getUsageData = cached(() => scanAllSessions(), 60_000)
 
 const app = new Hono()
 
-app.get('/', async (c) => {
-  const sessions = await getUsageData()
+app.get('/', (c) => {
+  const sessions = getUsageData()
   return c.json(aggregateUsage(sessions))
 })
 
-app.get('/sessions', async (c) => {
+app.get('/sessions', (c) => {
   const since = c.req.query('since')
   const limit = Number.parseInt(c.req.query('limit') ?? '20', 10)
-  const sessions = await getUsageData()
+  const sessions = getUsageData()
 
   let filtered = sessions
   if (since) {
@@ -33,9 +25,9 @@ app.get('/sessions', async (c) => {
   return c.json(filtered.slice(0, limit))
 })
 
-app.get('/trend', async (c) => {
+app.get('/trend', (c) => {
   const days = Number.parseInt(c.req.query('days') ?? '30', 10)
-  const sessions = await getUsageData()
+  const sessions = getUsageData()
   return c.json(usageTrend(sessions, days))
 })
 

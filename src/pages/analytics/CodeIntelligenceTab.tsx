@@ -99,7 +99,10 @@ export function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null })
 
       {data.tool_calls.length > 0 && (
         <SectionCard title='Tool Call Distribution'>
-          <Group justify='center'>
+          <Group
+            justify='center'
+            mih={260}
+          >
             <PieChart
               data={pieData}
               mx='auto'
