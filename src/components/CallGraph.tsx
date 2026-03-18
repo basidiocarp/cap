@@ -81,7 +81,7 @@ export function CallGraph({ file }: CallGraphProps) {
   const { data: dependencies = [], isLoading } = useDependencies(file ?? '')
 
   const { nodes, edges } = useMemo(() => {
-    if (dependencies.length === 0) {
+    if (!Array.isArray(dependencies) || dependencies.length === 0) {
       return { edges: [], nodes: [] }
     }
 

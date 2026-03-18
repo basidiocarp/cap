@@ -23,6 +23,38 @@ import { FileDetailTabs } from './code-explorer/FileDetailTabs'
 import { FileTreeNode } from './code-explorer/FileTreeNode'
 import { SymbolTable } from './code-explorer/SymbolTable'
 
+const CODE_EXTENSIONS = new Set([
+  'c',
+  'cc',
+  'cpp',
+  'cs',
+  'dart',
+  'ex',
+  'go',
+  'h',
+  'hpp',
+  'java',
+  'js',
+  'jsx',
+  'kt',
+  'lua',
+  'mts',
+  'php',
+  'py',
+  'rb',
+  'rs',
+  'swift',
+  'ts',
+  'tsx',
+  'zig',
+])
+
+function isCodeFile(path: string | null): boolean {
+  if (!path) return false
+  const ext = path.split('.').pop()?.toLowerCase() ?? ''
+  return CODE_EXTENSIONS.has(ext)
+}
+
 export function CodeExplorer() {
   const [searchParams] = useSearchParams()
   const fileParam = searchParams.get('file')
@@ -45,13 +77,15 @@ export function CodeExplorer() {
 
   const tree = useFileTreeState(fileParam, symbolParam, unavailable, onFileSelected)
 
-  const { data: symbols = [], isLoading: symbolsLoading } = useSymbols(tree.selectedFile ?? '')
-  const { data: definition, isLoading: defLoading } = useDefinition(tree.selectedFile ?? '', expandedSymbol ?? '')
-  const { data: annotations = [], isLoading: annotationsLoading } = useAnnotations(tree.selectedFile ?? '')
-  const { data: callSites = [], isLoading: callSitesLoading } = useCallSites(tree.selectedFile ?? '')
-  const { data: complexity = [], isLoading: complexityLoading } = useComplexity(tree.selectedFile ?? '')
-  const { data: exports = [], isLoading: exportsLoading } = useExports(tree.selectedFile ?? '')
-  const { data: fileSummary, isLoading: summaryLoading } = useFileSummary(tree.selectedFile ?? '')
+  const codeFile = isCodeFile(tree.selectedFile) ? (tree.selectedFile ?? '') : ''
+
+  const { data: symbols = [], isLoading: symbolsLoading } = useSymbols(codeFile)
+  const { data: definition, isLoading: defLoading } = useDefinition(codeFile, expandedSymbol ?? '')
+  const { data: annotations = [], isLoading: annotationsLoading } = useAnnotations(codeFile)
+  const { data: callSites = [], isLoading: callSitesLoading } = useCallSites(codeFile)
+  const { data: complexity = [], isLoading: complexityLoading } = useComplexity(codeFile)
+  const { data: exports = [], isLoading: exportsLoading } = useExports(codeFile)
+  const { data: fileSummary, isLoading: summaryLoading } = useFileSummary(codeFile)
 
   const handleLoadSymbols = useCallback(
     (filePath: string) => {
@@ -258,7 +292,11 @@ export function CodeExplorer() {
 
               {!(symbolsLoading || (symbolMode === 'exports' && exportsLoading)) && displaySymbols.length === 0 && (
                 <EmptyState>
-                  {symbolMode === 'exports' ? 'No exported symbols found in this file' : 'No symbols found in this file'}
+                  {!isCodeFile(tree.selectedFile)
+                    ? 'Code intelligence is not available for this file type'
+                    : symbolMode === 'exports'
+                      ? 'No exported symbols found in this file'
+                      : 'No symbols found in this file'}
                 </EmptyState>
               )}
 
