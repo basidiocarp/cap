@@ -65,7 +65,10 @@ export function Analytics() {
         </Grid.Col>
       </Grid>
 
-      <Tabs defaultValue='token-savings'>
+      <Tabs
+        keepMounted={false}
+        defaultValue='token-savings'
+      >
         <Tabs.List>
           <Tabs.Tab
             leftSection={<IconChartBar size={16} />}

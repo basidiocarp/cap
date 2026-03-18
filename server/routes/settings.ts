@@ -190,22 +190,16 @@ app.put('/mycelium', async (c) => {
 
     mkdirSync(configDir, { recursive: true })
 
-    let content = ''
-    if (body.hyphae_enabled !== undefined) {
-      content += `[filters.hyphae]\nenabled = ${body.hyphae_enabled ? 'true' : 'false'}\n`
-    }
-    if (body.rhizome_enabled !== undefined) {
-      content += `[filters.rhizome]\nenabled = ${body.rhizome_enabled ? 'true' : 'false'}\n`
-    }
+    // Read existing settings to merge with
+    const existing = getMyceliumSettings()
+    const hyphaeEnabled = body.hyphae_enabled ?? existing.filters.hyphae.enabled
+    const rhizomeEnabled = body.rhizome_enabled ?? existing.filters.rhizome.enabled
 
-    if (content.length === 0) {
-      return c.json({ error: 'No valid settings provided' }, 400)
-    }
+    const content = `[filters.hyphae]\nenabled = ${hyphaeEnabled}\n\n[filters.rhizome]\nenabled = ${rhizomeEnabled}\n`
 
     writeFileSync(configPath, content, 'utf-8')
 
-    const settings = getMyceliumSettings()
-    return c.json(settings)
+    return c.json(getMyceliumSettings())
   } catch (err) {
     logger.error({ err }, 'Failed to write mycelium config')
     return c.json({ error: 'Failed to write mycelium config' }, 500)
@@ -220,23 +214,19 @@ app.put('/rhizome', async (c) => {
 
     mkdirSync(configDir, { recursive: true })
 
-    let content = ''
-    if (body.auto_export !== undefined) {
-      content += `auto_export = ${body.auto_export ? 'true' : 'false'}\n`
-    }
+    // Read existing settings to merge with
+    const existing = getRhizomeSettings()
+    const autoExport = body.auto_export ?? existing.auto_export
+
+    let content = `auto_export = ${autoExport}\n`
     if (Array.isArray(body.languages)) {
       const langs = body.languages.map((l: unknown) => `"${l}"`).join(', ')
       content += `languages = [${langs}]\n`
     }
 
-    if (content.length === 0) {
-      return c.json({ error: 'No valid settings provided' }, 400)
-    }
-
     writeFileSync(configPath, content, 'utf-8')
 
-    const settings = getRhizomeSettings()
-    return c.json(settings)
+    return c.json(getRhizomeSettings())
   } catch (err) {
     logger.error({ err }, 'Failed to write rhizome config')
     return c.json({ error: 'Failed to write rhizome config' }, 500)
