@@ -17,6 +17,8 @@ import type {
   HealthResult,
   HoverInfo,
   HyphaeAnalytics,
+  LspInstallResult,
+  LspStatusResult,
   Memoir,
   MemoirDetail,
   Memory,
@@ -64,6 +66,9 @@ export type {
   HoverInfo,
   HyphaeAnalytics,
   LspInfo,
+  LspInstallResult,
+  LspLanguageStatus,
+  LspStatusResult,
   Memoir,
   MemoirDetail,
   Memory,
@@ -120,6 +125,17 @@ async function post<T = unknown>(path: string, body?: Record<string, unknown>): 
     body: body ? JSON.stringify(body) : undefined,
     headers: { 'Content-Type': 'application/json' },
     method: 'POST',
+  })
+  if (!res.ok) throw new Error(await extractErrorMessage(res))
+  return res.json() as Promise<T>
+}
+
+async function put<T = unknown>(path: string, body: Record<string, unknown>): Promise<T> {
+  const url = new URL(`${BASE}${path}`, window.location.origin)
+  const res = await fetch(url.toString(), {
+    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'PUT',
   })
   if (!res.ok) throw new Error(await extractErrorMessage(res))
   return res.json() as Promise<T>
@@ -201,6 +217,14 @@ export const settingsApi = {
   get: () => get<EcosystemSettings>('/settings'),
   getModes: () => get<ModeConfig>('/settings/modes'),
   pruneHyphae: (threshold?: number) => post<PruneResult>('/settings/hyphae/prune', threshold !== undefined ? { threshold } : undefined),
+  updateHyphae: (config: { embedding_model?: string; similarity_threshold?: number }) => put<EcosystemSettings>('/settings/hyphae', config),
+  updateMycelium: (config: { hyphae_enabled?: boolean; rhizome_enabled?: boolean }) => put<EcosystemSettings>('/settings/mycelium', config),
+  updateRhizome: (config: { auto_export?: boolean; languages?: string[] }) => put<EcosystemSettings>('/settings/rhizome', config),
+}
+
+export const lspApi = {
+  install: (language: string) => post<LspInstallResult>('/lsp/install', { language }),
+  status: () => get<LspStatusResult>('/lsp/status'),
 }
 
 export const statusApi = {

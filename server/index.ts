@@ -8,6 +8,7 @@ import { CORS_ORIGIN } from './lib/config.ts'
 import { logger } from './logger.ts'
 import { rhizome } from './rhizome.ts'
 import hyphaeRoutes from './routes/hyphae.ts'
+import lspRoutes from './routes/lsp.ts'
 import myceliumRoutes from './routes/mycelium.ts'
 import rhizomeRoutes from './routes/rhizome.ts'
 import settingsRoutes from './routes/settings.ts'
@@ -33,6 +34,7 @@ export function createApp(): Hono {
   })
 
   app.route('/api/hyphae', hyphaeRoutes)
+  app.route('/api/lsp', lspRoutes)
   app.route('/api/mycelium', myceliumRoutes)
   app.route('/api/rhizome', rhizomeRoutes)
   app.route('/api/settings', settingsRoutes)

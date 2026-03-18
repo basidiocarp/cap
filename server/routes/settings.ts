@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { Hono } from 'hono'
@@ -175,6 +175,105 @@ app.post('/modes/activate', async (c) => {
     const message = err instanceof Error ? err.message : 'Failed to activate mode'
     logger.error({ err }, 'Mode activation failed')
     return c.json({ error: message }, 400)
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Config write endpoints
+// ─────────────────────────────────────────────────────────────────────────────
+
+app.put('/mycelium', async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}))
+    const configPath = join(homedir(), '.config', 'mycelium', 'config.toml')
+    const configDir = join(homedir(), '.config', 'mycelium')
+
+    mkdirSync(configDir, { recursive: true })
+
+    let content = ''
+    if (body.hyphae_enabled !== undefined) {
+      content += `[filters.hyphae]\nenabled = ${body.hyphae_enabled ? 'true' : 'false'}\n`
+    }
+    if (body.rhizome_enabled !== undefined) {
+      content += `[filters.rhizome]\nenabled = ${body.rhizome_enabled ? 'true' : 'false'}\n`
+    }
+
+    if (content.length === 0) {
+      return c.json({ error: 'No valid settings provided' }, 400)
+    }
+
+    writeFileSync(configPath, content, 'utf-8')
+
+    const settings = getMyceliumSettings()
+    return c.json(settings)
+  } catch (err) {
+    logger.error({ err }, 'Failed to write mycelium config')
+    return c.json({ error: 'Failed to write mycelium config' }, 500)
+  }
+})
+
+app.put('/rhizome', async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}))
+    const configPath = join(homedir(), '.config', 'rhizome', 'config.toml')
+    const configDir = join(homedir(), '.config', 'rhizome')
+
+    mkdirSync(configDir, { recursive: true })
+
+    let content = ''
+    if (body.auto_export !== undefined) {
+      content += `auto_export = ${body.auto_export ? 'true' : 'false'}\n`
+    }
+    if (Array.isArray(body.languages)) {
+      const langs = body.languages.map((l: unknown) => `"${l}"`).join(', ')
+      content += `languages = [${langs}]\n`
+    }
+
+    if (content.length === 0) {
+      return c.json({ error: 'No valid settings provided' }, 400)
+    }
+
+    writeFileSync(configPath, content, 'utf-8')
+
+    const settings = getRhizomeSettings()
+    return c.json(settings)
+  } catch (err) {
+    logger.error({ err }, 'Failed to write rhizome config')
+    return c.json({ error: 'Failed to write rhizome config' }, 500)
+  }
+})
+
+app.put('/hyphae', async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}))
+    const configPath = join(homedir(), '.config', 'hyphae', 'config.toml')
+    const configDir = join(homedir(), '.config', 'hyphae')
+
+    mkdirSync(configDir, { recursive: true })
+
+    let content = ''
+    if (body.embedding_model !== undefined && typeof body.embedding_model === 'string') {
+      content += `embedding_model = "${body.embedding_model}"\n`
+    }
+    if (body.similarity_threshold !== undefined) {
+      const threshold = Number(body.similarity_threshold)
+      if (!Number.isFinite(threshold) || threshold < 0 || threshold > 1) {
+        return c.json({ error: 'similarity_threshold must be a number between 0 and 1' }, 400)
+      }
+      content += `similarity_threshold = ${threshold}\n`
+    }
+
+    if (content.length === 0) {
+      return c.json({ error: 'No valid settings provided' }, 400)
+    }
+
+    writeFileSync(configPath, content, 'utf-8')
+
+    const settings = getHyphaeSettings()
+    return c.json(settings)
+  } catch (err) {
+    logger.error({ err }, 'Failed to write hyphae config')
+    return c.json({ error: 'Failed to write hyphae config' }, 500)
   }
 })
 

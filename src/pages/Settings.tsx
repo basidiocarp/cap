@@ -1,12 +1,13 @@
-import { Alert, Badge, Button, Grid, Group, NumberInput, SegmentedControl, Stack, Text, Title } from '@mantine/core'
-import { IconBrain, IconCode, IconDatabase, IconSettings, IconShield } from '@tabler/icons-react'
+import { Alert, Badge, Button, Grid, Group, NumberInput, SegmentedControl, Stack, Switch, Tabs, Text, Title } from '@mantine/core'
+import { IconBrain, IconCode, IconDatabase, IconServer, IconSettings, IconShield } from '@tabler/icons-react'
 import { useState } from 'react'
 
 import type { EcosystemSettings } from '../lib/api'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
-import { useActivateMode, useModes, usePruneHyphae, useSettings } from '../lib/queries'
+import { useActivateMode, useModes, usePruneHyphae, useSettings, useUpdateMycelium, useUpdateRhizome } from '../lib/queries'
+import { LspManager } from './settings/LspManager'
 
 function formatBytes(bytes: number): string {
   if (bytes >= 1024 * 1024) {
@@ -15,33 +16,9 @@ function formatBytes(bytes: number): string {
   return `${(bytes / 1024).toFixed(2)} KB`
 }
 
-function EnabledBadge({ enabled, label }: { enabled: boolean; label: string }) {
-  return (
-    <Badge
-      color={enabled ? 'mycelium' : 'gray'}
-      size='sm'
-      variant='light'
-    >
-      {label}: {enabled ? 'Enabled' : 'Disabled'}
-    </Badge>
-  )
-}
-
-function ConfigPath({ path }: { path: string | null }) {
-  return (
-    <Group gap='xs'>
-      <Text
-        c='dimmed'
-        size='sm'
-      >
-        Config:
-      </Text>
-      <Text size='sm'>{path ?? 'Not set'}</Text>
-    </Group>
-  )
-}
-
 function MyceliumCard({ settings }: { settings: EcosystemSettings['mycelium'] }) {
+  const update = useUpdateMycelium()
+
   return (
     <SectionCard h='100%'>
       <Group mb='md'>
@@ -49,17 +26,35 @@ function MyceliumCard({ settings }: { settings: EcosystemSettings['mycelium'] })
         <Title order={4}>Mycelium</Title>
       </Group>
       <Stack gap='sm'>
-        <ConfigPath path={settings.config_path} />
         <Group gap='xs'>
-          <EnabledBadge
-            enabled={settings.filters.hyphae.enabled}
-            label='Hyphae integration'
-          />
-          <EnabledBadge
-            enabled={settings.filters.rhizome.enabled}
-            label='Rhizome integration'
-          />
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Config:
+          </Text>
+          <Text size='sm'>{settings.config_path ?? 'Not set (using defaults)'}</Text>
         </Group>
+        <Switch
+          checked={settings.filters.hyphae.enabled}
+          color='mycelium'
+          label='Hyphae integration'
+          onChange={(e) => update.mutate({ hyphae_enabled: e.currentTarget.checked })}
+        />
+        <Switch
+          checked={settings.filters.rhizome.enabled}
+          color='mycelium'
+          label='Rhizome integration'
+          onChange={(e) => update.mutate({ rhizome_enabled: e.currentTarget.checked })}
+        />
+        {update.isError && (
+          <Text
+            c='red'
+            size='xs'
+          >
+            {update.error instanceof Error ? update.error.message : 'Update failed'}
+          </Text>
+        )}
       </Stack>
     </SectionCard>
   )
@@ -76,7 +71,15 @@ function HyphaeCard({ settings }: { settings: EcosystemSettings['hyphae'] }) {
         <Title order={4}>Hyphae</Title>
       </Group>
       <Stack gap='sm'>
-        <ConfigPath path={settings.config_path} />
+        <Group gap='xs'>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Config:
+          </Text>
+          <Text size='sm'>{settings.config_path ?? 'Not set (using defaults)'}</Text>
+        </Group>
         <Group gap='xs'>
           <Text
             c='dimmed'
@@ -138,6 +141,8 @@ function HyphaeCard({ settings }: { settings: EcosystemSettings['hyphae'] }) {
 }
 
 function RhizomeCard({ settings }: { settings: EcosystemSettings['rhizome'] }) {
+  const update = useUpdateRhizome()
+
   return (
     <SectionCard h='100%'>
       <Group mb='md'>
@@ -145,20 +150,36 @@ function RhizomeCard({ settings }: { settings: EcosystemSettings['rhizome'] }) {
         <Title order={4}>Rhizome</Title>
       </Group>
       <Stack gap='sm'>
-        <ConfigPath path={settings.config_path} />
         <Group gap='xs'>
-          <EnabledBadge
-            enabled={settings.auto_export}
-            label='Auto-export'
-          />
-          <Badge
-            color='lichen'
+          <Text
+            c='dimmed'
             size='sm'
-            variant='outline'
           >
-            {settings.languages_enabled} languages
-          </Badge>
+            Config:
+          </Text>
+          <Text size='sm'>{settings.config_path ?? 'Not set (using defaults)'}</Text>
         </Group>
+        <Switch
+          checked={settings.auto_export}
+          color='mycelium'
+          label='Auto-export to Hyphae'
+          onChange={(e) => update.mutate({ auto_export: e.currentTarget.checked })}
+        />
+        <Badge
+          color='lichen'
+          size='sm'
+          variant='outline'
+        >
+          {settings.languages_enabled} languages configured
+        </Badge>
+        {update.isError && (
+          <Text
+            c='red'
+            size='xs'
+          >
+            {update.error instanceof Error ? update.error.message : 'Update failed'}
+          </Text>
+        )}
       </Stack>
     </SectionCard>
   )
@@ -224,21 +245,52 @@ export function Settings() {
 
       <ErrorAlert error={error} />
 
-      <ModeSelector />
+      <Tabs defaultValue='config'>
+        <Tabs.List>
+          <Tabs.Tab
+            leftSection={<IconSettings size={16} />}
+            value='config'
+          >
+            Configuration
+          </Tabs.Tab>
+          <Tabs.Tab
+            leftSection={<IconServer size={16} />}
+            value='lsp'
+          >
+            Language Servers
+          </Tabs.Tab>
+        </Tabs.List>
 
-      {settings && (
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <MyceliumCard settings={settings.mycelium} />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <HyphaeCard settings={settings.hyphae} />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <RhizomeCard settings={settings.rhizome} />
-          </Grid.Col>
-        </Grid>
-      )}
+        <Tabs.Panel
+          pt='md'
+          value='config'
+        >
+          <Stack>
+            <ModeSelector />
+
+            {settings && (
+              <Grid>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                  <MyceliumCard settings={settings.mycelium} />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                  <HyphaeCard settings={settings.hyphae} />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 4 }}>
+                  <RhizomeCard settings={settings.rhizome} />
+                </Grid.Col>
+              </Grid>
+            )}
+          </Stack>
+        </Tabs.Panel>
+
+        <Tabs.Panel
+          pt='md'
+          value='lsp'
+        >
+          <LspManager />
+        </Tabs.Panel>
+      </Tabs>
     </Stack>
   )
 }

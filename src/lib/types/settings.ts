@@ -19,3 +19,23 @@ export interface PruneResult {
   message: string
   pruned: number
 }
+
+export interface LspLanguageStatus {
+  language: string
+  lsp_binary: string
+  lsp_available: boolean
+  lsp_path: string | null
+  tree_sitter: boolean
+}
+
+export interface LspStatusResult {
+  available: boolean
+  languages: LspLanguageStatus[]
+}
+
+export interface LspInstallResult {
+  installed: boolean
+  language: string
+  message: string
+  path?: string
+}
