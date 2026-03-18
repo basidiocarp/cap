@@ -2,6 +2,8 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { basename, join } from 'node:path'
 
+import { logger } from '../logger.ts'
+
 export interface SessionUsage {
   duration_messages: number
   estimated_cost: number
@@ -12,6 +14,8 @@ export interface SessionUsage {
   session_id: string
   cache_tokens: number
   timestamp: string
+  /** Internal: path to the transcript file for re-parsing */
+  _transcriptPath?: string
 }
 
 export interface UsageAggregate {
@@ -80,12 +84,15 @@ export function parseSessionUsage(transcriptPath: string): SessionUsage | null {
         if (obj.type === 'user' || obj.type === 'assistant') {
           messageCount++
         }
-      } catch {}
+      } catch (err) {
+        logger.debug({ err, transcriptPath }, 'Failed to parse transcript line')
+      }
     }
 
     if (messageCount === 0) return null
 
     return {
+      _transcriptPath: transcriptPath,
       cache_tokens: cacheTokens,
       duration_messages: messageCount,
       estimated_cost: estimateCost(model, inputTokens, outputTokens),
@@ -96,7 +103,8 @@ export function parseSessionUsage(transcriptPath: string): SessionUsage | null {
       session_id: sessionId || basename(transcriptPath, '.jsonl'),
       timestamp: timestamp || new Date().toISOString(),
     }
-  } catch {
+  } catch (err) {
+    logger.debug({ err, transcriptPath }, 'Failed to parse session usage')
     return null
   }
 }

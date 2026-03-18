@@ -121,6 +121,7 @@ export function useAnnotations(file: string) {
     enabled: !!file,
     queryFn: () => rhizomeApi.annotations(file),
     queryKey: rhizomeKeys.annotations(file),
+    staleTime: 300_000,
   })
 }
 
@@ -129,6 +130,7 @@ export function useComplexity(file: string) {
     enabled: !!file,
     queryFn: () => rhizomeApi.complexity(file),
     queryKey: rhizomeKeys.complexity(file),
+    staleTime: 300_000,
   })
 }
 
@@ -161,6 +163,7 @@ export function useSymbols(file: string) {
     enabled: !!file,
     queryFn: () => rhizomeApi.symbols(file),
     queryKey: rhizomeKeys.symbols(file),
+    staleTime: 300_000,
   })
 }
 
@@ -169,6 +172,7 @@ export function useDefinition(file: string, symbol: string) {
     enabled: !!file && !!symbol,
     queryFn: () => rhizomeApi.definition(file, symbol),
     queryKey: rhizomeKeys.definition(file, symbol),
+    staleTime: 300_000,
   })
 }
 
@@ -196,6 +200,7 @@ export function useCallSites(file: string, fn?: string) {
     enabled: !!file,
     queryFn: () => rhizomeApi.callSites(file, fn),
     queryKey: rhizomeKeys.callSites(file, fn),
+    staleTime: 300_000,
   })
 }
 
@@ -204,6 +209,7 @@ export function useExports(file: string) {
     enabled: !!file,
     queryFn: () => rhizomeApi.exports(file),
     queryKey: rhizomeKeys.exports(file),
+    staleTime: 300_000,
   })
 }
 

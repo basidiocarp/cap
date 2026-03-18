@@ -1,3 +1,97 @@
+import type {
+  Annotation,
+  CallSite,
+  ComplexityResult,
+  Concept,
+  ConceptInspection,
+  DependencyEdge,
+  DiagnosticItem,
+  EcosystemSettings,
+  EcosystemStatus,
+  EnclosingClass,
+  ExportedSymbol,
+  FileNode,
+  FileSummary,
+  GainResult,
+  GatherContextResult,
+  HealthResult,
+  HoverInfo,
+  HyphaeAnalytics,
+  Memoir,
+  MemoirDetail,
+  Memory,
+  ModeConfig,
+  MyceliumAnalytics,
+  ParameterInfo,
+  PruneResult,
+  RhizomeAnalytics,
+  RhizomeStatus,
+  RhizomeSymbol,
+  ScopeVariable,
+  SearchResult,
+  SessionUsage,
+  Stats,
+  SymbolBody,
+  SymbolDefinition,
+  SymbolLocation,
+  TestFunction,
+  TopicSummary,
+  UsageAggregate,
+  UsageTrend,
+} from './types'
+
+// Re-export all types for backward compatibility
+export type {
+  Annotation,
+  CallSite,
+  ComplexityResult,
+  Concept,
+  ConceptInspection,
+  ConceptLink,
+  ConceptNeighbor,
+  ContextEntry,
+  DependencyEdge,
+  DiagnosticItem,
+  EcosystemSettings,
+  EcosystemStatus,
+  EnclosingClass,
+  ExportedSymbol,
+  FileNode,
+  FileSummary,
+  GainResult,
+  GatherContextResult,
+  HealthResult,
+  HoverInfo,
+  HyphaeAnalytics,
+  LspInfo,
+  Memoir,
+  MemoirDetail,
+  Memory,
+  Mode,
+  ModeConfig,
+  MyceliumAnalytics,
+  ParameterInfo,
+  PruneResult,
+  RhizomeAnalytics,
+  RhizomeStatus,
+  RhizomeSymbol,
+  ScopeVariable,
+  SearchResult,
+  SessionUsage,
+  Stats,
+  SymbolBody,
+  SymbolDefinition,
+  SymbolLocation,
+  TestFunction,
+  TopicSummary,
+  UsageAggregate,
+  UsageTrend,
+} from './types'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HTTP client
+// ─────────────────────────────────────────────────────────────────────────────
+
 const BASE = '/api'
 
 async function extractErrorMessage(res: Response): Promise<string> {
@@ -31,312 +125,9 @@ async function post<T = unknown>(path: string, body?: Record<string, unknown>): 
   return res.json() as Promise<T>
 }
 
-// Types (mirrors server/types.ts MemoryRow)
-
-export interface Memory {
-  id: string
-  created_at: string
-  updated_at: string
-  last_accessed: string
-  access_count: number
-  weight: number
-  topic: string
-  summary: string
-  raw_excerpt: string | null
-  keywords: string
-  importance: string
-  source_type: string
-  source_data: string | null
-  related_ids: string
-}
-
-export interface TopicSummary {
-  topic: string
-  count: number
-  avg_weight: number
-  newest: string
-  oldest: string
-}
-
-export interface Stats {
-  total_memories: number
-  total_topics: number
-  avg_weight: number
-  oldest: string | null
-  newest: string | null
-}
-
-export interface HealthResult {
-  topic: string
-  count: number
-  avg_weight: number
-  low_weight_count: number
-  critical_count: number
-  high_count: number
-  medium_count: number
-  low_count: number
-}
-
-export interface Memoir {
-  id: string
-  name: string
-  description: string
-  created_at: string
-  updated_at: string
-  consolidation_threshold: number
-}
-
-export interface Concept {
-  id: string
-  memoir_id: string
-  name: string
-  definition: string
-  labels: string
-  confidence: number
-  revision: number
-  created_at: string
-  updated_at: string
-  source_memory_ids: string
-}
-
-export interface ConceptLink {
-  id: string
-  source_id: string
-  target_id: string
-  relation: string
-  weight: number
-  created_at: string
-}
-
-export interface MemoirDetail {
-  memoir: Memoir
-  concepts: Concept[]
-}
-
-export interface ConceptNeighbor {
-  concept: Concept
-  link: ConceptLink
-  direction: 'outgoing' | 'incoming'
-}
-
-export interface ConceptInspection {
-  concept: Concept
-  neighbors: ConceptNeighbor[]
-}
-
-export interface SymbolLocation {
-  column_end: number
-  column_start: number
-  file_path: string
-  line_end: number
-  line_start: number
-}
-
-export interface RhizomeSymbol {
-  children?: RhizomeSymbol[]
-  doc_comment: string | null
-  kind: string
-  location: SymbolLocation
-  name: string
-  signature: string | null
-}
-
-export interface FileNode {
-  children?: FileNode[]
-  language?: string
-  name: string
-  path: string
-  type: 'dir' | 'file'
-}
-
-export interface DiagnosticItem {
-  code: string | null
-  column: number
-  file: string
-  line: number
-  message: string
-  severity: 'error' | 'hint' | 'info' | 'warning'
-}
-
-export interface RhizomeStatus {
-  available: boolean
-  backend: 'lsp' | 'tree-sitter' | null
-  languages: string[]
-}
-
-export interface LspInfo {
-  available: boolean
-  bin: string
-  language: string
-  name: string
-  running: boolean
-}
-
-export interface EcosystemStatus {
-  hyphae: { available: boolean; memories: number; memoirs: number; version: string | null }
-  lsps: LspInfo[]
-  mycelium: { available: boolean; version: string | null }
-  rhizome: RhizomeStatus
-}
-
-export interface SearchResult {
-  file: string
-  kind: string
-  line: number
-  name: string
-  signature: string | null
-}
-
-export interface SymbolDefinition {
-  body: string
-  doc_comment: string | null
-  kind: string
-  name: string
-  signature: string | null
-}
-
-export interface HoverInfo {
-  content: string
-}
-
-export interface Annotation {
-  file: string
-  kind: string
-  line: number
-  message: string
-}
-
-export interface ComplexityResult {
-  complexity: number
-  file: string
-  line: number
-  name: string
-}
-
-export interface DependencyEdge {
-  callee: string
-  caller: string
-  line: number
-}
-
-export interface TestFunction {
-  file: string
-  line: number
-  name: string
-}
-
-export interface HyphaeAnalytics {
-  importance_distribution: { critical: number; ephemeral: number; high: number; low: number; medium: number }
-  lifecycle: { avg_weight: number; created_last_7d: number; created_last_30d: number; decayed: number; min_weight: number; pruned: number }
-  memoir_stats: { code_memoirs: number; total: number; total_concepts: number; total_links: number }
-  memory_utilization: { rate: number; recalled: number; total: number }
-  search_stats: { empty_results: number; hit_rate: number; total_searches: number }
-  top_topics: { avg_weight: number; count: number; latest_created_at: string; name: string }[]
-}
-
-export interface MyceliumAnalytics {
-  filter_hit_rate: { filtered: number; passthrough: number; rate: number }
-  savings_by_category: { category: string; commands: number; rate: number; tokens_input: number; tokens_saved: number }[]
-  savings_trend: { commands: number; date: string; tokens_saved: number }[]
-  top_commands: { avg_savings_percent: number; command: string; count: number }[]
-  total_stats: { overall_rate: number; total_commands: number; total_tokens_input: number; total_tokens_saved: number }
-}
-
-export interface RhizomeAnalytics {
-  available: boolean
-  backend_usage: { lsp: boolean; treesitter: boolean }
-  languages: { detection: string; language: string }[]
-  supported_tools: string[]
-  tool_calls: { avg_duration_ms: number; count: number; tool: string }[]
-}
-
-export interface EcosystemSettings {
-  hyphae: { config_path: string | null; db_path: string; db_size_bytes: number }
-  mycelium: { config_path: string | null; filters: { hyphae: { enabled: boolean }; rhizome: { enabled: boolean } } }
-  rhizome: { auto_export: boolean; config_path: string | null; languages_enabled: number }
-}
-
-export interface PruneResult {
-  message: string
-  pruned: number
-}
-
-export interface CallSite {
-  call_expression: string
-  caller: string
-  file: string
-  line: number
-}
-
-export interface EnclosingClass {
-  kind: string
-  line_end: number
-  line_start: number
-  name: string
-}
-
-export interface GainResult {
-  avg_savings_pct?: number
-  by_command?: [string, number, number, number][]
-  total_commands?: number
-  total_input?: number
-  total_saved?: number
-}
-
-export interface ExportedSymbol {
-  kind: string
-  line: number
-  name: string
-  signature: string | null
-}
-
-export interface FileSummary {
-  description: string
-  exports: number
-  functions: number
-  imports: number
-  language: string
-  lines: number
-  types: number
-}
-
-export interface ParameterInfo {
-  default_value: string | null
-  name: string
-  type: string | null
-}
-
-export interface ScopeVariable {
-  kind: string
-  line: number
-  name: string
-  type: string | null
-}
-
-export interface SymbolBody {
-  body: string
-  kind: string
-  line_end: number
-  line_start: number
-  name: string
-}
-
-export interface ContextEntry {
-  content: string
-  relevance: number
-  source: string
-  symbol?: string
-  topic?: string
-}
-
-export interface GatherContextResult {
-  context: ContextEntry[]
-  sources_queried: string[]
-  tokens_budget: number
-  tokens_used: number
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
 // API clients
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const hyphaeApi = {
   analytics: () => get<HyphaeAnalytics>('/hyphae/analytics'),
@@ -396,47 +187,6 @@ export const rhizomeApi = {
   symbols: (file: string) => get<RhizomeSymbol[]>('/rhizome/symbols', { file }),
   tests: (file: string) => get<TestFunction[]>('/rhizome/tests', { file }),
   typeDefinitions: (file: string) => get<RhizomeSymbol[]>('/rhizome/type-definitions', { file }),
-}
-
-export interface Mode {
-  description: string
-  hyphae_tools: string[]
-  rhizome_tools: string[]
-}
-
-export interface ModeConfig {
-  active: string
-  modes: Record<string, Mode>
-}
-
-export interface SessionUsage {
-  cache_tokens: number
-  duration_messages: number
-  estimated_cost: number
-  input_tokens: number
-  model: string
-  output_tokens: number
-  project: string
-  session_id: string
-  timestamp: string
-}
-
-export interface UsageAggregate {
-  avg_cost_per_session: number
-  cache_hit_rate: number
-  sessions: number
-  total_cache_tokens: number
-  total_cost: number
-  total_input_tokens: number
-  total_output_tokens: number
-}
-
-export interface UsageTrend {
-  cost: number
-  date: string
-  input_tokens: number
-  output_tokens: number
-  sessions: number
 }
 
 export const usageApi = {

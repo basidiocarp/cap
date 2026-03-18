@@ -25,6 +25,53 @@ async function rhizomeTool(c: Context, tool: string, args: Record<string, unknow
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Endpoint factory
+// ─────────────────────────────────────────────────────────────────────────────
+
+const NUMERIC_PARAMS = new Set(['line', 'column', 'depth'])
+
+function endpoint(tool: string, required: string[], optional: string[] = []) {
+  return async (c: Context) => {
+    const params: Record<string, unknown> = {}
+    for (const key of required) {
+      const val = requireQuery(c, key)
+      if (val instanceof Response) return val
+      params[key] = NUMERIC_PARAMS.has(key) ? Number(val) : val
+    }
+    for (const key of optional) {
+      const val = c.req.query(key)
+      if (val) params[key] = NUMERIC_PARAMS.has(key) ? Number(val) : val
+    }
+    return rhizomeTool(c, tool, params)
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Endpoint factory — with numeric validation
+// ─────────────────────────────────────────────────────────────────────────────
+
+function numericEndpoint(tool: string, requiredStr: string[], requiredNum: string[]) {
+  return async (c: Context) => {
+    const params: Record<string, unknown> = {}
+    for (const key of requiredStr) {
+      const val = requireQuery(c, key)
+      if (val instanceof Response) return val
+      params[key] = val
+    }
+    for (const key of requiredNum) {
+      const raw = requireQuery(c, key)
+      if (raw instanceof Response) return raw
+      const num = parseNumberParam(raw as string)
+      if (num === undefined) {
+        return c.json({ error: `${key} must be a valid number` }, 400)
+      }
+      params[key] = num
+    }
+    return rhizomeTool(c, tool, params)
+  }
+}
+
 const SUPPORTED_TOOLS = [
   'find_references',
   'get_annotations',
@@ -137,28 +184,34 @@ app.get('/status', (c) => {
   })
 })
 
-app.get('/symbols', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  return rhizomeTool(c, 'get_symbols', { file })
-})
+// ─────────────────────────────────────────────────────────────────────────────
+// Simple endpoints (factory-based)
+// ─────────────────────────────────────────────────────────────────────────────
 
-app.get('/structure', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  const args: Record<string, unknown> = { file }
-  const depth = parseNumberParam(c.req.query('depth'))
-  if (depth !== undefined) args.depth = depth
-  return rhizomeTool(c, 'get_structure', args)
-})
+app.get('/symbols', endpoint('get_symbols', ['file']))
+app.get('/definition', endpoint('get_definition', ['file', 'symbol']))
+app.get('/structure', endpoint('get_structure', ['file'], ['depth']))
+app.get('/annotations', endpoint('get_annotations', ['file']))
+app.get('/complexity', endpoint('get_complexity', ['file']))
+app.get('/dependencies', endpoint('get_dependencies', ['file']))
+app.get('/tests', endpoint('get_tests', ['file']))
+app.get('/exports', endpoint('get_exports', ['file']))
+app.get('/summary', endpoint('summarize_file', ['file']))
+app.get('/type-definitions', endpoint('get_type_definitions', ['file']))
+app.get('/parameters', endpoint('get_parameters', ['file', 'symbol']))
 
-app.get('/definition', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  const symbol = requireQuery(c, 'symbol')
-  if (symbol instanceof Response) return symbol
-  return rhizomeTool(c, 'get_definition', { file, symbol })
-})
+// ─────────────────────────────────────────────────────────────────────────────
+// Numeric-validated endpoints
+// ─────────────────────────────────────────────────────────────────────────────
+
+app.get('/references', numericEndpoint('find_references', ['file'], ['line', 'column']))
+app.get('/hover', numericEndpoint('get_hover_info', ['file'], ['line', 'column']))
+app.get('/scope', numericEndpoint('get_scope', ['file'], ['line']))
+app.get('/enclosing-class', numericEndpoint('get_enclosing_class', ['file'], ['line']))
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Custom endpoints (unique logic)
+// ─────────────────────────────────────────────────────────────────────────────
 
 app.get('/search', async (c) => {
   const pattern = requireQuery(c, 'pattern')
@@ -169,64 +222,10 @@ app.get('/search', async (c) => {
   return rhizomeTool(c, 'search_symbols', args)
 })
 
-app.get('/references', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  const line = requireQuery(c, 'line')
-  if (line instanceof Response) return line
-  const column = requireQuery(c, 'column')
-  if (column instanceof Response) return column
-  const lineNum = parseNumberParam(line)
-  const colNum = parseNumberParam(column)
-  if (lineNum === undefined || colNum === undefined) {
-    return c.json({ error: 'line and column must be valid numbers' }, 400)
-  }
-  return rhizomeTool(c, 'find_references', { column: colNum, file, line: lineNum })
-})
-
 app.get('/diagnostics', async (c) => {
   const file = c.req.query('file')
   if (!file) return c.json([])
   return rhizomeTool(c, 'get_diagnostics', { file })
-})
-
-app.get('/hover', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  const line = requireQuery(c, 'line')
-  if (line instanceof Response) return line
-  const column = requireQuery(c, 'column')
-  if (column instanceof Response) return column
-  const lineNum = parseNumberParam(line)
-  const colNum = parseNumberParam(column)
-  if (lineNum === undefined || colNum === undefined) {
-    return c.json({ error: 'line and column must be valid numbers' }, 400)
-  }
-  return rhizomeTool(c, 'get_hover_info', { column: colNum, file, line: lineNum })
-})
-
-app.get('/annotations', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  return rhizomeTool(c, 'get_annotations', { file })
-})
-
-app.get('/complexity', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  return rhizomeTool(c, 'get_complexity', { file })
-})
-
-app.get('/dependencies', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  return rhizomeTool(c, 'get_dependencies', { file })
-})
-
-app.get('/tests', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  return rhizomeTool(c, 'get_tests', { file })
 })
 
 app.get('/files', async (c) => {
@@ -250,24 +249,6 @@ app.get('/files', async (c) => {
   }
 })
 
-app.get('/scope', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  const line = requireQuery(c, 'line')
-  if (line instanceof Response) return line
-  const lineNum = parseNumberParam(line)
-  if (lineNum === undefined) {
-    return c.json({ error: 'line must be a valid number' }, 400)
-  }
-  return rhizomeTool(c, 'get_scope', { file, line: lineNum })
-})
-
-app.get('/exports', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  return rhizomeTool(c, 'get_exports', { file })
-})
-
 app.get('/call-sites', async (c) => {
   const file = requireQuery(c, 'file')
   if (file instanceof Response) return file
@@ -275,12 +256,6 @@ app.get('/call-sites', async (c) => {
   const fn = c.req.query('function')
   if (fn) args.function = fn
   return rhizomeTool(c, 'get_call_sites', args)
-})
-
-app.get('/summary', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  return rhizomeTool(c, 'summarize_file', { file })
 })
 
 app.get('/symbol-body', async (c) => {
@@ -292,32 +267,6 @@ app.get('/symbol-body', async (c) => {
   const line = parseNumberParam(c.req.query('line'))
   if (line !== undefined) args.line = line
   return rhizomeTool(c, 'get_symbol_body', args)
-})
-
-app.get('/type-definitions', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  return rhizomeTool(c, 'get_type_definitions', { file })
-})
-
-app.get('/enclosing-class', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  const line = requireQuery(c, 'line')
-  if (line instanceof Response) return line
-  const lineNum = parseNumberParam(line)
-  if (lineNum === undefined) {
-    return c.json({ error: 'line must be a valid number' }, 400)
-  }
-  return rhizomeTool(c, 'get_enclosing_class', { file, line: lineNum })
-})
-
-app.get('/parameters', async (c) => {
-  const file = requireQuery(c, 'file')
-  if (file instanceof Response) return file
-  const symbol = requireQuery(c, 'symbol')
-  if (symbol instanceof Response) return symbol
-  return rhizomeTool(c, 'get_parameters', { file, symbol })
 })
 
 export default app

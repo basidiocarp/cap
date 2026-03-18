@@ -1,25 +1,21 @@
 import { ActionIcon, Badge, Box, Group, Loader, ScrollArea, SegmentedControl, Stack, Text, TextInput, Title } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconLayoutSidebar } from '@tabler/icons-react'
-import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
-import type { FileNode } from '../lib/api'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
-import { rhizomeApi } from '../lib/api'
+import { useFileTreeState } from '../hooks/useFileTreeState'
 import {
-  rhizomeKeys,
   useAnnotations,
   useCallSites,
   useComplexity,
   useDefinition,
   useExports,
   useFileSummary,
-  useFileTree,
   useRhizomeStatus,
   useSymbols,
 } from '../lib/queries'
@@ -31,108 +27,41 @@ export function CodeExplorer() {
   const [searchParams] = useSearchParams()
   const fileParam = searchParams.get('file')
   const symbolParam = searchParams.get('symbol')
-  const queryClient = useQueryClient()
 
   const [treeOpen, { toggle: toggleTree }] = useDisclosure(false)
-  const [fileTree, setFileTree] = useState<Map<string, FileNode[]>>(new Map())
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [symbolFilter, setSymbolFilter] = useState('')
   const [symbolMode, setSymbolMode] = useState<'all' | 'exports'>('all')
   const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null)
   const [showFullDef, setShowFullDef] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [loadedDirs, setLoadedDirs] = useState<Set<string>>(new Set())
 
   const { data: statusData } = useRhizomeStatus()
   const unavailable = statusData ? !statusData.available : false
-  const { data: initialTree, isLoading: treeLoading } = useFileTree(undefined, 2)
-  const { data: symbols = [], isLoading: symbolsLoading } = useSymbols(selectedFile ?? '')
-  const { data: definition, isLoading: defLoading } = useDefinition(selectedFile ?? '', expandedSymbol ?? '')
-  const { data: annotations = [], isLoading: annotationsLoading } = useAnnotations(selectedFile ?? '')
-  const { data: callSites = [], isLoading: callSitesLoading } = useCallSites(selectedFile ?? '')
-  const { data: complexity = [], isLoading: complexityLoading } = useComplexity(selectedFile ?? '')
-  const { data: exports = [], isLoading: exportsLoading } = useExports(selectedFile ?? '')
-  const { data: fileSummary, isLoading: summaryLoading } = useFileSummary(selectedFile ?? '')
 
-  useEffect(() => {
-    // index initial tree into a path → children map
-    if (!initialTree) return
-    const tree = new Map<string, FileNode[]>()
-    tree.set('', initialTree)
-    const indexChildren = (items: FileNode[]) => {
-      for (const node of items) {
-        if (node.type === 'dir' && node.children) {
-          tree.set(node.path, node.children)
-          indexChildren(node.children)
-        }
-      }
-    }
-    indexChildren(initialTree)
-    setFileTree(tree)
-    setLoadedDirs(new Set(tree.keys()))
-  }, [initialTree])
-
-  useEffect(() => {
-    // expand tree to file/symbol from URL params
-    if (!fileParam || treeLoading || unavailable) return
-    const parts = fileParam.split('/')
-    const dirs: string[] = []
-    for (let i = 0; i < parts.length - 1; i++) {
-      dirs.push(parts.slice(0, i + 1).join('/'))
-    }
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      for (const d of dirs) next.add(d)
-      return next
-    })
-    setSelectedFile(fileParam)
+  const onFileSelected = useCallback((_file: string | null, symbol: string | null) => {
     setSymbolFilter('')
-    setExpandedSymbol(symbolParam ?? null)
+    setExpandedSymbol(symbol)
     setShowFullDef(false)
-  }, [fileParam, symbolParam, treeLoading, unavailable])
-
-  const handleExpand = useCallback(
-    async (dirPath: string) => {
-      setExpanded((prev) => {
-        const next = new Set(prev)
-        if (next.has(dirPath)) {
-          next.delete(dirPath)
-        } else {
-          next.add(dirPath)
-        }
-        return next
-      })
-      if (!loadedDirs.has(dirPath)) {
-        try {
-          const children = await queryClient.fetchQuery({
-            queryFn: () => rhizomeApi.files(dirPath, 1),
-            queryKey: rhizomeKeys.files(dirPath, 1),
-          })
-          setFileTree((prev) => {
-            const next = new Map(prev)
-            next.set(dirPath, children)
-            return next
-          })
-          setLoadedDirs((prev) => {
-            const next = new Set(prev)
-            next.add(dirPath)
-            return next
-          })
-        } catch (e) {
-          setError(e instanceof Error ? e.message : 'Failed to load directory')
-        }
-      }
-    },
-    [loadedDirs, queryClient]
-  )
-
-  const loadSymbols = useCallback((filePath: string) => {
-    setSelectedFile(filePath)
-    setExpandedSymbol(null)
-    setShowFullDef(false)
-    setSymbolFilter('')
   }, [])
+
+  const tree = useFileTreeState(fileParam, symbolParam, unavailable, onFileSelected)
+
+  const { data: symbols = [], isLoading: symbolsLoading } = useSymbols(tree.selectedFile ?? '')
+  const { data: definition, isLoading: defLoading } = useDefinition(tree.selectedFile ?? '', expandedSymbol ?? '')
+  const { data: annotations = [], isLoading: annotationsLoading } = useAnnotations(tree.selectedFile ?? '')
+  const { data: callSites = [], isLoading: callSitesLoading } = useCallSites(tree.selectedFile ?? '')
+  const { data: complexity = [], isLoading: complexityLoading } = useComplexity(tree.selectedFile ?? '')
+  const { data: exports = [], isLoading: exportsLoading } = useExports(tree.selectedFile ?? '')
+  const { data: fileSummary, isLoading: summaryLoading } = useFileSummary(tree.selectedFile ?? '')
+
+  const handleLoadSymbols = useCallback(
+    (filePath: string) => {
+      tree.loadSymbols(filePath)
+      setExpandedSymbol(null)
+      setShowFullDef(false)
+      setSymbolFilter('')
+    },
+    [tree]
+  )
 
   const handleSymbolClick = useCallback(
     (symbolName: string) => {
@@ -152,13 +81,13 @@ export function CodeExplorer() {
       return exports.map((e) => ({
         doc_comment: null,
         kind: e.kind,
-        location: { column_end: 0, column_start: 0, file_path: selectedFile ?? '', line_end: e.line, line_start: e.line },
+        location: { column_end: 0, column_start: 0, file_path: tree.selectedFile ?? '', line_end: e.line, line_start: e.line },
         name: e.name,
         signature: e.signature,
       }))
     }
     return symbols
-  }, [exports, selectedFile, symbolMode, symbols])
+  }, [exports, tree.selectedFile, symbolMode, symbols])
 
   const filteredSymbols = useMemo(() => {
     if (!symbolFilter.trim()) return displaySymbols
@@ -187,19 +116,17 @@ export function CodeExplorer() {
     )
   }
 
-  if (treeLoading) {
+  if (tree.treeLoading) {
     return <PageLoader />
   }
-
-  const rootNodes = fileTree.get('') ?? []
 
   return (
     <Stack>
       <Title order={2}>Code Explorer</Title>
 
       <ErrorAlert
-        error={error}
-        onClose={() => setError(null)}
+        error={tree.error}
+        onClose={() => tree.setError(null)}
         withCloseButton
       />
 
@@ -222,18 +149,18 @@ export function CodeExplorer() {
               Files
             </Title>
             <ScrollArea h={600}>
-              {rootNodes.length > 0 ? (
+              {tree.rootNodes.length > 0 ? (
                 <Stack gap={0}>
-                  {rootNodes.map((node) => (
+                  {tree.rootNodes.map((node) => (
                     <FileTreeNode
-                      expanded={expanded}
-                      fileTree={fileTree}
+                      expanded={tree.expanded}
+                      fileTree={tree.fileTree}
                       key={node.path}
                       level={0}
                       node={node}
-                      onExpand={handleExpand}
-                      onSelect={loadSymbols}
-                      selectedFile={selectedFile}
+                      onExpand={tree.handleExpand}
+                      onSelect={handleLoadSymbols}
+                      selectedFile={tree.selectedFile}
                     />
                   ))}
                 </Stack>
@@ -245,14 +172,14 @@ export function CodeExplorer() {
         </Box>
 
         <Stack style={{ flex: 1 }}>
-          {selectedFile ? (
+          {tree.selectedFile ? (
             <>
               <Text
                 c='dimmed'
                 ff='monospace'
                 size='sm'
               >
-                {selectedFile}
+                {tree.selectedFile}
               </Text>
 
               {!summaryLoading && fileSummary && (
@@ -342,7 +269,7 @@ export function CodeExplorer() {
                 callSitesLoading={callSitesLoading}
                 complexity={complexity}
                 complexityLoading={complexityLoading}
-                selectedFile={selectedFile}
+                selectedFile={tree.selectedFile}
               />
             </>
           ) : (

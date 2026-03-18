@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
 
+import { logger } from '../logger.ts'
 import { scanAllSessions } from './usage.ts'
 
 export interface ToolUsage {
@@ -88,7 +89,9 @@ export function parseSessionTelemetry(transcriptPath: string): SessionTelemetry 
             }
           }
         }
-      } catch {}
+      } catch {
+        // Skip malformed JSON lines
+      }
     }
 
     if (messageCount === 0) return null
@@ -107,15 +110,40 @@ export function parseSessionTelemetry(transcriptPath: string): SessionTelemetry 
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Merge helpers (immutable)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function mergeCountMaps(target: Record<string, number>, source: Record<string, number>): Record<string, number> {
+  const result = { ...target }
+  for (const [key, count] of Object.entries(source)) {
+    result[key] = (result[key] ?? 0) + count
+  }
+  return result
+}
+
+function mergeFileMaps(
+  target: Record<string, { edits: number; reads: number }>,
+  source: Record<string, { edits: number; reads: number }>
+): Record<string, { edits: number; reads: number }> {
+  const result: Record<string, { edits: number; reads: number }> = {}
+  for (const key of new Set([...Object.keys(target), ...Object.keys(source)])) {
+    const t = target[key] ?? { edits: 0, reads: 0 }
+    const s = source[key] ?? { edits: 0, reads: 0 }
+    result[key] = { edits: t.edits + s.edits, reads: t.reads + s.reads }
+  }
+  return result
+}
+
 export function aggregateTelemetry(since?: string): AggregateTelemetry {
   const sessions = scanAllSessions(since)
-  const allTools: Record<string, number> = {}
-  const allFiles: Record<string, { edits: number; reads: number }> = {}
-  const allCommands: Record<string, number> = {}
+  let allTools: Record<string, number> = {}
+  let allFiles: Record<string, { edits: number; reads: number }> = {}
+  let allCommands: Record<string, number> = {}
   const projectCounts: Record<string, number> = {}
   const dayMap: Record<string, number> = {}
   let totalMessages = 0
-  const totalToolCalls = 0
+  let totalToolCalls = 0
 
   for (const s of sessions) {
     const date = s.timestamp.slice(0, 10)
@@ -123,12 +151,18 @@ export function aggregateTelemetry(since?: string): AggregateTelemetry {
     projectCounts[s.project] = (projectCounts[s.project] ?? 0) + 1
     totalMessages += s.duration_messages
 
-    // Parse telemetry from the same session
-    // Note: we use the usage sessions which already have parsed data
+    // Re-parse transcript for detailed tool/file/command data
+    const telemetry = parseSessionTelemetry(s._transcriptPath ?? '')
+    if (telemetry) {
+      allTools = mergeCountMaps(allTools, telemetry.tools)
+      allFiles = mergeFileMaps(allFiles, telemetry.files)
+      allCommands = mergeCountMaps(allCommands, telemetry.commands)
+      for (const count of Object.values(telemetry.tools)) {
+        totalToolCalls += count
+      }
+    }
   }
 
-  // For detailed tool/file/command data we'd need to re-parse transcripts
-  // For now return the aggregates we can from usage data
   const sessionsByDay = Object.entries(dayMap)
     .map(([date, count]) => ({ count, date }))
     .sort((a, b) => a.date.localeCompare(b.date))
