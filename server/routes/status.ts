@@ -5,8 +5,8 @@ import { Hono } from 'hono'
 import { getDb } from '../db.ts'
 import { cachedAsync } from '../lib/cache.ts'
 import { HYPHAE_BIN, MYCELIUM_BIN } from '../lib/config.ts'
+import { registry } from '../lib/rhizome-registry.ts'
 import { logger } from '../logger.ts'
-import { rhizome } from '../rhizome.ts'
 
 const exec = promisify(execFile)
 
@@ -80,7 +80,7 @@ async function checkHyphae(): Promise<StatusResult['hyphae']> {
 }
 
 function checkRhizome(): StatusResult['rhizome'] {
-  const available = rhizome.isAvailable()
+  const available = registry.getActive().isAvailable()
   return {
     available,
     backend: available ? 'tree-sitter' : null,
