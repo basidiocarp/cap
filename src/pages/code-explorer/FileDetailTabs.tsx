@@ -83,10 +83,10 @@ export function FileDetailTabs({
           )}
           {!annotationsLoading && annotations.length > 0 && (
             <Stack gap='xs'>
-              {annotations.map((a) => (
+              {annotations.map((a, i) => (
                 <Alert
                   color={annotationColor(a.kind)}
-                  key={`${a.kind}-${a.line}-${a.message}`}
+                  key={`${a.kind ?? i}-${a.line}-${a.message ?? ''}`}
                   p='xs'
                   variant='light'
                 >
@@ -188,8 +188,8 @@ export function FileDetailTabs({
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {callSites.map((cs) => (
-                  <Table.Tr key={`${cs.caller}-${cs.line}-${cs.call_expression}`}>
+                {callSites.map((cs, i) => (
+                  <Table.Tr key={`${cs.caller ?? i}-${cs.line}-${cs.call_expression ?? ''}`}>
                     <Table.Td>
                       <Text
                         ff='monospace'
