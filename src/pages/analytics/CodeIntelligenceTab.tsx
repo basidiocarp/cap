@@ -102,6 +102,7 @@ export function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null })
           <Group
             justify='center'
             mih={260}
+            miw={260}
           >
             <PieChart
               data={pieData}

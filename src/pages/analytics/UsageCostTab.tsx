@@ -71,6 +71,8 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
           <Title order={4}>Daily Cost Trend</Title>
           <ResponsiveContainer
             height={250}
+            minHeight={250}
+            minWidth={100}
             width='100%'
           >
             <LineChart data={trend}>
@@ -97,6 +99,8 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
           <Title order={4}>Token Usage by Day</Title>
           <ResponsiveContainer
             height={250}
+            minHeight={250}
+            minWidth={100}
             width='100%'
           >
             <BarChart data={trend}>
