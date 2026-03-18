@@ -27,6 +27,7 @@ export type {
   HoverInfo,
   LspInfo,
   ParameterInfo,
+  ProjectInfo,
   RhizomeAnalytics,
   RhizomeStatus,
   RhizomeSymbol,

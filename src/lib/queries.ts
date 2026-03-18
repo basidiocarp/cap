@@ -106,6 +106,7 @@ export const rhizomeKeys = {
   diagnostics: (file?: string) => ['rhizome', 'diagnostics', file] as const,
   exports: (file: string) => ['rhizome', 'exports', file] as const,
   files: (path?: string, depth?: number) => ['rhizome', 'files', path, depth] as const,
+  project: () => ['rhizome', 'project'] as const,
   scope: (file: string, line: number) => ['rhizome', 'scope', file, line] as const,
   search: (pattern: string, path?: string) => ['rhizome', 'search', pattern, path] as const,
   status: () => ['rhizome', 'status'] as const,
@@ -147,6 +148,24 @@ export function useRhizomeStatus() {
     queryFn: () => rhizomeApi.status(),
     queryKey: rhizomeKeys.status(),
     staleTime: 30_000,
+  })
+}
+
+export function useProject() {
+  return useQuery({
+    queryFn: () => rhizomeApi.project(),
+    queryKey: rhizomeKeys.project(),
+    staleTime: 30_000,
+  })
+}
+
+export function useSwitchProject() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (path: string) => rhizomeApi.switchProject(path),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rhizome'] })
+    },
   })
 }
 

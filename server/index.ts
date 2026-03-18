@@ -5,8 +5,8 @@ import { cors } from 'hono/cors'
 
 import { closeDb } from './db.ts'
 import { CORS_ORIGIN } from './lib/config.ts'
+import { registry } from './lib/rhizome-registry.ts'
 import { logger } from './logger.ts'
-import { rhizome } from './rhizome.ts'
 import hyphaeRoutes from './routes/hyphae.ts'
 import lspRoutes from './routes/lsp.ts'
 import myceliumRoutes from './routes/mycelium.ts'
@@ -56,7 +56,7 @@ serve({ fetch: app.fetch, port })
 
 function shutdown() {
   logger.info('Shutting down')
-  rhizome.destroy()
+  registry.destroyAll()
   closeDb()
   process.exit(0)
 }

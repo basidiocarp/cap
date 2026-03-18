@@ -232,8 +232,3 @@ export class RhizomeClient {
     this.pending.clear()
   }
 }
-
-export const rhizome = new RhizomeClient()
-
-process.on('SIGINT', () => rhizome.destroy())
-process.on('SIGTERM', () => rhizome.destroy())

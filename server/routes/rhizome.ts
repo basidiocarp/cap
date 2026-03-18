@@ -1,5 +1,6 @@
 import type { Context } from 'hono'
 import { execFile } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import { promisify } from 'node:util'
 import { Hono } from 'hono'
 
@@ -7,8 +8,8 @@ import { cachedAsync } from '../lib/cache.ts'
 import { RHIZOME_PROJECT } from '../lib/config.ts'
 import { buildFileTree } from '../lib/fileTree.ts'
 import { parseNumberParam, requireQuery } from '../lib/params.ts'
+import { registry } from '../lib/rhizome-registry.ts'
 import { logger } from '../logger.ts'
-import { rhizome } from '../rhizome.ts'
 
 const exec = promisify(execFile)
 
@@ -16,7 +17,7 @@ const app = new Hono()
 
 async function rhizomeTool(c: Context, tool: string, args: Record<string, unknown>): Promise<Response> {
   try {
-    const result = await rhizome.callTool(tool, args)
+    const result = await registry.getActive().callTool(tool, args)
     return c.json(result)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
@@ -145,7 +146,7 @@ const UNAVAILABLE_RESPONSE = {
 }
 
 const getAnalytics = cachedAsync(async () => {
-  if (!rhizome.isAvailable()) return UNAVAILABLE_RESPONSE
+  if (!registry.getActive().isAvailable()) return UNAVAILABLE_RESPONSE
 
   return {
     available: true,
@@ -170,7 +171,7 @@ app.get('/analytics', async (c) => {
 
 // Everything below requires Rhizome to be running
 app.use('*', async (c, next) => {
-  if (!rhizome.isAvailable()) {
+  if (!registry.getActive().isAvailable()) {
     return c.json({ available: false, error: 'Rhizome not installed' }, 503)
   }
   await next()
@@ -267,6 +268,34 @@ app.get('/symbol-body', async (c) => {
   const line = parseNumberParam(c.req.query('line'))
   if (line !== undefined) args.line = line
   return rhizomeTool(c, 'get_symbol_body', args)
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Project switching
+// ─────────────────────────────────────────────────────────────────────────────
+
+app.get('/project', (c) => {
+  return c.json({
+    active: registry.getActiveProject(),
+    recent: registry.getRecentProjects(),
+  })
+})
+
+app.post('/project', async (c) => {
+  const body = await c.req.json().catch(() => ({}))
+  const path = body.path
+  if (!path || typeof path !== 'string') {
+    return c.json({ error: 'Missing required field: path' }, 400)
+  }
+  // Validate path exists
+  if (!existsSync(path)) {
+    return c.json({ error: `Path does not exist: ${path}` }, 400)
+  }
+  registry.switchProject(path)
+  return c.json({
+    active: registry.getActiveProject(),
+    recent: registry.getRecentProjects(),
+  })
 })
 
 export default app

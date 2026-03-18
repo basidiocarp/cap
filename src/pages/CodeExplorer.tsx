@@ -7,6 +7,7 @@ import { useSearchParams } from 'react-router-dom'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
+import { ProjectSelector } from '../components/ProjectSelector'
 import { SectionCard } from '../components/SectionCard'
 import { useFileTreeState } from '../hooks/useFileTreeState'
 import {
@@ -156,7 +157,10 @@ export function CodeExplorer() {
 
   return (
     <Stack>
-      <Title order={2}>Code Explorer</Title>
+      <Group justify='space-between'>
+        <Title order={2}>Code Explorer</Title>
+        <ProjectSelector />
+      </Group>
 
       <ErrorAlert
         error={tree.error}

@@ -151,3 +151,8 @@ export interface RhizomeStatus {
   backend: 'lsp' | 'tree-sitter' | null
   languages: string[]
 }
+
+export interface ProjectInfo {
+  active: string
+  recent: string[]
+}
