@@ -73,6 +73,16 @@ app.get('/analytics', (c) => {
   return c.json(hyphae.getAnalytics())
 })
 
+app.get('/context', async (c) => {
+  const task = requireQuery(c, 'task')
+  if (task instanceof Response) return task
+  const project = c.req.query('project')
+  const budget = clampParam(c.req.query('budget'), 2000, 50000)
+  const include = c.req.query('include')
+  const result = await hyphae.gatherContext(task, project ?? undefined, budget, include ?? undefined)
+  return c.json(result)
+})
+
 // Writes (shell to CLI)
 
 const VALID_IMPORTANCE = new Set(['critical', 'high', 'medium', 'low', 'ephemeral'])

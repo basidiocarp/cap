@@ -6,6 +6,7 @@ import { hyphaeApi, myceliumApi, rhizomeApi, settingsApi, statusApi } from './ap
 
 export const hyphaeKeys = {
   analytics: () => ['hyphae', 'analytics'] as const,
+  context: (task: string, project?: string) => ['hyphae', 'context', task, project] as const,
   health: (topic?: string) => ['hyphae', 'health', topic] as const,
   memoir: (name: string) => ['hyphae', 'memoir', name] as const,
   memoirInspect: (memoir: string, concept: string, depth?: number) => ['hyphae', 'memoir', memoir, 'inspect', concept, depth] as const,
@@ -16,6 +17,14 @@ export const hyphaeKeys = {
   stats: () => ['hyphae', 'stats'] as const,
   topicMemories: (topic: string, limit?: number) => ['hyphae', 'topicMemories', topic, limit] as const,
   topics: () => ['hyphae', 'topics'] as const,
+}
+
+export function useContext(task: string, project?: string) {
+  return useQuery({
+    enabled: !!task.trim(),
+    queryFn: () => hyphaeApi.context(task, project),
+    queryKey: hyphaeKeys.context(task, project),
+  })
 }
 
 export function useStats() {

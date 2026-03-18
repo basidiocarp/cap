@@ -1,14 +1,127 @@
-import { Badge, Grid, Group, Progress, Stack, Table, Text, Title } from '@mantine/core'
+import { Badge, Card, Grid, Group, Loader, Progress, Stack, Table, Text, TextInput, Title } from '@mantine/core'
+import { useDebouncedValue } from '@mantine/hooks'
 import { useQueries } from '@tanstack/react-query'
+import { useState } from 'react'
 
-import type { HealthResult, Stats, TopicSummary } from '../lib/api'
+import type { ContextEntry, GatherContextResult, HealthResult, Stats, TopicSummary } from '../lib/api'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { KpiCard } from '../components/KpiCard'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { hyphaeApi, myceliumApi } from '../lib/api'
-import { hyphaeKeys, myceliumKeys } from '../lib/queries'
+import { hyphaeKeys, myceliumKeys, useContext } from '../lib/queries'
+
+function relevanceColor(score: number): string {
+  if (score >= 0.8) return 'mycelium'
+  if (score >= 0.5) return 'fruiting'
+  return 'substrate'
+}
+
+function sourceLabel(source: string): string {
+  switch (source) {
+    case 'memory':
+      return 'Memory'
+    case 'error':
+      return 'Error'
+    case 'session':
+      return 'Session'
+    case 'code':
+      return 'Code'
+    default:
+      return source
+  }
+}
+
+function ContextCard({ entry }: { entry: ContextEntry }) {
+  return (
+    <Card
+      p='sm'
+      withBorder
+    >
+      <Group
+        justify='space-between'
+        mb={4}
+      >
+        <Group gap='xs'>
+          <Badge
+            color={relevanceColor(entry.relevance)}
+            size='xs'
+            variant='light'
+          >
+            {sourceLabel(entry.source)}
+          </Badge>
+          {entry.topic && (
+            <Text
+              c='dimmed'
+              size='xs'
+            >
+              {entry.topic}
+            </Text>
+          )}
+          {entry.symbol && (
+            <Text
+              ff='monospace'
+              size='xs'
+            >
+              {entry.symbol}
+            </Text>
+          )}
+        </Group>
+        <Text
+          c='dimmed'
+          size='xs'
+        >
+          {(entry.relevance * 100).toFixed(0)}%
+        </Text>
+      </Group>
+      <Text size='sm'>{entry.content.length > 200 ? `${entry.content.slice(0, 200)}...` : entry.content}</Text>
+    </Card>
+  )
+}
+
+function QuickContext() {
+  const [task, setTask] = useState('')
+  const [debouncedTask] = useDebouncedValue(task, 500)
+  const contextQuery = useContext(debouncedTask)
+  const data = contextQuery.data as GatherContextResult | undefined
+
+  return (
+    <SectionCard title='Quick Context'>
+      <TextInput
+        mb='sm'
+        onChange={(e) => setTask(e.currentTarget.value)}
+        placeholder='Describe a task to gather context for...'
+        value={task}
+      />
+      {contextQuery.isLoading && debouncedTask && <Loader size='sm' />}
+      {data && data.context.length > 0 && (
+        <Stack gap='xs'>
+          {data.context.map((entry) => (
+            <ContextCard
+              entry={entry}
+              key={`${entry.source}-${entry.topic ?? ''}-${entry.symbol ?? ''}-${entry.content.slice(0, 32)}`}
+            />
+          ))}
+          <Text
+            c='dimmed'
+            size='xs'
+          >
+            {data.tokens_used}/{data.tokens_budget} tokens | Sources: {data.sources_queried.join(', ')}
+          </Text>
+        </Stack>
+      )}
+      {data && data.context.length === 0 && debouncedTask && (
+        <Text
+          c='dimmed'
+          size='sm'
+        >
+          No relevant context found.
+        </Text>
+      )}
+    </SectionCard>
+  )
+}
 
 export function Dashboard() {
   const [statsQuery, topicsQuery, healthQuery, gainQuery] = useQueries({
@@ -72,6 +185,8 @@ export function Dashboard() {
           </Grid.Col>
         </Grid>
       )}
+
+      <QuickContext />
 
       <Grid>
         <Grid.Col span={{ base: 12, md: 6 }}>

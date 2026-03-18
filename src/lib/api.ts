@@ -321,10 +321,31 @@ export interface SymbolBody {
   name: string
 }
 
+export interface ContextEntry {
+  content: string
+  relevance: number
+  source: string
+  symbol?: string
+  topic?: string
+}
+
+export interface GatherContextResult {
+  context: ContextEntry[]
+  sources_queried: string[]
+  tokens_budget: number
+  tokens_used: number
+}
+
 // API clients
 
 export const hyphaeApi = {
   analytics: () => get<HyphaeAnalytics>('/hyphae/analytics'),
+  context: (task: string, project?: string, budget?: number) =>
+    get<GatherContextResult>('/hyphae/context', {
+      budget: budget ? String(budget) : '',
+      project: project ?? '',
+      task,
+    }),
   health: (topic?: string) => get<HealthResult[]>('/hyphae/health', { topic: topic ?? '' }),
   memoir: (name: string) => get<MemoirDetail>(`/hyphae/memoirs/${encodeURIComponent(name)}`),
   memoirInspect: (memoir: string, concept: string, depth?: number) =>
