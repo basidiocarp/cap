@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.4.0
+
+### Features
+
+- **Usage & Cost analytics tab**: Parses Claude Code session transcripts to estimate per-session and per-model token costs, with cost breakdown charts and trend analysis.
+- **Agent telemetry backend**: New backend endpoints for collecting and querying agent performance metrics (latency, error rates, tool usage patterns).
+- **Operational modes**: Settings page offers Explore, Develop, and Review modes that adjust dashboard layout and visible panels per workflow.
+- **Force-graph visualization**: Interactive force-directed graph for memoir concepts on the Memoirs page, showing relationships and clusters.
+- **ReactFlow ecosystem architecture diagram**: Visual architecture map on the Status page showing how Mycelium, Hyphae, Rhizome, Cap, Spore, and Lamella interconnect.
+- **ReactFlow call graph**: Interactive call graph visualization in CodeExplorer showing function call relationships within a file.
+- **Quick Context section on Dashboard**: At-a-glance panel showing recent memories, active sessions, and pending tasks.
+- **Annotations and Complexity panels in CodeExplorer**: Side panels displaying code annotations (TODO/FIXME/NOTE) and cyclomatic complexity per function.
+- **Cross-tool analytics**: 4-tab analytics layout (Mycelium token savings, Hyphae memory stats, Rhizome code intel, Usage & Cost) with unified date range filtering.
+- **Settings page**: Tool configuration (binary paths, database locations), prune button for Hyphae memory cleanup, and operational mode selection.
+
 ## v0.3.0
 
 ### Features
