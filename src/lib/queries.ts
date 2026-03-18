@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { hyphaeApi, myceliumApi, rhizomeApi, settingsApi, statusApi } from './api'
+import { hyphaeApi, myceliumApi, rhizomeApi, settingsApi, statusApi, usageApi } from './api'
 
 // Hyphae
 
@@ -242,6 +242,38 @@ export function useEcosystemStatus() {
     queryFn: () => statusApi.ecosystem(),
     queryKey: statusKeys.ecosystem(),
     refetchInterval: 30_000,
+  })
+}
+
+// Usage
+
+export const usageKeys = {
+  aggregate: () => ['usage', 'aggregate'] as const,
+  sessions: (since?: string, limit?: number) => ['usage', 'sessions', since, limit] as const,
+  trend: (days?: number) => ['usage', 'trend', days] as const,
+}
+
+export function useUsageAggregate() {
+  return useQuery({
+    queryFn: () => usageApi.aggregate(),
+    queryKey: usageKeys.aggregate(),
+    staleTime: 60_000,
+  })
+}
+
+export function useUsageTrend(days = 30) {
+  return useQuery({
+    queryFn: () => usageApi.trend(days),
+    queryKey: usageKeys.trend(days),
+    staleTime: 60_000,
+  })
+}
+
+export function useUsageSessions(limit = 20) {
+  return useQuery({
+    queryFn: () => usageApi.sessions(undefined, limit),
+    queryKey: usageKeys.sessions(undefined, limit),
+    staleTime: 60_000,
   })
 }
 

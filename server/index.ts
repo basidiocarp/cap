@@ -12,6 +12,7 @@ import myceliumRoutes from './routes/mycelium.ts'
 import rhizomeRoutes from './routes/rhizome.ts'
 import settingsRoutes from './routes/settings.ts'
 import statusRoutes from './routes/status.ts'
+import usageRoutes from './routes/usage.ts'
 
 export function createApp(): Hono {
   const app = new Hono()
@@ -35,6 +36,7 @@ export function createApp(): Hono {
   app.route('/api/rhizome', rhizomeRoutes)
   app.route('/api/settings', settingsRoutes)
   app.route('/api/status', statusRoutes)
+  app.route('/api/usage', usageRoutes)
 
   app.get('/api/health', (c) => c.json({ status: 'ok' }))
 

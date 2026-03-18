@@ -1,19 +1,31 @@
 import { Grid, Stack, Tabs, Title } from '@mantine/core'
-import { IconBrain, IconChartBar, IconCode, IconNetwork } from '@tabler/icons-react'
+import { IconBrain, IconChartBar, IconCode, IconCurrencyDollar, IconNetwork } from '@tabler/icons-react'
 
 import { KpiCard } from '../components/KpiCard'
 import { PageLoader } from '../components/PageLoader'
-import { useEcosystemStatus, useHyphaeAnalytics, useMyceliumAnalytics, useRhizomeAnalytics } from '../lib/queries'
+import {
+  useEcosystemStatus,
+  useHyphaeAnalytics,
+  useMyceliumAnalytics,
+  useRhizomeAnalytics,
+  useUsageAggregate,
+  useUsageSessions,
+  useUsageTrend,
+} from '../lib/queries'
 import { CodeIntelligenceTab } from './analytics/CodeIntelligenceTab'
 import { EcosystemTab } from './analytics/EcosystemTab'
 import { MemoryHealthTab } from './analytics/MemoryHealthTab'
 import { TokenSavingsTab } from './analytics/TokenSavingsTab'
+import { UsageCostTab } from './analytics/UsageCostTab'
 
 export function Analytics() {
   const { data: ecosystemData = null, isLoading: ecosystemLoading } = useEcosystemStatus()
   const { data: hyphaeData = null, isLoading: hyphaeLoading } = useHyphaeAnalytics()
   const { data: myceliumData = null, isLoading: myceliumLoading } = useMyceliumAnalytics()
   const { data: rhizomeData = null, isLoading: rhizomeLoading } = useRhizomeAnalytics()
+  const { data: usageAggregate = null } = useUsageAggregate()
+  const { data: usageTrend = null } = useUsageTrend(30)
+  const { data: usageSessions = null } = useUsageSessions(20)
 
   const loading = ecosystemLoading || hyphaeLoading || myceliumLoading || rhizomeLoading
 
@@ -79,6 +91,12 @@ export function Analytics() {
           >
             Ecosystem
           </Tabs.Tab>
+          <Tabs.Tab
+            leftSection={<IconCurrencyDollar size={16} />}
+            value='usage'
+          >
+            Usage &amp; Cost
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel
@@ -107,6 +125,17 @@ export function Analytics() {
           value='ecosystem'
         >
           <EcosystemTab data={ecosystemData} />
+        </Tabs.Panel>
+
+        <Tabs.Panel
+          pt='md'
+          value='usage'
+        >
+          <UsageCostTab
+            aggregate={usageAggregate}
+            sessions={usageSessions}
+            trend={usageTrend}
+          />
         </Tabs.Panel>
       </Tabs>
     </Stack>
