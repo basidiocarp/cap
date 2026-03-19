@@ -1,5 +1,5 @@
 import { Grid, Stack, Tabs, Title } from '@mantine/core'
-import { IconBrain, IconChartBar, IconCode, IconCurrencyDollar, IconNetwork } from '@tabler/icons-react'
+import { IconActivity, IconBrain, IconChartBar, IconCode, IconCurrencyDollar, IconNetwork } from '@tabler/icons-react'
 
 import { KpiCard } from '../components/KpiCard'
 import { PageLoader } from '../components/PageLoader'
@@ -8,6 +8,7 @@ import {
   useHyphaeAnalytics,
   useMyceliumAnalytics,
   useRhizomeAnalytics,
+  useTelemetry,
   useUsageAggregate,
   useUsageSessions,
   useUsageTrend,
@@ -15,6 +16,7 @@ import {
 import { CodeIntelligenceTab } from './analytics/CodeIntelligenceTab'
 import { EcosystemTab } from './analytics/EcosystemTab'
 import { MemoryHealthTab } from './analytics/MemoryHealthTab'
+import { TelemetryTab } from './analytics/TelemetryTab'
 import { TokenSavingsTab } from './analytics/TokenSavingsTab'
 import { UsageCostTab } from './analytics/UsageCostTab'
 
@@ -23,6 +25,7 @@ export function Analytics() {
   const { data: hyphaeData = null, isLoading: hyphaeLoading } = useHyphaeAnalytics()
   const { data: myceliumData = null, isLoading: myceliumLoading } = useMyceliumAnalytics()
   const { data: rhizomeData = null, isLoading: rhizomeLoading } = useRhizomeAnalytics()
+  const { data: telemetryData = null } = useTelemetry()
   const { data: usageAggregate = null } = useUsageAggregate()
   const { data: usageTrend = null } = useUsageTrend(30)
   const { data: usageSessions = null } = useUsageSessions(20)
@@ -83,6 +86,12 @@ export function Analytics() {
             Memory Health
           </Tabs.Tab>
           <Tabs.Tab
+            leftSection={<IconActivity size={16} />}
+            value='telemetry'
+          >
+            Telemetry
+          </Tabs.Tab>
+          <Tabs.Tab
             leftSection={<IconCode size={16} />}
             value='code-intelligence'
           >
@@ -114,6 +123,13 @@ export function Analytics() {
           value='memory-health'
         >
           <MemoryHealthTab data={hyphaeData} />
+        </Tabs.Panel>
+
+        <Tabs.Panel
+          pt='md'
+          value='telemetry'
+        >
+          <TelemetryTab data={telemetryData} />
         </Tabs.Panel>
 
         <Tabs.Panel

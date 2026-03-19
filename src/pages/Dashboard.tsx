@@ -2,6 +2,7 @@ import { Badge, Card, Grid, Group, Loader, Progress, Stack, Table, Text, TextInp
 import { useDebouncedValue } from '@mantine/hooks'
 import { useQueries } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import type { ContextEntry, GatherContextResult, HealthResult, Stats, TopicSummary } from '../lib/api'
 import { EmptyState } from '../components/EmptyState'
@@ -10,7 +11,7 @@ import { KpiCard } from '../components/KpiCard'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { hyphaeApi, myceliumApi } from '../lib/api'
-import { hyphaeKeys, myceliumKeys, useContext } from '../lib/queries'
+import { hyphaeKeys, myceliumKeys, useContext, useEcosystemStatus } from '../lib/queries'
 
 function relevanceColor(score: number): string {
   if (score >= 0.8) return 'mycelium'
@@ -124,6 +125,8 @@ function QuickContext() {
 }
 
 export function Dashboard() {
+  const navigate = useNavigate()
+
   const [statsQuery, topicsQuery, healthQuery, gainQuery] = useQueries({
     queries: [
       { queryFn: () => hyphaeApi.stats(), queryKey: hyphaeKeys.stats() },
@@ -132,6 +135,8 @@ export function Dashboard() {
       { queryFn: () => myceliumApi.gain(), queryKey: myceliumKeys.gain() },
     ],
   })
+
+  const { data: ecosystemStatus } = useEcosystemStatus()
 
   const loading = statsQuery.isLoading || topicsQuery.isLoading || healthQuery.isLoading || gainQuery.isLoading
   const error = statsQuery.error || topicsQuery.error || healthQuery.error || gainQuery.error
@@ -152,6 +157,29 @@ export function Dashboard() {
   return (
     <Stack>
       <Title order={2}>Dashboard</Title>
+
+      {ecosystemStatus && (
+        <Group gap='xs'>
+          <Badge
+            color={ecosystemStatus.mycelium.available ? 'mycelium' : 'red'}
+            variant='light'
+          >
+            Mycelium {ecosystemStatus.mycelium.available ? '✓' : '✗'}
+          </Badge>
+          <Badge
+            color={ecosystemStatus.hyphae.available ? 'substrate' : 'red'}
+            variant='light'
+          >
+            Hyphae {ecosystemStatus.hyphae.available ? '✓' : '✗'}
+          </Badge>
+          <Badge
+            color={ecosystemStatus.rhizome.available ? 'fruiting' : 'red'}
+            variant='light'
+          >
+            Rhizome {ecosystemStatus.rhizome.available ? '✓' : '✗'}
+          </Badge>
+        </Group>
+      )}
 
       {stats && (
         <Grid>
@@ -206,7 +234,17 @@ export function Dashboard() {
                 <Table.Tbody>
                   {topics.map((t) => (
                     <Table.Tr key={t.topic}>
-                      <Table.Td>{t.topic}</Table.Td>
+                      <Table.Td>
+                        <Text
+                          component='button'
+                          fw={500}
+                          onClick={() => navigate(`/memories?topic=${encodeURIComponent(t.topic)}`)}
+                          style={{ cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}
+                          variant='link'
+                        >
+                          {t.topic}
+                        </Text>
+                      </Table.Td>
                       <Table.Td>{t.count}</Table.Td>
                       <Table.Td>{t.avg_weight.toFixed(3)}</Table.Td>
                     </Table.Tr>

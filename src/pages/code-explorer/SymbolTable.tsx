@@ -1,11 +1,12 @@
-import { Badge, Code, Group, Loader, Stack, Table, Text, UnstyledButton } from '@mantine/core'
-import { IconChevronRight } from '@tabler/icons-react'
-import { Fragment } from 'react'
+import { Badge, Button, Code, Group, Loader, Stack, Table, Text, UnstyledButton } from '@mantine/core'
+import { IconChevronRight, IconLink } from '@tabler/icons-react'
+import { Fragment, useState } from 'react'
 
 import type { RhizomeSymbol, SymbolDefinition } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'
 import { symbolKindColor } from '../../lib/colors'
 import { onActivate } from '../../lib/keyboard'
+import { useReferences } from '../../lib/queries'
 
 interface SymbolTableProps {
   defLoading: boolean
@@ -15,6 +16,7 @@ interface SymbolTableProps {
   filteredSymbols: RhizomeSymbol[]
   hasMoreLines: boolean
   onSymbolClick: (name: string) => void
+  selectedFile: string | null
   showFullDef: boolean
   onToggleFullDef: () => void
 }
@@ -27,9 +29,19 @@ export function SymbolTable({
   filteredSymbols,
   hasMoreLines,
   onSymbolClick,
+  selectedFile,
   showFullDef,
   onToggleFullDef,
 }: SymbolTableProps) {
+  const [showReferences, setShowReferences] = useState(false)
+
+  const currentSymbol = filteredSymbols.find((s) => s.name === expandedSymbol)
+  const { data: references = [], isLoading: referencesLoading } = useReferences(
+    selectedFile ?? '',
+    currentSymbol?.location.line_start ?? 0,
+    currentSymbol?.location.column_start ?? 0,
+    showReferences
+  )
   return (
     <SectionCard>
       <Table highlightOnHover>
@@ -104,7 +116,7 @@ export function SymbolTable({
                     {defLoading ? (
                       <Loader size='sm' />
                     ) : definition ? (
-                      <Stack gap='xs'>
+                      <Stack gap='md'>
                         {definition.doc_comment && (
                           <Text
                             c='dimmed'
@@ -125,6 +137,63 @@ export function SymbolTable({
                             </Text>
                           </UnstyledButton>
                         )}
+
+                        <div>
+                          <Button
+                            disabled={referencesLoading}
+                            leftSection={<IconLink size={14} />}
+                            onClick={() => setShowReferences(!showReferences)}
+                            size='xs'
+                            variant={showReferences ? 'filled' : 'light'}
+                          >
+                            {showReferences ? 'Hide' : 'Find'} References
+                          </Button>
+
+                          {showReferences && (
+                            <Stack
+                              gap='xs'
+                              mt='sm'
+                            >
+                              {referencesLoading && <Loader size='sm' />}
+                              {!referencesLoading && references.length === 0 && (
+                                <Text
+                                  c='dimmed'
+                                  size='xs'
+                                >
+                                  No references found
+                                </Text>
+                              )}
+                              {!referencesLoading && references.length > 0 && (
+                                <Stack gap={0}>
+                                  <Text
+                                    c='dimmed'
+                                    fw={500}
+                                    size='xs'
+                                  >
+                                    References ({references.length})
+                                  </Text>
+                                  {references.map((ref) => (
+                                    <Text
+                                      ff='monospace'
+                                      key={`${ref.file_path}-${ref.line_start}`}
+                                      size='xs'
+                                    >
+                                      <Text
+                                        c='mycelium'
+                                        component='span'
+                                        ff='monospace'
+                                        fw={500}
+                                      >
+                                        {ref.file_path.split('/').pop()}
+                                      </Text>
+                                      :{ref.line_start}:{ref.column_start}
+                                    </Text>
+                                  ))}
+                                </Stack>
+                              )}
+                            </Stack>
+                          )}
+                        </div>
                       </Stack>
                     ) : null}
                   </Table.Td>

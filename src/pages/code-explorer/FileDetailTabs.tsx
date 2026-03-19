@@ -4,6 +4,7 @@ import type { Annotation, CallSite, ComplexityResult } from '../../lib/api'
 import { CallGraph } from '../../components/CallGraph'
 import { SectionCard } from '../../components/SectionCard'
 import { annotationColor, complexityColor } from '../../lib/colors'
+import { useTests } from '../../lib/queries'
 
 interface FileDetailTabsProps {
   annotations: Annotation[]
@@ -24,6 +25,8 @@ export function FileDetailTabs({
   complexityLoading,
   selectedFile,
 }: FileDetailTabsProps) {
+  const { data: tests = [], isLoading: testsLoading } = useTests(selectedFile ?? '')
+
   return (
     <SectionCard>
       <Tabs defaultValue='annotations'>
@@ -62,6 +65,18 @@ export function FileDetailTabs({
                 variant='light'
               >
                 {callSites.length}
+              </Badge>
+            )}
+          </Tabs.Tab>
+          <Tabs.Tab value='tests'>
+            Tests{' '}
+            {!testsLoading && tests.length > 0 && (
+              <Badge
+                ml={4}
+                size='xs'
+                variant='light'
+              >
+                {tests.length}
               </Badge>
             )}
           </Tabs.Tab>
@@ -209,6 +224,48 @@ export function FileDetailTabs({
                       >
                         {cs.call_expression}
                       </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          )}
+        </Tabs.Panel>
+
+        <Tabs.Panel
+          pt='sm'
+          value='tests'
+        >
+          {testsLoading && <Loader size='sm' />}
+          {!testsLoading && tests.length === 0 && (
+            <Text
+              c='dimmed'
+              size='sm'
+            >
+              No test functions found
+            </Text>
+          )}
+          {!testsLoading && tests.length > 0 && (
+            <Table highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Name</Table.Th>
+                  <Table.Th>Line</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {tests.map((test) => (
+                  <Table.Tr key={`${test.name}-${test.line}`}>
+                    <Table.Td>
+                      <Text
+                        ff='monospace'
+                        size='sm'
+                      >
+                        {test.name}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size='sm'>{test.line}</Text>
                     </Table.Td>
                   </Table.Tr>
                 ))}

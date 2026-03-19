@@ -1,5 +1,5 @@
-import { Badge, Group, Loader, Stack, Table, Text, TextInput, Title, UnstyledButton } from '@mantine/core'
-import { useState } from 'react'
+import { Badge, Group, Loader, ScrollArea, Stack, Table, Text, TextInput, Title, UnstyledButton } from '@mantine/core'
+import { useMemo, useState } from 'react'
 
 import type { Concept } from '../lib/api'
 import { ConceptGraph } from '../components/ConceptGraph'
@@ -15,16 +15,27 @@ import { useMemoir, useMemoirInspect, useMemoirs } from '../lib/queries'
 export function Memoirs() {
   const [selected, setSelected] = useState<string | null>(null)
   const [inspectConcept, setInspectConcept] = useState('')
+  const [conceptFilter, setConceptFilter] = useState('')
 
   const { data: memoirs = [], error: memoirsError, isLoading: memoirsLoading } = useMemoirs()
   const { data: detail, isLoading: detailLoading } = useMemoir(selected ?? '')
   const { data: inspection, isLoading: inspectLoading } = useMemoirInspect(selected ?? '', inspectConcept, 2)
+
+  const filteredConcepts = useMemo(() => {
+    if (!detail?.concepts || !conceptFilter.trim()) {
+      return detail?.concepts ?? []
+    }
+
+    const filterLower = conceptFilter.toLowerCase()
+    return detail.concepts.filter((c: Concept) => c.name.toLowerCase().includes(filterLower))
+  }, [detail?.concepts, conceptFilter])
 
   const error = memoirsError
 
   function handleSelectMemoir(name: string) {
     setSelected(name)
     setInspectConcept('')
+    setConceptFilter('')
   }
 
   function handleInspect(conceptName?: string) {
@@ -94,7 +105,7 @@ export function Memoirs() {
                   size='sm'
                   variant='light'
                 >
-                  {detail.concepts.length} concepts
+                  {filteredConcepts.length}/{detail.concepts.length} concepts
                 </Badge>
               </Group>
               <Text
@@ -105,64 +116,75 @@ export function Memoirs() {
                 {detail.memoir.description}
               </Text>
 
-              {detail.concepts.length > 0 ? (
-                <Table highlightOnHover>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Concept</Table.Th>
-                      <Table.Th>Definition</Table.Th>
-                      <Table.Th>Confidence</Table.Th>
-                      <Table.Th>Labels</Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {detail.concepts.map((c: Concept) => (
-                      <Table.Tr
-                        key={c.id}
-                        onClick={() => handleInspect(c.name)}
-                        onKeyDown={onActivate(() => handleInspect(c.name))}
-                        style={{ cursor: 'pointer' }}
-                        tabIndex={0}
-                      >
-                        <Table.Td>
-                          <Text
-                            fw={500}
-                            size='sm'
-                          >
-                            {c.name}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td maw={300}>
-                          <Text
-                            lineClamp={2}
-                            size='sm'
-                          >
-                            {c.definition}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td>
-                          <Text size='sm'>{(c.confidence * 100).toFixed(0)}%</Text>
-                        </Table.Td>
-                        <Table.Td>
-                          <Group gap={4}>
-                            {parseJsonArray<{ namespace: string; value: string }>(c.labels).map((l) => (
-                              <Badge
-                                color='spore'
-                                key={`${l.namespace}:${l.value}`}
-                                size='xs'
-                                variant='light'
-                              >
-                                {l.namespace}:{l.value}
-                              </Badge>
-                            ))}
-                          </Group>
-                        </Table.Td>
+              {detail.concepts.length > 0 && (
+                <TextInput
+                  mb='sm'
+                  onChange={(e) => setConceptFilter(e.currentTarget.value)}
+                  placeholder='Filter concepts by name...'
+                  value={conceptFilter}
+                />
+              )}
+
+              {filteredConcepts.length > 0 ? (
+                <ScrollArea>
+                  <Table highlightOnHover>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Concept</Table.Th>
+                        <Table.Th>Definition</Table.Th>
+                        <Table.Th>Confidence</Table.Th>
+                        <Table.Th>Labels</Table.Th>
                       </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {filteredConcepts.map((c: Concept) => (
+                        <Table.Tr
+                          key={c.id}
+                          onClick={() => handleInspect(c.name)}
+                          onKeyDown={onActivate(() => handleInspect(c.name))}
+                          style={{ cursor: 'pointer' }}
+                          tabIndex={0}
+                        >
+                          <Table.Td>
+                            <Text
+                              fw={500}
+                              size='sm'
+                            >
+                              {c.name}
+                            </Text>
+                          </Table.Td>
+                          <Table.Td maw={300}>
+                            <Text
+                              lineClamp={2}
+                              size='sm'
+                            >
+                              {c.definition}
+                            </Text>
+                          </Table.Td>
+                          <Table.Td>
+                            <Text size='sm'>{(c.confidence * 100).toFixed(0)}%</Text>
+                          </Table.Td>
+                          <Table.Td>
+                            <Group gap={4}>
+                              {parseJsonArray<{ namespace: string; value: string }>(c.labels).map((l) => (
+                                <Badge
+                                  color='spore'
+                                  key={`${l.namespace}:${l.value}`}
+                                  size='xs'
+                                  variant='light'
+                                >
+                                  {l.namespace}:{l.value}
+                                </Badge>
+                              ))}
+                            </Group>
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </ScrollArea>
               ) : (
-                <EmptyState>No concepts yet</EmptyState>
+                <EmptyState>{conceptFilter ? 'No concepts match the filter' : 'No concepts yet'}</EmptyState>
               )}
             </SectionCard>
           )}

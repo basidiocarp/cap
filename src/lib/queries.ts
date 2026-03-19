@@ -107,6 +107,7 @@ export const rhizomeKeys = {
   exports: (file: string) => ['rhizome', 'exports', file] as const,
   files: (path?: string, depth?: number) => ['rhizome', 'files', path, depth] as const,
   project: () => ['rhizome', 'project'] as const,
+  references: (file: string, line: number, column: number) => ['rhizome', 'references', file, line, column] as const,
   scope: (file: string, line: number) => ['rhizome', 'scope', file, line] as const,
   search: (pattern: string, path?: string) => ['rhizome', 'search', pattern, path] as const,
   status: () => ['rhizome', 'status'] as const,
@@ -232,6 +233,15 @@ export function useExports(file: string) {
   })
 }
 
+export function useReferences(file: string, line: number, column: number, enabled = true) {
+  return useQuery({
+    enabled: !!file && line > 0 && column >= 0 && enabled,
+    queryFn: () => rhizomeApi.references(file, line, column),
+    queryKey: rhizomeKeys.references(file, line, column),
+    staleTime: 300_000,
+  })
+}
+
 export function useScope(file: string, line: number) {
   return useQuery({
     enabled: !!file && line > 0,
@@ -256,6 +266,15 @@ export function useSymbolBody(file: string, symbol: string, line?: number) {
   })
 }
 
+export function useTests(file: string) {
+  return useQuery({
+    enabled: !!file,
+    queryFn: () => rhizomeApi.tests(file),
+    queryKey: rhizomeKeys.tests(file),
+    staleTime: 300_000,
+  })
+}
+
 // Status
 
 export const statusKeys = {
@@ -275,6 +294,7 @@ export function useEcosystemStatus() {
 export const usageKeys = {
   aggregate: () => ['usage', 'aggregate'] as const,
   sessions: (since?: string, limit?: number) => ['usage', 'sessions', since, limit] as const,
+  telemetry: () => ['usage', 'telemetry'] as const,
   trend: (days?: number) => ['usage', 'trend', days] as const,
 }
 
@@ -298,6 +318,14 @@ export function useUsageSessions(limit = 20) {
   return useQuery({
     queryFn: () => usageApi.sessions(undefined, limit),
     queryKey: usageKeys.sessions(undefined, limit),
+    staleTime: 60_000,
+  })
+}
+
+export function useTelemetry() {
+  return useQuery({
+    queryFn: () => usageApi.telemetry(),
+    queryKey: usageKeys.telemetry(),
     staleTime: 60_000,
   })
 }

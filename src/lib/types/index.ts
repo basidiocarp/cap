@@ -41,3 +41,4 @@ export type {
 export type { EcosystemSettings, LspInstallResult, LspLanguageStatus, LspStatusResult, Mode, ModeConfig, PruneResult } from './settings'
 export type { EcosystemStatus } from './status'
 export type { SessionUsage, UsageAggregate, UsageTrend } from './usage'
+export type { AggregateTelemetry, CommandUsage, FileActivity, SessionsByDay, ToolUsage } from './telemetry'

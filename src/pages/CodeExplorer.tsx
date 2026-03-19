@@ -286,6 +286,7 @@ export function CodeExplorer() {
                   hasMoreLines={hasMoreLines}
                   onSymbolClick={handleSymbolClick}
                   onToggleFullDef={() => setShowFullDef((v) => !v)}
+                  selectedFile={tree.selectedFile}
                   showFullDef={showFullDef}
                 />
               )}
