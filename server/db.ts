@@ -17,10 +17,12 @@ function defaultDbPath(): string {
 const DEFAULT_DB_PATH = defaultDbPath()
 
 let db: DatabaseType | null = null
+let initialized = false
 
 export function getDb(): DatabaseType | null {
-  if (db !== undefined) return db
+  if (initialized) return db
 
+  initialized = true
   try {
     const dbPath = process.env.HYPHAE_DB ?? DEFAULT_DB_PATH
     logger.info({ dbPath }, 'Opening hyphae database (read-only)')
@@ -37,4 +39,5 @@ export function getDb(): DatabaseType | null {
 export function closeDb() {
   db?.close()
   db = null
+  initialized = false
 }
