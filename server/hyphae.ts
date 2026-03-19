@@ -149,6 +149,13 @@ export function memoirInspect(
   const visited = new Set<string>([concept.id])
   let frontier = [concept.id]
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // BFS traversal phase: collect links and neighbor IDs
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const neighborLinks: Array<{ target_id: string; source_id: string; link: ConceptLinkRow; direction: 'outgoing' | 'incoming' }> = []
+  const conceptIdsToFetch = new Set<string>()
+
   for (let d = 0; d < depth && frontier.length > 0; d++) {
     const nextFrontier: string[] = []
     for (const nodeId of frontier) {
@@ -172,10 +179,10 @@ export function memoirInspect(
         if (!visited.has(row.target_id)) {
           visited.add(row.target_id)
           nextFrontier.push(row.target_id)
-          const linkedConcept = db.prepare('SELECT * FROM concepts WHERE id = ?').get(row.target_id) as ConceptRow
-          neighbors.push({
-            concept: linkedConcept,
-            direction: 'outgoing',
+          conceptIdsToFetch.add(row.target_id)
+          neighborLinks.push({
+            target_id: row.target_id,
+            source_id: row.target_id,
             link: {
               created_at: row.created_at,
               id: row.id,
@@ -184,6 +191,7 @@ export function memoirInspect(
               target_id: row.target_id,
               weight: row.weight,
             },
+            direction: 'outgoing',
           })
         }
       }
@@ -192,10 +200,10 @@ export function memoirInspect(
         if (!visited.has(row.source_id)) {
           visited.add(row.source_id)
           nextFrontier.push(row.source_id)
-          const linkedConcept = db.prepare('SELECT * FROM concepts WHERE id = ?').get(row.source_id) as ConceptRow
-          neighbors.push({
-            concept: linkedConcept,
-            direction: 'incoming',
+          conceptIdsToFetch.add(row.source_id)
+          neighborLinks.push({
+            target_id: row.source_id,
+            source_id: row.source_id,
             link: {
               created_at: row.created_at,
               id: row.id,
@@ -204,11 +212,34 @@ export function memoirInspect(
               target_id: row.target_id,
               weight: row.weight,
             },
+            direction: 'incoming',
           })
         }
       }
     }
     frontier = nextFrontier
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Batch fetch: fetch all concepts in a single query
+  // ─────────────────────────────────────────────────────────────────────────
+
+  if (conceptIdsToFetch.size > 0) {
+    const conceptIds = Array.from(conceptIdsToFetch)
+    const placeholders = conceptIds.map(() => '?').join(',')
+    const allConcepts = db.prepare(`SELECT * FROM concepts WHERE id IN (${placeholders})`).all(...conceptIds) as ConceptRow[]
+    const conceptMap = new Map(allConcepts.map((c) => [c.id, c]))
+
+    for (const neighborLink of neighborLinks) {
+      const linkedConcept = conceptMap.get(neighborLink.source_id)
+      if (linkedConcept) {
+        neighbors.push({
+          concept: linkedConcept,
+          direction: neighborLink.direction,
+          link: neighborLink.link,
+        })
+      }
+    }
   }
 
   return { concept, neighbors }

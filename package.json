@@ -9,7 +9,9 @@
     "dev:all": "npm run dev:server & npm run dev",
     "build": "tsc -b && vite build",
     "lint": "npx @biomejs/biome check --write .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
@@ -55,7 +57,8 @@
     "postcss-simple-vars": "^7.0.1",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",
-    "vite": "^8.0.0-beta.13"
+    "vite": "^8.0.0-beta.13",
+    "vitest": "^4.1.0"
   },
   "overrides": {
     "vite": "^8.0.0-beta.13"
