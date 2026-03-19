@@ -41,12 +41,18 @@ export async function getGainHistory(format: 'json' | 'text' = 'json') {
   return { raw }
 }
 
+function isGainCliOutput(v: GainCliOutput | { raw: string } | null): v is GainCliOutput {
+  return v !== null && !('raw' in v)
+}
+
 async function computeAnalytics() {
   try {
     const [gain, history] = await Promise.allSettled([getGain('json'), getGainHistory('json')])
 
-    const gainData = gain.status === 'fulfilled' ? gain.value : null
-    const historyData = history.status === 'fulfilled' ? history.value : null
+    const gainRaw = gain.status === 'fulfilled' ? gain.value : null
+    const historyRaw = history.status === 'fulfilled' ? history.value : null
+    const gainData = isGainCliOutput(gainRaw) ? gainRaw : null
+    const historyData = isGainCliOutput(historyRaw) ? historyRaw : null
 
     const byCommand = gainData?.by_command ?? []
     const savings_by_category = byCommand.map((cmd: [string, number, number, number]) => ({

@@ -5,8 +5,18 @@ import { cached } from './cache.ts'
 // Analytics computation
 // ─────────────────────────────────────────────────────────────────────────────
 
+const EMPTY_ANALYTICS = {
+  importance_distribution: { critical: 0, ephemeral: 0, high: 0, low: 0, medium: 0 },
+  lifecycle: { avg_weight: 0, created_last_7d: 0, created_last_30d: 0, decayed: 0, min_weight: 0, pruned: 0 },
+  memoir_stats: { code_memoirs: 0, total: 0, total_concepts: 0, total_links: 0 },
+  memory_utilization: { rate: 0, recalled: 0, total: 0 },
+  search_stats: { empty_results: 0, hit_rate: 0, total_searches: 0 },
+  top_topics: [],
+}
+
 function computeAnalytics() {
   const db = getDb()
+  if (!db) return EMPTY_ANALYTICS
 
   const total = (db.prepare('SELECT COUNT(*) as count FROM memories').get() as { count: number }).count
   const recalled = (db.prepare('SELECT COUNT(*) as count FROM memories WHERE access_count > 0').get() as { count: number }).count

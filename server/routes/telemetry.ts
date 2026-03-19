@@ -1,10 +1,10 @@
 import { Hono } from 'hono'
 
-import { cachedAsync } from '../lib/cache.ts'
+import { cached } from '../lib/cache.ts'
 import { aggregateTelemetry } from '../lib/telemetry.ts'
 import { logger } from '../logger.ts'
 
-const getTelemetry = cachedAsync(() => {
+const getTelemetry = cached(() => {
   try {
     return aggregateTelemetry()
   } catch (err) {
@@ -15,8 +15,8 @@ const getTelemetry = cachedAsync(() => {
 
 const app = new Hono()
 
-app.get('/', async (c) => {
-  const data = await getTelemetry()
+app.get('/', (c) => {
+  const data = getTelemetry()
   if (!data) return c.json({ error: 'No telemetry available' }, 500)
   return c.json(data)
 })

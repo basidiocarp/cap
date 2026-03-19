@@ -17,7 +17,6 @@ function defaultDbPath(): string {
 const DEFAULT_DB_PATH = defaultDbPath()
 
 let db: DatabaseType | null = null
-let dbError: string | null = null
 
 export function getDb(): DatabaseType | null {
   if (db !== undefined) return db
@@ -28,7 +27,6 @@ export function getDb(): DatabaseType | null {
     db = new Database(dbPath, { readonly: true })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    dbError = message
     logger.warn({ error: message, path: process.env.HYPHAE_DB ?? DEFAULT_DB_PATH }, 'Hyphae database not available')
     db = null
   }

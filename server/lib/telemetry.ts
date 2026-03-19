@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
 
-import { logger } from '../logger.ts'
 import { scanAllSessions } from './usage.ts'
 
 export interface ToolUsage {

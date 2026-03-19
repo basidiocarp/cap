@@ -46,6 +46,7 @@ const MEMORY_SOURCES: SourceConfig[] = [
 
 function queryMemorySource(task: string, project: string | undefined, config: SourceConfig): ContextEntry[] {
   const db = getDb()
+  if (!db) return []
   const results: ContextEntry[] = []
 
   let sql = `
@@ -80,6 +81,7 @@ function queryMemorySource(task: string, project: string | undefined, config: So
 
 function queryCodeSource(task: string, project: string): ContextEntry[] {
   const db = getDb()
+  if (!db) return []
   const results: ContextEntry[] = []
 
   const memoir = db.prepare('SELECT * FROM memoirs WHERE name = ?').get(`code:${project}`) as MemoirRow | undefined

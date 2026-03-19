@@ -64,10 +64,12 @@ async function checkHyphae(): Promise<StatusResult['hyphae']> {
     let memoirs = 0
     try {
       const db = getDb()
-      const memRow = db.prepare('SELECT COUNT(*) as count FROM memories').get() as { count: number }
-      memories = memRow.count
-      const memoirRow = db.prepare('SELECT COUNT(*) as count FROM memoirs').get() as { count: number }
-      memoirs = memoirRow.count
+      if (db) {
+        const memRow = db.prepare('SELECT COUNT(*) as count FROM memories').get() as { count: number }
+        memories = memRow.count
+        const memoirRow = db.prepare('SELECT COUNT(*) as count FROM memoirs').get() as { count: number }
+        memoirs = memoirRow.count
+      }
     } catch (dbErr) {
       logger.debug({ err: dbErr }, 'Hyphae DB query failed')
     }
