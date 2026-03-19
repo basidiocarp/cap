@@ -1,6 +1,6 @@
-import { Alert, Badge, Button, Group, Stack, Text, Title } from '@mantine/core'
+import { Alert, Badge, Button, Group, List, Stack, Text, Title } from '@mantine/core'
 import { IconAlertCircle, IconAlertTriangle, IconInfoCircle, IconRefresh } from '@tabler/icons-react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import type { DiagnosticItem } from '../lib/api'
 import { EmptyState } from '../components/EmptyState'
@@ -74,9 +74,35 @@ export function Diagnostics() {
       {status && !isLsp && (
         <Alert
           color='substrate'
-          title='LSP Backend Required'
+          title='Language Server Required'
         >
-          LSP backend required for diagnostics. Tree-sitter backend provides symbol analysis only.
+          <Text size='sm'>
+            Diagnostics (errors, warnings, type issues) require a running language server. Tree-sitter provides symbol extraction only — it
+            cannot type-check code.
+          </Text>
+          <Text
+            mt='xs'
+            size='sm'
+          >
+            To enable diagnostics:
+          </Text>
+          <List
+            mt='xs'
+            size='sm'
+          >
+            <List.Item>
+              Go to{' '}
+              <Text
+                c='mycelium'
+                component={Link}
+                to='/settings'
+              >
+                Settings → Language Servers
+              </Text>{' '}
+              and install an LSP server for your language
+            </List.Item>
+            <List.Item>Rhizome will auto-upgrade to the LSP backend when a server is available</List.Item>
+          </List>
         </Alert>
       )}
 
