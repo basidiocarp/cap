@@ -97,7 +97,7 @@ export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: Concep
   const graphRef = useRef<ForceGraphMethods | undefined>(undefined)
   const [width, setWidth] = useState(600)
 
-  const { data: inspection, isLoading } = useMemoirInspect(memoir, concept ?? '', depth)
+  const { data: inspection, isLoading, isFetching } = useMemoirInspect(memoir, concept ?? '', depth)
 
   // Configure forces for better spread when graph data changes
   useEffect(() => {
@@ -239,7 +239,7 @@ export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: Concep
     )
   }
 
-  if (isLoading) {
+  if (isLoading && !inspection) {
     return <Loader size='sm' />
   }
 
@@ -257,7 +257,7 @@ export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: Concep
   return (
     <div
       ref={containerRef}
-      style={{ width: '100%' }}
+      style={{ opacity: isFetching ? 0.6 : 1, transition: 'opacity 0.2s', width: '100%' }}
     >
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <ForceGraph2D

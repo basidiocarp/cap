@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { hyphaeApi, lspApi, myceliumApi, rhizomeApi, settingsApi, statusApi, usageApi } from './api'
 
@@ -70,6 +70,7 @@ export function useMemoir(name: string) {
 export function useMemoirInspect(memoir: string, concept: string, depth?: number) {
   return useQuery({
     enabled: !!memoir && !!concept,
+    placeholderData: keepPreviousData,
     queryFn: () => hyphaeApi.memoirInspect(memoir, concept, depth),
     queryKey: hyphaeKeys.memoirInspect(memoir, concept, depth),
   })
