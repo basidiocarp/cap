@@ -17,14 +17,22 @@ function defaultDbPath(): string {
 const DEFAULT_DB_PATH = defaultDbPath()
 
 let db: DatabaseType | null = null
+let dbError: string | null = null
 
-export function getDb(): DatabaseType {
-  if (!db) {
+export function getDb(): DatabaseType | null {
+  if (db !== undefined) return db
+
+  try {
     const dbPath = process.env.HYPHAE_DB ?? DEFAULT_DB_PATH
     logger.info({ dbPath }, 'Opening hyphae database (read-only)')
     db = new Database(dbPath, { readonly: true })
-    db.pragma('journal_mode = WAL')
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    dbError = message
+    logger.warn({ error: message, path: process.env.HYPHAE_DB ?? DEFAULT_DB_PATH }, 'Hyphae database not available')
+    db = null
   }
+
   return db
 }
 

@@ -1,6 +1,6 @@
 import type { Context } from 'hono'
 import { execFile } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, statSync } from 'node:fs'
 import { promisify } from 'node:util'
 import { Hono } from 'hono'
 
@@ -290,6 +290,26 @@ app.post('/project', async (c) => {
   // Validate path exists
   if (!existsSync(path)) {
     return c.json({ error: `Path does not exist: ${path}` }, 400)
+  }
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Validate path is a directory
+  // ─────────────────────────────────────────────────────────────────────────────
+  let stat
+  try {
+    stat = statSync(path)
+  } catch (err) {
+    return c.json({ error: `Cannot access path: ${path}` }, 400)
+  }
+  if (!stat.isDirectory()) {
+    return c.json({ error: `Path is not a directory: ${path}` }, 400)
+  }
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Warn if no project marker found (but don't block)
+  // ─────────────────────────────────────────────────────────────────────────────
+  const projectMarkers = ['.git', 'package.json', 'Cargo.toml', 'pyproject.toml', 'go.mod']
+  const hasMarker = projectMarkers.some((marker) => existsSync(`${path}/${marker}`))
+  if (!hasMarker) {
+    logger.warn({ path }, 'Switched to directory without recognized project marker')
   }
   registry.switchProject(path)
   return c.json({

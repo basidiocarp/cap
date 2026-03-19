@@ -15,6 +15,15 @@ export { gatherContext } from './lib/context-gatherer.ts'
 
 export function getStats(): StatsResult {
   const db = getDb()
+  if (!db) {
+    return {
+      total_memories: 0,
+      total_topics: 0,
+      avg_weight: 0,
+      oldest: null,
+      newest: null,
+    }
+  }
   const row = db
     .prepare(
       `SELECT
@@ -31,6 +40,7 @@ export function getStats(): StatsResult {
 
 export function getTopics(): TopicSummary[] {
   const db = getDb()
+  if (!db) return []
   return db
     .prepare(
       `SELECT
@@ -48,6 +58,7 @@ export function getTopics(): TopicSummary[] {
 
 export function recall(query: string, topic?: string, limit = 20): MemoryRow[] {
   const db = getDb()
+  if (!db) return []
   let sql = `
     SELECT m.*
     FROM memories m
@@ -69,16 +80,19 @@ export function recall(query: string, topic?: string, limit = 20): MemoryRow[] {
 
 export function getMemory(id: string): MemoryRow | undefined {
   const db = getDb()
+  if (!db) return undefined
   return db.prepare('SELECT * FROM memories WHERE id = ?').get(id) as MemoryRow | undefined
 }
 
 export function getMemoriesByTopic(topic: string, limit = 50): MemoryRow[] {
   const db = getDb()
+  if (!db) return []
   return db.prepare('SELECT * FROM memories WHERE topic = ? ORDER BY created_at DESC LIMIT ?').all(topic, limit) as MemoryRow[]
 }
 
 export function getHealth(topic?: string): HealthResult[] {
   const db = getDb()
+  if (!db) return []
   let sql = `
     SELECT
       topic,
@@ -102,11 +116,13 @@ export function getHealth(topic?: string): HealthResult[] {
 
 export function memoirList(): MemoirRow[] {
   const db = getDb()
+  if (!db) return []
   return db.prepare('SELECT * FROM memoirs ORDER BY updated_at DESC').all() as MemoirRow[]
 }
 
 export function memoirShow(name: string): { memoir: MemoirRow; concepts: ConceptRow[] } | null {
   const db = getDb()
+  if (!db) return null
   const memoir = db.prepare('SELECT * FROM memoirs WHERE name = ?').get(name) as MemoirRow | undefined
   if (!memoir) return null
   const concepts = db.prepare('SELECT * FROM concepts WHERE memoir_id = ? ORDER BY confidence DESC').all(memoir.id) as ConceptRow[]
@@ -119,6 +135,7 @@ export function memoirInspect(
   depth = 2
 ): { concept: ConceptRow; neighbors: Array<{ concept: ConceptRow; link: ConceptLinkRow; direction: 'outgoing' | 'incoming' }> } | null {
   const db = getDb()
+  if (!db) return null
   const memoir = db.prepare('SELECT * FROM memoirs WHERE name = ?').get(memoirName) as MemoirRow | undefined
   if (!memoir) return null
 
@@ -199,6 +216,7 @@ export function memoirInspect(
 
 export function memoirSearch(memoirName: string, query: string): ConceptRow[] {
   const db = getDb()
+  if (!db) return []
   const memoir = db.prepare('SELECT * FROM memoirs WHERE name = ?').get(memoirName) as MemoirRow | undefined
   if (!memoir) return []
 
@@ -215,6 +233,7 @@ export function memoirSearch(memoirName: string, query: string): ConceptRow[] {
 
 export function memoirSearchAll(query: string): ConceptRow[] {
   const db = getDb()
+  if (!db) return []
   return db
     .prepare(
       `SELECT c.*
