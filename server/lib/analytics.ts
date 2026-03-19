@@ -10,7 +10,7 @@ const EMPTY_ANALYTICS = {
   lifecycle: { avg_weight: 0, created_last_7d: 0, created_last_30d: 0, decayed: 0, min_weight: 0, pruned: 0 },
   memoir_stats: { code_memoirs: 0, total: 0, total_concepts: 0, total_links: 0 },
   memory_utilization: { rate: 0, recalled: 0, total: 0 },
-  search_stats: { empty_results: 0, hit_rate: 0, total_searches: 0 },
+  search_stats: null,
   top_topics: [],
 }
 
@@ -90,7 +90,7 @@ function computeAnalytics() {
     lifecycle: { avg_weight, created_last_7d, created_last_30d, decayed, min_weight, pruned: 0 },
     memoir_stats: { code_memoirs, total: total_memoirs, total_concepts, total_links },
     memory_utilization: { rate: total > 0 ? recalled / total : 0, recalled, total },
-    search_stats: { empty_results: 0, hit_rate: 0, total_searches: 0 },
+    search_stats: null,
     top_topics,
   }
 }

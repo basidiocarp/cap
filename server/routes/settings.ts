@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
-import { homedir } from 'node:os'
+import { homedir, platform } from 'node:os'
 import { join } from 'node:path'
 import { Hono } from 'hono'
 
@@ -32,13 +32,24 @@ function tomlArrayLength(content: string, key: string): number {
   return items.split(',').filter((s) => s.trim().length > 0).length
 }
 
+function sectionEnabled(content: string, section: string): boolean {
+  const regex = new RegExp(`\\[${section.replace('.', '\\.')}\\][\\s\\S]*?enabled\\s*=\\s*(true|false)`)
+  const match = content.match(regex)
+  if (match) return match[1] === 'true'
+  return content.includes(`[${section}]`)
+}
+
 function getHyphaeSettings(): {
   config_path: string | null
   db_path: string
   db_size_bytes: number
 } {
   const configPath = join(homedir(), '.config', 'hyphae', 'config.toml')
-  const dbPath = process.env.HYPHAE_DB ?? join(homedir(), '.local', 'share', 'hyphae', 'hyphae.db')
+  const defaultDb =
+    platform() === 'darwin'
+      ? join(homedir(), 'Library', 'Application Support', 'hyphae', 'hyphae.db')
+      : join(process.env.XDG_DATA_HOME ?? join(homedir(), '.local', 'share'), 'hyphae', 'hyphae.db')
+  const dbPath = process.env.HYPHAE_DB ?? defaultDb
 
   let configExists = false
   try {
@@ -84,8 +95,8 @@ function getMyceliumSettings(): {
   return {
     config_path: configPath,
     filters: {
-      hyphae: { enabled: tomlBool(content, 'enabled', false) || content.includes('[filters.hyphae]') },
-      rhizome: { enabled: tomlBool(content, 'enabled', false) || content.includes('[filters.rhizome]') },
+      hyphae: { enabled: sectionEnabled(content, 'filters.hyphae') },
+      rhizome: { enabled: sectionEnabled(content, 'filters.rhizome') },
     },
   }
 }
@@ -243,23 +254,25 @@ app.put('/hyphae', async (c) => {
 
     mkdirSync(configDir, { recursive: true })
 
-    let content = ''
+    // Read existing config to preserve unmanaged settings
+    let existing = readToml(configPath) ?? ''
+
     if (body.embedding_model !== undefined && typeof body.embedding_model === 'string') {
-      content += `embedding_model = "${body.embedding_model}"\n`
+      const re = /^embedding_model\s*=.*$/m
+      const line = `embedding_model = "${body.embedding_model}"`
+      existing = re.test(existing) ? existing.replace(re, line) : `${existing}\n${line}`
     }
     if (body.similarity_threshold !== undefined) {
       const threshold = Number(body.similarity_threshold)
       if (!Number.isFinite(threshold) || threshold < 0 || threshold > 1) {
         return c.json({ error: 'similarity_threshold must be a number between 0 and 1' }, 400)
       }
-      content += `similarity_threshold = ${threshold}\n`
+      const re = /^similarity_threshold\s*=.*$/m
+      const line = `similarity_threshold = ${threshold}`
+      existing = re.test(existing) ? existing.replace(re, line) : `${existing}\n${line}`
     }
 
-    if (content.length === 0) {
-      return c.json({ error: 'No valid settings provided' }, 400)
-    }
-
-    writeFileSync(configPath, content, 'utf-8')
+    writeFileSync(configPath, existing.trim() + '\n', 'utf-8')
 
     const settings = getHyphaeSettings()
     return c.json(settings)

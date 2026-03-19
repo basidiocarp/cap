@@ -99,10 +99,10 @@ export function getHealth(topic?: string): HealthResult[] {
       COUNT(*) as count,
       AVG(weight) as avg_weight,
       SUM(CASE WHEN weight < 0.3 THEN 1 ELSE 0 END) as low_weight_count,
-      SUM(CASE WHEN importance = 'Critical' THEN 1 ELSE 0 END) as critical_count,
-      SUM(CASE WHEN importance = 'High' THEN 1 ELSE 0 END) as high_count,
-      SUM(CASE WHEN importance = 'Medium' THEN 1 ELSE 0 END) as medium_count,
-      SUM(CASE WHEN importance = 'Low' THEN 1 ELSE 0 END) as low_count
+      SUM(CASE WHEN importance = 'critical' THEN 1 ELSE 0 END) as critical_count,
+      SUM(CASE WHEN importance = 'high' THEN 1 ELSE 0 END) as high_count,
+      SUM(CASE WHEN importance = 'medium' THEN 1 ELSE 0 END) as medium_count,
+      SUM(CASE WHEN importance = 'low' THEN 1 ELSE 0 END) as low_count
     FROM memories
   `
   const params: string[] = []

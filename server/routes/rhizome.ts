@@ -153,7 +153,7 @@ const getAnalytics = cachedAsync(async () => {
     backend_usage: { lsp: false, treesitter: true },
     languages: SUPPORTED_LANGUAGES.map((language) => ({ detection: 'tree-sitter', language })),
     supported_tools: [...SUPPORTED_TOOLS],
-    tool_calls: SUPPORTED_TOOLS.map((tool) => ({ avg_duration_ms: 0, count: 0, tool })),
+    tool_calls: [],
   }
 }, 60_000)
 

@@ -86,7 +86,34 @@ function checkRhizome(): StatusResult['rhizome'] {
   return {
     available,
     backend: available ? 'tree-sitter' : null,
-    languages: available ? ['rust', 'typescript', 'javascript', 'python', 'go', 'java', 'c', 'cpp', 'ruby'] : [],
+    languages: available
+      ? [
+          'bash',
+          'c',
+          'cpp',
+          'csharp',
+          'dart',
+          'elixir',
+          'go',
+          'haskell',
+          'java',
+          'javascript',
+          'julia',
+          'kotlin',
+          'lua',
+          'ocaml',
+          'php',
+          'python',
+          'ruby',
+          'rust',
+          'scala',
+          'swift',
+          'terraform',
+          'typescript',
+          'yaml',
+          'zig',
+        ]
+      : [],
   }
 }
 
