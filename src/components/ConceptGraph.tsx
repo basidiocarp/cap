@@ -1,4 +1,5 @@
 import { Loader, Text } from '@mantine/core'
+import type { ForceGraphMethods } from 'react-force-graph-2d'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
 
@@ -87,15 +88,26 @@ function edgeColor(relation: string): string {
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GRAPH_HEIGHT = 400
-const MIN_NODE_SIZE = 2
-const MAX_NODE_SIZE = 8
+const GRAPH_HEIGHT = 450
+const MIN_NODE_SIZE = 3
+const MAX_NODE_SIZE = 10
 
 export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: ConceptGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const graphRef = useRef<ForceGraphMethods | undefined>(undefined)
   const [width, setWidth] = useState(600)
 
   const { data: inspection, isLoading } = useMemoirInspect(memoir, concept ?? '', depth)
+
+  // Configure forces for better spread when graph data changes
+  useEffect(() => {
+    const fg = graphRef.current
+    if (!fg) return
+    fg.d3Force('charge')?.strength(-200)
+    fg.d3Force('link')?.distance(80)
+    // Re-heat simulation briefly on data change
+    fg.d3ReheatSimulation()
+  }, [inspection])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -249,8 +261,11 @@ export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: Concep
     >
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <ForceGraph2D
+        ref={graphRef as any}
         backgroundColor='transparent'
-        cooldownTicks={100}
+        cooldownTicks={50}
+        d3AlphaDecay={0.05}
+        d3VelocityDecay={0.3}
         graphData={graphData as any}
         height={GRAPH_HEIGHT}
         linkColor={linkColor as any}
@@ -261,6 +276,7 @@ export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: Concep
         nodeCanvasObject={nodeCanvasObject as any}
         nodeVal={nodeVal as any}
         onNodeClick={handleNodeClick as any}
+        warmupTicks={30}
         width={width}
       />
     </div>
