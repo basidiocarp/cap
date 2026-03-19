@@ -102,14 +102,16 @@ function getRhizomeSettings(): {
     return {
       auto_export: false,
       config_path: null,
-      languages_enabled: 0,
+      languages_enabled: 32,
     }
   }
 
+  const explicitLanguages = tomlArrayLength(content, 'languages')
   return {
     auto_export: tomlBool(content, 'auto_export', false),
     config_path: configPath,
-    languages_enabled: tomlArrayLength(content, 'languages'),
+    // No languages array means all 32 are enabled (default)
+    languages_enabled: explicitLanguages > 0 ? explicitLanguages : 32,
   }
 }
 
