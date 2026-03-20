@@ -1,4 +1,7 @@
 import { execFile } from 'node:child_process'
+import { readFile } from 'node:fs/promises'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { Hono } from 'hono'
 
@@ -36,10 +39,29 @@ interface LspInfo {
   running: boolean
 }
 
+interface HookInfo {
+  command: string
+  event: string
+  matcher: string
+}
+
+interface HookError {
+  hook: string
+  message: string
+  timestamp: string
+}
+
+interface HookHealthResult {
+  error_count: number
+  installed_hooks: HookInfo[]
+  recent_errors: HookError[]
+}
+
 type PromiseFilled<T> = { status: 'fulfilled'; value: T }
 
 interface StatusResult {
   hyphae: { available: boolean; memories: number; memoirs: number; version: string | null }
+  hooks: HookHealthResult
   lsps: LspInfo[]
   mycelium: { available: boolean; version: string | null }
   rhizome: { available: boolean; backend: 'tree-sitter' | 'lsp' | null; languages: string[] }
@@ -142,10 +164,83 @@ async function checkLsps(): Promise<LspInfo[]> {
   return results.filter((r): r is PromiseFilled<LspInfo> => r.status === 'fulfilled').map((r) => r.value)
 }
 
+async function loadHookHealth(): Promise<HookHealthResult> {
+  try {
+    const settingsPath = join(homedir(), '.claude', 'settings.json')
+    const errorLogPath = '/tmp/hyphae-hook-errors.log'
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Read installed hooks from settings
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    let installedHooks: HookInfo[] = []
+    try {
+      const settingsContent = await readFile(settingsPath, 'utf-8')
+      const settings = JSON.parse(settingsContent) as { hooks?: Record<string, unknown>[] }
+      if (Array.isArray(settings.hooks)) {
+        installedHooks = settings.hooks
+          .filter((h): h is Record<string, unknown> => typeof h === 'object')
+          .map((h) => ({
+            command: String(h.command ?? ''),
+            event: String(h.event ?? ''),
+            matcher: String(h.matcher ?? ''),
+          }))
+      }
+    } catch (err) {
+      logger.debug({ err }, 'Failed to read hook settings')
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Read recent errors from log file
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    let recentErrors: HookError[] = []
+    try {
+      const logContent = await readFile(errorLogPath, 'utf-8')
+      const lines = logContent.split('\n').filter((l) => l.trim())
+      recentErrors = lines
+        .slice(-20) // Last 20 errors
+        .map((line) => {
+          try {
+            const parsed = JSON.parse(line) as { hook?: string; message?: string; timestamp?: string }
+            return {
+              hook: String(parsed.hook ?? 'unknown'),
+              message: String(parsed.message ?? ''),
+              timestamp: String(parsed.timestamp ?? new Date().toISOString()),
+            }
+          } catch {
+            // Fallback for non-JSON lines
+            return {
+              hook: 'unknown',
+              message: line.substring(0, 100),
+              timestamp: new Date().toISOString(),
+            }
+          }
+        })
+    } catch (err) {
+      logger.debug({ err }, 'Failed to read hook error log')
+    }
+
+    return {
+      error_count: recentErrors.length,
+      installed_hooks: installedHooks,
+      recent_errors: recentErrors,
+    }
+  } catch (err) {
+    logger.debug({ err }, 'Hook health check failed')
+    return {
+      error_count: 0,
+      installed_hooks: [],
+      recent_errors: [],
+    }
+  }
+}
+
 async function fetchStatus(): Promise<StatusResult> {
-  const [myceliumResult, hyphaeResult] = await Promise.allSettled([checkMycelium(), checkHyphae()])
+  const [myceliumResult, hyphaeResult, hooksResult] = await Promise.allSettled([checkMycelium(), checkHyphae(), loadHookHealth()])
   return {
     hyphae: hyphaeResult.status === 'fulfilled' ? hyphaeResult.value : { available: false, memoirs: 0, memories: 0, version: null },
+    hooks: hooksResult.status === 'fulfilled' ? hooksResult.value : { error_count: 0, installed_hooks: [], recent_errors: [] },
     lsps: await checkLsps(),
     mycelium: myceliumResult.status === 'fulfilled' ? myceliumResult.value : { available: false, version: null },
     rhizome: checkRhizome(),

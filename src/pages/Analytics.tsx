@@ -1,9 +1,10 @@
 import { Grid, Stack, Tabs, Title } from '@mantine/core'
-import { IconActivity, IconBrain, IconChartBar, IconCode, IconCurrencyDollar, IconNetwork } from '@tabler/icons-react'
+import { IconActivity, IconBrain, IconChartBar, IconCode, IconCurrencyDollar, IconHistory, IconNetwork } from '@tabler/icons-react'
 
 import { KpiCard } from '../components/KpiCard'
 import { PageLoader } from '../components/PageLoader'
 import {
+  useCommandHistory,
   useEcosystemStatus,
   useHyphaeAnalytics,
   useMyceliumAnalytics,
@@ -14,6 +15,7 @@ import {
   useUsageTrend,
 } from '../lib/queries'
 import { CodeIntelligenceTab } from './analytics/CodeIntelligenceTab'
+import { CommandHistoryTab } from './analytics/CommandHistoryTab'
 import { EcosystemTab } from './analytics/EcosystemTab'
 import { MemoryHealthTab } from './analytics/MemoryHealthTab'
 import { TelemetryTab } from './analytics/TelemetryTab'
@@ -29,6 +31,7 @@ export function Analytics() {
   const { data: usageAggregate = null } = useUsageAggregate()
   const { data: usageTrend = null } = useUsageTrend(30)
   const { data: usageSessions = null } = useUsageSessions(20)
+  const { data: commandHistory = null } = useCommandHistory(50)
 
   const loading = ecosystemLoading || hyphaeLoading || myceliumLoading || rhizomeLoading
 
@@ -80,6 +83,12 @@ export function Analytics() {
             Token Savings
           </Tabs.Tab>
           <Tabs.Tab
+            leftSection={<IconHistory size={16} />}
+            value='command-history'
+          >
+            Command History
+          </Tabs.Tab>
+          <Tabs.Tab
             leftSection={<IconBrain size={16} />}
             value='memory-health'
           >
@@ -116,6 +125,13 @@ export function Analytics() {
           value='token-savings'
         >
           <TokenSavingsTab data={myceliumData} />
+        </Tabs.Panel>
+
+        <Tabs.Panel
+          pt='md'
+          value='command-history'
+        >
+          <CommandHistoryTab data={commandHistory} />
         </Tabs.Panel>
 
         <Tabs.Panel

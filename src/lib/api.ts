@@ -2,6 +2,7 @@ import type {
   AggregateTelemetry,
   Annotation,
   CallSite,
+  CommandHistory,
   ComplexityResult,
   Concept,
   ConceptInspection,
@@ -18,6 +19,8 @@ import type {
   HealthResult,
   HoverInfo,
   HyphaeAnalytics,
+  IngestionSource,
+  Lesson,
   LspInstallResult,
   LspStatusResult,
   Memoir,
@@ -33,6 +36,7 @@ import type {
   RhizomeSymbol,
   ScopeVariable,
   SearchResult,
+  SessionRecord,
   SessionUsage,
   Stats,
   SymbolBody,
@@ -48,6 +52,8 @@ import type {
 export type {
   Annotation,
   CallSite,
+  CommandHistory,
+  CommandHistoryEntry,
   ComplexityResult,
   Concept,
   ConceptInspection,
@@ -67,6 +73,7 @@ export type {
   HealthResult,
   HoverInfo,
   HyphaeAnalytics,
+  IngestionSource,
   LspInfo,
   LspInstallResult,
   LspLanguageStatus,
@@ -84,7 +91,9 @@ export type {
   RhizomeStatus,
   RhizomeSymbol,
   ScopeVariable,
+  Lesson,
   SearchResult,
+  SessionRecord,
   SessionUsage,
   Stats,
   SymbolBody,
@@ -150,12 +159,21 @@ async function put<T = unknown>(path: string, body: Record<string, unknown>): Pr
 
 export const hyphaeApi = {
   analytics: () => get<HyphaeAnalytics>('/hyphae/analytics'),
+  consolidate: (topic: string, keepOriginals?: boolean) =>
+    post<{ result: string }>('/hyphae/consolidate', { keep_originals: keepOriginals, topic }),
   context: (task: string, project?: string, budget?: number) =>
     get<GatherContextResult>('/hyphae/context', {
       budget: budget ? String(budget) : '',
       project: project ?? '',
       task,
     }),
+  deleteMemory: (id: string) => {
+    const url = new URL(`${BASE}/hyphae/memories/${encodeURIComponent(id)}`, window.location.origin)
+    return fetch(url.toString(), { method: 'DELETE' }).then(async (res) => {
+      if (!res.ok) throw new Error(await extractErrorMessage(res))
+      return res.json() as Promise<{ result: string }>
+    })
+  },
   health: (topic?: string) => get<HealthResult[]>('/hyphae/health', { topic: topic ?? '' }),
   memoir: (name: string) => get<MemoirDetail>(`/hyphae/memoirs/${encodeURIComponent(name)}`),
   memoirInspect: (memoir: string, concept: string, depth?: number) =>
@@ -168,14 +186,22 @@ export const hyphaeApi = {
   memory: (id: string) => get<Memory>(`/hyphae/memories/${encodeURIComponent(id)}`),
   recall: (q: string, topic?: string, limit?: number) =>
     get<Memory[]>('/hyphae/recall', { limit: limit ? String(limit) : '', q, topic: topic ?? '' }),
+  searchGlobal: (q: string, limit?: number) => get<Memory[]>('/hyphae/search-global', { limit: limit ? String(limit) : '', q }),
+  sources: () => get<IngestionSource[]>('/hyphae/sources'),
   stats: () => get<Stats>('/hyphae/stats'),
   topicMemories: (topic: string, limit?: number) =>
     get<Memory[]>(`/hyphae/topics/${encodeURIComponent(topic)}/memories`, { limit: limit ? String(limit) : '' }),
   topics: () => get<TopicSummary[]>('/hyphae/topics'),
+  updateImportance: (id: string, importance: string) =>
+    put<{ result: string }>(`/hyphae/memories/${encodeURIComponent(id)}/importance`, { importance }),
+  sessions: (project?: string, limit?: number) =>
+    get<SessionRecord[]>('/hyphae/sessions', { limit: limit ? String(limit) : '', project: project ?? '' }),
+  lessons: () => get<Lesson[]>('/hyphae/lessons'),
 }
 
 export const myceliumApi = {
   analytics: () => get<MyceliumAnalytics>('/mycelium/analytics'),
+  commandHistory: (limit?: number) => get<CommandHistory>('/mycelium/history', { limit: limit ? String(limit) : '' }),
   gain: () => get<GainResult>('/mycelium/gain'),
   gainHistory: () => get<GainResult>('/mycelium/gain/history'),
 }

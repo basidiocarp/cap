@@ -1,5 +1,7 @@
 import {
+  Alert,
   Badge,
+  Button,
   Card,
   Code,
   Grid,
@@ -7,8 +9,10 @@ import {
   Modal,
   Progress,
   ScrollArea,
+  Select,
   SimpleGrid,
   Stack,
+  Switch,
   Table,
   Text,
   TextInput,
@@ -17,7 +21,7 @@ import {
   UnstyledButton,
 } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
-import { IconSearch, IconX } from '@tabler/icons-react'
+import { IconAlertCircle, IconSearch, IconTrash, IconX } from '@tabler/icons-react'
 import { useState } from 'react'
 
 import type { Memory } from '../lib/api'
@@ -27,7 +31,15 @@ import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { importanceColor } from '../lib/colors'
 import { parseJsonArray } from '../lib/parse'
-import { useRecall, useTopicMemories, useTopics } from '../lib/queries'
+import {
+  useDeleteMemory,
+  useIngestionSources,
+  useRecall,
+  useSearchGlobal,
+  useTopicMemories,
+  useTopics,
+  useUpdateImportance,
+} from '../lib/queries'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -186,6 +198,30 @@ function MemoryTable({ memories, onSelect }: { memories: Memory[]; onSelect: (m:
 // ─────────────────────────────────────────────────────────────────────────────
 
 function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () => void }) {
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false)
+  const deleteMemory = useDeleteMemory()
+  const updateImportance = useUpdateImportance()
+
+  const handleDelete = async () => {
+    try {
+      await deleteMemory.mutateAsync(memory.id)
+      setShowConfirmDelete(false)
+      onClose()
+    } catch (err) {
+      console.error('Delete failed:', err)
+    }
+  }
+
+  const handleImportanceChange = async (importance: string | null) => {
+    if (importance) {
+      try {
+        await updateImportance.mutateAsync({ id: memory.id, importance })
+      } catch (err) {
+        console.error('Update importance failed:', err)
+      }
+    }
+  }
+
   return (
     <Modal
       centered
@@ -389,8 +425,135 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
             </Group>
           </div>
         )}
+
+        <div style={{ borderTop: '1px solid var(--mantine-color-dark-6)', paddingTop: 'var(--mantine-spacing-md)' }}>
+          <Stack gap='sm'>
+            <Select
+              clearable
+              data={['critical', 'high', 'medium', 'low', 'ephemeral']}
+              disabled={updateImportance.isPending}
+              label='Importance'
+              onChange={handleImportanceChange}
+              placeholder='Update importance...'
+              size='sm'
+              value={memory.importance}
+            />
+
+            {deleteMemory.isError && (
+              <Alert
+                color='red'
+                icon={<IconAlertCircle size={16} />}
+                title='Error'
+              >
+                {deleteMemory.error instanceof Error ? deleteMemory.error.message : 'Failed to delete memory'}
+              </Alert>
+            )}
+
+            {updateImportance.isError && (
+              <Alert
+                color='red'
+                icon={<IconAlertCircle size={16} />}
+                title='Error'
+              >
+                {updateImportance.error instanceof Error ? updateImportance.error.message : 'Failed to update importance'}
+              </Alert>
+            )}
+
+            {showConfirmDelete ? (
+              <Group gap='xs'>
+                <Button
+                  color='red'
+                  disabled={deleteMemory.isPending}
+                  onClick={handleDelete}
+                  size='sm'
+                  variant='filled'
+                >
+                  {deleteMemory.isPending ? 'Deleting...' : 'Confirm Delete'}
+                </Button>
+                <Button
+                  disabled={deleteMemory.isPending}
+                  onClick={() => setShowConfirmDelete(false)}
+                  size='sm'
+                  variant='light'
+                >
+                  Cancel
+                </Button>
+              </Group>
+            ) : (
+              <Button
+                color='red'
+                leftSection={<IconTrash size={16} />}
+                onClick={() => setShowConfirmDelete(true)}
+                size='sm'
+                variant='light'
+              >
+                Delete Memory
+              </Button>
+            )}
+          </Stack>
+        </div>
       </Stack>
     </Modal>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Documents section (ingested files)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function DocumentsSection() {
+  const { data: sources = [], isLoading } = useIngestionSources()
+
+  if (isLoading) {
+    return <PageLoader size='sm' />
+  }
+
+  if (sources.length === 0) {
+    return (
+      <SectionCard title='Ingested Documents'>
+        <EmptyState>No documents ingested yet. Documents are automatically indexed during RAG operations.</EmptyState>
+      </SectionCard>
+    )
+  }
+
+  return (
+    <SectionCard title='Ingested Documents'>
+      <Table striped>
+        <Table.Thead>
+          <Table.Tr>
+            <Table.Th>File Path</Table.Th>
+            <Table.Th>Chunks</Table.Th>
+            <Table.Th>Last Ingested</Table.Th>
+          </Table.Tr>
+        </Table.Thead>
+        <Table.Tbody>
+          {sources.map((source, idx) => (
+            <Table.Tr key={idx}>
+              <Table.Td>
+                <Text
+                  size='sm'
+                  ff='monospace'
+                >
+                  {source.source_path}
+                </Text>
+              </Table.Td>
+              <Table.Td>
+                <Badge
+                  color='spore'
+                  size='sm'
+                  variant='light'
+                >
+                  {source.chunk_count}
+                </Badge>
+              </Table.Td>
+              <Table.Td>
+                <Text size='sm'>{source.last_ingested ? timeAgo(source.last_ingested) : '—'}</Text>
+              </Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </SectionCard>
   )
 }
 
@@ -403,14 +566,26 @@ export function Memories() {
   const [query, setQuery] = useState('')
   const [debouncedQuery] = useDebouncedValue(query, 400)
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null)
+  const [isGlobalSearch, setIsGlobalSearch] = useState(false)
 
   const { data: topics = [], isLoading: topicsLoading } = useTopics()
 
   const recallQuery = useRecall(debouncedQuery, selectedTopic ?? undefined, 30)
+  const globalSearchQuery = useSearchGlobal(debouncedQuery, 30)
   const topicQuery = useTopicMemories(selectedTopic ?? '', 50)
 
   const hasQuery = !!debouncedQuery.trim()
-  const activeQuery = hasQuery ? recallQuery : selectedTopic ? topicQuery : null
+  let activeQuery
+  if (hasQuery && isGlobalSearch) {
+    activeQuery = globalSearchQuery
+  } else if (hasQuery) {
+    activeQuery = recallQuery
+  } else if (selectedTopic) {
+    activeQuery = topicQuery
+  } else {
+    activeQuery = null
+  }
+
   const memories: Memory[] = activeQuery?.data ?? []
   const loading = activeQuery?.isLoading ?? false
   const error = activeQuery?.error
@@ -442,35 +617,56 @@ export function Memories() {
       </Group>
 
       {/* Search + filter bar */}
-      <Group>
-        <TextInput
-          leftSection={<IconSearch size={16} />}
-          onChange={(e) => setQuery(e.currentTarget.value)}
-          placeholder='Search memories...'
-          rightSection={
-            query ? (
-              <IconX
-                onClick={() => setQuery('')}
-                size={14}
-                style={{ cursor: 'pointer' }}
-              />
-            ) : null
-          }
-          style={{ flex: 1 }}
-          value={query}
-        />
-        {(selectedTopic || hasQuery) && (
-          <UnstyledButton onClick={handleClearFilters}>
-            <Text
-              c='dimmed'
+      <Stack gap='xs'>
+        <Group>
+          <TextInput
+            leftSection={<IconSearch size={16} />}
+            onChange={(e) => setQuery(e.currentTarget.value)}
+            placeholder='Search memories...'
+            rightSection={
+              query ? (
+                <IconX
+                  onClick={() => setQuery('')}
+                  size={14}
+                  style={{ cursor: 'pointer' }}
+                />
+              ) : null
+            }
+            style={{ flex: 1 }}
+            value={query}
+          />
+          {(selectedTopic || hasQuery) && (
+            <UnstyledButton onClick={handleClearFilters}>
+              <Text
+                c='dimmed'
+                size='sm'
+                td='underline'
+              >
+                Clear all
+              </Text>
+            </UnstyledButton>
+          )}
+        </Group>
+
+        {hasQuery && (
+          <Group gap='xs'>
+            <Switch
+              checked={isGlobalSearch}
+              label={isGlobalSearch ? 'All Projects' : 'This Project'}
+              onChange={(e) => setIsGlobalSearch(e.currentTarget.checked)}
               size='sm'
-              td='underline'
-            >
-              Clear all
-            </Text>
-          </UnstyledButton>
+            />
+            {isGlobalSearch && (
+              <Text
+                c='dimmed'
+                size='xs'
+              >
+                Searching across all projects
+              </Text>
+            )}
+          </Group>
         )}
-      </Group>
+      </Stack>
 
       <ErrorAlert error={error} />
 
@@ -547,6 +743,8 @@ export function Memories() {
               ))}
             </SimpleGrid>
           )}
+
+          {!topicsLoading && topics.length > 0 && <DocumentsSection />}
         </>
       )}
 
@@ -578,9 +776,7 @@ export function Memories() {
       )}
 
       {/* No results */}
-      {!loading && !showBrowseView && memories.length === 0 && !error && (
-        <EmptyState mt='md'>No results found.</EmptyState>
-      )}
+      {!loading && !showBrowseView && memories.length === 0 && !error && <EmptyState mt='md'>No results found.</EmptyState>}
 
       {/* Results table */}
       {memories.length > 0 && (

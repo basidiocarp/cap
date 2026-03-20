@@ -1,6 +1,7 @@
 import { cachedAsync } from './lib/cache.ts'
 import { createCliRunner } from './lib/cli.ts'
 import { MYCELIUM_BIN } from './lib/config.ts'
+import { logger } from './logger.ts'
 
 const run = createCliRunner(MYCELIUM_BIN, 'mycelium')
 
@@ -10,6 +11,19 @@ interface GainCliOutput {
   total_commands?: number
   total_input?: number
   total_saved?: number
+}
+
+interface CommandHistoryEntry {
+  command: string
+  filtered_tokens: number
+  original_tokens: number
+  savings_pct: number
+  timestamp: string
+}
+
+export interface CommandHistory {
+  commands: CommandHistoryEntry[]
+  total: number
 }
 
 function parseGainOutput(raw: unknown): GainCliOutput {
@@ -103,3 +117,31 @@ async function computeAnalytics() {
 }
 
 export const getAnalytics = cachedAsync(computeAnalytics, 60_000)
+
+export async function getCommandHistory(limit = 50): Promise<CommandHistory> {
+  try {
+    const gainHistory = await getGainHistory('json')
+    if (!isGainCliOutput(gainHistory)) {
+      return { commands: [], total: 0 }
+    }
+
+    const byCommand = gainHistory.by_command ?? []
+    const commands = byCommand
+      .map((cmd: [string, number, number, number]) => ({
+        command: cmd[0] ?? 'unknown',
+        original_tokens: cmd[1] ?? 0,
+        filtered_tokens: cmd[2] ?? 0,
+        savings_pct: cmd[3] ?? 0,
+        timestamp: new Date().toISOString(), // Note: Mycelium CLI doesn't provide per-command timestamps
+      }))
+      .slice(0, limit)
+
+    return {
+      commands,
+      total: commands.length,
+    }
+  } catch (err) {
+    logger.debug({ err }, 'Failed to get command history')
+    return { commands: [], total: 0 }
+  }
+}

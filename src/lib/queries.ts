@@ -8,12 +8,16 @@ export const hyphaeKeys = {
   analytics: () => ['hyphae', 'analytics'] as const,
   context: (task: string, project?: string) => ['hyphae', 'context', task, project] as const,
   health: (topic?: string) => ['hyphae', 'health', topic] as const,
+  lessons: () => ['hyphae', 'lessons'] as const,
   memoir: (name: string) => ['hyphae', 'memoir', name] as const,
   memoirInspect: (memoir: string, concept: string, depth?: number) => ['hyphae', 'memoir', memoir, 'inspect', concept, depth] as const,
   memoirSearch: (memoir: string, q: string) => ['hyphae', 'memoir', memoir, 'search', q] as const,
   memoirSearchAll: (q: string) => ['hyphae', 'memoirSearchAll', q] as const,
   memoirs: () => ['hyphae', 'memoirs'] as const,
   recall: (q: string, topic?: string, limit?: number) => ['hyphae', 'recall', q, topic, limit] as const,
+  searchGlobal: (q: string, limit?: number) => ['hyphae', 'searchGlobal', q, limit] as const,
+  sessions: (project?: string, limit?: number) => ['hyphae', 'sessions', project, limit] as const,
+  sources: () => ['hyphae', 'sources'] as const,
   stats: () => ['hyphae', 'stats'] as const,
   topicMemories: (topic: string, limit?: number) => ['hyphae', 'topicMemories', topic, limit] as const,
   topics: () => ['hyphae', 'topics'] as const,
@@ -80,10 +84,70 @@ export function useHyphaeAnalytics() {
   return useQuery({ queryFn: () => hyphaeApi.analytics(), queryKey: hyphaeKeys.analytics() })
 }
 
+export function useSearchGlobal(q: string, limit?: number) {
+  return useQuery({
+    enabled: !!q.trim(),
+    queryFn: () => hyphaeApi.searchGlobal(q, limit),
+    queryKey: hyphaeKeys.searchGlobal(q, limit),
+  })
+}
+
+export function useSessions(project?: string, limit?: number) {
+  return useQuery({
+    queryFn: () => hyphaeApi.sessions(project, limit),
+    queryKey: hyphaeKeys.sessions(project, limit),
+  })
+}
+
+export function useLessons() {
+  return useQuery({
+    queryFn: () => hyphaeApi.lessons(),
+    queryKey: hyphaeKeys.lessons(),
+  })
+}
+
+export function useIngestionSources() {
+  return useQuery({
+    queryFn: () => hyphaeApi.sources(),
+    queryKey: hyphaeKeys.sources(),
+  })
+}
+
+export function useDeleteMemory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => hyphaeApi.deleteMemory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hyphae'] })
+    },
+  })
+}
+
+export function useUpdateImportance() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, importance }: { id: string; importance: string }) => hyphaeApi.updateImportance(id, importance),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hyphae'] })
+    },
+  })
+}
+
+export function useConsolidate() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (topic: string) => hyphaeApi.consolidate(topic),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hyphae'] })
+    },
+  })
+}
+
 // Mycelium
 
 export const myceliumKeys = {
   analytics: () => ['mycelium', 'analytics'] as const,
+  commandHistory: (limit?: number) => ['mycelium', 'commandHistory', limit] as const,
   gain: () => ['mycelium', 'gain'] as const,
 }
 
@@ -93,6 +157,13 @@ export function useGain() {
 
 export function useMyceliumAnalytics() {
   return useQuery({ queryFn: () => myceliumApi.analytics(), queryKey: myceliumKeys.analytics() })
+}
+
+export function useCommandHistory(limit?: number) {
+  return useQuery({
+    queryFn: () => myceliumApi.commandHistory(limit),
+    queryKey: myceliumKeys.commandHistory(limit),
+  })
 }
 
 // Rhizome

@@ -13,3 +13,16 @@ export interface GainResult {
   total_input?: number
   total_saved?: number
 }
+
+export interface CommandHistoryEntry {
+  command: string
+  filtered_tokens: number
+  original_tokens: number
+  savings_pct: number
+  timestamp: string
+}
+
+export interface CommandHistory {
+  commands: CommandHistoryEntry[]
+  total: number
+}

@@ -28,6 +28,14 @@ app.get('/recall', (c) => {
   return c.json(hyphae.recall(query, topic ?? undefined, clampedLimit))
 })
 
+app.get('/search-global', (c) => {
+  const query = requireQuery(c, 'q')
+  if (query instanceof Response) return query
+  const limit = c.req.query('limit')
+  const clampedLimit = clampParam(limit, 20, 200)
+  return c.json(hyphae.searchGlobal(query, clampedLimit))
+})
+
 app.get('/memories/:id', (c) => {
   const memory = hyphae.getMemory(c.req.param('id'))
   if (!memory) return c.json({ error: 'Not found' }, 404)
@@ -69,8 +77,23 @@ app.get('/memoirs/:name/search', (c) => {
   return c.json(hyphae.memoirSearch(c.req.param('name'), query))
 })
 
+app.get('/sessions', (c) => {
+  const project = c.req.query('project')
+  const limit = c.req.query('limit')
+  const clampedLimit = clampParam(limit, 20, 200)
+  return c.json(hyphae.getSessions(project ?? undefined, clampedLimit))
+})
+
+app.get('/lessons', (c) => {
+  return c.json(hyphae.extractLessons())
+})
+
 app.get('/analytics', (c) => {
   return c.json(hyphae.getAnalytics())
+})
+
+app.get('/sources', (c) => {
+  return c.json(hyphae.getIngestionSources())
 })
 
 app.get('/context', async (c) => {
@@ -108,6 +131,21 @@ app.post('/store', async (c) => {
 
 app.delete('/memories/:id', async (c) => {
   const result = await hyphae.forget(c.req.param('id'))
+  return c.json({ result })
+})
+
+app.put('/memories/:id/importance', async (c) => {
+  const body = await c.req.json<{ importance: string }>()
+
+  if (!body.importance?.trim()) {
+    return c.json({ error: 'importance is required' }, 400)
+  }
+
+  if (!VALID_IMPORTANCE.has(body.importance.toLowerCase())) {
+    return c.json({ error: `Invalid importance. Must be one of: ${[...VALID_IMPORTANCE].join(', ')}` }, 400)
+  }
+
+  const result = await hyphae.updateImportance(c.req.param('id'), body.importance)
   return c.json({ result })
 })
 

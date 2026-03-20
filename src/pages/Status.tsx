@@ -1,5 +1,5 @@
 import { Badge, Button, Card, Grid, Group, Stack, Table, Text, Title } from '@mantine/core'
-import { IconCircleCheck, IconCircleX, IconRefresh } from '@tabler/icons-react'
+import { IconAlertCircle, IconCircleCheck, IconCircleX, IconRefresh } from '@tabler/icons-react'
 
 import type { EcosystemStatus } from '../lib/api'
 import { EcosystemFlow } from '../components/EcosystemFlow'
@@ -7,6 +7,17 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { useEcosystemStatus } from '../lib/queries'
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const minutes = Math.floor(diff / 60_000)
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
 
 function AvailabilityBadge({ available }: { available: boolean }) {
   return (
@@ -111,6 +122,116 @@ function LspSection({ status }: { status: EcosystemStatus }) {
             Not found: {missing.map((l) => l.name).join(', ')}
           </Text>
         </Stack>
+      )}
+    </SectionCard>
+  )
+}
+
+function HooksSection({ status }: { status: EcosystemStatus }) {
+  const hooks = status.hooks
+  const hasErrors = hooks.error_count > 0
+
+  return (
+    <SectionCard title='Claude Code Hooks'>
+      {hooks.installed_hooks.length === 0 ? (
+        <Text
+          c='dimmed'
+          size='sm'
+        >
+          No hooks installed.
+        </Text>
+      ) : (
+        <>
+          <Group
+            gap='xs'
+            mb='md'
+          >
+            <Badge
+              color={hasErrors ? 'red' : 'mycelium'}
+              leftSection={hasErrors ? <IconAlertCircle size={12} /> : <IconCircleCheck size={12} />}
+              size='sm'
+              variant='light'
+            >
+              {hasErrors ? `${hooks.error_count} errors` : 'Healthy'}
+            </Badge>
+          </Group>
+
+          <Table striped>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Event</Table.Th>
+                <Table.Th>Matcher</Table.Th>
+                <Table.Th>Command</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {hooks.installed_hooks.map((hook, idx) => (
+                <Table.Tr key={idx}>
+                  <Table.Td>
+                    <Badge
+                      size='xs'
+                      variant='outline'
+                    >
+                      {hook.event}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size='sm'>{hook.matcher}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text
+                      size='xs'
+                      c='dimmed'
+                    >
+                      {hook.command}
+                    </Text>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+
+          {hooks.recent_errors.length > 0 && (
+            <Stack
+              gap='xs'
+              mt='md'
+            >
+              <Text
+                c='red'
+                size='sm'
+                fw={500}
+              >
+                Recent Errors
+              </Text>
+              {hooks.recent_errors.slice(0, 5).map((error, idx) => (
+                <Card
+                  key={idx}
+                  p='xs'
+                  bg='red.0'
+                  withBorder
+                >
+                  <Group justify='space-between'>
+                    <div>
+                      <Text size='xs'>{error.hook}</Text>
+                      <Text
+                        size='xs'
+                        c='dimmed'
+                      >
+                        {error.message}
+                      </Text>
+                    </div>
+                    <Text
+                      size='xs'
+                      c='dimmed'
+                    >
+                      {timeAgo(error.timestamp)}
+                    </Text>
+                  </Group>
+                </Card>
+              ))}
+            </Stack>
+          )}
+        </>
       )}
     </SectionCard>
   )
@@ -281,6 +402,8 @@ export function Status() {
           </Grid>
 
           <LspSection status={status} />
+
+          <HooksSection status={status} />
         </>
       )}
     </Stack>

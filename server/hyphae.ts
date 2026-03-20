@@ -1,6 +1,17 @@
-import type { ConceptLinkRow, ConceptRow, HealthResult, MemoirRow, MemoryRow, StatsResult, TopicSummary } from './types.ts'
+import type {
+  ConceptLinkRow,
+  ConceptRow,
+  HealthResult,
+  Lesson,
+  MemoirRow,
+  MemoryRow,
+  SessionRecord,
+  StatsResult,
+  TopicSummary,
+} from './types.ts'
 import { getDb } from './db.ts'
 import { createCliRunner } from './lib/cli.ts'
+import { logger } from './logger.ts'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Re-exports from extracted modules
@@ -78,6 +89,20 @@ export function recall(query: string, topic?: string, limit = 20): MemoryRow[] {
   return db.prepare(sql).all(...params) as MemoryRow[]
 }
 
+export function searchGlobal(query: string, limit = 20): (MemoryRow & { project?: string })[] {
+  const db = getDb()
+  if (!db) return []
+  const sql = `
+    SELECT m.*, m.project
+    FROM memories m
+    JOIN memories_fts fts ON m.rowid = fts.rowid
+    WHERE memories_fts MATCH ?
+    ORDER BY m.weight DESC
+    LIMIT ?
+  `
+  return db.prepare(sql).all(query, limit) as (MemoryRow & { project?: string })[]
+}
+
 export function getMemory(id: string): MemoryRow | undefined {
   const db = getDb()
   if (!db) return undefined
@@ -112,6 +137,33 @@ export function getHealth(topic?: string): HealthResult[] {
   }
   sql += ' GROUP BY topic ORDER BY count DESC'
   return db.prepare(sql).all(...params) as HealthResult[]
+}
+
+export interface IngestionSource {
+  chunk_count: number
+  last_ingested: string | null
+  source_path: string
+}
+
+export function getIngestionSources(): IngestionSource[] {
+  const db = getDb()
+  if (!db) return []
+  try {
+    return db
+      .prepare(
+        `SELECT
+          source_path,
+          COUNT(*) as chunk_count,
+          MAX(created_at) as last_ingested
+        FROM chunks
+        GROUP BY source_path
+        ORDER BY last_ingested DESC`
+      )
+      .all() as IngestionSource[]
+  } catch (err) {
+    logger.debug({ err }, 'Failed to query chunks table')
+    return []
+  }
 }
 
 export function memoirList(): MemoirRow[] {
@@ -293,8 +345,172 @@ export async function forget(id: string) {
   return runCli(['forget', id])
 }
 
+export async function updateImportance(id: string, importance: string) {
+  return runCli(['update', '--id', id, '--importance', importance])
+}
+
 export async function consolidate(topic: string, keepOriginals = false) {
   const args = ['consolidate', '-t', topic]
   if (keepOriginals) args.push('--keep-originals')
   return runCli(args)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sessions Timeline
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function getSessions(project?: string, limit = 20): SessionRecord[] {
+  const db = getDb()
+  if (!db) return []
+
+  try {
+    // Try querying sessions table if it exists
+    let sql = 'SELECT * FROM sessions'
+    const params: string[] = []
+
+    if (project) {
+      sql += ' WHERE project = ?'
+      params.push(project)
+    }
+
+    sql += ' ORDER BY started_at DESC LIMIT ?'
+    params.push(String(limit))
+
+    return db.prepare(sql).all(...params) as SessionRecord[]
+  } catch {
+    // Fallback: query session/{project} topic memories
+    if (!project) return []
+
+    const memories = db
+      .prepare(
+        `SELECT m.* FROM memories m
+         WHERE m.topic = ?
+         ORDER BY m.created_at DESC
+         LIMIT ?`
+      )
+      .all(`session/${project}`, limit) as MemoryRow[]
+
+    return memories.map((m): SessionRecord => {
+      const sourceData = m.source_data ? (JSON.parse(m.source_data) as Record<string, unknown>) : {}
+      return {
+        id: m.id,
+        project,
+        task: (sourceData.task as string) || null,
+        started_at: m.created_at,
+        ended_at: (sourceData.ended_at as string) || null,
+        summary: m.summary,
+        files_modified: (sourceData.files_modified as string) || null,
+        errors: (sourceData.errors as string) || null,
+        status: (sourceData.status as string) || 'completed',
+      }
+    })
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Lessons Extraction
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function extractLessons(): Lesson[] {
+  const db = getDb()
+  if (!db) return []
+
+  const lessons: Lesson[] = []
+  const topicCounts = new Map<string, number>()
+  const topicMemories = new Map<string, MemoryRow[]>()
+
+  // Query corrections, errors/resolved, and tests/resolved
+  const topics = ['corrections', 'errors/resolved', 'tests/resolved']
+
+  for (const topic of topics) {
+    const memories = db.prepare(`SELECT * FROM memories WHERE topic = ? ORDER BY created_at DESC LIMIT 50`).all(topic) as MemoryRow[]
+
+    if (memories.length > 0) {
+      topicCounts.set(topic, memories.length)
+      topicMemories.set(topic, memories)
+    }
+  }
+
+  // Extract lessons from corrections
+  const corrections = topicMemories.get('corrections') || []
+  const correctionGroups = new Map<string, MemoryRow[]>()
+
+  for (const mem of corrections) {
+    const keywords = mem.keywords ? (JSON.parse(mem.keywords) as string[]) : []
+    const key = keywords.slice(0, 2).join('|') || mem.summary.slice(0, 20)
+
+    if (!correctionGroups.has(key)) {
+      correctionGroups.set(key, [])
+    }
+    correctionGroups.get(key)!.push(mem)
+  }
+
+  for (const [, items] of correctionGroups) {
+    if (items.length >= 1) {
+      lessons.push({
+        id: `correction-${lessons.length}`,
+        category: 'corrections',
+        description: items[0].summary,
+        frequency: items.length,
+        source_topics: ['corrections'],
+        keywords: items[0].keywords ? (JSON.parse(items[0].keywords) as string[]) : [],
+      })
+    }
+  }
+
+  // Extract lessons from resolved errors
+  const resolvedErrors = topicMemories.get('errors/resolved') || []
+  const errorGroups = new Map<string, MemoryRow[]>()
+
+  for (const mem of resolvedErrors) {
+    const keywords = mem.keywords ? (JSON.parse(mem.keywords) as string[]) : []
+    const key = keywords[0] || mem.summary.slice(0, 30)
+
+    if (!errorGroups.has(key)) {
+      errorGroups.set(key, [])
+    }
+    errorGroups.get(key)!.push(mem)
+  }
+
+  for (const [, items] of errorGroups) {
+    if (items.length >= 1) {
+      lessons.push({
+        id: `error-${lessons.length}`,
+        category: 'errors',
+        description: items[0].summary,
+        frequency: items.length,
+        source_topics: ['errors/resolved'],
+        keywords: items[0].keywords ? (JSON.parse(items[0].keywords) as string[]) : [],
+      })
+    }
+  }
+
+  // Extract lessons from resolved tests
+  const resolvedTests = topicMemories.get('tests/resolved') || []
+  const testGroups = new Map<string, MemoryRow[]>()
+
+  for (const mem of resolvedTests) {
+    const keywords = mem.keywords ? (JSON.parse(mem.keywords) as string[]) : []
+    const key = keywords[0] || mem.summary.slice(0, 30)
+
+    if (!testGroups.has(key)) {
+      testGroups.set(key, [])
+    }
+    testGroups.get(key)!.push(mem)
+  }
+
+  for (const [, items] of testGroups) {
+    if (items.length >= 1) {
+      lessons.push({
+        id: `test-${lessons.length}`,
+        category: 'tests',
+        description: items[0].summary,
+        frequency: items.length,
+        source_topics: ['tests/resolved'],
+        keywords: items[0].keywords ? (JSON.parse(items[0].keywords) as string[]) : [],
+      })
+    }
+  }
+
+  return lessons.sort((a, b) => b.frequency - a.frequency)
 }

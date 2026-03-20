@@ -112,3 +112,9 @@ export interface GatherContextResult {
   tokens_budget: number
   tokens_used: number
 }
+
+export interface IngestionSource {
+  chunk_count: number
+  last_ingested: string | null
+  source_path: string
+}
