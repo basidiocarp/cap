@@ -6,6 +6,7 @@ import { promisify } from 'node:util'
 import { Hono } from 'hono'
 
 import { getDb } from '../db.ts'
+import { detectAgentRuntimes } from '../lib/agent-runtimes.ts'
 import { cachedAsync } from '../lib/cache.ts'
 import { HYPHAE_BIN, MYCELIUM_BIN } from '../lib/config.ts'
 import { registry } from '../lib/rhizome-registry.ts'
@@ -64,9 +65,28 @@ interface HookLifecycleStatus {
   matching_hooks: number
 }
 
+interface CodexNotifyStatus {
+  command: string | null
+  config_path: string | null
+  configured: boolean
+  contract_matched: boolean
+}
+
+interface AgentRuntimeStatus {
+  config_path: string | null
+  configured: boolean
+  detected: boolean
+  integration: 'hooks' | 'mcp'
+  notify?: CodexNotifyStatus
+}
+
 type PromiseFilled<T> = { status: 'fulfilled'; value: T }
 
 interface StatusResult {
+  agents: {
+    claude_code: AgentRuntimeStatus
+    codex: AgentRuntimeStatus
+  }
   hyphae: { available: boolean; memories: number; memoirs: number; version: string | null }
   hooks: HookHealthResult
   lsps: LspInfo[]
@@ -210,7 +230,9 @@ async function loadHookHealth(): Promise<HookHealthResult> {
           }))
       }
     } catch (err) {
-      logger.debug({ err }, 'Failed to read hook settings')
+      if (!isErrnoException(err) || err.code !== 'ENOENT') {
+        logger.debug({ err, settingsPath }, 'Failed to read hook settings')
+      }
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -266,6 +288,7 @@ async function loadHookHealth(): Promise<HookHealthResult> {
 async function fetchStatus(): Promise<StatusResult> {
   const [myceliumResult, hyphaeResult, hooksResult] = await Promise.allSettled([checkMycelium(), checkHyphae(), loadHookHealth()])
   return {
+    agents: detectAgentRuntimes(),
     hooks:
       hooksResult.status === 'fulfilled'
         ? hooksResult.value

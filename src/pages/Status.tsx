@@ -8,7 +8,7 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { ProjectSelector } from '../components/ProjectSelector'
 import { SectionCard } from '../components/SectionCard'
-import { buildOnboardingActions, missingLifecycleHooks, summarizeOnboarding } from '../lib/onboarding'
+import { buildOnboardingActions, missingLifecycleHooks, summarizeCodexIntegration, summarizeOnboarding } from '../lib/onboarding'
 import { useEcosystemStatus } from '../lib/queries'
 
 function timeAgo(dateStr: string): string {
@@ -42,6 +42,31 @@ function summarizeHookHealth(status: EcosystemStatus): {
 } {
   const missingLifecycle = missingLifecycleHooks(status)
   const hookCount = status.hooks.installed_hooks.length
+  const codexConfigured = status.agents.codex.configured
+  const claudeConfigured = status.agents.claude_code.configured
+  const codexSummary = summarizeCodexIntegration(status)
+
+  if (!claudeConfigured && codexConfigured) {
+    return {
+      color: codexSummary.color,
+      detail:
+        codexSummary.label === 'Notify adapter'
+          ? 'Codex is configured through MCP and the notify adapter. Claude hook coverage is optional until you wire Claude Code in as well.'
+          : codexSummary.detail,
+      label: codexSummary.label === 'Notify adapter' ? 'Codex ready' : codexSummary.label,
+    }
+  }
+
+  if (hookCount === 0 && codexConfigured) {
+    return {
+      color: codexSummary.color,
+      detail:
+        codexSummary.label === 'Notify adapter'
+          ? 'No Claude hooks are installed. Codex already has its notify adapter coverage, so this only affects Claude-specific lifecycle capture.'
+          : codexSummary.detail,
+      label: codexSummary.label === 'Notify adapter' ? 'Optional' : codexSummary.label,
+    }
+  }
 
   if (hookCount === 0) {
     return {
@@ -75,7 +100,7 @@ function summarizeHookHealth(status: EcosystemStatus): {
 }
 
 function HookSummaryIcon({ label }: { label: string }) {
-  return label === 'Covered' ? <IconCircleCheck size={12} /> : <IconAlertCircle size={12} />
+  return ['Covered', 'Codex ready', 'Optional'].includes(label) ? <IconCircleCheck size={12} /> : <IconAlertCircle size={12} />
 }
 
 function ToolCard({
@@ -178,9 +203,10 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
   const hasErrors = hooks.error_count > 0
   const missingLifecycle = missingLifecycleHooks(status)
   const summary = summarizeHookHealth(status)
+  const codexSummary = summarizeCodexIntegration(status)
 
   return (
-    <SectionCard title='Claude Code Hooks'>
+    <SectionCard title='Claude hook coverage'>
       <Stack
         gap='xs'
         mb='md'
@@ -246,9 +272,13 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
       {hooks.installed_hooks.length === 0 ? (
         <Alert
           color='gray'
-          title='No hooks installed'
+          title='No Claude hooks installed'
         >
-          Use onboarding to wire `SessionStart`, `PostToolUse`, `PreCompact`, and `SessionEnd` into Claude Code.
+          {status.agents.codex.configured
+            ? codexSummary.label === 'Notify adapter'
+              ? 'Codex already has MCP and notify adapter coverage. Claude Code hook capture is optional if you want SessionStart, PostToolUse, PreCompact, and SessionEnd.'
+              : `Codex is ${codexSummary.label.toLowerCase()}. Claude Code hook capture is optional unless you also want SessionStart, PostToolUse, PreCompact, and SessionEnd.`
+            : 'Use onboarding to wire SessionStart, PostToolUse, PreCompact, and SessionEnd into Claude Code.'}
         </Alert>
       ) : (
         <>
@@ -355,6 +385,94 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
   )
 }
 
+function AgentRuntimeCard({ status }: { status: EcosystemStatus }) {
+  const runtimes = [
+    { key: 'claude-code', label: 'Claude Code', status: status.agents.claude_code },
+    { key: 'codex', label: 'Codex', status: status.agents.codex },
+  ] as const
+  const codexSummary = summarizeCodexIntegration(status)
+
+  return (
+    <SectionCard title='Agent runtimes'>
+      <Stack gap='sm'>
+        <Text
+          c='dimmed'
+          size='sm'
+        >
+          Claude uses hook-based lifecycle capture. Codex uses MCP config and can add the hyphae notify adapter for turn-complete coverage.
+        </Text>
+        {runtimes.map((runtime) => {
+          const badgeColor = runtime.status.configured ? 'mycelium' : runtime.status.detected ? 'orange' : 'gray'
+          const badgeLabel =
+            runtime.key === 'codex'
+              ? runtime.status.configured
+                ? 'MCP'
+                : runtime.status.detected
+                  ? 'Detected'
+                  : 'Not found'
+              : runtime.status.configured
+                ? 'Configured'
+                : runtime.status.detected
+                  ? 'Detected'
+                  : 'Not found'
+
+          return (
+            <Card
+              bg='var(--mantine-color-gray-0)'
+              key={runtime.key}
+              p='sm'
+              withBorder
+            >
+              <Stack gap={6}>
+                <Group justify='space-between'>
+                  <Text
+                    fw={600}
+                    size='sm'
+                  >
+                    {runtime.label}
+                  </Text>
+                  <Group gap='xs'>
+                    <Badge
+                      color={badgeColor}
+                      size='sm'
+                      variant='light'
+                    >
+                      {badgeLabel}
+                    </Badge>
+                    {runtime.key === 'codex' ? (
+                      <Badge
+                        color={codexSummary.color}
+                        size='sm'
+                        variant='light'
+                      >
+                        {codexSummary.label}
+                      </Badge>
+                    ) : (
+                      <Badge
+                        color='gray'
+                        size='sm'
+                        variant='outline'
+                      >
+                        hooks
+                      </Badge>
+                    )}
+                  </Group>
+                </Group>
+                <Text
+                  c='dimmed'
+                  size='xs'
+                >
+                  {runtime.key === 'codex' ? codexSummary.detail : (runtime.status.config_path ?? 'No config file detected yet.')}
+                </Text>
+              </Stack>
+            </Card>
+          )
+        })}
+      </Stack>
+    </SectionCard>
+  )
+}
+
 function ProjectContextCard({ status }: { status: EcosystemStatus }) {
   const recentProjects = status.project.recent.filter((project) => project !== status.project.active)
 
@@ -437,6 +555,7 @@ function GettingStartedCard({ status }: { status: EcosystemStatus }) {
     .filter((action) => action.tier !== 'manual')
     .slice(0, 3)
   const hookSummary = summarizeHookHealth(status)
+  const codexSummary = summarizeCodexIntegration(status)
 
   return (
     <SectionCard title='Getting started'>
@@ -447,7 +566,8 @@ function GettingStartedCard({ status }: { status: EcosystemStatus }) {
           size='sm'
           spacing='xs'
         >
-          <List.Item>Hook state: {hookSummary.label.toLowerCase()}</List.Item>
+          <List.Item>Claude hooks: {hookSummary.label.toLowerCase()}</List.Item>
+          <List.Item>Codex adapter: {codexSummary.label.toLowerCase()}</List.Item>
           <List.Item>Active project: {status.project.active}</List.Item>
           <List.Item>Best next step: {actions[0]?.command ?? 'Open onboarding for guided repair'}</List.Item>
         </List>
@@ -561,6 +681,10 @@ export function Status() {
             </Grid.Col>
 
             <Grid.Col span={{ base: 12, lg: 3, md: 6 }}>
+              <AgentRuntimeCard status={status} />
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, lg: 3, md: 6 }}>
               <ToolCard
                 available={status.mycelium.available}
                 description='Token compression proxy'
@@ -636,7 +760,7 @@ export function Status() {
               </ToolCard>
             </Grid.Col>
 
-            <Grid.Col span={{ base: 12, lg: 3, md: 6 }}>
+            <Grid.Col span={{ base: 12, lg: 6, md: 12 }}>
               <ToolCard
                 available={status.rhizome.available}
                 description='Code intelligence engine'

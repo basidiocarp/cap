@@ -15,6 +15,10 @@ function formatCost(cost: number): string {
   return `$${cost.toFixed(2)}`
 }
 
+function runtimeLabel(runtime: SessionUsage['runtime']): string {
+  return runtime === 'codex' ? 'Codex' : 'Claude Code'
+}
+
 function formatTokens(tokens: number): string {
   if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(1)}M`
   if (tokens >= 1_000) return `${(tokens / 1_000).toFixed(0)}K`
@@ -32,6 +36,8 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
       </Text>
     )
   }
+
+  const hasCodexSessions = sessions?.some((session) => session.runtime === 'codex') ?? false
 
   return (
     <Stack gap='lg'>
@@ -142,6 +148,7 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
               <Table.Tr>
                 <Table.Th>Date</Table.Th>
                 <Table.Th>Project</Table.Th>
+                <Table.Th>Runtime</Table.Th>
                 <Table.Th>Model</Table.Th>
                 <Table.Th>Tokens</Table.Th>
                 <Table.Th>Cost</Table.Th>
@@ -162,15 +169,32 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
                     </Badge>
                   </Table.Td>
                   <Table.Td>
+                    <Badge
+                      color={s.runtime === 'codex' ? 'blue' : 'grape'}
+                      size='sm'
+                      variant='light'
+                    >
+                      {runtimeLabel(s.runtime)}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td>
                     <Text size='xs'>{s.model.replace('claude-', '')}</Text>
                   </Table.Td>
                   <Table.Td>{formatTokens(s.input_tokens + s.output_tokens)}</Table.Td>
-                  <Table.Td>{formatCost(s.estimated_cost)}</Table.Td>
+                  <Table.Td>{s.cost_known ? formatCost(s.estimated_cost) : 'n/a'}</Table.Td>
                   <Table.Td>{s.duration_messages}</Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
           </Table>
+          {hasCodexSessions && (
+            <Text
+              c='dimmed'
+              size='xs'
+            >
+              Codex sessions are parsed from `~/.codex/sessions`, and costs stay `n/a` when the model pricing is unknown.
+            </Text>
+          )}
         </>
       )}
     </Stack>

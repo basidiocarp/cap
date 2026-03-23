@@ -4,6 +4,9 @@ import { basename, join } from 'node:path'
 
 import { logger } from '../logger.ts'
 
+export type SessionProvider = 'anthropic' | 'openai' | 'unknown'
+export type SessionRuntime = 'claude-code' | 'codex'
+
 export interface SessionUsage {
   duration_messages: number
   estimated_cost: number
@@ -13,6 +16,9 @@ export interface SessionUsage {
   project: string
   session_id: string
   cache_tokens: number
+  cost_known: boolean
+  provider: SessionProvider
+  runtime: SessionRuntime
   timestamp: string
   /** Internal: path to the transcript file for re-parsing */
   _transcriptPath?: string
@@ -43,12 +49,27 @@ const PRICING: Record<string, { input: number; output: number }> = {
   'claude-sonnet-4-6': { input: 3, output: 15 },
 }
 
-function estimateCost(model: string, inputTokens: number, outputTokens: number): number {
-  const pricing = PRICING[model] ?? PRICING['claude-sonnet-4-6']
-  return (inputTokens / 1_000_000) * pricing.input + (outputTokens / 1_000_000) * pricing.output
+function estimateCost(model: string, inputTokens: number, outputTokens: number): { cost: number; known: boolean } {
+  const pricing = PRICING[model]
+  if (!pricing) {
+    return { cost: 0, known: false }
+  }
+
+  return {
+    cost: (inputTokens / 1_000_000) * pricing.input + (outputTokens / 1_000_000) * pricing.output,
+    known: true,
+  }
 }
 
-export function parseSessionUsage(transcriptPath: string): SessionUsage | null {
+function normalizeProvider(value: unknown): SessionProvider {
+  if (value === 'anthropic' || value === 'openai') {
+    return value
+  }
+
+  return 'unknown'
+}
+
+function parseClaudeSessionUsage(transcriptPath: string): SessionUsage | null {
   try {
     const content = readFileSync(transcriptPath, 'utf-8')
     const lines = content.split('\n').filter((l) => l.trim())
@@ -91,41 +112,155 @@ export function parseSessionUsage(transcriptPath: string): SessionUsage | null {
 
     if (messageCount === 0) return null
 
+    const { cost, known } = estimateCost(model, inputTokens, outputTokens)
+
     return {
       _transcriptPath: transcriptPath,
       cache_tokens: cacheTokens,
+      cost_known: known,
       duration_messages: messageCount,
-      estimated_cost: estimateCost(model, inputTokens, outputTokens),
+      estimated_cost: cost,
       input_tokens: inputTokens,
       model,
       output_tokens: outputTokens,
       project: project || 'unknown',
+      provider: 'anthropic',
+      runtime: 'claude-code',
       session_id: sessionId || basename(transcriptPath, '.jsonl'),
       timestamp: timestamp || new Date().toISOString(),
     }
   } catch (err) {
-    logger.debug({ err, transcriptPath }, 'Failed to parse session usage')
+    logger.debug({ err, transcriptPath }, 'Failed to parse Claude session usage')
     return null
   }
 }
 
+function parseCodexSessionUsage(transcriptPath: string): SessionUsage | null {
+  try {
+    const content = readFileSync(transcriptPath, 'utf-8')
+    const lines = content.split('\n').filter((l) => l.trim())
+
+    let inputTokens = 0
+    let outputTokens = 0
+    let cacheTokens = 0
+    let messageCount = 0
+    let model = 'unknown'
+    let provider: SessionProvider = 'unknown'
+    let project = ''
+    let sessionId = ''
+    let timestamp = ''
+
+    for (const line of lines) {
+      try {
+        const obj = JSON.parse(line) as Record<string, unknown>
+        const type = typeof obj.type === 'string' ? obj.type : ''
+        const payload = typeof obj.payload === 'object' && obj.payload !== null ? (obj.payload as Record<string, unknown>) : null
+
+        if (type === 'session_meta' && payload) {
+          if (!sessionId && typeof payload.id === 'string') sessionId = payload.id
+          if (!timestamp && typeof payload.timestamp === 'string') timestamp = payload.timestamp
+          if (!project && typeof payload.cwd === 'string') project = basename(payload.cwd)
+          if (provider === 'unknown') provider = normalizeProvider(payload.model_provider)
+        }
+
+        if (type === 'turn_context' && payload) {
+          if (!timestamp && typeof obj.timestamp === 'string') timestamp = obj.timestamp
+          if (!project && typeof payload.cwd === 'string') project = basename(payload.cwd)
+          if (model === 'unknown' && typeof payload.model === 'string') model = payload.model
+        }
+
+        if (type === 'event_msg' && payload) {
+          if (payload.type === 'user_message') {
+            messageCount++
+          }
+
+          if (payload.type === 'token_count') {
+            const info = typeof payload.info === 'object' && payload.info !== null ? (payload.info as Record<string, unknown>) : null
+            const totalUsage =
+              info && typeof info.total_token_usage === 'object' && info.total_token_usage !== null
+                ? (info.total_token_usage as Record<string, unknown>)
+                : null
+
+            if (totalUsage) {
+              inputTokens = typeof totalUsage.input_tokens === 'number' ? totalUsage.input_tokens : inputTokens
+              outputTokens = typeof totalUsage.output_tokens === 'number' ? totalUsage.output_tokens : outputTokens
+              cacheTokens = typeof totalUsage.cached_input_tokens === 'number' ? totalUsage.cached_input_tokens : cacheTokens
+            }
+          }
+        }
+
+        if (type === 'response_item' && payload?.type === 'message' && payload.role === 'assistant') {
+          messageCount++
+        }
+
+        if (!timestamp && typeof obj.timestamp === 'string') timestamp = obj.timestamp
+      } catch (err) {
+        logger.debug({ err, transcriptPath }, 'Failed to parse Codex transcript line')
+      }
+    }
+
+    if (messageCount === 0 && inputTokens === 0 && outputTokens === 0 && cacheTokens === 0) {
+      return null
+    }
+
+    const { cost, known } = estimateCost(model, inputTokens, outputTokens)
+
+    return {
+      _transcriptPath: transcriptPath,
+      cache_tokens: cacheTokens,
+      cost_known: known,
+      duration_messages: messageCount,
+      estimated_cost: cost,
+      input_tokens: inputTokens,
+      model,
+      output_tokens: outputTokens,
+      project: project || 'unknown',
+      provider,
+      runtime: 'codex',
+      session_id: sessionId || basename(transcriptPath, '.jsonl'),
+      timestamp: timestamp || new Date().toISOString(),
+    }
+  } catch (err) {
+    logger.debug({ err, transcriptPath }, 'Failed to parse Codex session usage')
+    return null
+  }
+}
+
+export function parseSessionUsage(transcriptPath: string): SessionUsage | null {
+  if (transcriptPath.includes(`${join('.codex', 'sessions')}`)) {
+    return parseCodexSessionUsage(transcriptPath)
+  }
+
+  return parseClaudeSessionUsage(transcriptPath)
+}
+
+function collectSessionFiles(root: string, files: string[] = []): string[] {
+  if (!existsSync(root)) return files
+
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    const filePath = join(root, entry.name)
+    if (entry.isDirectory()) {
+      collectSessionFiles(filePath, files)
+      continue
+    }
+
+    if (entry.isFile() && filePath.endsWith('.jsonl')) {
+      files.push(filePath)
+    }
+  }
+
+  return files
+}
+
 export function scanAllSessions(since?: string): SessionUsage[] {
   const sessions: SessionUsage[] = []
-  const claudeProjects = join(homedir(), '.claude', 'projects')
-
-  if (!existsSync(claudeProjects)) return sessions
+  const roots = [join(homedir(), '.claude', 'projects'), join(homedir(), '.codex', 'sessions')]
 
   const sinceTs = since ? new Date(since).getTime() : 0
 
   try {
-    for (const projDir of readdirSync(claudeProjects)) {
-      const sessionsDir = join(claudeProjects, projDir, 'sessions')
-      if (!existsSync(sessionsDir)) continue
-
-      for (const file of readdirSync(sessionsDir)) {
-        if (!file.endsWith('.jsonl')) continue
-        const filePath = join(sessionsDir, file)
-
+    for (const root of roots) {
+      for (const filePath of collectSessionFiles(root)) {
         if (sinceTs > 0) {
           try {
             const mtime = statSync(filePath).mtime.getTime()
@@ -143,7 +278,7 @@ export function scanAllSessions(since?: string): SessionUsage[] {
     // ignore read errors
   }
 
-  sessions.sort((a, b) => (b.timestamp > a.timestamp ? 1 : -1))
+  sessions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
   return sessions
 }
 

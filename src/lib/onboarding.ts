@@ -1,6 +1,6 @@
 import type { EcosystemStatus, StipeDoctorCheck, StipeInitStep, StipeRepairAction, StipeRepairPlan } from './api'
 
-export type AllowedStipeAction = 'doctor' | 'init' | 'install-claude-code' | 'install-full-stack' | 'install-minimal'
+export type AllowedStipeAction = 'doctor' | 'init' | 'install-claude-code' | 'install-codex' | 'install-full-stack' | 'install-minimal'
 
 export interface OnboardingAction {
   command: string
@@ -14,6 +14,7 @@ const STIPE_COMMANDS: Record<AllowedStipeAction, string[]> = {
   doctor: ['doctor'],
   init: ['init'],
   'install-claude-code': ['install', '--profile', 'claude-code'],
+  'install-codex': ['install', '--profile', 'codex'],
   'install-full-stack': ['install', '--profile', 'full-stack'],
   'install-minimal': ['install', '--profile', 'minimal'],
 }
@@ -22,7 +23,62 @@ function hasCoreGap(status: EcosystemStatus): boolean {
   return !status.mycelium.available || !status.hyphae.available || !status.rhizome.available
 }
 
+function hasCodexConfigured(status: EcosystemStatus): boolean {
+  return status.agents.codex.configured
+}
+
+function hasCodexDetected(status: EcosystemStatus): boolean {
+  return status.agents.codex.detected || status.agents.codex.configured
+}
+
+export function summarizeCodexIntegration(status: EcosystemStatus): {
+  color: string
+  detail: string
+  label: string
+} {
+  const { codex } = status.agents
+  const notify = codex.notify
+
+  if (!codex.configured) {
+    return {
+      color: 'gray',
+      detail: 'No Codex config.toml was detected.',
+      label: 'Not configured',
+    }
+  }
+
+  if (!notify?.configured) {
+    return {
+      color: 'orange',
+      detail: 'Codex MCP is configured, but notify = ["hyphae", "codex-notify"] is missing.',
+      label: 'MCP only',
+    }
+  }
+
+  if (!notify.contract_matched) {
+    return {
+      color: 'orange',
+      detail: 'Codex notify is present, but it does not match notify = ["hyphae", "codex-notify"].',
+      label: 'Notify mismatch',
+    }
+  }
+
+  return {
+    color: 'mycelium',
+    detail: 'Codex MCP and the hyphae codex-notify adapter are configured.',
+    label: 'Notify adapter',
+  }
+}
+
+function hasClaudeConfigured(status: EcosystemStatus): boolean {
+  return status.agents.claude_code.configured
+}
+
 function isHooksUnhealthy(status: EcosystemStatus): boolean {
+  if (!hasClaudeConfigured(status)) {
+    return false
+  }
+
   return status.hooks.installed_hooks.length === 0 || status.hooks.error_count > 0 || missingLifecycleHooks(status).length > 0
 }
 
@@ -41,6 +97,7 @@ function toRunAction(actionKey?: string | null): AllowedStipeAction | undefined 
     case 'doctor':
     case 'init':
     case 'install-claude-code':
+    case 'install-codex':
     case 'install-full-stack':
     case 'install-minimal':
       return actionKey
@@ -74,13 +131,14 @@ function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
   const actions: OnboardingAction[] = []
   const coreGap = hasCoreGap(status)
   const hooksUnhealthy = isHooksUnhealthy(status)
+  const primaryRepair = coreGap || (hooksUnhealthy && !hasCodexConfigured(status))
 
   addAction(actions, {
     command: `stipe ${STIPE_COMMANDS.doctor.join(' ')}`,
     description: 'Check for setup drift, missing hooks, and local configuration problems.',
     label: 'Run stipe doctor',
     runAction: 'doctor',
-    tier: hooksUnhealthy || coreGap ? 'primary' : 'secondary',
+    tier: primaryRepair ? 'primary' : 'secondary',
   })
 
   addAction(actions, {
@@ -88,7 +146,7 @@ function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
     description: 'Bootstrap the ecosystem config and hook wiring on this machine.',
     label: 'Initialize the ecosystem',
     runAction: 'init',
-    tier: hooksUnhealthy || coreGap ? 'primary' : 'secondary',
+    tier: primaryRepair ? 'primary' : 'secondary',
   })
 
   addAction(actions, {
@@ -101,10 +159,18 @@ function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
 
   addAction(actions, {
     command: `stipe ${STIPE_COMMANDS['install-claude-code'].join(' ')}`,
-    description: 'Install the Claude Code-oriented profile for a local agent workflow.',
+    description: 'Install the Claude Code-oriented profile when you want hook-based lifecycle capture.',
     label: 'Install the Claude Code profile',
     runAction: 'install-claude-code',
     tier: 'secondary',
+  })
+
+  addAction(actions, {
+    command: `stipe ${STIPE_COMMANDS['install-codex'].join(' ')}`,
+    description: 'Install the Codex-oriented profile when you want MCP plus notify-based lifecycle capture.',
+    label: 'Install the Codex profile',
+    runAction: 'install-codex',
+    tier: hasCodexDetected(status) && coreGap ? 'primary' : 'secondary',
   })
 
   addAction(actions, {
@@ -150,6 +216,24 @@ export function summarizeOnboarding(status: EcosystemStatus, repairPlan?: StipeR
   ].filter((item): item is string => item !== null)
 
   if (missing.length === 0 && !isHooksUnhealthy(status)) {
+    if (hasCodexConfigured(status)) {
+      const codexSummary = summarizeCodexIntegration(status)
+
+      if (codexSummary.label === 'Notify adapter') {
+        return 'The core ecosystem is installed and Codex notify adapter coverage is configured. Use the commands below for drift checks, optional Claude hooks, or profile installs.'
+      }
+
+      if (codexSummary.label === 'MCP only') {
+        return 'The core ecosystem is installed. Codex MCP is configured, but the notify adapter is still missing.'
+      }
+
+      if (codexSummary.label === 'Notify mismatch') {
+        return 'The core ecosystem is installed. Codex notify is configured, but it does not match the expected adapter contract.'
+      }
+
+      return 'The core ecosystem is installed and Codex is configured. Use the commands below for drift checks, optional Claude hooks, or profile installs.'
+    }
+
     return 'The core ecosystem is installed. Use the commands below for drift checks or optional profiles.'
   }
 
@@ -159,15 +243,19 @@ export function summarizeOnboarding(status: EcosystemStatus, repairPlan?: StipeR
     fragments.push(`Missing: ${missing.join(', ')}`)
   }
 
-  if (status.hooks.installed_hooks.length === 0) {
+  if (hasClaudeConfigured(status) && status.hooks.installed_hooks.length === 0) {
     fragments.push('No hooks detected')
-  } else if (status.hooks.error_count > 0) {
+  } else if (hasClaudeConfigured(status) && status.hooks.error_count > 0) {
     fragments.push(`${status.hooks.error_count} hook errors`)
   }
 
   const missingLifecycle = missingLifecycleHooks(status)
-  if (missingLifecycle.length > 0) {
+  if (hasClaudeConfigured(status) && missingLifecycle.length > 0) {
     fragments.push(`Missing lifecycle hooks: ${missingLifecycle.join(', ')}`)
+  }
+
+  if (hasCodexConfigured(status)) {
+    fragments.push(summarizeCodexIntegration(status).label)
   }
 
   return fragments.join(' · ')

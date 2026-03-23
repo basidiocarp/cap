@@ -55,8 +55,10 @@ import type {
 
 // Re-export all types for backward compatibility
 export type {
+  AgentRuntimeStatus,
   Annotation,
   CallSite,
+  CodexNotifyStatus,
   CommandHistory,
   CommandHistoryEntry,
   ComplexityResult,

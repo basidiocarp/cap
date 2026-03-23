@@ -17,6 +17,7 @@ const STIPE_ACTIONS = {
   doctor: ['doctor'],
   init: ['init'],
   'install-claude-code': ['install', '--profile', 'claude-code'],
+  'install-codex': ['install', '--profile', 'codex'],
   'install-full-stack': ['install', '--profile', 'full-stack'],
   'install-minimal': ['install', '--profile', 'minimal'],
 } as const

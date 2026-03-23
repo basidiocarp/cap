@@ -1,11 +1,25 @@
 import { describe, expect, it } from 'vitest'
 
-import type { EcosystemStatus, StipeRepairPlan } from '../../src/lib/api'
-import { buildOnboardingActions, missingLifecycleHooks, summarizeOnboarding } from '../../src/lib/onboarding'
+import type { CodexNotifyStatus, EcosystemStatus, StipeRepairPlan } from '../../src/lib/api'
+import { buildOnboardingActions, missingLifecycleHooks, summarizeCodexIntegration, summarizeOnboarding } from '../../src/lib/onboarding'
 import { buildStipeArgs, parseStipeAction } from '../routes/settings'
 
 function createMissingStatus(): EcosystemStatus {
   return {
+    agents: {
+      claude_code: {
+        config_path: '/Users/test/.claude/settings.json',
+        configured: true,
+        detected: true,
+        integration: 'hooks',
+      },
+      codex: {
+        config_path: null,
+        configured: false,
+        detected: false,
+        integration: 'mcp',
+      },
+    },
     hooks: {
       error_count: 1,
       installed_hooks: [],
@@ -22,6 +36,33 @@ function createMissingStatus(): EcosystemStatus {
     mycelium: { available: false, version: null },
     project: { active: '/projects/current', recent: ['/projects/current'] },
     rhizome: { available: false, backend: null, languages: [] },
+  }
+}
+
+function createCodexStatus(notify: CodexNotifyStatus): EcosystemStatus {
+  const status = createMissingStatus()
+
+  return {
+    ...status,
+    agents: {
+      ...status.agents,
+      claude_code: {
+        ...status.agents.claude_code,
+        config_path: null,
+        configured: false,
+        detected: false,
+      },
+      codex: {
+        ...status.agents.codex,
+        config_path: '/Users/test/.codex/config.toml',
+        configured: true,
+        detected: true,
+        notify,
+      },
+    },
+    hyphae: { available: true, memoirs: 0, memories: 0, version: null },
+    mycelium: { available: true, version: null },
+    rhizome: { available: true, backend: 'tree-sitter', languages: [] },
   }
 }
 
@@ -99,11 +140,13 @@ describe('onboarding helpers', () => {
   it('accepts only allowlisted stipe actions', () => {
     expect(parseStipeAction('doctor')).toBe('doctor')
     expect(parseStipeAction('install-claude-code')).toBe('install-claude-code')
+    expect(parseStipeAction('install-codex')).toBe('install-codex')
     expect(parseStipeAction('rm -rf /')).toBeNull()
   })
 
   it('maps allowlisted stipe actions to fixed argument lists', () => {
     expect(buildStipeArgs('install-full-stack')).toEqual(['install', '--profile', 'full-stack'])
+    expect(buildStipeArgs('install-codex')).toEqual(['install', '--profile', 'codex'])
   })
 
   it('prefers structured stipe repair actions when they are available', () => {
@@ -114,10 +157,48 @@ describe('onboarding helpers', () => {
     expect(commands).toContain('stipe install --profile claude-code')
   })
 
+  it('surfaces the codex install profile when Codex is present', () => {
+    const actions = buildOnboardingActions(
+      createCodexStatus({
+        command: null,
+        config_path: '/Users/test/.codex/config.toml',
+        configured: false,
+        contract_matched: false,
+      })
+    )
+
+    expect(actions.map((action) => action.command)).toContain('stipe install --profile codex')
+  })
+
   it('reports missing lifecycle hooks in onboarding summaries', () => {
     const status = createMissingStatus()
 
     expect(missingLifecycleHooks(status)).toEqual(['SessionStart', 'PostToolUse', 'PreCompact', 'SessionEnd'])
     expect(summarizeOnboarding(status)).toContain('Missing lifecycle hooks')
+  })
+
+  it('distinguishes Codex MCP-only presence from notify adapter coverage', () => {
+    const mcpOnly = createCodexStatus({
+      command: null,
+      config_path: '/Users/test/.codex/config.toml',
+      configured: false,
+      contract_matched: false,
+    })
+    const adapter = createCodexStatus({
+      command: 'hyphae codex-notify',
+      config_path: '/Users/test/.codex/config.toml',
+      configured: true,
+      contract_matched: true,
+    })
+
+    expect(summarizeCodexIntegration(mcpOnly)).toMatchObject({
+      label: 'MCP only',
+    })
+    expect(summarizeOnboarding(mcpOnly)).toContain('Codex MCP is configured')
+
+    expect(summarizeCodexIntegration(adapter)).toMatchObject({
+      label: 'Notify adapter',
+    })
+    expect(summarizeOnboarding(adapter)).toContain('Codex notify adapter coverage is configured')
   })
 })

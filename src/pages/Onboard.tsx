@@ -7,7 +7,14 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { ProjectSelector } from '../components/ProjectSelector'
 import { SectionCard } from '../components/SectionCard'
-import { buildOnboardingActions, failingDoctorChecks, initPlanSteps, missingLifecycleHooks, summarizeOnboarding } from '../lib/onboarding'
+import {
+  buildOnboardingActions,
+  failingDoctorChecks,
+  initPlanSteps,
+  missingLifecycleHooks,
+  summarizeCodexIntegration,
+  summarizeOnboarding,
+} from '../lib/onboarding'
 import { useEcosystemStatus, useRunStipeAction, useStipeRepairPlan } from '../lib/queries'
 
 function StatusChip({ color, label, value }: { color: string; label: string; value: string }) {
@@ -203,6 +210,7 @@ export function Onboard() {
   const failingChecks = failingDoctorChecks(repairPlanQuery.data)
   const lifecycleGaps = missingLifecycleHooks(status)
   const steps = initPlanSteps(repairPlanQuery.data)
+  const codexSummary = summarizeCodexIntegration(status)
   const recommendedAction = primaryActions[0] ?? secondaryActions[0] ?? manualActions[0] ?? null
   const recommendedRunAction = recommendedAction?.runAction
 
@@ -266,6 +274,21 @@ export function Onboard() {
           </Group>
           <Group gap='xs'>
             <StatusChip
+              color={status.agents.claude_code.configured ? 'mycelium' : 'gray'}
+              label='Claude Code'
+              value={status.agents.claude_code.configured ? 'configured' : 'not configured'}
+            />
+            <StatusChip
+              color={status.agents.codex.configured ? 'mycelium' : 'gray'}
+              label='Codex MCP'
+              value={status.agents.codex.configured ? 'configured' : 'not configured'}
+            />
+            <StatusChip
+              color={codexSummary.color}
+              label='Codex adapter'
+              value={codexSummary.label.toLowerCase()}
+            />
+            <StatusChip
               color={status.mycelium.available ? 'mycelium' : 'red'}
               label='Mycelium'
               value={status.mycelium.available ? 'available' : 'missing'}
@@ -281,9 +304,19 @@ export function Onboard() {
               value={status.rhizome.available ? 'available' : 'missing'}
             />
             <StatusChip
-              color={status.hooks.error_count > 0 || status.hooks.installed_hooks.length === 0 ? 'orange' : 'mycelium'}
-              label='Hooks'
-              value={status.hooks.error_count > 0 || status.hooks.installed_hooks.length === 0 ? 'needs attention' : 'healthy'}
+              color={
+                status.agents.claude_code.configured && (status.hooks.error_count > 0 || status.hooks.installed_hooks.length === 0)
+                  ? 'orange'
+                  : 'mycelium'
+              }
+              label='Claude hooks'
+              value={
+                !status.agents.claude_code.configured && status.agents.codex.configured
+                  ? 'optional'
+                  : status.hooks.error_count > 0 || status.hooks.installed_hooks.length === 0
+                    ? 'needs attention'
+                    : 'healthy'
+              }
             />
           </Group>
 
@@ -293,6 +326,17 @@ export function Onboard() {
               title='Hook errors detected'
             >
               `stipe doctor` will check the most common local drift cases first.
+            </Alert>
+          )}
+
+          {status.agents.codex.configured && (
+            <Alert
+              color={codexSummary.color}
+              title={codexSummary.label === 'Notify adapter' ? 'Codex already connected' : 'Codex notify adapter missing'}
+            >
+              {codexSummary.label === 'Notify adapter'
+                ? 'This machine already has a Codex MCP config and the notify adapter contract in place. Claude Code lifecycle capture is optional.'
+                : `${codexSummary.detail} Add notify = ["hyphae", "codex-notify"] to ~/.codex/config.toml if you want Codex turn-complete coverage.`}
             </Alert>
           )}
 
@@ -335,10 +379,10 @@ export function Onboard() {
             </Alert>
           )}
 
-          {lifecycleGaps.length > 0 && (
+          {status.agents.claude_code.configured && lifecycleGaps.length > 0 && (
             <Alert
               color='gray'
-              title='Lifecycle hooks not fully covered'
+              title='Claude lifecycle hooks not fully covered'
             >
               Missing recommended hooks: {lifecycleGaps.join(', ')}
             </Alert>

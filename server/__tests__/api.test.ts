@@ -86,8 +86,20 @@ describe('API Routes', () => {
       expect(res.status).toBe(200)
 
       const json = (await res.json()) as Record<string, unknown>
+      expect(json).toHaveProperty('agents')
       expect(json).toHaveProperty('project')
       expect(json).toHaveProperty('hooks')
+
+      const agents = json.agents as Record<string, unknown>
+      expect(agents).toHaveProperty('claude_code')
+      expect(agents).toHaveProperty('codex')
+
+      const codex = agents.codex as Record<string, unknown>
+      expect(codex).toHaveProperty('notify')
+      const notify = codex.notify as Record<string, unknown>
+      expect(notify).toHaveProperty('configured')
+      expect(notify).toHaveProperty('contract_matched')
+      expect(notify).toHaveProperty('command')
 
       const project = json.project as Record<string, unknown>
       expect(typeof project.active).toBe('string')
