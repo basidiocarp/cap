@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
-import { homedir } from 'node:os'
+import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { Hono } from 'hono'
@@ -76,6 +76,7 @@ interface StatusResult {
 }
 
 const RECOMMENDED_HOOK_EVENTS = ['SessionStart', 'PostToolUse', 'PreCompact', 'SessionEnd'] as const
+const DEFAULT_HOOK_ERROR_LOG = join(tmpdir(), 'hyphae-hook-errors.log')
 
 function buildLifecycleCoverage(installedHooks: HookInfo[]): HookLifecycleStatus[] {
   return RECOMMENDED_HOOK_EVENTS.map((event) => ({
@@ -83,6 +84,10 @@ function buildLifecycleCoverage(installedHooks: HookInfo[]): HookLifecycleStatus
     installed: installedHooks.some((hook) => hook.event.toLowerCase() === event.toLowerCase()),
     matching_hooks: installedHooks.filter((hook) => hook.event.toLowerCase() === event.toLowerCase()).length,
   }))
+}
+
+function isErrnoException(err: unknown): err is NodeJS.ErrnoException {
+  return typeof err === 'object' && err !== null && 'code' in err
 }
 
 async function checkMycelium(): Promise<StatusResult['mycelium']> {
@@ -185,7 +190,7 @@ async function checkLsps(): Promise<LspInfo[]> {
 async function loadHookHealth(): Promise<HookHealthResult> {
   try {
     const settingsPath = join(homedir(), '.claude', 'settings.json')
-    const errorLogPath = '/tmp/hyphae-hook-errors.log'
+    const errorLogPath = process.env.HYPHAE_HOOK_ERROR_LOG ?? DEFAULT_HOOK_ERROR_LOG
 
     // ─────────────────────────────────────────────────────────────────────────────
     // Read installed hooks from settings
@@ -236,7 +241,9 @@ async function loadHookHealth(): Promise<HookHealthResult> {
           }
         })
     } catch (err) {
-      logger.debug({ err }, 'Failed to read hook error log')
+      if (!isErrnoException(err) || err.code !== 'ENOENT') {
+        logger.debug({ err, errorLogPath }, 'Failed to read hook error log')
+      }
     }
 
     return {
