@@ -19,7 +19,7 @@
     "@hono/node-server": "^1.19.11",
     "@mantine/charts": "^8.3.16",
     "@mantine/core": "^8.3.16",
-    "@mantine/dates": "^8.3.16",
+    "@mantine/dates": "^8.3.18",
     "@mantine/hooks": "^8.3.16",
     "@mantine/modals": "^8.3.16",
     "@mantine/notifications": "^8.3.16",
