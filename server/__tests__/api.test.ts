@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as hyphae from '../hyphae'
 import { createApp } from '../index'
+import { registry } from '../lib/rhizome-registry'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // API Route Tests
@@ -125,6 +126,91 @@ describe('API Routes', () => {
 
       expect(res.status).toBe(400)
       await expect(res.json()).resolves.toEqual({ error: 'reason must be a string' })
+    })
+  })
+
+  describe('POST /api/rhizome edit workflows', () => {
+    it('forwards rename requests to Rhizome', async () => {
+      const client = {
+        callTool: vi.fn().mockResolvedValue('Renamed symbol'),
+        isAvailable: vi.fn().mockReturnValue(true),
+      }
+      vi.spyOn(registry, 'getActive').mockReturnValue(client as never)
+
+      const req = new Request('http://localhost:3001/api/rhizome/rename', {
+        body: JSON.stringify({
+          column: 4,
+          file: 'src/lib.rs',
+          line: 12,
+          new_name: 'renamed_symbol',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(client.callTool).toHaveBeenCalledWith('rename_symbol', {
+        column: 4,
+        file: 'src/lib.rs',
+        line: 12,
+        new_name: 'renamed_symbol',
+      })
+      await expect(res.json()).resolves.toBe('Renamed symbol')
+    })
+
+    it('forwards copy requests to Rhizome', async () => {
+      const client = {
+        callTool: vi.fn().mockResolvedValue({ inserted_at_line: 42, lines_inserted: 8 }),
+        isAvailable: vi.fn().mockReturnValue(true),
+      }
+      vi.spyOn(registry, 'getActive').mockReturnValue(client as never)
+
+      const req = new Request('http://localhost:3001/api/rhizome/copy-symbol', {
+        body: JSON.stringify({
+          position: 'after',
+          source_file: 'src/source.ts',
+          symbol: 'SourceThing',
+          target_file: 'src/target.ts',
+          target_symbol: 'TargetThing',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(client.callTool).toHaveBeenCalledWith('copy_symbol', {
+        position: 'after',
+        source_file: 'src/source.ts',
+        symbol: 'SourceThing',
+        target_file: 'src/target.ts',
+        target_symbol: 'TargetThing',
+      })
+      await expect(res.json()).resolves.toEqual({ inserted_at_line: 42, lines_inserted: 8 })
+    })
+
+    it('rejects move requests with missing required fields', async () => {
+      const client = {
+        callTool: vi.fn(),
+        isAvailable: vi.fn().mockReturnValue(true),
+      }
+      vi.spyOn(registry, 'getActive').mockReturnValue(client as never)
+
+      const req = new Request('http://localhost:3001/api/rhizome/move-symbol', {
+        body: JSON.stringify({
+          source_file: 'src/source.ts',
+          symbol: 'SourceThing',
+          target_file: 'src/target.ts',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(client.callTool).not.toHaveBeenCalled()
+      await expect(res.json()).resolves.toEqual({ error: 'Missing required field: target_symbol' })
     })
   })
 

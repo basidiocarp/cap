@@ -1,11 +1,12 @@
-import { Badge, Button, Card, Grid, Group, Stack, Table, Text, Title } from '@mantine/core'
-import { IconAlertCircle, IconCircleCheck, IconCircleX, IconRefresh } from '@tabler/icons-react'
+import { Alert, Badge, Button, Card, Grid, Group, List, Stack, Table, Text, Title } from '@mantine/core'
+import { IconAlertCircle, IconArrowRight, IconCircleCheck, IconCircleX, IconRefresh } from '@tabler/icons-react'
 import { Link } from 'react-router-dom'
 
 import type { EcosystemStatus } from '../lib/api'
 import { EcosystemFlow } from '../components/EcosystemFlow'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
+import { ProjectSelector } from '../components/ProjectSelector'
 import { SectionCard } from '../components/SectionCard'
 import { buildOnboardingActions, missingLifecycleHooks, summarizeOnboarding } from '../lib/onboarding'
 import { useEcosystemStatus } from '../lib/queries'
@@ -32,6 +33,49 @@ function AvailabilityBadge({ available }: { available: boolean }) {
       {available ? 'Available' : 'Unavailable'}
     </Badge>
   )
+}
+
+function summarizeHookHealth(status: EcosystemStatus): {
+  color: string
+  detail: string
+  label: string
+} {
+  const missingLifecycle = missingLifecycleHooks(status)
+  const hookCount = status.hooks.installed_hooks.length
+
+  if (hookCount === 0) {
+    return {
+      color: 'gray',
+      detail: 'No Claude Code hooks are installed yet.',
+      label: 'Not configured',
+    }
+  }
+
+  if (status.hooks.error_count > 0) {
+    return {
+      color: 'red',
+      detail: `${status.hooks.error_count} recent hook errors were recorded.`,
+      label: 'Needs repair',
+    }
+  }
+
+  if (missingLifecycle.length > 0) {
+    return {
+      color: 'orange',
+      detail: `Coverage is missing for ${missingLifecycle.join(', ')}.`,
+      label: 'Partial coverage',
+    }
+  }
+
+  return {
+    color: 'mycelium',
+    detail: 'Recommended lifecycle coverage is installed and no recent errors were recorded.',
+    label: 'Covered',
+  }
+}
+
+function HookSummaryIcon({ label }: { label: string }) {
+  return label === 'Covered' ? <IconCircleCheck size={12} /> : <IconAlertCircle size={12} />
 }
 
 function ToolCard({
@@ -133,6 +177,7 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
   const hooks = status.hooks
   const hasErrors = hooks.error_count > 0
   const missingLifecycle = missingLifecycleHooks(status)
+  const summary = summarizeHookHealth(status)
 
   return (
     <SectionCard title='Claude Code Hooks'>
@@ -140,6 +185,40 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
         gap='xs'
         mb='md'
       >
+        <Group justify='space-between'>
+          <Group gap='xs'>
+            <Badge
+              color={summary.color}
+              leftSection={hasErrors ? <IconAlertCircle size={12} /> : <HookSummaryIcon label={summary.label} />}
+              size='sm'
+              variant='light'
+            >
+              {summary.label}
+            </Badge>
+            <Badge
+              color='gray'
+              size='sm'
+              variant='outline'
+            >
+              {hooks.installed_hooks.length} installed
+            </Badge>
+          </Group>
+          <Button
+            component={Link}
+            leftSection={<IconArrowRight size={14} />}
+            size='xs'
+            to='/onboard'
+            variant='subtle'
+          >
+            Repair hooks
+          </Button>
+        </Group>
+        <Text
+          c='dimmed'
+          size='sm'
+        >
+          {summary.detail}
+        </Text>
         <Text size='sm'>Recommended lifecycle coverage</Text>
         <Group gap='xs'>
           {hooks.lifecycle.map((hook) => (
@@ -165,12 +244,12 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
       </Stack>
 
       {hooks.installed_hooks.length === 0 ? (
-        <Text
-          c='dimmed'
-          size='sm'
+        <Alert
+          color='gray'
+          title='No hooks installed'
         >
-          No hooks installed.
-        </Text>
+          Use onboarding to wire `SessionStart`, `PostToolUse`, `PreCompact`, and `SessionEnd` into Claude Code.
+        </Alert>
       ) : (
         <>
           <Group
@@ -222,7 +301,15 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
             </Table.Tbody>
           </Table>
 
-          {hooks.recent_errors.length > 0 && (
+          {hooks.recent_errors.length === 0 ? (
+            <Text
+              c='dimmed'
+              mt='md'
+              size='sm'
+            >
+              No recent hook errors recorded.
+            </Text>
+          ) : (
             <Stack
               gap='xs'
               mt='md'
@@ -268,15 +355,102 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
   )
 }
 
+function ProjectContextCard({ status }: { status: EcosystemStatus }) {
+  const recentProjects = status.project.recent.filter((project) => project !== status.project.active)
+
+  return (
+    <SectionCard title='Project context'>
+      <Stack gap='sm'>
+        <Group
+          align='start'
+          justify='space-between'
+        >
+          <div style={{ flex: 1 }}>
+            <Text
+              c='dimmed'
+              size='xs'
+            >
+              Active project
+            </Text>
+            <Text
+              ff='monospace'
+              size='sm'
+            >
+              {status.project.active}
+            </Text>
+          </div>
+          <ProjectSelector variant='button' />
+        </Group>
+
+        <div>
+          <Text
+            c='dimmed'
+            size='xs'
+          >
+            Workspace notes
+          </Text>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Switch here before checking Rhizome status if you want the dashboard to inspect a different repo or worktree.
+          </Text>
+        </div>
+
+        {recentProjects.length > 0 ? (
+          <div>
+            <Text
+              c='dimmed'
+              mb={6}
+              size='xs'
+            >
+              Recent projects
+            </Text>
+            <Group gap='xs'>
+              {recentProjects.slice(0, 4).map((project) => (
+                <Badge
+                  color='gray'
+                  key={project}
+                  size='sm'
+                  variant='outline'
+                >
+                  {project}
+                </Badge>
+              ))}
+            </Group>
+          </div>
+        ) : (
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            No other recent project contexts recorded yet.
+          </Text>
+        )}
+      </Stack>
+    </SectionCard>
+  )
+}
+
 function GettingStartedCard({ status }: { status: EcosystemStatus }) {
   const actions = buildOnboardingActions(status)
     .filter((action) => action.tier !== 'manual')
     .slice(0, 3)
+  const hookSummary = summarizeHookHealth(status)
 
   return (
     <SectionCard title='Getting started'>
       <Stack gap='sm'>
         <Text size='sm'>{summarizeOnboarding(status)}</Text>
+        <List
+          c='dimmed'
+          size='sm'
+          spacing='xs'
+        >
+          <List.Item>Hook state: {hookSummary.label.toLowerCase()}</List.Item>
+          <List.Item>Active project: {status.project.active}</List.Item>
+          <List.Item>Best next step: {actions[0]?.command ?? 'Open onboarding for guided repair'}</List.Item>
+        </List>
         <Group gap='xs'>
           {actions.map((action) => (
             <Badge
@@ -297,6 +471,24 @@ function GettingStartedCard({ status }: { status: EcosystemStatus }) {
         >
           Open onboarding
         </Button>
+        <Group gap='xs'>
+          <Button
+            component={Link}
+            size='xs'
+            to='/code'
+            variant='subtle'
+          >
+            Open code explorer
+          </Button>
+          <Button
+            component={Link}
+            size='xs'
+            to='/memories'
+            variant='subtle'
+          >
+            Review memories
+          </Button>
+        </Group>
       </Stack>
     </SectionCard>
   )
@@ -364,7 +556,11 @@ export function Status() {
           </Card>
 
           <Grid>
-            <Grid.Col span={{ base: 12, md: 4 }}>
+            <Grid.Col span={{ base: 12, lg: 3, md: 6 }}>
+              <ProjectContextCard status={status} />
+            </Grid.Col>
+
+            <Grid.Col span={{ base: 12, lg: 3, md: 6 }}>
               <ToolCard
                 available={status.mycelium.available}
                 description='Token compression proxy'
@@ -391,7 +587,7 @@ export function Status() {
               </ToolCard>
             </Grid.Col>
 
-            <Grid.Col span={{ base: 12, md: 4 }}>
+            <Grid.Col span={{ base: 12, lg: 3, md: 6 }}>
               <ToolCard
                 available={status.hyphae.available}
                 description='Persistent memory store'
@@ -440,7 +636,7 @@ export function Status() {
               </ToolCard>
             </Grid.Col>
 
-            <Grid.Col span={{ base: 12, md: 4 }}>
+            <Grid.Col span={{ base: 12, lg: 3, md: 6 }}>
               <ToolCard
                 available={status.rhizome.available}
                 description='Code intelligence engine'
@@ -458,21 +654,6 @@ export function Status() {
                 )}
                 {status.rhizome.languages.length > 0 && (
                   <Stack gap='xs'>
-                    <Text
-                      c='dimmed'
-                      ff='monospace'
-                      size='xs'
-                    >
-                      Active project: {status.project.active}
-                    </Text>
-                    {status.project.recent.length > 1 && (
-                      <Text
-                        c='dimmed'
-                        size='xs'
-                      >
-                        Recent projects: {status.project.recent.length}
-                      </Text>
-                    )}
                     <Text size='sm'>{status.rhizome.languages.length} languages supported</Text>
                     <Group gap={4}>
                       {status.rhizome.languages.map((lang) => (

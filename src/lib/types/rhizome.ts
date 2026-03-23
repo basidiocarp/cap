@@ -156,3 +156,34 @@ export interface ProjectInfo {
   active: string
   recent: string[]
 }
+
+export interface RhizomeRenameRequest {
+  column: number
+  file: string
+  line: number
+  new_name: string
+}
+
+export interface RhizomeCopyMoveRequest {
+  position: 'before' | 'after'
+  source_file: string
+  symbol: string
+  target_file: string
+  target_symbol: string
+}
+
+export interface RhizomeCopyMoveResult {
+  inserted_at_line: number
+  lines_copied?: number
+  lines_inserted: number
+  lines_moved?: number
+  position: 'before' | 'after'
+  source_file: string
+  source_lines_after?: number
+  source_lines_before?: number
+  symbol: string
+  target_file: string
+  target_symbol: string
+}
+
+export type RhizomeRenameResult = string

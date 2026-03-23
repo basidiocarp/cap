@@ -1,4 +1,4 @@
-import { ActionIcon, Combobox, Group, Text, TextInput, useCombobox } from '@mantine/core'
+import { ActionIcon, Button, Combobox, Group, Text, TextInput, useCombobox } from '@mantine/core'
 import { IconFolder, IconFolderOpen } from '@tabler/icons-react'
 import { useState } from 'react'
 
@@ -8,7 +8,7 @@ function basename(path: string): string {
   return path.split('/').pop() ?? path
 }
 
-export function ProjectSelector() {
+export function ProjectSelector({ fullWidth = false, variant = 'icon' }: { fullWidth?: boolean; variant?: 'button' | 'icon' }) {
   const { data: project } = useProject()
   const switchProject = useSwitchProject()
   const combobox = useCombobox()
@@ -30,22 +30,40 @@ export function ProjectSelector() {
     }
   }
 
+  const activeBasename = basename(project.active)
+
   return (
     <Combobox
       onOptionSubmit={handleSelect}
       store={combobox}
     >
       <Combobox.Target>
-        <ActionIcon
-          color='mycelium'
-          loading={switchProject.isPending}
-          onClick={() => combobox.toggleDropdown()}
-          size='lg'
-          title={`Project: ${project.active}`}
-          variant='subtle'
-        >
-          <IconFolder size={20} />
-        </ActionIcon>
+        {variant === 'button' ? (
+          <Button
+            justify='space-between'
+            leftSection={<IconFolder size={16} />}
+            loading={switchProject.isPending}
+            onClick={() => combobox.toggleDropdown()}
+            rightSection={<IconFolderOpen size={14} />}
+            size='sm'
+            title={`Project: ${project.active}`}
+            variant='light'
+            w={fullWidth ? '100%' : undefined}
+          >
+            {activeBasename}
+          </Button>
+        ) : (
+          <ActionIcon
+            color='mycelium'
+            loading={switchProject.isPending}
+            onClick={() => combobox.toggleDropdown()}
+            size='lg'
+            title={`Project: ${project.active}`}
+            variant='subtle'
+          >
+            <IconFolder size={20} />
+          </ActionIcon>
+        )}
       </Combobox.Target>
 
       <Combobox.Dropdown maw={500}>

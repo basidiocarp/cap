@@ -143,7 +143,10 @@ function MemoryTable({ memories, onSelect }: { memories: Memory[]; onSelect: (m:
               <Table.Tr
                 key={m.id}
                 onClick={() => onSelect(m)}
-                style={{ cursor: 'pointer' }}
+                style={{
+                  cursor: 'pointer',
+                  opacity: review.kind === 'invalidated' ? 0.7 : 1,
+                }}
               >
                 <Table.Td maw={400}>
                   <Text
@@ -735,6 +738,7 @@ export function Memories() {
   const [debouncedQuery] = useDebouncedValue(query, 400)
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null)
   const [isGlobalSearch, setIsGlobalSearch] = useState(false)
+  const [reviewFilter, setReviewFilter] = useState<'active' | 'all' | 'invalidated' | 'stale'>('all')
 
   const { data: topics = [], isLoading: topicsLoading } = useTopics()
 
@@ -745,9 +749,17 @@ export function Memories() {
   const hasQuery = !!debouncedQuery.trim()
   const activeQuery = hasQuery ? (isGlobalSearch ? globalSearchQuery : recallQuery) : selectedTopic ? topicQuery : null
 
-  const memories: Memory[] = activeQuery?.data ?? []
+  const rawMemories: Memory[] = activeQuery?.data ?? []
   const loading = activeQuery?.isLoading ?? false
   const error = activeQuery?.error
+  const memories = reviewFilter === 'all' ? rawMemories : rawMemories.filter((memory) => getMemoryReviewState(memory).kind === reviewFilter)
+  const reviewCounts = rawMemories.reduce(
+    (counts, memory) => {
+      counts[getMemoryReviewState(memory).kind] += 1
+      return counts
+    },
+    { active: 0, invalidated: 0, stale: 0 }
+  )
 
   const showBrowseView = !hasQuery && !selectedTopic && !loading
 
@@ -759,6 +771,7 @@ export function Memories() {
   function handleClearFilters() {
     setSelectedTopic(null)
     setQuery('')
+    setReviewFilter('all')
   }
 
   return (
@@ -823,6 +836,44 @@ export function Memories() {
                 Searching across all projects
               </Text>
             )}
+          </Group>
+        )}
+
+        {!showBrowseView && (
+          <Group gap='xs'>
+            <Select
+              data={[
+                { label: 'All review states', value: 'all' },
+                { label: 'Active', value: 'active' },
+                { label: 'Stale', value: 'stale' },
+                { label: 'Invalidated', value: 'invalidated' },
+              ]}
+              onChange={(value) => setReviewFilter((value as 'active' | 'all' | 'invalidated' | 'stale') ?? 'all')}
+              size='xs'
+              value={reviewFilter}
+              w={190}
+            />
+            <Badge
+              color='gray'
+              size='sm'
+              variant={reviewFilter === 'all' ? 'light' : 'outline'}
+            >
+              {reviewCounts.active} active
+            </Badge>
+            <Badge
+              color='yellow'
+              size='sm'
+              variant={reviewFilter === 'stale' ? 'light' : 'outline'}
+            >
+              {reviewCounts.stale} stale
+            </Badge>
+            <Badge
+              color='red'
+              size='sm'
+              variant={reviewFilter === 'invalidated' ? 'light' : 'outline'}
+            >
+              {reviewCounts.invalidated} invalidated
+            </Badge>
           </Group>
         )}
       </Stack>
@@ -923,6 +974,15 @@ export function Memories() {
           >
             {selectedTopic}
           </Badge>
+          {reviewFilter !== 'all' && (
+            <Badge
+              color='gray'
+              size='sm'
+              variant='outline'
+            >
+              {reviewFilter}
+            </Badge>
+          )}
         </Group>
       )}
 
@@ -935,7 +995,11 @@ export function Memories() {
       )}
 
       {/* No results */}
-      {!loading && !showBrowseView && memories.length === 0 && !error && <EmptyState mt='md'>No results found.</EmptyState>}
+      {!loading && !showBrowseView && rawMemories.length > 0 && memories.length === 0 && !error && (
+        <EmptyState mt='md'>No memories match the current review filter.</EmptyState>
+      )}
+
+      {!loading && !showBrowseView && rawMemories.length === 0 && !error && <EmptyState mt='md'>No results found.</EmptyState>}
 
       {/* Results table */}
       {memories.length > 0 && (

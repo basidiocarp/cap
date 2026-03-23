@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react'
 import { Grid, Stack, Tabs, Title } from '@mantine/core'
 import { IconActivity, IconBrain, IconChartBar, IconCode, IconCurrencyDollar, IconHistory, IconNetwork } from '@tabler/icons-react'
+import { lazy, Suspense } from 'react'
 
 import { KpiCard } from '../components/KpiCard'
 import { PageLoader } from '../components/PageLoader'
@@ -14,13 +16,18 @@ import {
   useUsageSessions,
   useUsageTrend,
 } from '../lib/queries'
-import { CodeIntelligenceTab } from './analytics/CodeIntelligenceTab'
 import { CommandHistoryTab } from './analytics/CommandHistoryTab'
 import { EcosystemTab } from './analytics/EcosystemTab'
-import { MemoryHealthTab } from './analytics/MemoryHealthTab'
-import { TelemetryTab } from './analytics/TelemetryTab'
-import { TokenSavingsTab } from './analytics/TokenSavingsTab'
-import { UsageCostTab } from './analytics/UsageCostTab'
+
+const TokenSavingsTab = lazy(() => import('./analytics/TokenSavingsTab').then((m) => ({ default: m.TokenSavingsTab })))
+const MemoryHealthTab = lazy(() => import('./analytics/MemoryHealthTab').then((m) => ({ default: m.MemoryHealthTab })))
+const TelemetryTab = lazy(() => import('./analytics/TelemetryTab').then((m) => ({ default: m.TelemetryTab })))
+const CodeIntelligenceTab = lazy(() => import('./analytics/CodeIntelligenceTab').then((m) => ({ default: m.CodeIntelligenceTab })))
+const UsageCostTab = lazy(() => import('./analytics/UsageCostTab').then((m) => ({ default: m.UsageCostTab })))
+
+function AnalyticsPanel({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<PageLoader mt='md' />}>{children}</Suspense>
+}
 
 export function Analytics() {
   const { data: ecosystemData = null, isLoading: ecosystemLoading } = useEcosystemStatus()
@@ -124,7 +131,9 @@ export function Analytics() {
           pt='md'
           value='token-savings'
         >
-          <TokenSavingsTab data={myceliumData} />
+          <AnalyticsPanel>
+            <TokenSavingsTab data={myceliumData} />
+          </AnalyticsPanel>
         </Tabs.Panel>
 
         <Tabs.Panel
@@ -138,21 +147,27 @@ export function Analytics() {
           pt='md'
           value='memory-health'
         >
-          <MemoryHealthTab data={hyphaeData} />
+          <AnalyticsPanel>
+            <MemoryHealthTab data={hyphaeData} />
+          </AnalyticsPanel>
         </Tabs.Panel>
 
         <Tabs.Panel
           pt='md'
           value='telemetry'
         >
-          <TelemetryTab data={telemetryData} />
+          <AnalyticsPanel>
+            <TelemetryTab data={telemetryData} />
+          </AnalyticsPanel>
         </Tabs.Panel>
 
         <Tabs.Panel
           pt='md'
           value='code-intelligence'
         >
-          <CodeIntelligenceTab data={rhizomeData} />
+          <AnalyticsPanel>
+            <CodeIntelligenceTab data={rhizomeData} />
+          </AnalyticsPanel>
         </Tabs.Panel>
 
         <Tabs.Panel
@@ -166,11 +181,13 @@ export function Analytics() {
           pt='md'
           value='usage'
         >
-          <UsageCostTab
-            aggregate={usageAggregate}
-            sessions={usageSessions}
-            trend={usageTrend}
-          />
+          <AnalyticsPanel>
+            <UsageCostTab
+              aggregate={usageAggregate}
+              sessions={usageSessions}
+              trend={usageTrend}
+            />
+          </AnalyticsPanel>
         </Tabs.Panel>
       </Tabs>
     </Stack>

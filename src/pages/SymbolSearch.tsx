@@ -53,7 +53,7 @@ export function SymbolSearch() {
     <Stack>
       <Group justify='space-between'>
         <Title order={2}>Symbol Search</Title>
-        <ProjectSelector />
+        <ProjectSelector variant='button' />
       </Group>
 
       <Text

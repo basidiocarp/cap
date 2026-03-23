@@ -9,8 +9,17 @@ export default defineConfig({
           if (id.includes('@mantine/core') || id.includes('@mantine/hooks') || id.includes('@mantine/notifications')) {
             return 'mantine'
           }
-          if (id.includes('@mantine/charts') || id.includes('recharts') || id.includes('d3-') || id.includes('victory-vendor')) {
-            return 'charts'
+          if (id.includes('@mantine/charts')) {
+            return 'mantine-charts'
+          }
+          if (id.includes('recharts') || id.includes('d3-') || id.includes('victory-vendor')) {
+            return 'recharts'
+          }
+          if (id.includes('@xyflow/react')) {
+            return 'flow'
+          }
+          if (id.includes('react-force-graph-2d') || id.includes('force-graph')) {
+            return 'force-graph'
           }
           if (
             id.includes('react-dom') ||

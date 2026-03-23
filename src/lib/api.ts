@@ -33,6 +33,10 @@ import type {
   ProjectInfo,
   PruneResult,
   RhizomeAnalytics,
+  RhizomeCopyMoveRequest,
+  RhizomeCopyMoveResult,
+  RhizomeRenameRequest,
+  RhizomeRenameResult,
   RhizomeStatus,
   RhizomeSymbol,
   ScopeVariable,
@@ -90,6 +94,10 @@ export type {
   ProjectInfo,
   PruneResult,
   RhizomeAnalytics,
+  RhizomeCopyMoveRequest,
+  RhizomeCopyMoveResult,
+  RhizomeRenameRequest,
+  RhizomeRenameResult,
   RhizomeStatus,
   RhizomeSymbol,
   ScopeVariable,
@@ -136,7 +144,7 @@ async function get<T = unknown>(path: string, params?: Record<string, string>): 
   return res.json() as Promise<T>
 }
 
-async function post<T = unknown>(path: string, body?: Record<string, unknown>): Promise<T> {
+async function post<T = unknown>(path: string, body?: unknown): Promise<T> {
   const url = new URL(`${BASE}${path}`, getOrigin())
   const res = await fetch(url.toString(), {
     body: body ? JSON.stringify(body) : undefined,
@@ -147,7 +155,7 @@ async function post<T = unknown>(path: string, body?: Record<string, unknown>): 
   return res.json() as Promise<T>
 }
 
-async function put<T = unknown>(path: string, body: Record<string, unknown>): Promise<T> {
+async function put<T = unknown>(path: string, body: unknown): Promise<T> {
   const url = new URL(`${BASE}${path}`, getOrigin())
   const res = await fetch(url.toString(), {
     body: JSON.stringify(body),
@@ -218,6 +226,7 @@ export const rhizomeApi = {
   annotations: (file: string) => get<Annotation[]>('/rhizome/annotations', { file }),
   callSites: (file: string, fn?: string) => get<CallSite[]>('/rhizome/call-sites', { file, function: fn ?? '' }),
   complexity: (file: string) => get<ComplexityResult[]>('/rhizome/complexity', { file }),
+  copySymbol: (body: RhizomeCopyMoveRequest) => post<RhizomeCopyMoveResult>('/rhizome/copy-symbol', body),
   definition: (file: string, symbol: string) => get<SymbolDefinition>('/rhizome/definition', { file, symbol }),
   dependencies: (file: string) => get<DependencyEdge[]>('/rhizome/dependencies', { file }),
   diagnostics: (file?: string) => get<DiagnosticItem[]>('/rhizome/diagnostics', { file: file ?? '' }),
@@ -226,10 +235,12 @@ export const rhizomeApi = {
   files: (path?: string, depth?: number) => get<FileNode[]>('/rhizome/files', { depth: depth ? String(depth) : '', path: path ?? '' }),
   hover: (file: string, line: number, column: number) =>
     get<HoverInfo>('/rhizome/hover', { column: String(column), file, line: String(line) }),
+  moveSymbol: (body: RhizomeCopyMoveRequest) => post<RhizomeCopyMoveResult>('/rhizome/move-symbol', body),
   parameters: (file: string, symbol: string) => get<ParameterInfo[]>('/rhizome/parameters', { file, symbol }),
   project: () => get<ProjectInfo>('/rhizome/project'),
   references: (file: string, line: number, column: number) =>
     get<SymbolLocation[]>('/rhizome/references', { column: String(column), file, line: String(line) }),
+  renameSymbol: (body: RhizomeRenameRequest) => post<RhizomeRenameResult>('/rhizome/rename', body),
   scope: (file: string, line: number) => get<ScopeVariable[]>('/rhizome/scope', { file, line: String(line) }),
   search: (pattern: string, path?: string) => get<SearchResult[]>('/rhizome/search', { path: path ?? '', pattern }),
   status: () => get<RhizomeStatus>('/rhizome/status'),

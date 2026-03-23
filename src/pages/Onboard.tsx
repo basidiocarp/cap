@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import type { StipeDoctorCheck, StipeInitStep } from '../lib/api'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
+import { ProjectSelector } from '../components/ProjectSelector'
 import { SectionCard } from '../components/SectionCard'
 import { buildOnboardingActions, failingDoctorChecks, initPlanSteps, missingLifecycleHooks, summarizeOnboarding } from '../lib/onboarding'
 import { useEcosystemStatus, useRunStipeAction, useStipeRepairPlan } from '../lib/queries'
@@ -27,12 +28,16 @@ function CommandCard({
   description,
   label,
   onRun,
+  recentlyRan = false,
+  running = false,
   tier,
 }: {
   command: string
   description: string
   label: string
   onRun?: () => void
+  recentlyRan?: boolean
+  running?: boolean
   tier: 'manual' | 'primary' | 'secondary'
 }) {
   return (
@@ -46,6 +51,15 @@ function CommandCard({
           <div>
             <Group gap='xs'>
               <Text fw={600}>{label}</Text>
+              {recentlyRan && (
+                <Badge
+                  color='green'
+                  size='xs'
+                  variant='light'
+                >
+                  last run
+                </Badge>
+              )}
               <Badge
                 color={tier === 'primary' ? 'mycelium' : tier === 'secondary' ? 'substrate' : 'gray'}
                 size='xs'
@@ -64,12 +78,13 @@ function CommandCard({
 
           {onRun && (
             <Button
+              disabled={running}
               leftSection={<IconPlayerPlay size={14} />}
               onClick={onRun}
               size='xs'
               variant='light'
             >
-              Run via Stipe
+              {running ? 'Running...' : 'Run via Stipe'}
             </Button>
           )}
         </Group>
@@ -188,6 +203,16 @@ export function Onboard() {
   const failingChecks = failingDoctorChecks(repairPlanQuery.data)
   const lifecycleGaps = missingLifecycleHooks(status)
   const steps = initPlanSteps(repairPlanQuery.data)
+  const recommendedAction = primaryActions[0] ?? secondaryActions[0] ?? manualActions[0] ?? null
+  const recommendedRunAction = recommendedAction?.runAction
+
+  function actionIsRunning(actionKey?: string) {
+    return Boolean(runStipe.isPending && actionKey && runStipe.variables === actionKey)
+  }
+
+  function actionWasLastRun(actionKey?: string) {
+    return Boolean(runStipe.isSuccess && actionKey && runStipe.data.action === actionKey)
+  }
 
   return (
     <Stack>
@@ -226,13 +251,19 @@ export function Onboard() {
       <SectionCard title='Current state'>
         <Stack gap='sm'>
           <Text size='sm'>Use this page when the ecosystem is partly installed or you want the shortest path to a working setup.</Text>
-          <Text
-            c='dimmed'
-            ff='monospace'
-            size='xs'
+          <Group
+            align='start'
+            justify='space-between'
           >
-            Active project: {status.project.active}
-          </Text>
+            <Text
+              c='dimmed'
+              ff='monospace'
+              size='xs'
+            >
+              Active project: {status.project.active}
+            </Text>
+            <ProjectSelector variant='button' />
+          </Group>
           <Group gap='xs'>
             <StatusChip
               color={status.mycelium.available ? 'mycelium' : 'red'}
@@ -262,6 +293,45 @@ export function Onboard() {
               title='Hook errors detected'
             >
               `stipe doctor` will check the most common local drift cases first.
+            </Alert>
+          )}
+
+          {recommendedAction && (
+            <Alert
+              color='mycelium'
+              title='Recommended next step'
+            >
+              <Stack gap='sm'>
+                <Text size='sm'>{recommendedAction.label}</Text>
+                <Text
+                  c='dimmed'
+                  ff='monospace'
+                  size='xs'
+                >
+                  {recommendedAction.command}
+                </Text>
+                <Group gap='xs'>
+                  {recommendedRunAction && (
+                    <Button
+                      disabled={actionIsRunning(recommendedRunAction)}
+                      leftSection={<IconPlayerPlay size={14} />}
+                      onClick={() => runStipe.mutate(recommendedRunAction)}
+                      size='xs'
+                      variant='light'
+                    >
+                      {actionIsRunning(recommendedRunAction) ? 'Running...' : 'Run recommended step'}
+                    </Button>
+                  )}
+                  <Button
+                    component={Link}
+                    size='xs'
+                    to='/status'
+                    variant='subtle'
+                  >
+                    View full status
+                  </Button>
+                </Group>
+              </Stack>
             </Alert>
           )}
 
@@ -323,6 +393,8 @@ export function Onboard() {
                   key={action.command}
                   label={action.label}
                   onRun={runAction ? () => runStipe.mutate(runAction) : undefined}
+                  recentlyRan={actionWasLastRun(runAction)}
+                  running={actionIsRunning(runAction)}
                   tier={action.tier}
                 />
               )
@@ -344,6 +416,8 @@ export function Onboard() {
                     key={action.command}
                     label={action.label}
                     onRun={runAction ? () => runStipe.mutate(runAction) : undefined}
+                    recentlyRan={actionWasLastRun(runAction)}
+                    running={actionIsRunning(runAction)}
                     tier={action.tier}
                   />
                 )
@@ -362,6 +436,8 @@ export function Onboard() {
                     description={action.description}
                     key={action.command}
                     label={action.label}
+                    recentlyRan={actionWasLastRun(action.runAction)}
+                    running={actionIsRunning(action.runAction)}
                     tier={action.tier}
                   />
                 ))
@@ -396,6 +472,7 @@ export function Onboard() {
               <Text
                 ff='monospace'
                 size='xs'
+                style={{ whiteSpace: 'pre-wrap' }}
               >
                 {runStipe.data.output}
               </Text>

@@ -17,6 +17,7 @@ import {
   useDefinition,
   useExports,
   useFileSummary,
+  useProject,
   useRhizomeStatus,
   useSymbols,
 } from '../lib/queries'
@@ -68,7 +69,9 @@ export function CodeExplorer() {
   const [showFullDef, setShowFullDef] = useState(false)
 
   const { data: statusData } = useRhizomeStatus()
+  const { data: project } = useProject()
   const unavailable = statusData ? !statusData.available : false
+  const projectName = project?.active.split('/').pop() ?? 'project'
 
   const onFileSelected = useCallback((_file: string | null, symbol: string | null) => {
     setSymbolFilter('')
@@ -159,8 +162,34 @@ export function CodeExplorer() {
     <Stack>
       <Group justify='space-between'>
         <Title order={2}>Code Explorer</Title>
-        <ProjectSelector />
+        <ProjectSelector variant='button' />
       </Group>
+
+      <Text
+        c='dimmed'
+        size='sm'
+      >
+        Exploring symbols and structure in{' '}
+        <Text
+          component='span'
+          fw={500}
+        >
+          {projectName}
+        </Text>
+        {project?.active ? (
+          <>
+            {' '}
+            <Text
+              c='dimmed'
+              component='span'
+              ff='monospace'
+              size='xs'
+            >
+              ({project.active})
+            </Text>
+          </>
+        ) : null}
+      </Text>
 
       <ErrorAlert
         error={tree.error}

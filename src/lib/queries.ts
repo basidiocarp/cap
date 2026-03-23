@@ -262,6 +262,36 @@ export function useSwitchProject() {
   })
 }
 
+export function useRenameSymbol() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: Parameters<typeof rhizomeApi.renameSymbol>[0]) => rhizomeApi.renameSymbol(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rhizome'] })
+    },
+  })
+}
+
+export function useCopySymbol() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: Parameters<typeof rhizomeApi.copySymbol>[0]) => rhizomeApi.copySymbol(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rhizome'] })
+    },
+  })
+}
+
+export function useMoveSymbol() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: Parameters<typeof rhizomeApi.moveSymbol>[0]) => rhizomeApi.moveSymbol(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rhizome'] })
+    },
+  })
+}
+
 export function useFileTree(path?: string, depth?: number) {
   return useQuery({
     queryFn: () => rhizomeApi.files(path, depth),
