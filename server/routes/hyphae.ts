@@ -149,6 +149,18 @@ app.put('/memories/:id/importance', async (c) => {
   return c.json({ result })
 })
 
+app.post('/memories/:id/invalidate', async (c) => {
+  const body = await c.req.json<{ reason?: string }>().catch(() => undefined)
+
+  if (body && body.reason !== undefined && typeof body.reason !== 'string') {
+    return c.json({ error: 'reason must be a string' }, 400)
+  }
+
+  const reason = body?.reason?.trim() || undefined
+  const result = await hyphae.invalidateMemory(c.req.param('id'), reason)
+  return c.json({ result })
+})
+
 app.post('/consolidate', async (c) => {
   const body = await c.req.json<{ topic: string; keep_originals?: boolean }>()
 

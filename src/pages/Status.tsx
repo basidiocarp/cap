@@ -7,7 +7,7 @@ import { EcosystemFlow } from '../components/EcosystemFlow'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
-import { buildOnboardingActions, summarizeOnboarding } from '../lib/onboarding'
+import { buildOnboardingActions, missingLifecycleHooks, summarizeOnboarding } from '../lib/onboarding'
 import { useEcosystemStatus } from '../lib/queries'
 
 function timeAgo(dateStr: string): string {
@@ -132,9 +132,38 @@ function LspSection({ status }: { status: EcosystemStatus }) {
 function HooksSection({ status }: { status: EcosystemStatus }) {
   const hooks = status.hooks
   const hasErrors = hooks.error_count > 0
+  const missingLifecycle = missingLifecycleHooks(status)
 
   return (
     <SectionCard title='Claude Code Hooks'>
+      <Stack
+        gap='xs'
+        mb='md'
+      >
+        <Text size='sm'>Recommended lifecycle coverage</Text>
+        <Group gap='xs'>
+          {hooks.lifecycle.map((hook) => (
+            <Badge
+              color={hook.installed ? 'mycelium' : 'gray'}
+              key={hook.event}
+              size='sm'
+              variant='light'
+            >
+              {hook.event}
+              {hook.matching_hooks > 1 ? ` (${hook.matching_hooks})` : ''}
+            </Badge>
+          ))}
+        </Group>
+        {missingLifecycle.length > 0 && (
+          <Text
+            c='dimmed'
+            size='xs'
+          >
+            Missing recommended hooks: {missingLifecycle.join(', ')}
+          </Text>
+        )}
+      </Stack>
+
       {hooks.installed_hooks.length === 0 ? (
         <Text
           c='dimmed'
@@ -429,6 +458,21 @@ export function Status() {
                 )}
                 {status.rhizome.languages.length > 0 && (
                   <Stack gap='xs'>
+                    <Text
+                      c='dimmed'
+                      ff='monospace'
+                      size='xs'
+                    >
+                      Active project: {status.project.active}
+                    </Text>
+                    {status.project.recent.length > 1 && (
+                      <Text
+                        c='dimmed'
+                        size='xs'
+                      >
+                        Recent projects: {status.project.recent.length}
+                      </Text>
+                    )}
                     <Text size='sm'>{status.rhizome.languages.length} languages supported</Text>
                     <Group gap={4}>
                       {status.rhizome.languages.map((lang) => (

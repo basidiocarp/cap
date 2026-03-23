@@ -23,7 +23,11 @@ function hasCoreGap(status: EcosystemStatus): boolean {
 }
 
 function isHooksUnhealthy(status: EcosystemStatus): boolean {
-  return status.hooks.installed_hooks.length === 0 || status.hooks.error_count > 0
+  return status.hooks.installed_hooks.length === 0 || status.hooks.error_count > 0 || missingLifecycleHooks(status).length > 0
+}
+
+export function missingLifecycleHooks(status: EcosystemStatus): string[] {
+  return status.hooks.lifecycle.filter((hook) => !hook.installed).map((hook) => hook.event)
 }
 
 function addAction(actions: OnboardingAction[], action: OnboardingAction) {
@@ -159,6 +163,11 @@ export function summarizeOnboarding(status: EcosystemStatus, repairPlan?: StipeR
     fragments.push('No hooks detected')
   } else if (status.hooks.error_count > 0) {
     fragments.push(`${status.hooks.error_count} hook errors`)
+  }
+
+  const missingLifecycle = missingLifecycleHooks(status)
+  if (missingLifecycle.length > 0) {
+    fragments.push(`Missing lifecycle hooks: ${missingLifecycle.join(', ')}`)
   }
 
   return fragments.join(' · ')

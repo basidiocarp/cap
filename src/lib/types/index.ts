@@ -41,6 +41,6 @@ export type {
 } from './rhizome'
 export type { Lesson, SessionRecord } from './sessions'
 export type { EcosystemSettings, LspInstallResult, LspLanguageStatus, LspStatusResult, Mode, ModeConfig, PruneResult } from './settings'
-export type { EcosystemStatus, HookError, HookHealthResult, HookInfo } from './status'
+export type { EcosystemStatus, HookError, HookHealthResult, HookInfo, HookLifecycleStatus } from './status'
 export type { AggregateTelemetry, CommandUsage, FileActivity, SessionsByDay, ToolUsage } from './telemetry'
 export type { SessionUsage, UsageAggregate, UsageTrend } from './usage'

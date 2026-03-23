@@ -1,15 +1,26 @@
 import { describe, expect, it } from 'vitest'
 
 import type { EcosystemStatus, StipeRepairPlan } from '../../src/lib/api'
-import { buildOnboardingActions } from '../../src/lib/onboarding'
+import { buildOnboardingActions, missingLifecycleHooks, summarizeOnboarding } from '../../src/lib/onboarding'
 import { buildStipeArgs, parseStipeAction } from '../routes/settings'
 
 function createMissingStatus(): EcosystemStatus {
   return {
-    hooks: { error_count: 1, installed_hooks: [], recent_errors: [] },
+    hooks: {
+      error_count: 1,
+      installed_hooks: [],
+      lifecycle: [
+        { event: 'SessionStart', installed: false, matching_hooks: 0 },
+        { event: 'PostToolUse', installed: false, matching_hooks: 0 },
+        { event: 'PreCompact', installed: false, matching_hooks: 0 },
+        { event: 'SessionEnd', installed: false, matching_hooks: 0 },
+      ],
+      recent_errors: [],
+    },
     hyphae: { available: false, memoirs: 0, memories: 0, version: null },
     lsps: [],
     mycelium: { available: false, version: null },
+    project: { active: '/projects/current', recent: ['/projects/current'] },
     rhizome: { available: false, backend: null, languages: [] },
   }
 }
@@ -101,5 +112,12 @@ describe('onboarding helpers', () => {
 
     expect(commands[0]).toBe('stipe init')
     expect(commands).toContain('stipe install --profile claude-code')
+  })
+
+  it('reports missing lifecycle hooks in onboarding summaries', () => {
+    const status = createMissingStatus()
+
+    expect(missingLifecycleHooks(status)).toEqual(['SessionStart', 'PostToolUse', 'PreCompact', 'SessionEnd'])
+    expect(summarizeOnboarding(status)).toContain('Missing lifecycle hooks')
   })
 })

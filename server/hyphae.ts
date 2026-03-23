@@ -349,6 +349,12 @@ export async function updateImportance(id: string, importance: string) {
   return runCli(['update', '--id', id, '--importance', importance])
 }
 
+export async function invalidateMemory(id: string, reason?: string) {
+  const args = ['invalidate', '--id', id]
+  if (reason) args.push('--reason', reason)
+  return runCli(args)
+}
+
 export async function consolidate(topic: string, keepOriginals = false) {
   const args = ['consolidate', '-t', topic]
   if (keepOriginals) args.push('--keep-originals')

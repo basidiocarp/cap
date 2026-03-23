@@ -1,4 +1,4 @@
-import type { LspInfo, RhizomeStatus } from './rhizome'
+import type { LspInfo, ProjectInfo, RhizomeStatus } from './rhizome'
 
 export interface HookInfo {
   command: string
@@ -12,9 +12,16 @@ export interface HookError {
   timestamp: string
 }
 
+export interface HookLifecycleStatus {
+  event: string
+  installed: boolean
+  matching_hooks: number
+}
+
 export interface HookHealthResult {
   error_count: number
   installed_hooks: HookInfo[]
+  lifecycle: HookLifecycleStatus[]
   recent_errors: HookError[]
 }
 
@@ -23,5 +30,6 @@ export interface EcosystemStatus {
   hooks: HookHealthResult
   lsps: LspInfo[]
   mycelium: { available: boolean; version: string | null }
+  project: ProjectInfo
   rhizome: RhizomeStatus
 }

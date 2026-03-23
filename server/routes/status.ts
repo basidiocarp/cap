@@ -54,7 +54,14 @@ interface HookError {
 interface HookHealthResult {
   error_count: number
   installed_hooks: HookInfo[]
+  lifecycle: HookLifecycleStatus[]
   recent_errors: HookError[]
+}
+
+interface HookLifecycleStatus {
+  event: string
+  installed: boolean
+  matching_hooks: number
 }
 
 type PromiseFilled<T> = { status: 'fulfilled'; value: T }
@@ -64,7 +71,18 @@ interface StatusResult {
   hooks: HookHealthResult
   lsps: LspInfo[]
   mycelium: { available: boolean; version: string | null }
+  project: { active: string; recent: string[] }
   rhizome: { available: boolean; backend: 'tree-sitter' | 'lsp' | null; languages: string[] }
+}
+
+const RECOMMENDED_HOOK_EVENTS = ['SessionStart', 'PostToolUse', 'PreCompact', 'SessionEnd'] as const
+
+function buildLifecycleCoverage(installedHooks: HookInfo[]): HookLifecycleStatus[] {
+  return RECOMMENDED_HOOK_EVENTS.map((event) => ({
+    event,
+    installed: installedHooks.some((hook) => hook.event.toLowerCase() === event.toLowerCase()),
+    matching_hooks: installedHooks.filter((hook) => hook.event.toLowerCase() === event.toLowerCase()).length,
+  }))
 }
 
 async function checkMycelium(): Promise<StatusResult['mycelium']> {
@@ -224,6 +242,7 @@ async function loadHookHealth(): Promise<HookHealthResult> {
     return {
       error_count: recentErrors.length,
       installed_hooks: installedHooks,
+      lifecycle: buildLifecycleCoverage(installedHooks),
       recent_errors: recentErrors,
     }
   } catch (err) {
@@ -231,6 +250,7 @@ async function loadHookHealth(): Promise<HookHealthResult> {
     return {
       error_count: 0,
       installed_hooks: [],
+      lifecycle: buildLifecycleCoverage([]),
       recent_errors: [],
     }
   }
@@ -239,10 +259,17 @@ async function loadHookHealth(): Promise<HookHealthResult> {
 async function fetchStatus(): Promise<StatusResult> {
   const [myceliumResult, hyphaeResult, hooksResult] = await Promise.allSettled([checkMycelium(), checkHyphae(), loadHookHealth()])
   return {
-    hooks: hooksResult.status === 'fulfilled' ? hooksResult.value : { error_count: 0, installed_hooks: [], recent_errors: [] },
+    hooks:
+      hooksResult.status === 'fulfilled'
+        ? hooksResult.value
+        : { error_count: 0, installed_hooks: [], lifecycle: buildLifecycleCoverage([]), recent_errors: [] },
     hyphae: hyphaeResult.status === 'fulfilled' ? hyphaeResult.value : { available: false, memoirs: 0, memories: 0, version: null },
     lsps: await checkLsps(),
     mycelium: myceliumResult.status === 'fulfilled' ? myceliumResult.value : { available: false, version: null },
+    project: {
+      active: registry.getActiveProject(),
+      recent: registry.getRecentProjects(),
+    },
     rhizome: checkRhizome(),
   }
 }

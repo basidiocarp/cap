@@ -180,6 +180,8 @@ export const hyphaeApi = {
     })
   },
   health: (topic?: string) => get<HealthResult[]>('/hyphae/health', { topic: topic ?? '' }),
+  invalidateMemory: (id: string, reason?: string) =>
+    post<{ result: string }>(`/hyphae/memories/${encodeURIComponent(id)}/invalidate`, reason ? { reason } : {}),
   lessons: () => get<Lesson[]>('/hyphae/lessons'),
   memoir: (name: string) => get<MemoirDetail>(`/hyphae/memoirs/${encodeURIComponent(name)}`),
   memoirInspect: (memoir: string, concept: string, depth?: number) =>

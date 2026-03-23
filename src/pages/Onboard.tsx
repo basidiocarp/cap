@@ -6,7 +6,7 @@ import type { StipeDoctorCheck, StipeInitStep } from '../lib/api'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
-import { buildOnboardingActions, failingDoctorChecks, initPlanSteps, summarizeOnboarding } from '../lib/onboarding'
+import { buildOnboardingActions, failingDoctorChecks, initPlanSteps, missingLifecycleHooks, summarizeOnboarding } from '../lib/onboarding'
 import { useEcosystemStatus, useRunStipeAction, useStipeRepairPlan } from '../lib/queries'
 
 function StatusChip({ color, label, value }: { color: string; label: string; value: string }) {
@@ -186,6 +186,7 @@ export function Onboard() {
   const secondaryActions = actions.filter((action) => action.tier === 'secondary')
   const manualActions = actions.filter((action) => action.tier === 'manual')
   const failingChecks = failingDoctorChecks(repairPlanQuery.data)
+  const lifecycleGaps = missingLifecycleHooks(status)
   const steps = initPlanSteps(repairPlanQuery.data)
 
   return (
@@ -225,6 +226,13 @@ export function Onboard() {
       <SectionCard title='Current state'>
         <Stack gap='sm'>
           <Text size='sm'>Use this page when the ecosystem is partly installed or you want the shortest path to a working setup.</Text>
+          <Text
+            c='dimmed'
+            ff='monospace'
+            size='xs'
+          >
+            Active project: {status.project.active}
+          </Text>
           <Group gap='xs'>
             <StatusChip
               color={status.mycelium.available ? 'mycelium' : 'red'}
@@ -254,6 +262,15 @@ export function Onboard() {
               title='Hook errors detected'
             >
               `stipe doctor` will check the most common local drift cases first.
+            </Alert>
+          )}
+
+          {lifecycleGaps.length > 0 && (
+            <Alert
+              color='gray'
+              title='Lifecycle hooks not fully covered'
+            >
+              Missing recommended hooks: {lifecycleGaps.join(', ')}
             </Alert>
           )}
 

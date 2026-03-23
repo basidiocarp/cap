@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import * as hyphae from '../hyphae'
 import { createApp } from '../index'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -10,6 +11,7 @@ describe('API Routes', () => {
   let app: ReturnType<typeof createApp>
 
   beforeEach(() => {
+    vi.restoreAllMocks()
     app = createApp()
   })
 
@@ -72,6 +74,57 @@ describe('API Routes', () => {
       expect(json).toBeDefined()
       // Should not be an error response
       expect(json).not.toHaveProperty('error')
+    })
+  })
+
+  describe('GET /api/status', () => {
+    it('returns ecosystem status with project and hook lifecycle coverage', async () => {
+      const req = new Request('http://localhost:3001/api/status')
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+
+      const json = (await res.json()) as Record<string, unknown>
+      expect(json).toHaveProperty('project')
+      expect(json).toHaveProperty('hooks')
+
+      const project = json.project as Record<string, unknown>
+      expect(typeof project.active).toBe('string')
+      expect(Array.isArray(project.recent)).toBe(true)
+
+      const hooks = json.hooks as Record<string, unknown>
+      expect(Array.isArray(hooks.lifecycle)).toBe(true)
+      const lifecycle = hooks.lifecycle as Array<Record<string, unknown>>
+      expect(lifecycle.map((entry) => entry.event)).toEqual(['SessionStart', 'PostToolUse', 'PreCompact', 'SessionEnd'])
+    })
+  })
+
+  describe('POST /api/hyphae/memories/:id/invalidate', () => {
+    it('forwards invalidate requests with an optional reason', async () => {
+      const invalidateSpy = vi.spyOn(hyphae, 'invalidateMemory').mockResolvedValue('invalidated')
+
+      const req = new Request('http://localhost:3001/api/hyphae/memories/mem-123/invalidate', {
+        body: JSON.stringify({ reason: 'No longer matches the current branch' }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(invalidateSpy).toHaveBeenCalledWith('mem-123', 'No longer matches the current branch')
+      await expect(res.json()).resolves.toEqual({ result: 'invalidated' })
+    })
+
+    it('rejects non-string invalidation reasons', async () => {
+      const req = new Request('http://localhost:3001/api/hyphae/memories/mem-123/invalidate', {
+        body: JSON.stringify({ reason: 42 }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      await expect(res.json()).resolves.toEqual({ error: 'reason must be a string' })
     })
   })
 

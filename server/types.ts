@@ -13,6 +13,12 @@ export interface MemoryRow {
   source_type: string
   source_data: string | null
   related_ids: string // JSON array
+  invalidated_at?: string | null
+  invalidation_reason?: string | null
+  invalidated_by?: string | null
+  is_stale?: boolean | null
+  stale_reason?: string | null
+  superseded_by_memory_id?: string | null
 }
 
 export interface MemoirRow {

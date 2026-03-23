@@ -15,6 +15,7 @@ import {
   Switch,
   Table,
   Text,
+  Textarea,
   TextInput,
   Title,
   Tooltip,
@@ -30,10 +31,13 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { importanceColor } from '../lib/colors'
+import { getMemoryReviewState } from '../lib/memory-review'
 import { parseJsonArray } from '../lib/parse'
 import {
   useDeleteMemory,
   useIngestionSources,
+  useInvalidateMemory,
+  useMemory,
   useRecall,
   useSearchGlobal,
   useTopicMemories,
@@ -100,6 +104,18 @@ function topicColor(topic: string): string {
   return 'gray'
 }
 
+function reviewColor(kind: 'active' | 'invalidated' | 'stale'): string {
+  if (kind === 'invalidated') return 'red'
+  if (kind === 'stale') return 'yellow'
+  return 'gray'
+}
+
+function reviewLabel(kind: 'active' | 'invalidated' | 'stale'): string {
+  if (kind === 'invalidated') return 'Invalidated'
+  if (kind === 'stale') return 'Stale'
+  return 'Active'
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Memory table
 // ─────────────────────────────────────────────────────────────────────────────
@@ -112,6 +128,7 @@ function MemoryTable({ memories, onSelect }: { memories: Memory[]; onSelect: (m:
           <Table.Tr>
             <Table.Th>Summary</Table.Th>
             <Table.Th w={120}>Topic</Table.Th>
+            <Table.Th w={110}>Review</Table.Th>
             <Table.Th w={90}>Importance</Table.Th>
             <Table.Th w={80}>Weight</Table.Th>
             <Table.Th>Keywords</Table.Th>
@@ -119,74 +136,108 @@ function MemoryTable({ memories, onSelect }: { memories: Memory[]; onSelect: (m:
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {memories.map((m) => (
-            <Table.Tr
-              key={m.id}
-              onClick={() => onSelect(m)}
-              style={{ cursor: 'pointer' }}
-            >
-              <Table.Td maw={400}>
-                <Text
-                  lineClamp={2}
-                  size='sm'
-                >
-                  {m.summary}
-                </Text>
-              </Table.Td>
-              <Table.Td>
-                <Badge
-                  color={topicColor(m.topic)}
-                  size='xs'
-                  variant='light'
-                >
-                  {m.topic}
-                </Badge>
-              </Table.Td>
-              <Table.Td>
-                <Badge
-                  color={importanceColor(m.importance)}
-                  size='xs'
-                  variant='light'
-                >
-                  {m.importance}
-                </Badge>
-              </Table.Td>
-              <Table.Td>
-                <Tooltip label={`Weight: ${m.weight.toFixed(3)}`}>
-                  <Progress
-                    color={weightColor(m.weight)}
-                    size='sm'
-                    value={m.weight * 100}
-                  />
-                </Tooltip>
-              </Table.Td>
-              <Table.Td>
-                <Group gap={4}>
-                  {getKeywords(m.keywords)
-                    .slice(0, 3)
-                    .map((kw) => (
-                      <Badge
-                        key={kw}
-                        size='xs'
-                        variant='outline'
-                      >
-                        {kw}
-                      </Badge>
-                    ))}
-                </Group>
-              </Table.Td>
-              <Table.Td>
-                <Tooltip label={new Date(m.created_at).toLocaleString()}>
+          {memories.map((m) => {
+            const review = getMemoryReviewState(m)
+
+            return (
+              <Table.Tr
+                key={m.id}
+                onClick={() => onSelect(m)}
+                style={{ cursor: 'pointer' }}
+              >
+                <Table.Td maw={400}>
                   <Text
-                    c='dimmed'
-                    size='xs'
+                    lineClamp={2}
+                    size='sm'
                   >
-                    {timeAgo(m.created_at)}
+                    {m.summary}
                   </Text>
-                </Tooltip>
-              </Table.Td>
-            </Table.Tr>
-          ))}
+                  {review.kind !== 'active' && (
+                    <Group
+                      gap={6}
+                      mt={6}
+                    >
+                      <Badge
+                        color={reviewColor(review.kind)}
+                        size='xs'
+                        variant='light'
+                      >
+                        {reviewLabel(review.kind)}
+                      </Badge>
+                      <Text
+                        c='dimmed'
+                        lineClamp={1}
+                        size='xs'
+                      >
+                        {review.description}
+                      </Text>
+                    </Group>
+                  )}
+                </Table.Td>
+                <Table.Td>
+                  <Badge
+                    color={topicColor(m.topic)}
+                    size='xs'
+                    variant='light'
+                  >
+                    {m.topic}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>
+                  <Badge
+                    color={reviewColor(review.kind)}
+                    size='xs'
+                    variant={review.kind === 'active' ? 'outline' : 'light'}
+                  >
+                    {reviewLabel(review.kind)}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>
+                  <Badge
+                    color={importanceColor(m.importance)}
+                    size='xs'
+                    variant='light'
+                  >
+                    {m.importance}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>
+                  <Tooltip label={`Weight: ${m.weight.toFixed(3)}`}>
+                    <Progress
+                      color={weightColor(m.weight)}
+                      size='sm'
+                      value={m.weight * 100}
+                    />
+                  </Tooltip>
+                </Table.Td>
+                <Table.Td>
+                  <Group gap={4}>
+                    {getKeywords(m.keywords)
+                      .slice(0, 3)
+                      .map((kw) => (
+                        <Badge
+                          key={kw}
+                          size='xs'
+                          variant='outline'
+                        >
+                          {kw}
+                        </Badge>
+                      ))}
+                  </Group>
+                </Table.Td>
+                <Table.Td>
+                  <Tooltip label={new Date(m.created_at).toLocaleString()}>
+                    <Text
+                      c='dimmed'
+                      size='xs'
+                    >
+                      {timeAgo(m.created_at)}
+                    </Text>
+                  </Tooltip>
+                </Table.Td>
+              </Table.Tr>
+            )
+          })}
         </Table.Tbody>
       </Table>
     </ScrollArea>
@@ -199,12 +250,18 @@ function MemoryTable({ memories, onSelect }: { memories: Memory[]; onSelect: (m:
 
 function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () => void }) {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
+  const [showInvalidateForm, setShowInvalidateForm] = useState(false)
+  const [invalidateReason, setInvalidateReason] = useState('')
   const deleteMemory = useDeleteMemory()
+  const invalidateMemory = useInvalidateMemory()
+  const { data: freshMemory } = useMemory(memory.id)
   const updateImportance = useUpdateImportance()
+  const detail = freshMemory ?? memory
+  const review = getMemoryReviewState(detail)
 
   const handleDelete = async () => {
     try {
-      await deleteMemory.mutateAsync(memory.id)
+      await deleteMemory.mutateAsync(detail.id)
       setShowConfirmDelete(false)
       onClose()
     } catch (err) {
@@ -215,10 +272,23 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
   const handleImportanceChange = async (importance: string | null) => {
     if (importance) {
       try {
-        await updateImportance.mutateAsync({ id: memory.id, importance })
+        await updateImportance.mutateAsync({ id: detail.id, importance })
       } catch (err) {
         console.error('Update importance failed:', err)
       }
+    }
+  }
+
+  const handleInvalidate = async () => {
+    try {
+      await invalidateMemory.mutateAsync({
+        id: detail.id,
+        reason: invalidateReason.trim() || undefined,
+      })
+      setShowInvalidateForm(false)
+      setInvalidateReason('')
+    } catch (err) {
+      console.error('Invalidate failed:', err)
     }
   }
 
@@ -232,16 +302,33 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
         <Group gap='sm'>
           <Text fw={600}>Memory Detail</Text>
           <Badge
-            color={importanceColor(memory.importance)}
+            color={importanceColor(detail.importance)}
             size='sm'
             variant='light'
           >
-            {memory.importance}
+            {detail.importance}
           </Badge>
         </Group>
       }
     >
       <Stack gap='md'>
+        <Alert
+          color={reviewColor(review.kind)}
+          icon={<IconAlertCircle size={16} />}
+          title={`${reviewLabel(review.kind)} memory`}
+        >
+          <Stack gap={4}>
+            <Text size='sm'>{review.description}</Text>
+            {detail.invalidated_at && (
+              <Text size='xs'>
+                Invalidated {timeAgo(detail.invalidated_at)} on {new Date(detail.invalidated_at).toLocaleString()}
+              </Text>
+            )}
+            {detail.invalidated_by && <Text size='xs'>Invalidated by {detail.invalidated_by}</Text>}
+            {detail.superseded_by_memory_id && <Text size='xs'>Superseded by memory {detail.superseded_by_memory_id.slice(0, 8)}</Text>}
+          </Stack>
+        </Alert>
+
         <SectionCard
           bg='chitin.9'
           padding='sm'
@@ -250,11 +337,11 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
             c='gray.2'
             size='sm'
           >
-            {memory.summary}
+            {detail.summary}
           </Text>
         </SectionCard>
 
-        {memory.raw_excerpt && (
+        {detail.raw_excerpt && (
           <div>
             <Text
               c='dimmed'
@@ -267,7 +354,7 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
               block
               style={{ maxHeight: 200, overflow: 'auto' }}
             >
-              {memory.raw_excerpt}
+              {detail.raw_excerpt}
             </Code>
           </div>
         )}
@@ -281,12 +368,12 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
               Topic
             </Text>
             <Badge
-              color={topicColor(memory.topic)}
+              color={topicColor(detail.topic)}
               mt={4}
               size='sm'
               variant='light'
             >
-              {memory.topic}
+              {detail.topic}
             </Badge>
           </Grid.Col>
           <Grid.Col span={4}>
@@ -301,12 +388,12 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
               mt={4}
             >
               <Progress
-                color={weightColor(memory.weight)}
+                color={weightColor(detail.weight)}
                 size='sm'
                 style={{ flex: 1 }}
-                value={memory.weight * 100}
+                value={detail.weight * 100}
               />
-              <Text size='xs'>{memory.weight.toFixed(3)}</Text>
+              <Text size='xs'>{detail.weight.toFixed(3)}</Text>
             </Group>
           </Grid.Col>
           <Grid.Col span={4}>
@@ -320,12 +407,12 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
               mt={4}
               size='sm'
             >
-              {memory.access_count}x
+              {detail.access_count}x
             </Text>
           </Grid.Col>
         </Grid>
 
-        {getKeywords(memory.keywords).length > 0 && (
+        {getKeywords(detail.keywords).length > 0 && (
           <div>
             <Text
               c='dimmed'
@@ -335,7 +422,7 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
               Keywords
             </Text>
             <Group gap={4}>
-              {getKeywords(memory.keywords).map((kw) => (
+              {getKeywords(detail.keywords).map((kw) => (
                 <Badge
                   key={kw}
                   size='sm'
@@ -356,12 +443,12 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
             >
               Created
             </Text>
-            <Text size='xs'>{timeAgo(memory.created_at)}</Text>
+            <Text size='xs'>{timeAgo(detail.created_at)}</Text>
             <Text
               c='dimmed'
               size='xs'
             >
-              {new Date(memory.created_at).toLocaleString()}
+              {new Date(detail.created_at).toLocaleString()}
             </Text>
           </Grid.Col>
           <Grid.Col span={4}>
@@ -371,7 +458,7 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
             >
               Updated
             </Text>
-            <Text size='xs'>{timeAgo(memory.updated_at)}</Text>
+            <Text size='xs'>{timeAgo(detail.updated_at)}</Text>
           </Grid.Col>
           <Grid.Col span={4}>
             <Text
@@ -380,11 +467,11 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
             >
               Last Accessed
             </Text>
-            <Text size='xs'>{timeAgo(memory.last_accessed)}</Text>
+            <Text size='xs'>{timeAgo(detail.last_accessed)}</Text>
           </Grid.Col>
         </Grid>
 
-        {memory.source_type && (
+        {detail.source_type && (
           <div>
             <Text
               c='dimmed'
@@ -397,12 +484,12 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
               size='xs'
               variant='outline'
             >
-              {memory.source_type}
+              {detail.source_type}
             </Badge>
           </div>
         )}
 
-        {getRelatedIds(memory.related_ids).length > 0 && (
+        {getRelatedIds(detail.related_ids).length > 0 && (
           <div>
             <Text
               c='dimmed'
@@ -412,7 +499,7 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
               Related Memories
             </Text>
             <Group gap={4}>
-              {getRelatedIds(memory.related_ids).map((id) => (
+              {getRelatedIds(detail.related_ids).map((id) => (
                 <Badge
                   ff='monospace'
                   key={id}
@@ -436,8 +523,79 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
               onChange={handleImportanceChange}
               placeholder='Update importance...'
               size='sm'
-              value={memory.importance}
+              value={detail.importance}
             />
+
+            <Stack gap='xs'>
+              <Text
+                c='dimmed'
+                size='xs'
+              >
+                Review
+              </Text>
+              {detail.invalidated_at ? (
+                <SectionCard
+                  bg='red.9'
+                  padding='sm'
+                >
+                  <Stack gap={4}>
+                    <Group gap='xs'>
+                      <Badge
+                        color='red'
+                        size='sm'
+                        variant='light'
+                      >
+                        Invalidated
+                      </Badge>
+                      <Text size='sm'>{detail.invalidation_reason || 'No reason captured.'}</Text>
+                    </Group>
+                    <Text size='xs'>Invalidated {new Date(detail.invalidated_at).toLocaleString()}</Text>
+                  </Stack>
+                </SectionCard>
+              ) : showInvalidateForm ? (
+                <>
+                  <Textarea
+                    autosize
+                    disabled={invalidateMemory.isPending}
+                    label='Invalidation reason'
+                    minRows={2}
+                    onChange={(event) => setInvalidateReason(event.currentTarget.value)}
+                    placeholder='Why should this memory stop being reused?'
+                    value={invalidateReason}
+                  />
+                  <Group gap='xs'>
+                    <Button
+                      color='red'
+                      disabled={invalidateMemory.isPending}
+                      onClick={handleInvalidate}
+                      size='sm'
+                    >
+                      {invalidateMemory.isPending ? 'Invalidating...' : 'Confirm Invalidate'}
+                    </Button>
+                    <Button
+                      disabled={invalidateMemory.isPending}
+                      onClick={() => {
+                        setInvalidateReason('')
+                        setShowInvalidateForm(false)
+                      }}
+                      size='sm'
+                      variant='light'
+                    >
+                      Cancel
+                    </Button>
+                  </Group>
+                </>
+              ) : (
+                <Button
+                  color='yellow'
+                  onClick={() => setShowInvalidateForm(true)}
+                  size='sm'
+                  variant='light'
+                >
+                  Mark as Invalidated
+                </Button>
+              )}
+            </Stack>
 
             {deleteMemory.isError && (
               <Alert
@@ -456,6 +614,16 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
                 title='Error'
               >
                 {updateImportance.error instanceof Error ? updateImportance.error.message : 'Failed to update importance'}
+              </Alert>
+            )}
+
+            {invalidateMemory.isError && (
+              <Alert
+                color='red'
+                icon={<IconAlertCircle size={16} />}
+                title='Error'
+              >
+                {invalidateMemory.error instanceof Error ? invalidateMemory.error.message : 'Failed to invalidate memory'}
               </Alert>
             )}
 

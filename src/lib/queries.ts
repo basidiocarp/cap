@@ -14,6 +14,7 @@ export const hyphaeKeys = {
   memoirSearch: (memoir: string, q: string) => ['hyphae', 'memoir', memoir, 'search', q] as const,
   memoirSearchAll: (q: string) => ['hyphae', 'memoirSearchAll', q] as const,
   memoirs: () => ['hyphae', 'memoirs'] as const,
+  memory: (id: string) => ['hyphae', 'memory', id] as const,
   recall: (q: string, topic?: string, limit?: number) => ['hyphae', 'recall', q, topic, limit] as const,
   searchGlobal: (q: string, limit?: number) => ['hyphae', 'searchGlobal', q, limit] as const,
   sessions: (project?: string, limit?: number) => ['hyphae', 'sessions', project, limit] as const,
@@ -61,6 +62,14 @@ export function useTopicMemories(topic: string, limit?: number) {
 
 export function useMemoirs() {
   return useQuery({ queryFn: () => hyphaeApi.memoirs(), queryKey: hyphaeKeys.memoirs() })
+}
+
+export function useMemory(id: string) {
+  return useQuery({
+    enabled: !!id,
+    queryFn: () => hyphaeApi.memory(id),
+    queryKey: hyphaeKeys.memory(id),
+  })
 }
 
 export function useMemoir(name: string) {
@@ -119,6 +128,17 @@ export function useDeleteMemory() {
     mutationFn: (id: string) => hyphaeApi.deleteMemory(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hyphae'] })
+    },
+  })
+}
+
+export function useInvalidateMemory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) => hyphaeApi.invalidateMemory(id, reason),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['hyphae'] })
+      queryClient.invalidateQueries({ queryKey: hyphaeKeys.memory(variables.id) })
     },
   })
 }
