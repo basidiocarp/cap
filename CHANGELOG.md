@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.9.0
+
+### Features
+
+- **Codex adapter status**: Status and onboarding now distinguish Claude lifecycle hooks, Codex MCP registration, and Codex notify adapter coverage instead of treating Claude hooks as the default integration model.
+- **Codex-aware usage parsing**: Usage analytics now ingest Codex session transcripts and report Codex runtime/provider details more honestly.
+
+### Improvements
+
+- **Adapter-oriented runtime model**: Runtime health is now represented explicitly as host adapters, which makes Codex-first environments read as intentionally configured rather than partially broken.
+
 ## v0.8.0
 
 ### Features
