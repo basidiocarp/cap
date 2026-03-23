@@ -73,6 +73,12 @@ interface CodexNotifyStatus {
 }
 
 interface AgentRuntimeStatus {
+  adapter: {
+    configured: boolean
+    detected: boolean
+    kind: 'hooks' | 'mcp'
+    label: string
+  }
   config_path: string | null
   configured: boolean
   detected: boolean

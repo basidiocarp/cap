@@ -274,14 +274,14 @@ export function Onboard() {
           </Group>
           <Group gap='xs'>
             <StatusChip
-              color={status.agents.claude_code.configured ? 'mycelium' : 'gray'}
-              label='Claude Code'
-              value={status.agents.claude_code.configured ? 'configured' : 'not configured'}
+              color={status.agents.claude_code.adapter.configured ? 'mycelium' : 'gray'}
+              label='Claude lifecycle adapter'
+              value={status.agents.claude_code.adapter.configured ? 'configured' : 'not configured'}
             />
             <StatusChip
-              color={status.agents.codex.configured ? 'mycelium' : 'gray'}
-              label='Codex MCP'
-              value={status.agents.codex.configured ? 'configured' : 'not configured'}
+              color={status.agents.codex.adapter.configured ? 'mycelium' : 'gray'}
+              label='Codex MCP adapter'
+              value={status.agents.codex.adapter.configured ? 'configured' : 'not configured'}
             />
             <StatusChip
               color={codexSummary.color}
@@ -305,13 +305,13 @@ export function Onboard() {
             />
             <StatusChip
               color={
-                status.agents.claude_code.configured && (status.hooks.error_count > 0 || status.hooks.installed_hooks.length === 0)
+                status.agents.claude_code.adapter.configured && (status.hooks.error_count > 0 || status.hooks.installed_hooks.length === 0)
                   ? 'orange'
                   : 'mycelium'
               }
-              label='Claude hooks'
+              label='Claude lifecycle adapter'
               value={
-                !status.agents.claude_code.configured && status.agents.codex.configured
+                !status.agents.claude_code.adapter.configured && status.agents.codex.adapter.configured
                   ? 'optional'
                   : status.hooks.error_count > 0 || status.hooks.installed_hooks.length === 0
                     ? 'needs attention'
@@ -323,19 +323,19 @@ export function Onboard() {
           {status.hooks.error_count > 0 && (
             <Alert
               color='orange'
-              title='Hook errors detected'
+              title='Lifecycle errors detected'
             >
               `stipe doctor` will check the most common local drift cases first.
             </Alert>
           )}
 
-          {status.agents.codex.configured && (
+          {status.agents.codex.adapter.configured && (
             <Alert
               color={codexSummary.color}
-              title={codexSummary.label === 'Notify adapter' ? 'Codex already connected' : 'Codex notify adapter missing'}
+              title={codexSummary.label === 'Notify adapter' ? 'Codex adapter ready' : 'Codex notify adapter missing'}
             >
               {codexSummary.label === 'Notify adapter'
-                ? 'This machine already has a Codex MCP config and the notify adapter contract in place. Claude Code lifecycle capture is optional.'
+                ? 'This machine already has a Codex MCP adapter and the notify adapter contract in place. Claude lifecycle capture is optional.'
                 : `${codexSummary.detail} Add notify = ["hyphae", "codex-notify"] to ~/.codex/config.toml if you want Codex turn-complete coverage.`}
             </Alert>
           )}
@@ -379,12 +379,12 @@ export function Onboard() {
             </Alert>
           )}
 
-          {status.agents.claude_code.configured && lifecycleGaps.length > 0 && (
+          {status.agents.claude_code.adapter.configured && lifecycleGaps.length > 0 && (
             <Alert
               color='gray'
-              title='Claude lifecycle hooks not fully covered'
+              title='Claude lifecycle adapter not fully covered'
             >
-              Missing recommended hooks: {lifecycleGaps.join(', ')}
+              Missing recommended lifecycle events: {lifecycleGaps.join(', ')}
             </Alert>
           )}
 

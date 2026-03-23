@@ -24,11 +24,11 @@ function hasCoreGap(status: EcosystemStatus): boolean {
 }
 
 function hasCodexConfigured(status: EcosystemStatus): boolean {
-  return status.agents.codex.configured
+  return status.agents.codex.adapter.configured
 }
 
 function hasCodexDetected(status: EcosystemStatus): boolean {
-  return status.agents.codex.detected || status.agents.codex.configured
+  return status.agents.codex.adapter.detected || status.agents.codex.adapter.configured
 }
 
 export function summarizeCodexIntegration(status: EcosystemStatus): {
@@ -71,7 +71,7 @@ export function summarizeCodexIntegration(status: EcosystemStatus): {
 }
 
 function hasClaudeConfigured(status: EcosystemStatus): boolean {
-  return status.agents.claude_code.configured
+  return status.agents.claude_code.adapter.configured
 }
 
 function isHooksUnhealthy(status: EcosystemStatus): boolean {
@@ -135,7 +135,7 @@ function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
 
   addAction(actions, {
     command: `stipe ${STIPE_COMMANDS.doctor.join(' ')}`,
-    description: 'Check for setup drift, missing hooks, and local configuration problems.',
+    description: 'Check for setup drift, missing lifecycle adapters, and local configuration problems.',
     label: 'Run stipe doctor',
     runAction: 'doctor',
     tier: primaryRepair ? 'primary' : 'secondary',
@@ -143,7 +143,7 @@ function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
 
   addAction(actions, {
     command: `stipe ${STIPE_COMMANDS.init.join(' ')}`,
-    description: 'Bootstrap the ecosystem config and hook wiring on this machine.',
+    description: 'Bootstrap the ecosystem config and lifecycle adapter wiring on this machine.',
     label: 'Initialize the ecosystem',
     runAction: 'init',
     tier: primaryRepair ? 'primary' : 'secondary',
@@ -159,7 +159,7 @@ function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
 
   addAction(actions, {
     command: `stipe ${STIPE_COMMANDS['install-claude-code'].join(' ')}`,
-    description: 'Install the Claude Code-oriented profile when you want hook-based lifecycle capture.',
+    description: 'Install the Claude Code-oriented profile when you want lifecycle hook capture.',
     label: 'Install the Claude Code profile',
     runAction: 'install-claude-code',
     tier: 'secondary',
@@ -220,7 +220,7 @@ export function summarizeOnboarding(status: EcosystemStatus, repairPlan?: StipeR
       const codexSummary = summarizeCodexIntegration(status)
 
       if (codexSummary.label === 'Notify adapter') {
-        return 'The core ecosystem is installed and Codex notify adapter coverage is configured. Use the commands below for drift checks, optional Claude hooks, or profile installs.'
+        return 'The core ecosystem is installed and Codex notify adapter coverage is configured. Use the commands below for drift checks, optional lifecycle adapters, or profile installs.'
       }
 
       if (codexSummary.label === 'MCP only') {
@@ -231,7 +231,7 @@ export function summarizeOnboarding(status: EcosystemStatus, repairPlan?: StipeR
         return 'The core ecosystem is installed. Codex notify is configured, but it does not match the expected adapter contract.'
       }
 
-      return 'The core ecosystem is installed and Codex is configured. Use the commands below for drift checks, optional Claude hooks, or profile installs.'
+      return 'The core ecosystem is installed and Codex is configured. Use the commands below for drift checks, optional lifecycle adapters, or profile installs.'
     }
 
     return 'The core ecosystem is installed. Use the commands below for drift checks or optional profiles.'
@@ -244,14 +244,14 @@ export function summarizeOnboarding(status: EcosystemStatus, repairPlan?: StipeR
   }
 
   if (hasClaudeConfigured(status) && status.hooks.installed_hooks.length === 0) {
-    fragments.push('No hooks detected')
+    fragments.push('No Claude lifecycle adapter detected')
   } else if (hasClaudeConfigured(status) && status.hooks.error_count > 0) {
-    fragments.push(`${status.hooks.error_count} hook errors`)
+    fragments.push(`${status.hooks.error_count} lifecycle errors`)
   }
 
   const missingLifecycle = missingLifecycleHooks(status)
   if (hasClaudeConfigured(status) && missingLifecycle.length > 0) {
-    fragments.push(`Missing lifecycle hooks: ${missingLifecycle.join(', ')}`)
+    fragments.push(`Missing lifecycle events: ${missingLifecycle.join(', ')}`)
   }
 
   if (hasCodexConfigured(status)) {

@@ -42,8 +42,8 @@ function summarizeHookHealth(status: EcosystemStatus): {
 } {
   const missingLifecycle = missingLifecycleHooks(status)
   const hookCount = status.hooks.installed_hooks.length
-  const codexConfigured = status.agents.codex.configured
-  const claudeConfigured = status.agents.claude_code.configured
+  const codexConfigured = status.agents.codex.adapter.configured
+  const claudeConfigured = status.agents.claude_code.adapter.configured
   const codexSummary = summarizeCodexIntegration(status)
 
   if (!claudeConfigured && codexConfigured) {
@@ -51,7 +51,7 @@ function summarizeHookHealth(status: EcosystemStatus): {
       color: codexSummary.color,
       detail:
         codexSummary.label === 'Notify adapter'
-          ? 'Codex is configured through MCP and the notify adapter. Claude hook coverage is optional until you wire Claude Code in as well.'
+          ? 'Codex is configured through MCP and the notify adapter. Claude lifecycle coverage is optional until you wire Claude Code in as well.'
           : codexSummary.detail,
       label: codexSummary.label === 'Notify adapter' ? 'Codex ready' : codexSummary.label,
     }
@@ -62,7 +62,7 @@ function summarizeHookHealth(status: EcosystemStatus): {
       color: codexSummary.color,
       detail:
         codexSummary.label === 'Notify adapter'
-          ? 'No Claude hooks are installed. Codex already has its notify adapter coverage, so this only affects Claude-specific lifecycle capture.'
+          ? 'No Claude lifecycle adapter is installed. Codex already has its notify adapter coverage, so this only affects Claude-specific lifecycle capture.'
           : codexSummary.detail,
       label: codexSummary.label === 'Notify adapter' ? 'Optional' : codexSummary.label,
     }
@@ -71,7 +71,7 @@ function summarizeHookHealth(status: EcosystemStatus): {
   if (hookCount === 0) {
     return {
       color: 'gray',
-      detail: 'No Claude Code hooks are installed yet.',
+      detail: 'No Claude lifecycle adapter is installed yet.',
       label: 'Not configured',
     }
   }
@@ -206,7 +206,7 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
   const codexSummary = summarizeCodexIntegration(status)
 
   return (
-    <SectionCard title='Claude hook coverage'>
+    <SectionCard title='Lifecycle adapters'>
       <Stack
         gap='xs'
         mb='md'
@@ -236,7 +236,7 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
             to='/onboard'
             variant='subtle'
           >
-            Repair hooks
+            Repair lifecycle
           </Button>
         </Group>
         <Text
@@ -264,7 +264,7 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
             c='dimmed'
             size='xs'
           >
-            Missing recommended hooks: {missingLifecycle.join(', ')}
+            Missing recommended lifecycle events: {missingLifecycle.join(', ')}
           </Text>
         )}
       </Stack>
@@ -272,13 +272,13 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
       {hooks.installed_hooks.length === 0 ? (
         <Alert
           color='gray'
-          title='No Claude hooks installed'
+          title='No Claude lifecycle adapter installed'
         >
-          {status.agents.codex.configured
+          {status.agents.codex.adapter.configured
             ? codexSummary.label === 'Notify adapter'
-              ? 'Codex already has MCP and notify adapter coverage. Claude Code hook capture is optional if you want SessionStart, PostToolUse, PreCompact, and SessionEnd.'
-              : `Codex is ${codexSummary.label.toLowerCase()}. Claude Code hook capture is optional unless you also want SessionStart, PostToolUse, PreCompact, and SessionEnd.`
-            : 'Use onboarding to wire SessionStart, PostToolUse, PreCompact, and SessionEnd into Claude Code.'}
+              ? 'Codex already has MCP and notify adapter coverage. Claude lifecycle capture is optional if you want SessionStart, PostToolUse, PreCompact, and SessionEnd.'
+              : `Codex is ${codexSummary.label.toLowerCase()}. Claude lifecycle capture is optional unless you also want SessionStart, PostToolUse, PreCompact, and SessionEnd.`
+            : 'Use onboarding to wire SessionStart, PostToolUse, PreCompact, and SessionEnd into Claude lifecycle capture.'}
         </Alert>
       ) : (
         <>
@@ -337,7 +337,7 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
               mt='md'
               size='sm'
             >
-              No recent hook errors recorded.
+              No recent lifecycle errors recorded.
             </Text>
           ) : (
             <Stack
@@ -349,7 +349,7 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
                 fw={500}
                 size='sm'
               >
-                Recent Errors
+                Recent lifecycle errors
               </Text>
               {hooks.recent_errors.slice(0, 5).map((error) => (
                 <Card
@@ -399,7 +399,7 @@ function AgentRuntimeCard({ status }: { status: EcosystemStatus }) {
           c='dimmed'
           size='sm'
         >
-          Claude uses hook-based lifecycle capture. Codex uses MCP config and can add the hyphae notify adapter for turn-complete coverage.
+          Claude uses a lifecycle adapter. Codex uses MCP plus an optional hyphae notify adapter for turn-complete coverage.
         </Text>
         {runtimes.map((runtime) => {
           const badgeColor = runtime.status.configured ? 'mycelium' : runtime.status.detected ? 'orange' : 'gray'
@@ -429,7 +429,7 @@ function AgentRuntimeCard({ status }: { status: EcosystemStatus }) {
                     fw={600}
                     size='sm'
                   >
-                    {runtime.label}
+                    {runtime.status.adapter.label}
                   </Text>
                   <Group gap='xs'>
                     <Badge
@@ -453,7 +453,7 @@ function AgentRuntimeCard({ status }: { status: EcosystemStatus }) {
                         size='sm'
                         variant='outline'
                       >
-                        hooks
+                        {runtime.status.adapter.kind}
                       </Badge>
                     )}
                   </Group>
@@ -566,7 +566,7 @@ function GettingStartedCard({ status }: { status: EcosystemStatus }) {
           size='sm'
           spacing='xs'
         >
-          <List.Item>Claude hooks: {hookSummary.label.toLowerCase()}</List.Item>
+          <List.Item>Claude lifecycle adapter: {hookSummary.label.toLowerCase()}</List.Item>
           <List.Item>Codex adapter: {codexSummary.label.toLowerCase()}</List.Item>
           <List.Item>Active project: {status.project.active}</List.Item>
           <List.Item>Best next step: {actions[0]?.command ?? 'Open onboarding for guided repair'}</List.Item>

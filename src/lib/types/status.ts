@@ -7,7 +7,15 @@ export interface CodexNotifyStatus {
   contract_matched: boolean
 }
 
+export interface AgentAdapterStatus {
+  configured: boolean
+  detected: boolean
+  kind: 'hooks' | 'mcp'
+  label: string
+}
+
 export interface AgentRuntimeStatus {
+  adapter: AgentAdapterStatus
   config_path: string | null
   configured: boolean
   detected: boolean

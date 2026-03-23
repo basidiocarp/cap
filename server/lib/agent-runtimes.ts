@@ -2,9 +2,13 @@ import { existsSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
-import type { AgentRuntimeStatus, CodexNotifyStatus } from '../../src/lib/types/status.ts'
+import type { AgentAdapterStatus, AgentRuntimeStatus, CodexNotifyStatus } from '../../src/lib/types/status.ts'
 
 const CODEX_NOTIFY_CONTRACT = ['hyphae', 'codex-notify'] as const
+
+function buildAdapterStatus(kind: AgentAdapterStatus['kind'], label: string, configured: boolean, detected: boolean): AgentAdapterStatus {
+  return { configured, detected, kind, label }
+}
 
 function parseTomlStringArray(content: string, key: string): string[] | null {
   const match = content.match(new RegExp(`^\\s*${key}\\s*=\\s*\\[([\\s\\S]*?)\\]`, 'm'))
@@ -69,12 +73,14 @@ export function detectAgentRuntimes(): {
 
   return {
     claude_code: {
+      adapter: buildAdapterStatus('hooks', 'Claude lifecycle hooks', claudeConfigured, existsSync(join(homedir(), '.claude'))),
       config_path: claudeConfigured ? claudeConfigPath : null,
       configured: claudeConfigured,
       detected: existsSync(join(homedir(), '.claude')),
       integration: 'hooks',
     },
     codex: {
+      adapter: buildAdapterStatus('mcp', 'Codex MCP', codexConfigured, existsSync(join(homedir(), '.codex'))),
       config_path: codexConfigured ? codexConfigPath : null,
       configured: codexConfigured,
       detected: existsSync(join(homedir(), '.codex')),

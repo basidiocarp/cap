@@ -8,12 +8,24 @@ function createMissingStatus(): EcosystemStatus {
   return {
     agents: {
       claude_code: {
+        adapter: {
+          configured: true,
+          detected: true,
+          kind: 'hooks',
+          label: 'Claude lifecycle hooks',
+        },
         config_path: '/Users/test/.claude/settings.json',
         configured: true,
         detected: true,
         integration: 'hooks',
       },
       codex: {
+        adapter: {
+          configured: false,
+          detected: false,
+          kind: 'mcp',
+          label: 'Codex MCP',
+        },
         config_path: null,
         configured: false,
         detected: false,
@@ -48,12 +60,22 @@ function createCodexStatus(notify: CodexNotifyStatus): EcosystemStatus {
       ...status.agents,
       claude_code: {
         ...status.agents.claude_code,
+        adapter: {
+          ...status.agents.claude_code.adapter,
+          configured: false,
+          detected: false,
+        },
         config_path: null,
         configured: false,
         detected: false,
       },
       codex: {
         ...status.agents.codex,
+        adapter: {
+          ...status.agents.codex.adapter,
+          configured: true,
+          detected: true,
+        },
         config_path: '/Users/test/.codex/config.toml',
         configured: true,
         detected: true,
@@ -174,7 +196,7 @@ describe('onboarding helpers', () => {
     const status = createMissingStatus()
 
     expect(missingLifecycleHooks(status)).toEqual(['SessionStart', 'PostToolUse', 'PreCompact', 'SessionEnd'])
-    expect(summarizeOnboarding(status)).toContain('Missing lifecycle hooks')
+    expect(summarizeOnboarding(status)).toContain('Missing lifecycle events')
   })
 
   it('distinguishes Codex MCP-only presence from notify adapter coverage', () => {
