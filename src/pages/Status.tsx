@@ -1,5 +1,6 @@
 import { Badge, Button, Card, Grid, Group, Stack, Table, Text, Title } from '@mantine/core'
 import { IconAlertCircle, IconCircleCheck, IconCircleX, IconRefresh } from '@tabler/icons-react'
+import { Link } from 'react-router-dom'
 
 import type { EcosystemStatus } from '../lib/api'
 import { EcosystemFlow } from '../components/EcosystemFlow'
@@ -7,6 +8,7 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { useEcosystemStatus } from '../lib/queries'
+import { buildOnboardingActions, summarizeOnboarding } from '../lib/onboarding'
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -237,6 +239,38 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
   )
 }
 
+function GettingStartedCard({ status }: { status: EcosystemStatus }) {
+  const actions = buildOnboardingActions(status).filter((action) => action.tier !== 'manual').slice(0, 3)
+
+  return (
+    <SectionCard title='Getting started'>
+      <Stack gap='sm'>
+        <Text size='sm'>{summarizeOnboarding(status)}</Text>
+        <Group gap='xs'>
+          {actions.map((action) => (
+            <Badge
+              color={action.tier === 'primary' ? 'mycelium' : 'substrate'}
+              key={action.command}
+              size='sm'
+              variant='light'
+            >
+              {action.command}
+            </Badge>
+          ))}
+        </Group>
+        <Button
+          component={Link}
+          leftSection={<IconAlertCircle size={14} />}
+          to='/onboard'
+          variant='light'
+        >
+          Open onboarding
+        </Button>
+      </Stack>
+    </SectionCard>
+  )
+}
+
 export function Status() {
   const { data: status, error, isLoading, refetch } = useEcosystemStatus()
 
@@ -247,21 +281,41 @@ export function Status() {
   return (
     <Stack>
       <Group justify='space-between'>
-        <Title order={2}>Ecosystem Status</Title>
-        <Button
-          leftSection={<IconRefresh size={16} />}
-          onClick={() => refetch()}
-          size='sm'
-          variant='subtle'
-        >
-          Refresh
-        </Button>
+        <div>
+          <Title order={2}>Ecosystem Status</Title>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Check what is installed, then jump to onboarding for the exact fix commands.
+          </Text>
+        </div>
+        <Group>
+          <Button
+            component={Link}
+            leftSection={<IconAlertCircle size={16} />}
+            to='/onboard'
+            variant='light'
+          >
+            Onboarding
+          </Button>
+          <Button
+            leftSection={<IconRefresh size={16} />}
+            onClick={() => refetch()}
+            size='sm'
+            variant='subtle'
+          >
+            Refresh
+          </Button>
+        </Group>
       </Group>
 
       <ErrorAlert error={error} />
 
       {status && (
         <>
+          <GettingStartedCard status={status} />
+
           <Card
             p='md'
             shadow='sm'

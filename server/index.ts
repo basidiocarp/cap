@@ -86,12 +86,18 @@ export function createApp(): Hono {
 }
 
 const app = createApp()
-const port = Number(process.env.PORT ?? 3001)
-const host = CAP_HOST
 
-logger.info({ host, port, apiKeyRequired: !!CAP_API_KEY }, 'Cap server started')
+export function startServer() {
+  const port = Number(process.env.PORT ?? 3001)
+  const host = CAP_HOST
 
-serve({ fetch: app.fetch, port, hostname: host })
+  logger.info({ host, port, apiKeyRequired: !!CAP_API_KEY }, 'Cap server started')
+  serve({ fetch: app.fetch, port, hostname: host })
+}
+
+if (!process.env.VITEST) {
+  startServer()
+}
 
 function shutdown() {
   logger.info('Shutting down')

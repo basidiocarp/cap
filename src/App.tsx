@@ -10,6 +10,7 @@ const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default:
 const CodeExplorer = lazy(() => import('./pages/CodeExplorer').then((m) => ({ default: m.CodeExplorer })))
 const Diagnostics = lazy(() => import('./pages/Diagnostics').then((m) => ({ default: m.Diagnostics })))
 const Lessons = lazy(() => import('./pages/Lessons').then((m) => ({ default: m.Lessons })))
+const Onboard = lazy(() => import('./pages/Onboard').then((m) => ({ default: m.Onboard })))
 const Memoirs = lazy(() => import('./pages/Memoirs').then((m) => ({ default: m.Memoirs })))
 const Memories = lazy(() => import('./pages/Memories').then((m) => ({ default: m.Memories })))
 const Sessions = lazy(() => import('./pages/Sessions').then((m) => ({ default: m.Sessions })))
@@ -45,6 +46,10 @@ export function App() {
             <Route
               element={<Lessons />}
               path='lessons'
+            />
+            <Route
+              element={<Onboard />}
+              path='onboard'
             />
             <Route
               element={<Analytics />}

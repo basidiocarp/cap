@@ -12,6 +12,7 @@ import {
   IconNetwork,
   IconSearch,
   IconSettings,
+  IconCompass,
 } from '@tabler/icons-react'
 import { Outlet, NavLink as RouterNavLink, useLocation } from 'react-router-dom'
 
@@ -36,6 +37,7 @@ const NAV_SECTIONS = [
   },
   {
     items: [
+      { icon: IconCompass, label: 'Onboarding', path: '/onboard' },
       { icon: IconChartBar, label: 'Analytics', path: '/analytics' },
       { icon: IconHeartbeat, label: 'Status', path: '/status' },
       { icon: IconSettings, label: 'Settings', path: '/settings' },

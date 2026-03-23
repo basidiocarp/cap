@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.7.0
+
+### Features
+
+- **Onboarding page**: New `/onboard` route with ecosystem setup guidance, suggested fix commands, and direct links back into the dashboard.
+- **Stipe actions from the UI**: Allowlisted backend actions let the dashboard run safe `stipe` flows such as `doctor`, `init`, and profile-based installs.
+
+### Improvements
+
+- **Status page getting-started card**: Status now surfaces onboarding guidance directly when the ecosystem is partially configured.
+- **Test-safe server bootstrap**: The backend no longer starts its HTTP listener during Vitest runs, which keeps tests isolated and deterministic.
+
 ## v0.4.0
 
 ### Features

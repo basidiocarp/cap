@@ -1,6 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { execFile } from 'node:child_process'
 import { homedir, platform } from 'node:os'
 import { join } from 'node:path'
+import { promisify } from 'node:util'
 import { Hono } from 'hono'
 
 import { createCliRunner } from '../lib/cli.ts'
@@ -9,6 +11,33 @@ import { activateMode, loadModes } from '../lib/modes.ts'
 import { logger } from '../logger.ts'
 
 const runHyphae = createCliRunner(HYPHAE_BIN, 'hyphae')
+const exec = promisify(execFile)
+
+const STIPE_ACTIONS = {
+  doctor: ['doctor'],
+  init: ['init'],
+  'install-claude-code': ['install', '--profile', 'claude-code'],
+  'install-full-stack': ['install', '--profile', 'full-stack'],
+  'install-minimal': ['install', '--profile', 'minimal'],
+} as const
+
+export type AllowedStipeAction = keyof typeof STIPE_ACTIONS
+
+export function parseStipeAction(action: string): AllowedStipeAction | null {
+  return action in STIPE_ACTIONS ? (action as AllowedStipeAction) : null
+}
+
+export function buildStipeArgs(action: AllowedStipeAction): string[] {
+  return [...STIPE_ACTIONS[action]]
+}
+
+async function runStipe(args: string[]): Promise<string> {
+  const { stdout } = await exec('stipe', args, {
+    env: { ...process.env, NO_COLOR: '1' },
+    timeout: 30_000,
+  })
+  return stdout.trim()
+}
 
 function readToml(filePath: string): string | null {
   try {
@@ -188,6 +217,29 @@ app.post('/modes/activate', async (c) => {
     const message = err instanceof Error ? err.message : 'Failed to activate mode'
     logger.error({ err }, 'Mode activation failed')
     return c.json({ error: message }, 400)
+  }
+})
+
+app.post('/stipe/run', async (c) => {
+  try {
+    const body = await c.req.json().catch(() => ({}))
+    const action = typeof body.action === 'string' ? parseStipeAction(body.action) : null
+
+    if (!action) {
+      return c.json({ error: 'Missing or invalid action' }, 400)
+    }
+
+    const args = buildStipeArgs(action)
+    const output = await runStipe(args)
+
+    return c.json({
+      action,
+      command: `stipe ${args.join(' ')}`,
+      output,
+    })
+  } catch (err) {
+    logger.error({ err }, 'Stipe action failed')
+    return c.json({ error: 'Stipe action failed' }, 500)
   }
 })
 

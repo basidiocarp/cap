@@ -47,6 +47,7 @@ import type {
   UsageAggregate,
   UsageTrend,
 } from './types'
+import type { AllowedStipeAction } from './onboarding'
 
 // Re-export all types for backward compatibility
 export type {
@@ -111,6 +112,10 @@ export type {
 
 const BASE = '/api'
 
+function getOrigin(): string {
+  return (globalThis as { location?: { origin?: string } }).location?.origin ?? 'http://localhost'
+}
+
 async function extractErrorMessage(res: Response): Promise<string> {
   const body = await res.json().catch(() => null)
   if (body && typeof body === 'object' && 'error' in body && typeof body.error === 'string') {
@@ -120,7 +125,7 @@ async function extractErrorMessage(res: Response): Promise<string> {
 }
 
 async function get<T = unknown>(path: string, params?: Record<string, string>): Promise<T> {
-  const url = new URL(`${BASE}${path}`, window.location.origin)
+  const url = new URL(`${BASE}${path}`, getOrigin())
   if (params) {
     for (const [k, v] of Object.entries(params)) {
       if (v) url.searchParams.set(k, v)
@@ -132,7 +137,7 @@ async function get<T = unknown>(path: string, params?: Record<string, string>): 
 }
 
 async function post<T = unknown>(path: string, body?: Record<string, unknown>): Promise<T> {
-  const url = new URL(`${BASE}${path}`, window.location.origin)
+  const url = new URL(`${BASE}${path}`, getOrigin())
   const res = await fetch(url.toString(), {
     body: body ? JSON.stringify(body) : undefined,
     headers: { 'Content-Type': 'application/json' },
@@ -143,7 +148,7 @@ async function post<T = unknown>(path: string, body?: Record<string, unknown>): 
 }
 
 async function put<T = unknown>(path: string, body: Record<string, unknown>): Promise<T> {
-  const url = new URL(`${BASE}${path}`, window.location.origin)
+  const url = new URL(`${BASE}${path}`, getOrigin())
   const res = await fetch(url.toString(), {
     body: JSON.stringify(body),
     headers: { 'Content-Type': 'application/json' },
@@ -168,7 +173,7 @@ export const hyphaeApi = {
       task,
     }),
   deleteMemory: (id: string) => {
-    const url = new URL(`${BASE}/hyphae/memories/${encodeURIComponent(id)}`, window.location.origin)
+    const url = new URL(`${BASE}/hyphae/memories/${encodeURIComponent(id)}`, getOrigin())
     return fetch(url.toString(), { method: 'DELETE' }).then(async (res) => {
       if (!res.ok) throw new Error(await extractErrorMessage(res))
       return res.json() as Promise<{ result: string }>
@@ -261,4 +266,14 @@ export const lspApi = {
 
 export const statusApi = {
   ecosystem: () => get<EcosystemStatus>('/status'),
+}
+
+export interface StipeRunResult {
+  action: AllowedStipeAction
+  command: string
+  output: string
+}
+
+export const stipeApi = {
+  run: (action: AllowedStipeAction) => post<StipeRunResult>('/settings/stipe/run', { action }),
 }

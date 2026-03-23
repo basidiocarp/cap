@@ -13,6 +13,7 @@ Hyphae memories, Mycelium token savings, and Rhizome code intelligence.
 | `/code`        | Code Explorer | File tree + symbol outline via Rhizome                     |
 | `/symbols`     | Symbol Search | Global symbol search across the project                    |
 | `/diagnostics` | Diagnostics   | LSP diagnostics viewer (requires LSP backend)              |
+| `/onboard`     | Onboarding    | Setup guidance and fix commands for a fresh ecosystem      |
 | `/analytics`   | Analytics     | Token savings, memory health, and code intelligence charts |
 | `/status`      | Status        | Ecosystem health for all three tools                       |
 

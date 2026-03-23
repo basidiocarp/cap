@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { hyphaeApi, lspApi, myceliumApi, rhizomeApi, settingsApi, statusApi, usageApi } from './api'
+import { hyphaeApi, lspApi, myceliumApi, rhizomeApi, settingsApi, stipeApi, statusApi, usageApi } from './api'
 
 // Hyphae
 
@@ -358,6 +358,17 @@ export function useEcosystemStatus() {
     queryFn: () => statusApi.ecosystem(),
     queryKey: statusKeys.ecosystem(),
     refetchInterval: 30_000,
+  })
+}
+
+export function useRunStipeAction() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (action: Parameters<typeof stipeApi.run>[0]) => stipeApi.run(action),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: statusKeys.ecosystem() })
+      queryClient.invalidateQueries({ queryKey: settingsKeys.get() })
+    },
   })
 }
 
