@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { EcosystemStatus } from '../../src/lib/api'
+import type { EcosystemStatus, StipeRepairPlan } from '../../src/lib/api'
 import { buildOnboardingActions } from '../../src/lib/onboarding'
 import { buildStipeArgs, parseStipeAction } from '../routes/settings'
 
@@ -11,6 +11,64 @@ function createMissingStatus(): EcosystemStatus {
     lsps: [],
     mycelium: { available: false, version: null },
     rhizome: { available: false, backend: null, languages: [] },
+  }
+}
+
+function createRepairPlan(): StipeRepairPlan {
+  return {
+    doctor: {
+      checks: [
+        {
+          message: 'Database not found',
+          name: 'hyphae database',
+          passed: false,
+          repair_actions: [
+            {
+              action_key: 'init',
+              args: ['init'],
+              command: 'stipe init',
+              description: 'Initialize the ecosystem.',
+              label: 'Initialize the ecosystem',
+              tier: 'primary',
+            },
+          ],
+        },
+      ],
+      healthy: false,
+      repair_actions: [
+        {
+          action_key: 'init',
+          args: ['init'],
+          command: 'stipe init',
+          description: 'Initialize the ecosystem.',
+          label: 'Initialize the ecosystem',
+          tier: 'primary',
+        },
+      ],
+      summary: '1 checks need attention.',
+    },
+    init_plan: {
+      detected_clients: ['Cursor'],
+      dry_run: true,
+      repair_actions: [
+        {
+          action_key: 'install-claude-code',
+          args: ['install', '--profile', 'claude-code'],
+          command: 'stipe install --profile claude-code',
+          description: 'Install the core local stack.',
+          label: 'Install the Claude Code profile',
+          tier: 'primary',
+        },
+      ],
+      steps: [
+        {
+          detail: 'Detected: Cursor',
+          status: 'planned',
+          title: 'configure detected MCP clients',
+        },
+      ],
+      target_client: null,
+    },
   }
 }
 
@@ -35,5 +93,13 @@ describe('onboarding helpers', () => {
 
   it('maps allowlisted stipe actions to fixed argument lists', () => {
     expect(buildStipeArgs('install-full-stack')).toEqual(['install', '--profile', 'full-stack'])
+  })
+
+  it('prefers structured stipe repair actions when they are available', () => {
+    const actions = buildOnboardingActions(createMissingStatus(), createRepairPlan())
+    const commands = actions.map((action) => action.command)
+
+    expect(commands[0]).toBe('stipe init')
+    expect(commands).toContain('stipe install --profile claude-code')
   })
 })

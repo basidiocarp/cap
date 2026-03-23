@@ -353,10 +353,22 @@ export const statusKeys = {
   ecosystem: () => ['status', 'ecosystem'] as const,
 }
 
+export const stipeKeys = {
+  repairPlan: () => ['stipe', 'repair-plan'] as const,
+}
+
 export function useEcosystemStatus() {
   return useQuery({
     queryFn: () => statusApi.ecosystem(),
     queryKey: statusKeys.ecosystem(),
+    refetchInterval: 30_000,
+  })
+}
+
+export function useStipeRepairPlan() {
+  return useQuery({
+    queryFn: () => stipeApi.repairPlan(),
+    queryKey: stipeKeys.repairPlan(),
     refetchInterval: 30_000,
   })
 }
@@ -367,6 +379,7 @@ export function useRunStipeAction() {
     mutationFn: (action: Parameters<typeof stipeApi.run>[0]) => stipeApi.run(action),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: statusKeys.ecosystem() })
+      queryClient.invalidateQueries({ queryKey: stipeKeys.repairPlan() })
       queryClient.invalidateQueries({ queryKey: settingsKeys.get() })
     },
   })

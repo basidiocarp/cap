@@ -1,12 +1,13 @@
-import { Alert, Badge, Button, Card, CopyButton, Grid, Group, Stack, Text, Title } from '@mantine/core'
-import { IconArrowRight, IconCheck, IconCopy, IconPlayerPlay, IconRefresh } from '@tabler/icons-react'
+import { Alert, Badge, Button, Card, CopyButton, Grid, Group, Stack, Text, ThemeIcon, Title } from '@mantine/core'
+import { IconAlertCircle, IconArrowRight, IconCheck, IconCopy, IconPlayerPlay, IconRefresh } from '@tabler/icons-react'
 import { Link } from 'react-router-dom'
 
+import type { StipeDoctorCheck, StipeInitStep } from '../lib/api'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
-import { useEcosystemStatus, useRunStipeAction } from '../lib/queries'
-import { buildOnboardingActions, summarizeOnboarding } from '../lib/onboarding'
+import { useEcosystemStatus, useRunStipeAction, useStipeRepairPlan } from '../lib/queries'
+import { buildOnboardingActions, failingDoctorChecks, initPlanSteps, summarizeOnboarding } from '../lib/onboarding'
 
 function StatusChip({
   color,
@@ -106,11 +107,81 @@ function CommandCard({
   )
 }
 
+function IssueCard({ check }: { check: StipeDoctorCheck }) {
+  return (
+    <Card
+      bg='var(--mantine-color-gray-0)'
+      p='md'
+      withBorder
+    >
+      <Stack gap='xs'>
+        <Group gap='xs'>
+          <ThemeIcon
+            color='orange'
+            size='sm'
+            variant='light'
+          >
+            <IconAlertCircle size={14} />
+          </ThemeIcon>
+          <Text fw={600}>{check.name}</Text>
+        </Group>
+        <Text size='sm'>{check.message}</Text>
+        {!!check.repair_actions?.length && (
+          <Group gap='xs'>
+            {check.repair_actions.map((action) => (
+              <Badge
+                color='orange'
+                key={`${check.name}-${action.command}`}
+                size='sm'
+                variant='light'
+              >
+                {action.command}
+              </Badge>
+            ))}
+          </Group>
+        )}
+      </Stack>
+    </Card>
+  )
+}
+
+function InitStepCard({ step }: { step: StipeInitStep }) {
+  const color = step.status === 'planned' ? 'mycelium' : step.status === 'already-ok' ? 'green' : 'gray'
+
+  return (
+    <Card
+      bg='var(--mantine-color-gray-0)'
+      p='md'
+      withBorder
+    >
+      <Stack gap='xs'>
+        <Group gap='xs'>
+          <Badge
+            color={color}
+            size='xs'
+            variant='light'
+          >
+            {step.status}
+          </Badge>
+          <Text fw={600}>{step.title}</Text>
+        </Group>
+        <Text
+          c='dimmed'
+          size='sm'
+        >
+          {step.detail}
+        </Text>
+      </Stack>
+    </Card>
+  )
+}
+
 export function Onboard() {
   const { data: status, error, isLoading, refetch } = useEcosystemStatus()
+  const repairPlanQuery = useStipeRepairPlan()
   const runStipe = useRunStipeAction()
 
-  if (isLoading) {
+  if (isLoading || repairPlanQuery.isLoading) {
     return <PageLoader mt='xl' />
   }
 
@@ -118,10 +189,12 @@ export function Onboard() {
     return <ErrorAlert error={error ?? new Error('No status data available')} />
   }
 
-  const actions = buildOnboardingActions(status)
+  const actions = buildOnboardingActions(status, repairPlanQuery.data)
   const primaryActions = actions.filter((action) => action.tier === 'primary')
   const secondaryActions = actions.filter((action) => action.tier === 'secondary')
   const manualActions = actions.filter((action) => action.tier === 'manual')
+  const failingChecks = failingDoctorChecks(repairPlanQuery.data)
+  const steps = initPlanSteps(repairPlanQuery.data)
 
   return (
     <Stack>
@@ -132,7 +205,7 @@ export function Onboard() {
             c='dimmed'
             size='sm'
           >
-            {summarizeOnboarding(status)}
+            {summarizeOnboarding(status, repairPlanQuery.data)}
           </Text>
         </div>
         <Group>
@@ -146,7 +219,10 @@ export function Onboard() {
           </Button>
           <Button
             leftSection={<IconRefresh size={14} />}
-            onClick={() => refetch()}
+            onClick={() => {
+              refetch()
+              repairPlanQuery.refetch()
+            }}
             variant='subtle'
           >
             Refresh
@@ -187,8 +263,40 @@ export function Onboard() {
               `stipe doctor` will check the most common local drift cases first.
             </Alert>
           )}
+
+          {repairPlanQuery.isError && (
+            <Alert color='orange' title='Using fallback onboarding guidance'>
+              Structured Stipe repair data was unavailable, so this page is using status-based suggestions only.
+            </Alert>
+          )}
         </Stack>
       </SectionCard>
+
+      {failingChecks.length > 0 && (
+        <SectionCard title='Detected issues'>
+          <Stack gap='md'>
+            {failingChecks.map((check) => (
+              <IssueCard
+                check={check}
+                key={check.name}
+              />
+            ))}
+          </Stack>
+        </SectionCard>
+      )}
+
+      {steps.length > 0 && (
+        <SectionCard title='What stipe init will do'>
+          <Stack gap='md'>
+            {steps.map((step) => (
+              <InitStepCard
+                key={`${step.status}-${step.title}`}
+                step={step}
+              />
+            ))}
+          </Stack>
+        </SectionCard>
+      )}
 
       {primaryActions.length > 0 && (
         <SectionCard title='Primary fixes'>

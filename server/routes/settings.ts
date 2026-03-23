@@ -39,6 +39,11 @@ async function runStipe(args: string[]): Promise<string> {
   return stdout.trim()
 }
 
+async function runStipeJson<T>(args: string[]): Promise<T> {
+  const output = await runStipe([...args, '--json'])
+  return JSON.parse(output) as T
+}
+
 function readToml(filePath: string): string | null {
   try {
     if (!existsSync(filePath)) return null
@@ -240,6 +245,23 @@ app.post('/stipe/run', async (c) => {
   } catch (err) {
     logger.error({ err }, 'Stipe action failed')
     return c.json({ error: 'Stipe action failed' }, 500)
+  }
+})
+
+app.get('/stipe/repair-plan', async (c) => {
+  try {
+    const [doctor, initPlan] = await Promise.all([
+      runStipeJson(['doctor']),
+      runStipeJson(['init', '--dry-run']),
+    ])
+
+    return c.json({
+      doctor,
+      init_plan: initPlan,
+    })
+  } catch (err) {
+    logger.error({ err }, 'Failed to load Stipe repair plan')
+    return c.json({ error: 'Failed to load Stipe repair plan' }, 500)
   }
 })
 

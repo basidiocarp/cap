@@ -1,4 +1,4 @@
-import type { EcosystemStatus } from './api'
+import type { EcosystemStatus, StipeDoctorCheck, StipeInitStep, StipeRepairAction, StipeRepairPlan } from './api'
 
 export type AllowedStipeAction =
   | 'doctor'
@@ -37,6 +37,29 @@ function addAction(actions: OnboardingAction[], action: OnboardingAction) {
   }
 }
 
+function toRunAction(actionKey?: string | null): AllowedStipeAction | undefined {
+  switch (actionKey) {
+    case 'doctor':
+    case 'init':
+    case 'install-claude-code':
+    case 'install-full-stack':
+    case 'install-minimal':
+      return actionKey
+    default:
+      return undefined
+  }
+}
+
+function mapRepairAction(action: StipeRepairAction): OnboardingAction {
+  return {
+    command: action.command,
+    description: action.description,
+    label: action.label,
+    runAction: toRunAction(action.action_key),
+    tier: action.tier,
+  }
+}
+
 function manualInstallAction(tool: 'hyphae' | 'mycelium' | 'rhizome'): OnboardingAction {
   const label = tool.charAt(0).toUpperCase() + tool.slice(1)
 
@@ -48,7 +71,7 @@ function manualInstallAction(tool: 'hyphae' | 'mycelium' | 'rhizome'): Onboardin
   }
 }
 
-export function buildOnboardingActions(status: EcosystemStatus): OnboardingAction[] {
+function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
   const actions: OnboardingAction[] = []
   const coreGap = hasCoreGap(status)
   const hooksUnhealthy = isHooksUnhealthy(status)
@@ -100,7 +123,27 @@ export function buildOnboardingActions(status: EcosystemStatus): OnboardingActio
   return actions
 }
 
-export function summarizeOnboarding(status: EcosystemStatus): string {
+export function buildOnboardingActions(status: EcosystemStatus, repairPlan?: StipeRepairPlan): OnboardingAction[] {
+  const actions: OnboardingAction[] = []
+
+  if (repairPlan) {
+    for (const action of [...repairPlan.doctor.repair_actions, ...repairPlan.init_plan.repair_actions]) {
+      addAction(actions, mapRepairAction(action))
+    }
+  }
+
+  for (const action of buildFallbackActions(status)) {
+    addAction(actions, action)
+  }
+
+  return actions
+}
+
+export function summarizeOnboarding(status: EcosystemStatus, repairPlan?: StipeRepairPlan): string {
+  if (repairPlan && !repairPlan.doctor.healthy) {
+    return repairPlan.doctor.summary
+  }
+
   const missing = [
     !status.mycelium.available ? 'Mycelium' : null,
     !status.hyphae.available ? 'Hyphae' : null,
@@ -124,4 +167,12 @@ export function summarizeOnboarding(status: EcosystemStatus): string {
   }
 
   return fragments.join(' · ')
+}
+
+export function failingDoctorChecks(repairPlan?: StipeRepairPlan): StipeDoctorCheck[] {
+  return repairPlan?.doctor.checks.filter((check) => !check.passed) ?? []
+}
+
+export function initPlanSteps(repairPlan?: StipeRepairPlan): StipeInitStep[] {
+  return repairPlan?.init_plan.steps ?? []
 }

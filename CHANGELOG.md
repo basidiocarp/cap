@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.8.0
+
+### Features
+
+- **Repair console onboarding**: The onboarding page now loads structured Stipe doctor/init reports and shows detected issues, planned init steps, and recommended repair actions.
+- **Structured Stipe API**: Cap now exposes a repair-plan endpoint that consumes `stipe doctor --json` and `stipe init --dry-run --json`.
+
+### Improvements
+
+- **Action prioritization**: Onboarding actions now prefer Stipe-provided repair actions over fallback status heuristics.
+
 ## v0.7.0
 
 ### Features
