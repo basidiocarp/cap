@@ -4,7 +4,7 @@ Cap is a web dashboard for the claude-mycelium ecosystem. It shows Hyphae memori
 
 ## Prerequisites
 
-- Node.js 20 or later
+- Node.js 24 or later
 - Hyphae installed (`hyphae --version` should work)
 - Optionally: Rhizome installed for code intelligence
 
