@@ -72,8 +72,8 @@ export function Analytics() {
       </Grid>
 
       <Tabs
-        keepMounted={false}
         defaultValue='token-savings'
+        keepMounted={false}
       >
         <Tabs.List>
           <Tabs.Tab

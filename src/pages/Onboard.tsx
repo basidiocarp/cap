@@ -6,18 +6,10 @@ import type { StipeDoctorCheck, StipeInitStep } from '../lib/api'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
-import { useEcosystemStatus, useRunStipeAction, useStipeRepairPlan } from '../lib/queries'
 import { buildOnboardingActions, failingDoctorChecks, initPlanSteps, summarizeOnboarding } from '../lib/onboarding'
+import { useEcosystemStatus, useRunStipeAction, useStipeRepairPlan } from '../lib/queries'
 
-function StatusChip({
-  color,
-  label,
-  value,
-}: {
-  color: string
-  label: string
-  value: string
-}) {
+function StatusChip({ color, label, value }: { color: string; label: string; value: string }) {
   return (
     <Badge
       color={color}
@@ -232,9 +224,7 @@ export function Onboard() {
 
       <SectionCard title='Current state'>
         <Stack gap='sm'>
-          <Text size='sm'>
-            Use this page when the ecosystem is partly installed or you want the shortest path to a working setup.
-          </Text>
+          <Text size='sm'>Use this page when the ecosystem is partly installed or you want the shortest path to a working setup.</Text>
           <Group gap='xs'>
             <StatusChip
               color={status.mycelium.available ? 'mycelium' : 'red'}
@@ -259,13 +249,19 @@ export function Onboard() {
           </Group>
 
           {status.hooks.error_count > 0 && (
-            <Alert color='orange' title='Hook errors detected'>
+            <Alert
+              color='orange'
+              title='Hook errors detected'
+            >
               `stipe doctor` will check the most common local drift cases first.
             </Alert>
           )}
 
           {repairPlanQuery.isError && (
-            <Alert color='orange' title='Using fallback onboarding guidance'>
+            <Alert
+              color='orange'
+              title='Using fallback onboarding guidance'
+            >
               Structured Stipe repair data was unavailable, so this page is using status-based suggestions only.
             </Alert>
           )}

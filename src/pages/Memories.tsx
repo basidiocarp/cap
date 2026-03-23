@@ -527,12 +527,12 @@ function DocumentsSection() {
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {sources.map((source, idx) => (
-            <Table.Tr key={idx}>
+          {sources.map((source) => (
+            <Table.Tr key={source.source_path}>
               <Table.Td>
                 <Text
-                  size='sm'
                   ff='monospace'
+                  size='sm'
                 >
                   {source.source_path}
                 </Text>
@@ -575,16 +575,7 @@ export function Memories() {
   const topicQuery = useTopicMemories(selectedTopic ?? '', 50)
 
   const hasQuery = !!debouncedQuery.trim()
-  let activeQuery
-  if (hasQuery && isGlobalSearch) {
-    activeQuery = globalSearchQuery
-  } else if (hasQuery) {
-    activeQuery = recallQuery
-  } else if (selectedTopic) {
-    activeQuery = topicQuery
-  } else {
-    activeQuery = null
-  }
+  const activeQuery = hasQuery ? (isGlobalSearch ? globalSearchQuery : recallQuery) : selectedTopic ? topicQuery : null
 
   const memories: Memory[] = activeQuery?.data ?? []
   const loading = activeQuery?.isLoading ?? false

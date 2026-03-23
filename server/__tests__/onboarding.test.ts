@@ -6,8 +6,8 @@ import { buildStipeArgs, parseStipeAction } from '../routes/settings'
 
 function createMissingStatus(): EcosystemStatus {
   return {
-    hyphae: { available: false, memories: 0, memoirs: 0, version: null },
     hooks: { error_count: 1, installed_hooks: [], recent_errors: [] },
+    hyphae: { available: false, memoirs: 0, memories: 0, version: null },
     lsps: [],
     mycelium: { available: false, version: null },
     rhizome: { available: false, backend: null, languages: [] },

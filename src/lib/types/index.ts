@@ -39,8 +39,8 @@ export type {
   SymbolLocation,
   TestFunction,
 } from './rhizome'
+export type { Lesson, SessionRecord } from './sessions'
 export type { EcosystemSettings, LspInstallResult, LspLanguageStatus, LspStatusResult, Mode, ModeConfig, PruneResult } from './settings'
 export type { EcosystemStatus, HookError, HookHealthResult, HookInfo } from './status'
-export type { SessionUsage, UsageAggregate, UsageTrend } from './usage'
 export type { AggregateTelemetry, CommandUsage, FileActivity, SessionsByDay, ToolUsage } from './telemetry'
-export type { Lesson, SessionRecord } from './sessions'
+export type { SessionUsage, UsageAggregate, UsageTrend } from './usage'

@@ -28,11 +28,11 @@ export function getStats(): StatsResult {
   const db = getDb()
   if (!db) {
     return {
+      avg_weight: 0,
+      newest: null,
+      oldest: null,
       total_memories: 0,
       total_topics: 0,
-      avg_weight: 0,
-      oldest: null,
-      newest: null,
     }
   }
   const row = db
@@ -233,8 +233,7 @@ export function memoirInspect(
           nextFrontier.push(row.target_id)
           conceptIdsToFetch.add(row.target_id)
           neighborLinks.push({
-            target_id: row.target_id,
-            source_id: row.target_id,
+            direction: 'outgoing',
             link: {
               created_at: row.created_at,
               id: row.id,
@@ -243,7 +242,8 @@ export function memoirInspect(
               target_id: row.target_id,
               weight: row.weight,
             },
-            direction: 'outgoing',
+            source_id: row.target_id,
+            target_id: row.target_id,
           })
         }
       }
@@ -254,8 +254,7 @@ export function memoirInspect(
           nextFrontier.push(row.source_id)
           conceptIdsToFetch.add(row.source_id)
           neighborLinks.push({
-            target_id: row.source_id,
-            source_id: row.source_id,
+            direction: 'incoming',
             link: {
               created_at: row.created_at,
               id: row.id,
@@ -264,7 +263,8 @@ export function memoirInspect(
               target_id: row.target_id,
               weight: row.weight,
             },
-            direction: 'incoming',
+            source_id: row.source_id,
+            target_id: row.source_id,
           })
         }
       }
@@ -393,15 +393,15 @@ export function getSessions(project?: string, limit = 20): SessionRecord[] {
     return memories.map((m): SessionRecord => {
       const sourceData = m.source_data ? (JSON.parse(m.source_data) as Record<string, unknown>) : {}
       return {
+        ended_at: (sourceData.ended_at as string) || null,
+        errors: (sourceData.errors as string) || null,
+        files_modified: (sourceData.files_modified as string) || null,
         id: m.id,
         project,
-        task: (sourceData.task as string) || null,
         started_at: m.created_at,
-        ended_at: (sourceData.ended_at as string) || null,
-        summary: m.summary,
-        files_modified: (sourceData.files_modified as string) || null,
-        errors: (sourceData.errors as string) || null,
         status: (sourceData.status as string) || 'completed',
+        summary: m.summary,
+        task: (sourceData.task as string) || null,
       }
     })
   }
@@ -439,21 +439,23 @@ export function extractLessons(): Lesson[] {
     const keywords = mem.keywords ? (JSON.parse(mem.keywords) as string[]) : []
     const key = keywords.slice(0, 2).join('|') || mem.summary.slice(0, 20)
 
-    if (!correctionGroups.has(key)) {
-      correctionGroups.set(key, [])
+    let group = correctionGroups.get(key)
+    if (!group) {
+      group = []
+      correctionGroups.set(key, group)
     }
-    correctionGroups.get(key)!.push(mem)
+    group.push(mem)
   }
 
   for (const [, items] of correctionGroups) {
     if (items.length >= 1) {
       lessons.push({
-        id: `correction-${lessons.length}`,
         category: 'corrections',
         description: items[0].summary,
         frequency: items.length,
-        source_topics: ['corrections'],
+        id: `correction-${lessons.length}`,
         keywords: items[0].keywords ? (JSON.parse(items[0].keywords) as string[]) : [],
+        source_topics: ['corrections'],
       })
     }
   }
@@ -466,21 +468,23 @@ export function extractLessons(): Lesson[] {
     const keywords = mem.keywords ? (JSON.parse(mem.keywords) as string[]) : []
     const key = keywords[0] || mem.summary.slice(0, 30)
 
-    if (!errorGroups.has(key)) {
-      errorGroups.set(key, [])
+    let group = errorGroups.get(key)
+    if (!group) {
+      group = []
+      errorGroups.set(key, group)
     }
-    errorGroups.get(key)!.push(mem)
+    group.push(mem)
   }
 
   for (const [, items] of errorGroups) {
     if (items.length >= 1) {
       lessons.push({
-        id: `error-${lessons.length}`,
         category: 'errors',
         description: items[0].summary,
         frequency: items.length,
-        source_topics: ['errors/resolved'],
+        id: `error-${lessons.length}`,
         keywords: items[0].keywords ? (JSON.parse(items[0].keywords) as string[]) : [],
+        source_topics: ['errors/resolved'],
       })
     }
   }
@@ -493,21 +497,23 @@ export function extractLessons(): Lesson[] {
     const keywords = mem.keywords ? (JSON.parse(mem.keywords) as string[]) : []
     const key = keywords[0] || mem.summary.slice(0, 30)
 
-    if (!testGroups.has(key)) {
-      testGroups.set(key, [])
+    let group = testGroups.get(key)
+    if (!group) {
+      group = []
+      testGroups.set(key, group)
     }
-    testGroups.get(key)!.push(mem)
+    group.push(mem)
   }
 
   for (const [, items] of testGroups) {
     if (items.length >= 1) {
       lessons.push({
-        id: `test-${lessons.length}`,
         category: 'tests',
         description: items[0].summary,
         frequency: items.length,
-        source_topics: ['tests/resolved'],
+        id: `test-${lessons.length}`,
         keywords: items[0].keywords ? (JSON.parse(items[0].keywords) as string[]) : [],
+        source_topics: ['tests/resolved'],
       })
     }
   }

@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { execFile } from 'node:child_process'
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { homedir, platform } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
@@ -250,10 +250,7 @@ app.post('/stipe/run', async (c) => {
 
 app.get('/stipe/repair-plan', async (c) => {
   try {
-    const [doctor, initPlan] = await Promise.all([
-      runStipeJson(['doctor']),
-      runStipeJson(['init', '--dry-run']),
-    ])
+    const [doctor, initPlan] = await Promise.all([runStipeJson(['doctor']), runStipeJson(['init', '--dry-run'])])
 
     return c.json({
       doctor,
@@ -346,7 +343,7 @@ app.put('/hyphae', async (c) => {
       existing = re.test(existing) ? existing.replace(re, line) : `${existing}\n${line}`
     }
 
-    writeFileSync(configPath, existing.trim() + '\n', 'utf-8')
+    writeFileSync(configPath, `${existing.trim()}\n`, 'utf-8')
 
     const settings = getHyphaeSettings()
     return c.json(settings)

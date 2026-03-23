@@ -129,8 +129,8 @@ export async function getCommandHistory(limit = 50): Promise<CommandHistory> {
     const commands = byCommand
       .map((cmd: [string, number, number, number]) => ({
         command: cmd[0] ?? 'unknown',
-        original_tokens: cmd[1] ?? 0,
         filtered_tokens: cmd[2] ?? 0,
+        original_tokens: cmd[1] ?? 0,
         savings_pct: cmd[3] ?? 0,
         timestamp: new Date().toISOString(), // Note: Mycelium CLI doesn't provide per-command timestamps
       }))

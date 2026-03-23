@@ -1,3 +1,4 @@
+import type { Stats } from 'node:fs'
 import type { Context } from 'hono'
 import { execFile } from 'node:child_process'
 import { existsSync, statSync } from 'node:fs'
@@ -294,10 +295,10 @@ app.post('/project', async (c) => {
   // ─────────────────────────────────────────────────────────────────────────────
   // Validate path is a directory
   // ─────────────────────────────────────────────────────────────────────────────
-  let stat
+  let stat: Stats
   try {
     stat = statSync(path)
-  } catch (err) {
+  } catch {
     return c.json({ error: `Cannot access path: ${path}` }, 400)
   }
   if (!stat.isDirectory()) {

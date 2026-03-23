@@ -1,5 +1,4 @@
-import { Alert, Progress, Stack, Table, Text } from '@mantine/core'
-import { Badge, Group } from '@mantine/core'
+import { Alert, Badge, Group, Progress, Stack, Table, Text } from '@mantine/core'
 
 import type { CommandHistory, CommandHistoryEntry } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'
@@ -67,12 +66,12 @@ export function CommandHistoryTab({ data }: { data: CommandHistory | null }) {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {data.commands.map((cmd: CommandHistoryEntry, idx: number) => (
-              <Table.Tr key={idx}>
+            {data.commands.map((cmd: CommandHistoryEntry) => (
+              <Table.Tr key={`${cmd.timestamp}-${cmd.command}`}>
                 <Table.Td>
                   <Text
-                    size='sm'
                     ff='monospace'
+                    size='sm'
                   >
                     {cmd.command}
                   </Text>

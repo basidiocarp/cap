@@ -303,8 +303,7 @@ export function Memoirs() {
                             c='gray.4'
                             size='xs'
                           >
-                            Confidence: {(inspection.concept.confidence * 100).toFixed(0)}% | Revision:{' '}
-                            {inspection.concept.revision}
+                            Confidence: {(inspection.concept.confidence * 100).toFixed(0)}% | Revision: {inspection.concept.revision}
                           </Text>
                         </SectionCard>
 

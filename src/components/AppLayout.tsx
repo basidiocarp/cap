@@ -3,16 +3,16 @@ import { useDisclosure } from '@mantine/hooks'
 import {
   IconBrain,
   IconBug,
+  IconBulb,
   IconChartBar,
   IconCode,
+  IconCompass,
   IconDashboard,
   IconHeartbeat,
   IconHistory,
-  IconBulb,
   IconNetwork,
   IconSearch,
   IconSettings,
-  IconCompass,
 } from '@tabler/icons-react'
 import { Outlet, NavLink as RouterNavLink, useLocation } from 'react-router-dom'
 

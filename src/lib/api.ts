@@ -1,3 +1,4 @@
+import type { AllowedStipeAction } from './onboarding'
 import type {
   AggregateTelemetry,
   Annotation,
@@ -47,7 +48,6 @@ import type {
   UsageAggregate,
   UsageTrend,
 } from './types'
-import type { AllowedStipeAction } from './onboarding'
 
 // Re-export all types for backward compatibility
 export type {
@@ -75,6 +75,7 @@ export type {
   HoverInfo,
   HyphaeAnalytics,
   IngestionSource,
+  Lesson,
   LspInfo,
   LspInstallResult,
   LspLanguageStatus,
@@ -92,7 +93,6 @@ export type {
   RhizomeStatus,
   RhizomeSymbol,
   ScopeVariable,
-  Lesson,
   SearchResult,
   SessionRecord,
   SessionUsage,
@@ -180,6 +180,7 @@ export const hyphaeApi = {
     })
   },
   health: (topic?: string) => get<HealthResult[]>('/hyphae/health', { topic: topic ?? '' }),
+  lessons: () => get<Lesson[]>('/hyphae/lessons'),
   memoir: (name: string) => get<MemoirDetail>(`/hyphae/memoirs/${encodeURIComponent(name)}`),
   memoirInspect: (memoir: string, concept: string, depth?: number) =>
     get<ConceptInspection>(`/hyphae/memoirs/${encodeURIComponent(memoir)}/inspect/${encodeURIComponent(concept)}`, {
@@ -192,6 +193,8 @@ export const hyphaeApi = {
   recall: (q: string, topic?: string, limit?: number) =>
     get<Memory[]>('/hyphae/recall', { limit: limit ? String(limit) : '', q, topic: topic ?? '' }),
   searchGlobal: (q: string, limit?: number) => get<Memory[]>('/hyphae/search-global', { limit: limit ? String(limit) : '', q }),
+  sessions: (project?: string, limit?: number) =>
+    get<SessionRecord[]>('/hyphae/sessions', { limit: limit ? String(limit) : '', project: project ?? '' }),
   sources: () => get<IngestionSource[]>('/hyphae/sources'),
   stats: () => get<Stats>('/hyphae/stats'),
   topicMemories: (topic: string, limit?: number) =>
@@ -199,9 +202,6 @@ export const hyphaeApi = {
   topics: () => get<TopicSummary[]>('/hyphae/topics'),
   updateImportance: (id: string, importance: string) =>
     put<{ result: string }>(`/hyphae/memories/${encodeURIComponent(id)}/importance`, { importance }),
-  sessions: (project?: string, limit?: number) =>
-    get<SessionRecord[]>('/hyphae/sessions', { limit: limit ? String(limit) : '', project: project ?? '' }),
-  lessons: () => get<Lesson[]>('/hyphae/lessons'),
 }
 
 export const myceliumApi = {
@@ -225,15 +225,15 @@ export const rhizomeApi = {
   hover: (file: string, line: number, column: number) =>
     get<HoverInfo>('/rhizome/hover', { column: String(column), file, line: String(line) }),
   parameters: (file: string, symbol: string) => get<ParameterInfo[]>('/rhizome/parameters', { file, symbol }),
+  project: () => get<ProjectInfo>('/rhizome/project'),
   references: (file: string, line: number, column: number) =>
     get<SymbolLocation[]>('/rhizome/references', { column: String(column), file, line: String(line) }),
   scope: (file: string, line: number) => get<ScopeVariable[]>('/rhizome/scope', { file, line: String(line) }),
   search: (pattern: string, path?: string) => get<SearchResult[]>('/rhizome/search', { path: path ?? '', pattern }),
-  project: () => get<ProjectInfo>('/rhizome/project'),
   status: () => get<RhizomeStatus>('/rhizome/status'),
-  switchProject: (path: string) => post<ProjectInfo>('/rhizome/project', { path }),
   structure: (file: string, depth?: number) => get<RhizomeSymbol[]>('/rhizome/structure', { depth: depth ? String(depth) : '', file }),
   summary: (file: string) => get<FileSummary>('/rhizome/summary', { file }),
+  switchProject: (path: string) => post<ProjectInfo>('/rhizome/project', { path }),
   symbolBody: (file: string, symbol: string, line?: number) =>
     get<SymbolBody>('/rhizome/symbol-body', { file, line: line ? String(line) : '', symbol }),
   symbols: (file: string) => get<RhizomeSymbol[]>('/rhizome/symbols', { file }),

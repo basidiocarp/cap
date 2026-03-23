@@ -7,8 +7,8 @@ import { EcosystemFlow } from '../components/EcosystemFlow'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
-import { useEcosystemStatus } from '../lib/queries'
 import { buildOnboardingActions, summarizeOnboarding } from '../lib/onboarding'
+import { useEcosystemStatus } from '../lib/queries'
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -167,8 +167,8 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {hooks.installed_hooks.map((hook, idx) => (
-                <Table.Tr key={idx}>
+              {hooks.installed_hooks.map((hook) => (
+                <Table.Tr key={`${hook.event}-${hook.matcher}-${hook.command}`}>
                   <Table.Td>
                     <Badge
                       size='xs'
@@ -182,8 +182,8 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
                   </Table.Td>
                   <Table.Td>
                     <Text
-                      size='xs'
                       c='dimmed'
+                      size='xs'
                     >
                       {hook.command}
                     </Text>
@@ -200,31 +200,31 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
             >
               <Text
                 c='red'
-                size='sm'
                 fw={500}
+                size='sm'
               >
                 Recent Errors
               </Text>
-              {hooks.recent_errors.slice(0, 5).map((error, idx) => (
+              {hooks.recent_errors.slice(0, 5).map((error) => (
                 <Card
-                  key={idx}
-                  p='xs'
                   bg='red.0'
+                  key={`${error.timestamp}-${error.hook}-${error.message}`}
+                  p='xs'
                   withBorder
                 >
                   <Group justify='space-between'>
                     <div>
                       <Text size='xs'>{error.hook}</Text>
                       <Text
-                        size='xs'
                         c='dimmed'
+                        size='xs'
                       >
                         {error.message}
                       </Text>
                     </div>
                     <Text
-                      size='xs'
                       c='dimmed'
+                      size='xs'
                     >
                       {timeAgo(error.timestamp)}
                     </Text>
@@ -240,7 +240,9 @@ function HooksSection({ status }: { status: EcosystemStatus }) {
 }
 
 function GettingStartedCard({ status }: { status: EcosystemStatus }) {
-  const actions = buildOnboardingActions(status).filter((action) => action.tier !== 'manual').slice(0, 3)
+  const actions = buildOnboardingActions(status)
+    .filter((action) => action.tier !== 'manual')
+    .slice(0, 3)
 
   return (
     <SectionCard title='Getting started'>

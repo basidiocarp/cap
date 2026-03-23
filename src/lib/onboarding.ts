@@ -1,11 +1,6 @@
 import type { EcosystemStatus, StipeDoctorCheck, StipeInitStep, StipeRepairAction, StipeRepairPlan } from './api'
 
-export type AllowedStipeAction =
-  | 'doctor'
-  | 'init'
-  | 'install-claude-code'
-  | 'install-full-stack'
-  | 'install-minimal'
+export type AllowedStipeAction = 'doctor' | 'init' | 'install-claude-code' | 'install-full-stack' | 'install-minimal'
 
 export interface OnboardingAction {
   command: string

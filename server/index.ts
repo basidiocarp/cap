@@ -4,7 +4,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
 import { closeDb } from './db.ts'
-import { CORS_ORIGIN, CAP_API_KEY, CAP_HOST } from './lib/config.ts'
+import { CAP_API_KEY, CAP_HOST, CORS_ORIGIN } from './lib/config.ts'
 import { registry } from './lib/rhizome-registry.ts'
 import { logger } from './logger.ts'
 import hyphaeRoutes from './routes/hyphae.ts'
@@ -37,14 +37,14 @@ function createAuthMiddleware() {
     // Verify Authorization header for all /api/* endpoints
     const authHeader = c.req.header('Authorization')
     if (!authHeader) {
-      logger.warn({ path: c.req.path, method: c.req.method }, 'Missing Authorization header')
+      logger.warn({ method: c.req.method, path: c.req.path }, 'Missing Authorization header')
       c.status(401)
       return c.json({ error: 'Authorization required' })
     }
 
     const [scheme, token] = authHeader.split(' ')
     if (scheme !== 'Bearer' || token !== CAP_API_KEY) {
-      logger.warn({ path: c.req.path, method: c.req.method }, 'Invalid API key')
+      logger.warn({ method: c.req.method, path: c.req.path }, 'Invalid API key')
       c.status(403)
       return c.json({ error: 'Unauthorized' })
     }
@@ -91,8 +91,8 @@ export function startServer() {
   const port = Number(process.env.PORT ?? 3001)
   const host = CAP_HOST
 
-  logger.info({ host, port, apiKeyRequired: !!CAP_API_KEY }, 'Cap server started')
-  serve({ fetch: app.fetch, port, hostname: host })
+  logger.info({ apiKeyRequired: !!CAP_API_KEY, host, port }, 'Cap server started')
+  serve({ fetch: app.fetch, hostname: host, port })
 }
 
 if (!process.env.VITEST) {

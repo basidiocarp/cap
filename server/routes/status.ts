@@ -239,8 +239,8 @@ async function loadHookHealth(): Promise<HookHealthResult> {
 async function fetchStatus(): Promise<StatusResult> {
   const [myceliumResult, hyphaeResult, hooksResult] = await Promise.allSettled([checkMycelium(), checkHyphae(), loadHookHealth()])
   return {
-    hyphae: hyphaeResult.status === 'fulfilled' ? hyphaeResult.value : { available: false, memoirs: 0, memories: 0, version: null },
     hooks: hooksResult.status === 'fulfilled' ? hooksResult.value : { error_count: 0, installed_hooks: [], recent_errors: [] },
+    hyphae: hyphaeResult.status === 'fulfilled' ? hyphaeResult.value : { available: false, memoirs: 0, memories: 0, version: null },
     lsps: await checkLsps(),
     mycelium: myceliumResult.status === 'fulfilled' ? myceliumResult.value : { available: false, version: null },
     rhizome: checkRhizome(),

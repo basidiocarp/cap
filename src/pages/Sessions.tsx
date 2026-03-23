@@ -1,5 +1,5 @@
 import { Badge, Card, Group, Stack, Text, Title } from '@mantine/core'
-import { IconClock, IconFiles, IconAlertCircle } from '@tabler/icons-react'
+import { IconAlertCircle, IconClock, IconFiles } from '@tabler/icons-react'
 
 import type { SessionRecord } from '../lib/types'
 import { ErrorAlert } from '../components/ErrorAlert'
@@ -65,14 +65,14 @@ function SessionCard({ session }: { session: SessionRecord }) {
     >
       <Stack gap='sm'>
         <Group
-          justify='space-between'
           align='flex-start'
+          justify='space-between'
         >
           <Stack gap={4}>
             <Group gap='xs'>
               <Title
-                order={4}
                 fw={600}
+                order={4}
               >
                 {session.task || 'Untitled Session'}
               </Title>
@@ -87,8 +87,8 @@ function SessionCard({ session }: { session: SessionRecord }) {
             {session.summary && (
               <Text
                 c='dimmed'
-                size='sm'
                 lineClamp={2}
+                size='sm'
               >
                 {session.summary}
               </Text>
@@ -96,8 +96,8 @@ function SessionCard({ session }: { session: SessionRecord }) {
           </Stack>
           <Text
             c='dimmed'
-            size='sm'
             fw={500}
+            size='sm'
           >
             {timeAgo(session.started_at)}
           </Text>
@@ -105,8 +105,8 @@ function SessionCard({ session }: { session: SessionRecord }) {
 
         <Group gap='lg'>
           <Group
-            gap={4}
             c='dimmed'
+            gap={4}
           >
             <IconClock size={16} />
             <Text size='sm'>{formatDuration(session.started_at, session.ended_at)}</Text>
@@ -114,8 +114,8 @@ function SessionCard({ session }: { session: SessionRecord }) {
 
           {filesCount > 0 && (
             <Group
-              gap={4}
               c='dimmed'
+              gap={4}
             >
               <IconFiles size={16} />
               <Text size='sm'>{filesCount} files modified</Text>
@@ -124,8 +124,8 @@ function SessionCard({ session }: { session: SessionRecord }) {
 
           {errorCount > 0 && (
             <Group
-              gap={4}
               c='red'
+              gap={4}
             >
               <IconAlertCircle size={16} />
               <Text size='sm'>{errorCount} errors</Text>
@@ -151,8 +151,8 @@ export function Sessions() {
   if (sessionsQuery.error) {
     return (
       <ErrorAlert
-        title='Failed to load sessions'
         error={sessionsQuery.error}
+        title='Failed to load sessions'
       />
     )
   }

@@ -31,10 +31,7 @@ class RhizomeRegistry {
   switchProject(projectPath: string): RhizomeClient {
     this.activeProject = projectPath
     // Add to recent, deduplicate, cap at 10
-    this.recentProjects = [
-      projectPath,
-      ...this.recentProjects.filter((p) => p !== projectPath),
-    ].slice(0, 10)
+    this.recentProjects = [projectPath, ...this.recentProjects.filter((p) => p !== projectPath)].slice(0, 10)
     return this.getOrCreate(projectPath)
   }
 

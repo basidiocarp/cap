@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { hyphaeApi, lspApi, myceliumApi, rhizomeApi, settingsApi, stipeApi, statusApi, usageApi } from './api'
+import { hyphaeApi, lspApi, myceliumApi, rhizomeApi, settingsApi, statusApi, stipeApi, usageApi } from './api'
 
 // Hyphae
 

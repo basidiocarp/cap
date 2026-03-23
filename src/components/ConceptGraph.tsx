@@ -1,5 +1,5 @@
+import type { GraphData as ForceGraphData, ForceGraphMethods, LinkObject, NodeObject } from 'react-force-graph-2d'
 import { Loader, Text } from '@mantine/core'
-import type { ForceGraphMethods } from 'react-force-graph-2d'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
 
@@ -30,11 +30,6 @@ interface GraphLink {
   relation: string
   source: string
   target: string
-}
-
-interface GraphData {
-  links: GraphLink[]
-  nodes: GraphNode[]
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -94,20 +89,10 @@ const MAX_NODE_SIZE = 10
 
 export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: ConceptGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const graphRef = useRef<ForceGraphMethods | undefined>(undefined)
+  const graphRef = useRef<ForceGraphMethods<GraphNode, GraphLink> | undefined>(undefined)
   const [width, setWidth] = useState(600)
 
   const { data: inspection, isLoading, isFetching } = useMemoirInspect(memoir, concept ?? '', depth)
-
-  // Configure forces for better spread when graph data changes
-  useEffect(() => {
-    const fg = graphRef.current
-    if (!fg) return
-    fg.d3Force('charge')?.strength(-200)
-    fg.d3Force('link')?.distance(80)
-    // Re-heat simulation briefly on data change
-    fg.d3ReheatSimulation()
-  }, [inspection])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -122,7 +107,7 @@ export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: Concep
     return () => observer.disconnect()
   }, [])
 
-  const graphData: GraphData = useMemo(() => {
+  const graphData: ForceGraphData<GraphNode, GraphLink> = useMemo(() => {
     if (!inspection) {
       return { links: [], nodes: [] }
     }
@@ -177,8 +162,17 @@ export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: Concep
     }
   }, [inspection])
 
+  // Configure forces for better spread when graph data changes.
+  useEffect(() => {
+    const fg = graphRef.current
+    if (!fg || graphData.nodes.length === 0) return
+    fg.d3Force('charge')?.strength(-200)
+    fg.d3Force('link')?.distance(80)
+    fg.d3ReheatSimulation()
+  }, [graphData])
+
   const handleNodeClick = useCallback(
-    (node: { id?: string }) => {
+    (node: NodeObject<GraphNode>) => {
       if (node.id && onNodeClick) {
         onNodeClick(String(node.id))
       }
@@ -186,46 +180,42 @@ export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: Concep
     [onNodeClick]
   )
 
-  const nodeVal = useCallback((node: { confidence?: number }) => {
-    const confidence = (node as GraphNode).confidence ?? 0.5
+  const nodeVal = useCallback((node: NodeObject<GraphNode>) => {
+    const confidence = node.confidence ?? 0.5
     return MIN_NODE_SIZE + confidence * (MAX_NODE_SIZE - MIN_NODE_SIZE)
   }, [])
 
-  const nodeCanvasObject = useCallback(
-    (node: { color?: string; id?: string; label?: string; x?: number; y?: number }, ctx: CanvasRenderingContext2D, globalScale: number) => {
-      const graphNode = node as GraphNode & { x?: number; y?: number }
-      const label = graphNode.label ?? String(graphNode.id ?? '')
-      const x = graphNode.x ?? 0
-      const y = graphNode.y ?? 0
-      const confidence = graphNode.confidence ?? 0.5
-      const radius = MIN_NODE_SIZE + confidence * (MAX_NODE_SIZE - MIN_NODE_SIZE)
-      const color = graphNode.color ?? DEFAULT_NODE_COLOR
+  const nodeCanvasObject = useCallback((node: NodeObject<GraphNode>, ctx: CanvasRenderingContext2D, globalScale: number) => {
+    const label = node.label ?? String(node.id ?? '')
+    const x = node.x ?? 0
+    const y = node.y ?? 0
+    const confidence = node.confidence ?? 0.5
+    const radius = MIN_NODE_SIZE + confidence * (MAX_NODE_SIZE - MIN_NODE_SIZE)
+    const color = node.color ?? DEFAULT_NODE_COLOR
 
-      // Draw node circle
-      ctx.beginPath()
-      ctx.arc(x, y, radius, 0, 2 * Math.PI)
-      ctx.fillStyle = color
-      ctx.fill()
+    // Draw node circle
+    ctx.beginPath()
+    ctx.arc(x, y, radius, 0, 2 * Math.PI)
+    ctx.fillStyle = color
+    ctx.fill()
 
-      // Draw label when zoomed in enough
-      const fontSize = Math.max(12 / globalScale, 2)
-      if (globalScale > 0.8) {
-        ctx.font = `${fontSize}px sans-serif`
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'top'
-        ctx.fillStyle = '#e0e0e0'
-        ctx.fillText(label, x, y + radius + 2)
-      }
-    },
-    []
-  )
-
-  const linkLabel = useCallback((link: { relation?: string }) => {
-    return (link as GraphLink).relation ?? ''
+    // Draw label when zoomed in enough
+    const fontSize = Math.max(12 / globalScale, 2)
+    if (globalScale > 0.8) {
+      ctx.font = `${fontSize}px sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'top'
+      ctx.fillStyle = '#e0e0e0'
+      ctx.fillText(label, x, y + radius + 2)
+    }
   }, [])
 
-  const linkColor = useCallback((link: { color?: string }) => {
-    return (link as GraphLink).color ?? DEFAULT_EDGE_COLOR
+  const linkLabel = useCallback((link: LinkObject<GraphNode, GraphLink>) => {
+    return link.relation ?? ''
+  }, [])
+
+  const linkColor = useCallback((link: LinkObject<GraphNode, GraphLink>) => {
+    return link.color ?? DEFAULT_EDGE_COLOR
   }, [])
 
   if (!concept) {
@@ -259,23 +249,22 @@ export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: Concep
       ref={containerRef}
       style={{ opacity: isFetching ? 0.6 : 1, transition: 'opacity 0.2s', width: '100%' }}
     >
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <ForceGraph2D
-        ref={graphRef as any}
+      <ForceGraph2D<GraphNode, GraphLink>
         backgroundColor='transparent'
         cooldownTicks={50}
         d3AlphaDecay={0.05}
         d3VelocityDecay={0.3}
-        graphData={graphData as any}
+        graphData={graphData}
         height={GRAPH_HEIGHT}
-        linkColor={linkColor as any}
+        linkColor={linkColor}
         linkDirectionalArrowLength={4}
         linkDirectionalArrowRelPos={1}
-        linkLabel={linkLabel as any}
+        linkLabel={linkLabel}
         linkWidth={1.5}
-        nodeCanvasObject={nodeCanvasObject as any}
-        nodeVal={nodeVal as any}
-        onNodeClick={handleNodeClick as any}
+        nodeCanvasObject={nodeCanvasObject}
+        nodeVal={nodeVal}
+        onNodeClick={handleNodeClick}
+        ref={graphRef}
         warmupTicks={30}
         width={width}
       />

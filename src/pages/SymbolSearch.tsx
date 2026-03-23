@@ -177,7 +177,9 @@ export function SymbolSearch() {
       )}
 
       {!loading && debouncedQuery.trim() && results.length === 0 && !error && (
-        <EmptyState mt='md'>No symbols found matching &lsquo;{debouncedQuery}&rsquo; in {projectName}</EmptyState>
+        <EmptyState mt='md'>
+          No symbols found matching &lsquo;{debouncedQuery}&rsquo; in {projectName}
+        </EmptyState>
       )}
 
       {results.length > 0 && (
@@ -197,12 +199,8 @@ export function SymbolSearch() {
                 {results.map((r) => (
                   <Table.Tr
                     key={`${r.file}:${r.line}:${r.name}`}
-                    onClick={() =>
-                      navigate(`/code?file=${encodeURIComponent(r.file)}&symbol=${encodeURIComponent(r.name)}`)
-                    }
-                    onKeyDown={onActivate(() =>
-                      navigate(`/code?file=${encodeURIComponent(r.file)}&symbol=${encodeURIComponent(r.name)}`)
-                    )}
+                    onClick={() => navigate(`/code?file=${encodeURIComponent(r.file)}&symbol=${encodeURIComponent(r.name)}`)}
+                    onKeyDown={onActivate(() => navigate(`/code?file=${encodeURIComponent(r.file)}&symbol=${encodeURIComponent(r.name)}`))}
                     style={{ cursor: 'pointer' }}
                     tabIndex={0}
                   >

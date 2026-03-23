@@ -1,5 +1,5 @@
 import { Badge, Card, Group, Stack, Text, Title } from '@mantine/core'
-import { IconBulb, IconAlertTriangle, IconCheck, IconRepeat } from '@tabler/icons-react'
+import { IconAlertTriangle, IconBulb, IconCheck, IconRepeat } from '@tabler/icons-react'
 
 import type { Lesson } from '../lib/types'
 import { ErrorAlert } from '../components/ErrorAlert'
@@ -62,8 +62,8 @@ function LessonCard({ lesson }: { lesson: Lesson }) {
     >
       <Stack gap='sm'>
         <Group
-          justify='space-between'
           align='flex-start'
+          justify='space-between'
         >
           <Group gap='sm'>
             {getCategoryIcon(lesson.category)}
@@ -76,9 +76,9 @@ function LessonCard({ lesson }: { lesson: Lesson }) {
               </Text>
               <Badge
                 color={getCategoryColor(lesson.category)}
+                leftSection={getCategoryIcon(lesson.category)}
                 size='xs'
                 variant='light'
-                leftSection={getCategoryIcon(lesson.category)}
               >
                 {getCategoryLabel(lesson.category)}
               </Badge>
@@ -100,8 +100,8 @@ function LessonCard({ lesson }: { lesson: Lesson }) {
           <Group gap={4}>
             {lesson.keywords.slice(0, 3).map((kw: string) => (
               <Badge
-                key={kw}
                 color='lichen'
+                key={kw}
                 size='xs'
                 variant='light'
               >
@@ -137,8 +137,8 @@ export function Lessons() {
   if (lessonsQuery.error) {
     return (
       <ErrorAlert
-        title='Failed to load lessons'
         error={lessonsQuery.error}
+        title='Failed to load lessons'
       />
     )
   }

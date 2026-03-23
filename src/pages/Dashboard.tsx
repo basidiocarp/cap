@@ -239,7 +239,7 @@ export function Dashboard() {
                           component='button'
                           fw={500}
                           onClick={() => navigate(`/memories?topic=${encodeURIComponent(t.topic)}`)}
-                          style={{ cursor: 'pointer', border: 'none', background: 'none', padding: 0 }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                           variant='link'
                         >
                           {t.topic}
