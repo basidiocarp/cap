@@ -8,7 +8,13 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { ProjectSelector } from '../components/ProjectSelector'
 import { SectionCard } from '../components/SectionCard'
-import { buildOnboardingActions, missingLifecycleHooks, summarizeCodexIntegration, summarizeOnboarding } from '../lib/onboarding'
+import {
+  buildOnboardingActions,
+  missingLifecycleHooks,
+  summarizeCodexIntegration,
+  summarizeCodexMode,
+  summarizeOnboarding,
+} from '../lib/onboarding'
 import { useEcosystemStatus } from '../lib/queries'
 
 function timeAgo(dateStr: string): string {
@@ -555,10 +561,10 @@ function GettingStartedCard({ status }: { status: EcosystemStatus }) {
     .filter((action) => action.tier !== 'manual')
     .slice(0, 3)
   const hookSummary = summarizeHookHealth(status)
-  const codexSummary = summarizeCodexIntegration(status)
+  const codexMode = summarizeCodexMode(status)
 
   return (
-    <SectionCard title='Getting started'>
+    <SectionCard title='Codex mode'>
       <Stack gap='sm'>
         <Text size='sm'>{summarizeOnboarding(status)}</Text>
         <List
@@ -566,8 +572,10 @@ function GettingStartedCard({ status }: { status: EcosystemStatus }) {
           size='sm'
           spacing='xs'
         >
-          <List.Item>Claude lifecycle adapter: {hookSummary.label.toLowerCase()}</List.Item>
-          <List.Item>Codex adapter: {codexSummary.label.toLowerCase()}</List.Item>
+          <List.Item>Codex mode: {codexMode.label.toLowerCase()}</List.Item>
+          <List.Item>Required for Codex: {codexMode.required.join(', ') || 'already configured'}</List.Item>
+          <List.Item>Optional Claude steps: {codexMode.optional.join(' ')}</List.Item>
+          <List.Item>Claude lifecycle coverage: {hookSummary.label.toLowerCase()}</List.Item>
           <List.Item>Active project: {status.project.active}</List.Item>
           <List.Item>Best next step: {actions[0]?.command ?? 'Open onboarding for guided repair'}</List.Item>
         </List>

@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.10.0
+
+### Features
+
+- **Codex mode onboarding**: Onboarding now presents a single Codex-first path with required Codex steps separated from optional Claude-specific coverage.
+
+### Improvements
+
+- **Codex mode summaries**: Status and onboarding now explain whether Codex mode is ready, partial, or needs repair instead of making users combine multiple adapter chips mentally.
+- **Codex-first action ordering**: The Codex install profile and notify-adapter requirements are surfaced ahead of Claude-specific profile work.
+
 ## v0.9.0
 
 ### Features

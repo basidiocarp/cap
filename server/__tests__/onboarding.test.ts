@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import type { CodexNotifyStatus, EcosystemStatus, StipeRepairPlan } from '../../src/lib/api'
-import { buildOnboardingActions, missingLifecycleHooks, summarizeCodexIntegration, summarizeOnboarding } from '../../src/lib/onboarding'
+import {
+  buildOnboardingActions,
+  missingLifecycleHooks,
+  summarizeCodexIntegration,
+  summarizeCodexMode,
+  summarizeOnboarding,
+} from '../../src/lib/onboarding'
 import { buildStipeArgs, parseStipeAction } from '../routes/settings'
 
 function createMissingStatus(): EcosystemStatus {
@@ -154,6 +160,7 @@ describe('onboarding helpers', () => {
     expect(commands).toContain('stipe install --profile minimal')
     expect(commands).toContain('stipe doctor')
     expect(commands).toContain('stipe init')
+    expect(commands).toContain('stipe install --profile codex')
     expect(commands).toContain('cargo install mycelium')
     expect(commands).toContain('cargo install hyphae')
     expect(commands).toContain('cargo install rhizome')
@@ -216,11 +223,42 @@ describe('onboarding helpers', () => {
     expect(summarizeCodexIntegration(mcpOnly)).toMatchObject({
       label: 'MCP only',
     })
-    expect(summarizeOnboarding(mcpOnly)).toContain('Codex MCP is configured')
+    expect(summarizeOnboarding(mcpOnly)).toContain('Codex mode is partially configured')
 
     expect(summarizeCodexIntegration(adapter)).toMatchObject({
       label: 'Notify adapter',
     })
-    expect(summarizeOnboarding(adapter)).toContain('Codex notify adapter coverage is configured')
+    expect(summarizeOnboarding(adapter)).toContain('Codex mode is ready')
+  })
+
+  it('summarizes Codex mode with required steps and optional Claude coverage', () => {
+    const status = createCodexStatus({
+      command: 'hyphae codex-notify',
+      config_path: '/Users/test/.codex/config.toml',
+      configured: true,
+      contract_matched: true,
+    })
+
+    expect(summarizeCodexMode(status)).toMatchObject({
+      label: 'Codex mode ready',
+      ready: true,
+      required: [],
+    })
+    expect(summarizeCodexMode(status).optional[0]).toContain('Claude lifecycle hooks')
+  })
+
+  it('summarizes Codex mode as partial when notify coverage is missing', () => {
+    const status = createCodexStatus({
+      command: null,
+      config_path: '/Users/test/.codex/config.toml',
+      configured: false,
+      contract_matched: false,
+    })
+
+    expect(summarizeCodexMode(status)).toMatchObject({
+      label: 'Codex mode partial',
+      ready: false,
+    })
+    expect(summarizeCodexMode(status).required).toContain('hyphae codex-notify adapter')
   })
 })

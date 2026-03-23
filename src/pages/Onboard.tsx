@@ -1,4 +1,4 @@
-import { Alert, Badge, Button, Card, CopyButton, Grid, Group, Stack, Text, ThemeIcon, Title } from '@mantine/core'
+import { Alert, Badge, Button, Card, CopyButton, Grid, Group, List, Stack, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconAlertCircle, IconArrowRight, IconCheck, IconCopy, IconPlayerPlay, IconRefresh } from '@tabler/icons-react'
 import { Link } from 'react-router-dom'
 
@@ -12,7 +12,7 @@ import {
   failingDoctorChecks,
   initPlanSteps,
   missingLifecycleHooks,
-  summarizeCodexIntegration,
+  summarizeCodexMode,
   summarizeOnboarding,
 } from '../lib/onboarding'
 import { useEcosystemStatus, useRunStipeAction, useStipeRepairPlan } from '../lib/queries'
@@ -190,6 +190,10 @@ function InitStepCard({ step }: { step: StipeInitStep }) {
   )
 }
 
+function isClaudeSpecificAction(command: string, label: string): boolean {
+  return command.includes('install --profile claude-code') || label.toLowerCase().includes('claude')
+}
+
 export function Onboard() {
   const { data: status, error, isLoading, refetch } = useEcosystemStatus()
   const repairPlanQuery = useStipeRepairPlan()
@@ -210,9 +214,11 @@ export function Onboard() {
   const failingChecks = failingDoctorChecks(repairPlanQuery.data)
   const lifecycleGaps = missingLifecycleHooks(status)
   const steps = initPlanSteps(repairPlanQuery.data)
-  const codexSummary = summarizeCodexIntegration(status)
+  const codexMode = summarizeCodexMode(status)
   const recommendedAction = primaryActions[0] ?? secondaryActions[0] ?? manualActions[0] ?? null
   const recommendedRunAction = recommendedAction?.runAction
+  const optionalClaudeActions = secondaryActions.filter((action) => isClaudeSpecificAction(action.command, action.label))
+  const otherOptionalActions = secondaryActions.filter((action) => !isClaudeSpecificAction(action.command, action.label))
 
   function actionIsRunning(actionKey?: string) {
     return Boolean(runStipe.isPending && actionKey && runStipe.variables === actionKey)
@@ -256,9 +262,12 @@ export function Onboard() {
         </Group>
       </Group>
 
-      <SectionCard title='Current state'>
+      <SectionCard title='Codex mode'>
         <Stack gap='sm'>
-          <Text size='sm'>Use this page when the ecosystem is partly installed or you want the shortest path to a working setup.</Text>
+          <Text size='sm'>
+            Use this page when you want the shortest path to a working Codex setup. Claude lifecycle capture stays optional unless you also
+            want Claude Code coverage.
+          </Text>
           <Group
             align='start'
             justify='space-between'
@@ -272,21 +281,75 @@ export function Onboard() {
             </Text>
             <ProjectSelector variant='button' />
           </Group>
+
+          <Alert
+            color={codexMode.color}
+            title={codexMode.label}
+          >
+            <Stack gap='xs'>
+              <Text size='sm'>{codexMode.detail}</Text>
+              <Grid>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Text
+                    fw={600}
+                    size='sm'
+                  >
+                    Required for Codex mode
+                  </Text>
+                  <List
+                    size='sm'
+                    spacing='xs'
+                  >
+                    {codexMode.required.length > 0 ? (
+                      codexMode.required.map((item) => <List.Item key={item}>{item}</List.Item>)
+                    ) : (
+                      <List.Item>All required Codex steps are already configured.</List.Item>
+                    )}
+                  </List>
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Text
+                    fw={600}
+                    size='sm'
+                  >
+                    Optional Claude steps
+                  </Text>
+                  <List
+                    size='sm'
+                    spacing='xs'
+                  >
+                    {codexMode.optional.map((item) => (
+                      <List.Item key={item}>{item}</List.Item>
+                    ))}
+                  </List>
+                </Grid.Col>
+              </Grid>
+            </Stack>
+          </Alert>
+
           <Group gap='xs'>
             <StatusChip
-              color={status.agents.claude_code.adapter.configured ? 'mycelium' : 'gray'}
-              label='Claude lifecycle adapter'
-              value={status.agents.claude_code.adapter.configured ? 'configured' : 'not configured'}
-            />
-            <StatusChip
               color={status.agents.codex.adapter.configured ? 'mycelium' : 'gray'}
-              label='Codex MCP adapter'
+              label='Codex MCP'
               value={status.agents.codex.adapter.configured ? 'configured' : 'not configured'}
             />
             <StatusChip
-              color={codexSummary.color}
+              color={
+                !status.agents.codex.notify?.configured ? 'orange' : status.agents.codex.notify.contract_matched ? 'mycelium' : 'orange'
+              }
+              label='Codex notify'
+              value={
+                !status.agents.codex.notify?.configured
+                  ? 'missing'
+                  : status.agents.codex.notify.contract_matched
+                    ? 'configured'
+                    : 'mismatch'
+              }
+            />
+            <StatusChip
+              color={codexMode.color}
               label='Codex adapter'
-              value={codexSummary.label.toLowerCase()}
+              value={codexMode.label.toLowerCase()}
             />
             <StatusChip
               color={status.mycelium.available ? 'mycelium' : 'red'}
@@ -305,13 +368,15 @@ export function Onboard() {
             />
             <StatusChip
               color={
-                status.agents.claude_code.adapter.configured && (status.hooks.error_count > 0 || status.hooks.installed_hooks.length === 0)
-                  ? 'orange'
-                  : 'mycelium'
+                status.agents.claude_code.adapter.configured
+                  ? status.hooks.error_count > 0 || status.hooks.installed_hooks.length === 0
+                    ? 'orange'
+                    : 'mycelium'
+                  : 'gray'
               }
-              label='Claude lifecycle adapter'
+              label='Claude hooks'
               value={
-                !status.agents.claude_code.adapter.configured && status.agents.codex.adapter.configured
+                !status.agents.claude_code.adapter.configured
                   ? 'optional'
                   : status.hooks.error_count > 0 || status.hooks.installed_hooks.length === 0
                     ? 'needs attention'
@@ -320,23 +385,30 @@ export function Onboard() {
             />
           </Group>
 
-          {status.hooks.error_count > 0 && (
+          {status.agents.codex.adapter.configured && !codexMode.ready && (
+            <Alert
+              color={codexMode.color}
+              title='Codex mode needs attention'
+            >
+              {codexMode.detail}
+            </Alert>
+          )}
+
+          {status.hooks.error_count > 0 && status.agents.claude_code.adapter.configured && (
             <Alert
               color='orange'
               title='Lifecycle errors detected'
             >
-              `stipe doctor` will check the most common local drift cases first.
+              `stipe doctor` will check the most common local drift cases first. Claude lifecycle capture is optional for Codex mode.
             </Alert>
           )}
 
-          {status.agents.codex.adapter.configured && (
+          {status.agents.codex.adapter.configured && codexMode.ready && (
             <Alert
-              color={codexSummary.color}
-              title={codexSummary.label === 'Notify adapter' ? 'Codex adapter ready' : 'Codex notify adapter missing'}
+              color={codexMode.color}
+              title='Codex mode ready'
             >
-              {codexSummary.label === 'Notify adapter'
-                ? 'This machine already has a Codex MCP adapter and the notify adapter contract in place. Claude lifecycle capture is optional.'
-                : `${codexSummary.detail} Add notify = ["hyphae", "codex-notify"] to ~/.codex/config.toml if you want Codex turn-complete coverage.`}
+              {codexMode.detail}
             </Alert>
           )}
 
@@ -382,7 +454,7 @@ export function Onboard() {
           {status.agents.claude_code.adapter.configured && lifecycleGaps.length > 0 && (
             <Alert
               color='gray'
-              title='Claude lifecycle adapter not fully covered'
+              title='Optional Claude coverage is incomplete'
             >
               Missing recommended lifecycle events: {lifecycleGaps.join(', ')}
             </Alert>
@@ -426,7 +498,7 @@ export function Onboard() {
       )}
 
       {primaryActions.length > 0 && (
-        <SectionCard title='Primary fixes'>
+        <SectionCard title='Required Codex steps'>
           <Stack gap='md'>
             {primaryActions.map((action) => {
               const { runAction } = action
@@ -449,9 +521,9 @@ export function Onboard() {
 
       <Grid>
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <SectionCard title='Optional profiles'>
+          <SectionCard title='Optional Claude steps'>
             <Stack gap='md'>
-              {secondaryActions.map((action) => {
+              {optionalClaudeActions.map((action) => {
                 const { runAction } = action
                 return (
                   <CommandCard
@@ -466,37 +538,74 @@ export function Onboard() {
                   />
                 )
               })}
+              {optionalClaudeActions.length === 0 && (
+                <Text
+                  c='dimmed'
+                  size='sm'
+                >
+                  No Claude-specific steps are needed right now.
+                </Text>
+              )}
             </Stack>
           </SectionCard>
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 6 }}>
-          <SectionCard title='Manual installs'>
+          <SectionCard title='Other optional profiles'>
             <Stack gap='md'>
-              {manualActions.length > 0 ? (
-                manualActions.map((action) => (
-                  <CommandCard
-                    command={action.command}
-                    description={action.description}
-                    key={action.command}
-                    label={action.label}
-                    recentlyRan={actionWasLastRun(action.runAction)}
-                    running={actionIsRunning(action.runAction)}
-                    tier={action.tier}
-                  />
-                ))
+              {otherOptionalActions.length > 0 ? (
+                otherOptionalActions.map((action) => {
+                  const { runAction } = action
+                  return (
+                    <CommandCard
+                      command={action.command}
+                      description={action.description}
+                      key={action.command}
+                      label={action.label}
+                      onRun={runAction ? () => runStipe.mutate(runAction) : undefined}
+                      recentlyRan={actionWasLastRun(runAction)}
+                      running={actionIsRunning(runAction)}
+                      tier={action.tier}
+                    />
+                  )
+                })
               ) : (
                 <Text
                   c='dimmed'
                   size='sm'
                 >
-                  No direct tool installs are needed right now.
+                  No extra profiles are needed right now.
                 </Text>
               )}
             </Stack>
           </SectionCard>
         </Grid.Col>
       </Grid>
+
+      <SectionCard title='Required tool installs'>
+        <Stack gap='md'>
+          {manualActions.length > 0 ? (
+            manualActions.map((action) => (
+              <CommandCard
+                command={action.command}
+                description={action.description}
+                key={action.command}
+                label={action.label}
+                recentlyRan={actionWasLastRun(action.runAction)}
+                running={actionIsRunning(action.runAction)}
+                tier={action.tier}
+              />
+            ))
+          ) : (
+            <Text
+              c='dimmed'
+              size='sm'
+            >
+              No direct tool installs are needed right now.
+            </Text>
+          )}
+        </Stack>
+      </SectionCard>
 
       {runStipe.isError && (
         <ErrorAlert
