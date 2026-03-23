@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import type { CodexNotifyStatus, EcosystemStatus, StipeRepairPlan } from '../../src/lib/api'
-import {
-  buildOnboardingActions,
-  missingLifecycleHooks,
-  summarizeCodexIntegration,
-  summarizeCodexMode,
-  summarizeOnboarding,
-} from '../../src/lib/onboarding'
+import { getCodexModeSteps, summarizeCodexAdapter, summarizeCodexMode } from '../../src/lib/codex'
+import { buildOnboardingActions, getOnboardingActionGroups, missingLifecycleHooks, summarizeOnboarding } from '../../src/lib/onboarding'
 import { buildStipeArgs, parseStipeAction } from '../routes/settings'
 
 function createMissingStatus(): EcosystemStatus {
@@ -206,7 +201,7 @@ describe('onboarding helpers', () => {
     expect(summarizeOnboarding(status)).toContain('Missing lifecycle events')
   })
 
-  it('distinguishes Codex MCP-only presence from notify adapter coverage', () => {
+  it('distinguishes Codex adapter health from full mode readiness', () => {
     const mcpOnly = createCodexStatus({
       command: null,
       config_path: '/Users/test/.codex/config.toml',
@@ -220,14 +215,10 @@ describe('onboarding helpers', () => {
       contract_matched: true,
     })
 
-    expect(summarizeCodexIntegration(mcpOnly)).toMatchObject({
-      label: 'MCP only',
-    })
+    expect(summarizeCodexAdapter(mcpOnly)).toMatchObject({ label: 'MCP only' })
     expect(summarizeOnboarding(mcpOnly)).toContain('Codex mode is partially configured')
 
-    expect(summarizeCodexIntegration(adapter)).toMatchObject({
-      label: 'Notify adapter',
-    })
+    expect(summarizeCodexAdapter(adapter)).toMatchObject({ label: 'Notify adapter' })
     expect(summarizeOnboarding(adapter)).toContain('Codex mode is ready')
   })
 
@@ -238,13 +229,18 @@ describe('onboarding helpers', () => {
       configured: true,
       contract_matched: true,
     })
+    const steps = getCodexModeSteps(status)
 
     expect(summarizeCodexMode(status)).toMatchObject({
       label: 'Codex mode ready',
       ready: true,
       required: [],
     })
-    expect(summarizeCodexMode(status).optional[0]).toContain('Claude lifecycle hooks')
+    expect(summarizeCodexMode(status).detail).toContain('Mycelium')
+    expect(steps.find((step) => step.label === 'Claude hooks')).toMatchObject({
+      group: 'optional',
+      status: 'optional',
+    })
   })
 
   it('summarizes Codex mode as partial when notify coverage is missing', () => {
@@ -259,6 +255,46 @@ describe('onboarding helpers', () => {
       label: 'Codex mode partial',
       ready: false,
     })
-    expect(summarizeCodexMode(status).required).toContain('hyphae codex-notify adapter')
+    expect(summarizeCodexMode(status).required).toContain('Codex notify')
+  })
+
+  it('keeps Mycelium in the required Codex flow', () => {
+    const status = {
+      ...createCodexStatus({
+        command: 'hyphae codex-notify',
+        config_path: '/Users/test/.codex/config.toml',
+        configured: true,
+        contract_matched: true,
+      }),
+      mycelium: {
+        available: false,
+        version: null,
+      },
+    }
+
+    const steps = getCodexModeSteps(status)
+    const myceliumStep = steps.find((step) => step.label === 'Mycelium')
+
+    expect(myceliumStep).toMatchObject({
+      group: 'required',
+      status: 'required',
+    })
+    expect(summarizeCodexMode(status).required[0]).toBe('Mycelium')
+  })
+
+  it('groups optional Claude actions using explicit metadata', () => {
+    const actions = buildOnboardingActions(
+      createCodexStatus({
+        command: 'hyphae codex-notify',
+        config_path: '/Users/test/.codex/config.toml',
+        configured: true,
+        contract_matched: true,
+      })
+    )
+    const groups = getOnboardingActionGroups(actions)
+
+    expect(groups.optionalClaude.every((action) => action.scope === 'claude-optional')).toBe(true)
+    expect(groups.optionalCore.every((action) => action.scope !== 'claude-optional')).toBe(true)
+    expect(groups.secondary.some((action) => action.scope === 'claude-optional')).toBe(true)
   })
 })

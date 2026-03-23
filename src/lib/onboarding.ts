@@ -1,4 +1,7 @@
 import type { EcosystemStatus, StipeDoctorCheck, StipeInitStep, StipeRepairAction, StipeRepairPlan } from './api'
+import { getCodexPresentationModel, missingLifecycleHooks } from './codex'
+
+export { missingLifecycleHooks } from './codex'
 
 export type AllowedStipeAction = 'doctor' | 'init' | 'install-claude-code' | 'install-codex' | 'install-full-stack' | 'install-minimal'
 
@@ -7,16 +10,8 @@ export interface OnboardingAction {
   description: string
   label: string
   runAction?: AllowedStipeAction
+  scope: 'claude-optional' | 'core'
   tier: 'manual' | 'primary' | 'secondary'
-}
-
-export interface CodexModeSummary {
-  color: string
-  detail: string
-  label: string
-  optional: string[]
-  ready: boolean
-  required: string[]
 }
 
 const STIPE_COMMANDS: Record<AllowedStipeAction, string[]> = {
@@ -26,6 +21,10 @@ const STIPE_COMMANDS: Record<AllowedStipeAction, string[]> = {
   'install-codex': ['install', '--profile', 'codex'],
   'install-full-stack': ['install', '--profile', 'full-stack'],
   'install-minimal': ['install', '--profile', 'minimal'],
+}
+
+function hasClaudeConfigured(status: EcosystemStatus): boolean {
+  return status.agents.claude_code.adapter.configured
 }
 
 function hasCoreGap(status: EcosystemStatus): boolean {
@@ -40,138 +39,6 @@ function hasCodexDetected(status: EcosystemStatus): boolean {
   return status.agents.codex.adapter.detected || status.agents.codex.adapter.configured
 }
 
-export function summarizeCodexIntegration(status: EcosystemStatus): {
-  color: string
-  detail: string
-  label: string
-} {
-  const { codex } = status.agents
-  const notify = codex.notify
-
-  if (!codex.configured) {
-    return {
-      color: 'gray',
-      detail: 'No Codex config.toml was detected.',
-      label: 'Not configured',
-    }
-  }
-
-  if (!notify?.configured) {
-    return {
-      color: 'orange',
-      detail: 'Codex MCP is configured, but notify = ["hyphae", "codex-notify"] is missing.',
-      label: 'MCP only',
-    }
-  }
-
-  if (!notify.contract_matched) {
-    return {
-      color: 'orange',
-      detail: 'Codex notify is present, but it does not match notify = ["hyphae", "codex-notify"].',
-      label: 'Notify mismatch',
-    }
-  }
-
-  return {
-    color: 'mycelium',
-    detail: 'Codex MCP and the hyphae codex-notify adapter are configured.',
-    label: 'Notify adapter',
-  }
-}
-
-function codexRequiredSteps(status: EcosystemStatus): string[] {
-  const required: string[] = []
-
-  if (!status.mycelium.available) required.push('Mycelium')
-  if (!status.hyphae.available) required.push('Hyphae')
-  if (!status.rhizome.available) required.push('Rhizome')
-
-  if (!status.agents.codex.adapter.configured) {
-    required.push('Codex MCP profile')
-  } else if (!status.agents.codex.notify?.configured) {
-    required.push('hyphae codex-notify adapter')
-  } else if (!status.agents.codex.notify.contract_matched) {
-    required.push('Fix the Codex notify contract')
-  }
-
-  return required
-}
-
-function codexOptionalSteps(status: EcosystemStatus): string[] {
-  if (!status.agents.claude_code.adapter.configured) {
-    return ['Claude lifecycle hooks are optional unless you also want Claude Code coverage.']
-  }
-
-  if (isHooksUnhealthy(status)) {
-    return ['Repair Claude lifecycle hooks if you also want Claude Code coverage.']
-  }
-
-  return ['Claude lifecycle hooks are available if you also want Claude Code coverage.']
-}
-
-export function summarizeCodexMode(status: EcosystemStatus): CodexModeSummary {
-  const required = codexRequiredSteps(status)
-  const optional = codexOptionalSteps(status)
-  const codex = status.agents.codex
-
-  if (!codex.configured) {
-    return {
-      color: 'gray',
-      detail: 'Install the Codex profile and the hyphae notify adapter to make Codex mode usable.',
-      label: 'Codex mode not configured',
-      optional,
-      ready: false,
-      required,
-    }
-  }
-
-  if (!codex.notify?.configured) {
-    return {
-      color: 'orange',
-      detail: 'Codex MCP is configured, but the hyphae notify adapter is still missing.',
-      label: 'Codex mode partial',
-      optional,
-      ready: false,
-      required,
-    }
-  }
-
-  if (!codex.notify.contract_matched) {
-    return {
-      color: 'orange',
-      detail: 'Codex notify is present, but it does not match the expected notify = ["hyphae", "codex-notify"] contract.',
-      label: 'Codex mode needs repair',
-      optional,
-      ready: false,
-      required,
-    }
-  }
-
-  if (required.length > 0) {
-    return {
-      color: 'orange',
-      detail: `Codex mode is missing: ${required.join(', ')}. Claude lifecycle capture is optional.`,
-      label: 'Codex mode partial',
-      optional,
-      ready: false,
-      required,
-    }
-  }
-
-  return {
-    color: 'mycelium',
-    detail: 'Codex MCP and the hyphae notify adapter are configured. Claude lifecycle capture is optional.',
-    label: 'Codex mode ready',
-    optional,
-    ready: required.length === 0,
-    required,
-  }
-}
-
-function hasClaudeConfigured(status: EcosystemStatus): boolean {
-  return status.agents.claude_code.adapter.configured
-}
-
 function isHooksUnhealthy(status: EcosystemStatus): boolean {
   if (!hasClaudeConfigured(status)) {
     return false
@@ -180,8 +47,22 @@ function isHooksUnhealthy(status: EcosystemStatus): boolean {
   return status.hooks.installed_hooks.length === 0 || status.hooks.error_count > 0 || missingLifecycleHooks(status).length > 0
 }
 
-export function missingLifecycleHooks(status: EcosystemStatus): string[] {
-  return status.hooks.lifecycle.filter((hook) => !hook.installed).map((hook) => hook.event)
+export interface OnboardingActionGroups {
+  manual: OnboardingAction[]
+  optionalClaude: OnboardingAction[]
+  optionalCore: OnboardingAction[]
+  primary: OnboardingAction[]
+  secondary: OnboardingAction[]
+}
+
+export function getOnboardingActionGroups(actions: OnboardingAction[]): OnboardingActionGroups {
+  return {
+    manual: actions.filter((action) => action.tier === 'manual'),
+    optionalClaude: actions.filter((action) => action.scope === 'claude-optional'),
+    optionalCore: actions.filter((action) => action.scope !== 'claude-optional' && action.tier === 'secondary'),
+    primary: actions.filter((action) => action.tier === 'primary'),
+    secondary: actions.filter((action) => action.tier === 'secondary'),
+  }
 }
 
 function addAction(actions: OnboardingAction[], action: OnboardingAction) {
@@ -210,6 +91,7 @@ function mapRepairAction(action: StipeRepairAction): OnboardingAction {
     description: action.description,
     label: action.label,
     runAction: toRunAction(action.action_key),
+    scope: action.action_key === 'install-claude-code' ? 'claude-optional' : 'core',
     tier: action.tier,
   }
 }
@@ -221,6 +103,7 @@ function manualInstallAction(tool: 'hyphae' | 'mycelium' | 'rhizome'): Onboardin
     command: `cargo install ${tool}`,
     description: `Install ${label} from crates.io.`,
     label: `Install ${label}`,
+    scope: 'core',
     tier: 'manual',
   }
 }
@@ -236,6 +119,7 @@ function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
     description: 'Check for setup drift, missing Codex requirements, and local configuration problems.',
     label: 'Run stipe doctor',
     runAction: 'doctor',
+    scope: 'core',
     tier: primaryRepair ? 'primary' : 'secondary',
   })
 
@@ -244,6 +128,7 @@ function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
     description: 'Bootstrap the ecosystem config and host adapter wiring on this machine.',
     label: 'Initialize the ecosystem',
     runAction: 'init',
+    scope: 'core',
     tier: primaryRepair ? 'primary' : 'secondary',
   })
 
@@ -252,6 +137,7 @@ function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
     description: 'Install the smallest useful stack for local onboarding.',
     label: 'Install the minimal profile',
     runAction: 'install-minimal',
+    scope: 'core',
     tier: coreGap ? 'primary' : 'secondary',
   })
 
@@ -260,6 +146,7 @@ function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
     description: 'Install the Codex-oriented profile when you want MCP plus notify-based lifecycle capture.',
     label: 'Install the Codex profile',
     runAction: 'install-codex',
+    scope: 'core',
     tier: hasCodexDetected(status) && coreGap ? 'primary' : 'secondary',
   })
 
@@ -268,6 +155,7 @@ function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
     description: 'Install the Claude Code-oriented profile if you also want lifecycle hook capture.',
     label: 'Install the Claude Code profile',
     runAction: 'install-claude-code',
+    scope: 'claude-optional',
     tier: 'secondary',
   })
 
@@ -276,6 +164,7 @@ function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
     description: 'Install the broadest profile when you want every ecosystem tool available.',
     label: 'Install the full stack',
     runAction: 'install-full-stack',
+    scope: 'core',
     tier: 'secondary',
   })
 
@@ -313,15 +202,15 @@ export function summarizeOnboarding(status: EcosystemStatus, repairPlan?: StipeR
     !status.rhizome.available ? 'Rhizome' : null,
   ].filter((item): item is string => item !== null)
 
-  if (missing.length === 0 && !isHooksUnhealthy(status)) {
-    if (hasCodexConfigured(status)) {
-      const codexMode = summarizeCodexMode(status)
+  const codex = status.agents.codex.adapter.configured ? getCodexPresentationModel(status) : null
 
-      if (codexMode.ready) {
+  if (missing.length === 0 && !isHooksUnhealthy(status)) {
+    if (codex) {
+      if (codex.mode.ready) {
         return 'Codex mode is ready. Use the required steps below for drift checks and required tool installs; Claude lifecycle hooks stay optional unless you also use Claude Code.'
       }
 
-      return `Codex mode is partially configured. ${codexMode.detail}`
+      return `Codex mode is partially configured. ${codex.mode.detail}`
     }
 
     return 'The core ecosystem is installed. Use the commands below for drift checks or optional profiles.'
@@ -344,8 +233,8 @@ export function summarizeOnboarding(status: EcosystemStatus, repairPlan?: StipeR
     fragments.push(`Missing lifecycle events: ${missingLifecycle.join(', ')}`)
   }
 
-  if (hasCodexConfigured(status)) {
-    fragments.push(summarizeCodexMode(status).label)
+  if (codex) {
+    fragments.push(codex.mode.label)
   }
 
   return fragments.join(' · ')

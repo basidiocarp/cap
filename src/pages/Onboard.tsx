@@ -1,34 +1,23 @@
-import { Alert, Badge, Button, Card, CopyButton, Grid, Group, List, Stack, Text, ThemeIcon, Title } from '@mantine/core'
-import { IconAlertCircle, IconArrowRight, IconCheck, IconCopy, IconPlayerPlay, IconRefresh } from '@tabler/icons-react'
+import { Alert, Badge, Button, Card, CopyButton, Grid, Group, Stack, Text, ThemeIcon, Title } from '@mantine/core'
+import { IconAlertCircle, IconArrowRight, IconCopy, IconPlayerPlay, IconRefresh } from '@tabler/icons-react'
 import { Link } from 'react-router-dom'
 
 import type { StipeDoctorCheck, StipeInitStep } from '../lib/api'
+import { CodexModeChecklist } from '../components/CodexModeChecklist'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { ProjectSelector } from '../components/ProjectSelector'
 import { SectionCard } from '../components/SectionCard'
+import { getCodexPresentationModel } from '../lib/codex'
 import {
   buildOnboardingActions,
   failingDoctorChecks,
+  getOnboardingActionGroups,
   initPlanSteps,
   missingLifecycleHooks,
-  summarizeCodexMode,
   summarizeOnboarding,
 } from '../lib/onboarding'
 import { useEcosystemStatus, useRunStipeAction, useStipeRepairPlan } from '../lib/queries'
-
-function StatusChip({ color, label, value }: { color: string; label: string; value: string }) {
-  return (
-    <Badge
-      color={color}
-      leftSection={<IconCheck size={12} />}
-      size='sm'
-      variant='light'
-    >
-      {label}: {value}
-    </Badge>
-  )
-}
 
 function CommandCard({
   command,
@@ -190,10 +179,6 @@ function InitStepCard({ step }: { step: StipeInitStep }) {
   )
 }
 
-function isClaudeSpecificAction(command: string, label: string): boolean {
-  return command.includes('install --profile claude-code') || label.toLowerCase().includes('claude')
-}
-
 export function Onboard() {
   const { data: status, error, isLoading, refetch } = useEcosystemStatus()
   const repairPlanQuery = useStipeRepairPlan()
@@ -208,17 +193,19 @@ export function Onboard() {
   }
 
   const actions = buildOnboardingActions(status, repairPlanQuery.data)
-  const primaryActions = actions.filter((action) => action.tier === 'primary')
-  const secondaryActions = actions.filter((action) => action.tier === 'secondary')
-  const manualActions = actions.filter((action) => action.tier === 'manual')
+  const {
+    manual: manualActions,
+    optionalClaude: optionalClaudeActions,
+    optionalCore: otherOptionalActions,
+    primary: primaryActions,
+    secondary: secondaryActions,
+  } = getOnboardingActionGroups(actions)
   const failingChecks = failingDoctorChecks(repairPlanQuery.data)
   const lifecycleGaps = missingLifecycleHooks(status)
   const steps = initPlanSteps(repairPlanQuery.data)
-  const codexMode = summarizeCodexMode(status)
+  const codex = getCodexPresentationModel(status)
   const recommendedAction = primaryActions[0] ?? secondaryActions[0] ?? manualActions[0] ?? null
   const recommendedRunAction = recommendedAction?.runAction
-  const optionalClaudeActions = secondaryActions.filter((action) => isClaudeSpecificAction(action.command, action.label))
-  const otherOptionalActions = secondaryActions.filter((action) => !isClaudeSpecificAction(action.command, action.label))
 
   function actionIsRunning(actionKey?: string) {
     return Boolean(runStipe.isPending && actionKey && runStipe.variables === actionKey)
@@ -265,8 +252,8 @@ export function Onboard() {
       <SectionCard title='Codex mode'>
         <Stack gap='sm'>
           <Text size='sm'>
-            Use this page when you want the shortest path to a working Codex setup. Claude lifecycle capture stays optional unless you also
-            want Claude Code coverage.
+            Use this page when you want the shortest path to a working Codex setup. Mycelium, Hyphae, Rhizome, Codex MCP, and Codex notify
+            are required in the same flow; Claude lifecycle capture stays optional unless you also want Claude Code coverage.
           </Text>
           <Group
             align='start'
@@ -282,135 +269,14 @@ export function Onboard() {
             <ProjectSelector variant='button' />
           </Group>
 
+          <CodexModeChecklist status={status} />
+
           <Alert
-            color={codexMode.color}
-            title={codexMode.label}
+            color={codex.adapter.color}
+            title='Codex adapter health'
           >
-            <Stack gap='xs'>
-              <Text size='sm'>{codexMode.detail}</Text>
-              <Grid>
-                <Grid.Col span={{ base: 12, md: 6 }}>
-                  <Text
-                    fw={600}
-                    size='sm'
-                  >
-                    Required for Codex mode
-                  </Text>
-                  <List
-                    size='sm'
-                    spacing='xs'
-                  >
-                    {codexMode.required.length > 0 ? (
-                      codexMode.required.map((item) => <List.Item key={item}>{item}</List.Item>)
-                    ) : (
-                      <List.Item>All required Codex steps are already configured.</List.Item>
-                    )}
-                  </List>
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 6 }}>
-                  <Text
-                    fw={600}
-                    size='sm'
-                  >
-                    Optional Claude steps
-                  </Text>
-                  <List
-                    size='sm'
-                    spacing='xs'
-                  >
-                    {codexMode.optional.map((item) => (
-                      <List.Item key={item}>{item}</List.Item>
-                    ))}
-                  </List>
-                </Grid.Col>
-              </Grid>
-            </Stack>
+            {codex.adapter.detail}
           </Alert>
-
-          <Group gap='xs'>
-            <StatusChip
-              color={status.agents.codex.adapter.configured ? 'mycelium' : 'gray'}
-              label='Codex MCP'
-              value={status.agents.codex.adapter.configured ? 'configured' : 'not configured'}
-            />
-            <StatusChip
-              color={
-                !status.agents.codex.notify?.configured ? 'orange' : status.agents.codex.notify.contract_matched ? 'mycelium' : 'orange'
-              }
-              label='Codex notify'
-              value={
-                !status.agents.codex.notify?.configured
-                  ? 'missing'
-                  : status.agents.codex.notify.contract_matched
-                    ? 'configured'
-                    : 'mismatch'
-              }
-            />
-            <StatusChip
-              color={codexMode.color}
-              label='Codex adapter'
-              value={codexMode.label.toLowerCase()}
-            />
-            <StatusChip
-              color={status.mycelium.available ? 'mycelium' : 'red'}
-              label='Mycelium'
-              value={status.mycelium.available ? 'available' : 'missing'}
-            />
-            <StatusChip
-              color={status.hyphae.available ? 'spore' : 'red'}
-              label='Hyphae'
-              value={status.hyphae.available ? 'available' : 'missing'}
-            />
-            <StatusChip
-              color={status.rhizome.available ? 'lichen' : 'red'}
-              label='Rhizome'
-              value={status.rhizome.available ? 'available' : 'missing'}
-            />
-            <StatusChip
-              color={
-                status.agents.claude_code.adapter.configured
-                  ? status.hooks.error_count > 0 || status.hooks.installed_hooks.length === 0
-                    ? 'orange'
-                    : 'mycelium'
-                  : 'gray'
-              }
-              label='Claude hooks'
-              value={
-                !status.agents.claude_code.adapter.configured
-                  ? 'optional'
-                  : status.hooks.error_count > 0 || status.hooks.installed_hooks.length === 0
-                    ? 'needs attention'
-                    : 'healthy'
-              }
-            />
-          </Group>
-
-          {status.agents.codex.adapter.configured && !codexMode.ready && (
-            <Alert
-              color={codexMode.color}
-              title='Codex mode needs attention'
-            >
-              {codexMode.detail}
-            </Alert>
-          )}
-
-          {status.hooks.error_count > 0 && status.agents.claude_code.adapter.configured && (
-            <Alert
-              color='orange'
-              title='Lifecycle errors detected'
-            >
-              `stipe doctor` will check the most common local drift cases first. Claude lifecycle capture is optional for Codex mode.
-            </Alert>
-          )}
-
-          {status.agents.codex.adapter.configured && codexMode.ready && (
-            <Alert
-              color={codexMode.color}
-              title='Codex mode ready'
-            >
-              {codexMode.detail}
-            </Alert>
-          )}
 
           {recommendedAction && (
             <Alert
