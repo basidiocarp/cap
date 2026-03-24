@@ -10,17 +10,7 @@ import { PageLoader } from '../components/PageLoader'
 import { ProjectSelector } from '../components/ProjectSelector'
 import { SectionCard } from '../components/SectionCard'
 import { useFileTreeState } from '../hooks/useFileTreeState'
-import {
-  useAnnotations,
-  useCallSites,
-  useComplexity,
-  useDefinition,
-  useExports,
-  useFileSummary,
-  useProject,
-  useRhizomeStatus,
-  useSymbols,
-} from '../lib/queries'
+import { useDefinition, useExports, useFileSummary, useProject, useRhizomeStatus, useSymbols } from '../lib/queries'
 import { FileDetailTabs } from './code-explorer/FileDetailTabs'
 import { FileTreeNode } from './code-explorer/FileTreeNode'
 import { SymbolTable } from './code-explorer/SymbolTable'
@@ -85,9 +75,6 @@ export function CodeExplorer() {
 
   const { data: symbols = [], isLoading: symbolsLoading } = useSymbols(codeFile)
   const { data: definition, isLoading: defLoading } = useDefinition(codeFile, expandedSymbol ?? '')
-  const { data: annotations = [], isLoading: annotationsLoading } = useAnnotations(codeFile)
-  const { data: callSites = [], isLoading: callSitesLoading } = useCallSites(codeFile)
-  const { data: complexity = [], isLoading: complexityLoading } = useComplexity(codeFile)
   const { data: exports = [], isLoading: exportsLoading } = useExports(codeFile)
   const { data: fileSummary, isLoading: summaryLoading } = useFileSummary(codeFile)
 
@@ -334,15 +321,7 @@ export function CodeExplorer() {
                 </EmptyState>
               )}
 
-              <FileDetailTabs
-                annotations={annotations}
-                annotationsLoading={annotationsLoading}
-                callSites={callSites}
-                callSitesLoading={callSitesLoading}
-                complexity={complexity}
-                complexityLoading={complexityLoading}
-                selectedFile={tree.selectedFile}
-              />
+              <FileDetailTabs selectedFile={tree.selectedFile} />
             </>
           ) : (
             <EmptyState>Select a file to explore its symbols</EmptyState>

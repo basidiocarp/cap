@@ -219,27 +219,27 @@ export const rhizomeKeys = {
   typeDefinitions: (file: string) => ['rhizome', 'typeDefinitions', file] as const,
 }
 
-export function useAnnotations(file: string) {
+export function useAnnotations(file: string, enabled = true) {
   return useQuery({
-    enabled: !!file,
+    enabled: !!file && enabled,
     queryFn: () => rhizomeApi.annotations(file),
     queryKey: rhizomeKeys.annotations(file),
     staleTime: 300_000,
   })
 }
 
-export function useComplexity(file: string) {
+export function useComplexity(file: string, enabled = true) {
   return useQuery({
-    enabled: !!file,
+    enabled: !!file && enabled,
     queryFn: () => rhizomeApi.complexity(file),
     queryKey: rhizomeKeys.complexity(file),
     staleTime: 300_000,
   })
 }
 
-export function useDependencies(file: string) {
+export function useDependencies(file: string, enabled = true) {
   return useQuery({
-    enabled: !!file,
+    enabled: !!file && enabled,
     queryFn: () => rhizomeApi.dependencies(file),
     queryKey: rhizomeKeys.dependencies(file),
   })
@@ -350,9 +350,9 @@ export function useRhizomeAnalytics(enabled = true) {
   })
 }
 
-export function useCallSites(file: string, fn?: string) {
+export function useCallSites(file: string, fn?: string, enabled = true) {
   return useQuery({
-    enabled: !!file,
+    enabled: !!file && enabled,
     queryFn: () => rhizomeApi.callSites(file, fn),
     queryKey: rhizomeKeys.callSites(file, fn),
     staleTime: 300_000,
@@ -401,9 +401,9 @@ export function useSymbolBody(file: string, symbol: string, line?: number) {
   })
 }
 
-export function useTests(file: string) {
+export function useTests(file: string, enabled = true) {
   return useQuery({
-    enabled: !!file,
+    enabled: !!file && enabled,
     queryFn: () => rhizomeApi.tests(file),
     queryKey: rhizomeKeys.tests(file),
     staleTime: 300_000,

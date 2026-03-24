@@ -11,6 +11,7 @@ import { useDependencies } from '../lib/queries'
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface CallGraphProps {
+  enabled?: boolean
   file: string | null
 }
 
@@ -77,8 +78,8 @@ function layoutNodes(names: string[], callers: Set<string>, callees: Set<string>
 // Component
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function CallGraph({ file }: CallGraphProps) {
-  const { data: dependencies = [], isLoading } = useDependencies(file ?? '')
+export function CallGraph({ enabled = true, file }: CallGraphProps) {
+  const { data: dependencies = [], isLoading } = useDependencies(file ?? '', enabled)
 
   const { nodes, edges } = useMemo(() => {
     if (!Array.isArray(dependencies) || dependencies.length === 0) {

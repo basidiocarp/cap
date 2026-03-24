@@ -1,35 +1,38 @@
 import { Alert, Badge, Group, Loader, Stack, Table, Tabs, Text } from '@mantine/core'
+import { lazy, Suspense, useState } from 'react'
 
-import type { Annotation, CallSite, ComplexityResult } from '../../lib/api'
-import { CallGraph } from '../../components/CallGraph'
 import { SectionCard } from '../../components/SectionCard'
 import { annotationColor, complexityColor } from '../../lib/colors'
-import { useTests } from '../../lib/queries'
+import { useAnnotations, useCallSites, useComplexity, useTests } from '../../lib/queries'
 
 interface FileDetailTabsProps {
-  annotations: Annotation[]
-  annotationsLoading: boolean
-  callSites: CallSite[]
-  callSitesLoading: boolean
-  complexity: ComplexityResult[]
-  complexityLoading: boolean
   selectedFile: string | null
 }
 
-export function FileDetailTabs({
-  annotations,
-  annotationsLoading,
-  callSites,
-  callSitesLoading,
-  complexity,
-  complexityLoading,
-  selectedFile,
-}: FileDetailTabsProps) {
-  const { data: tests = [], isLoading: testsLoading } = useTests(selectedFile ?? '')
+const CallGraph = lazy(() => import('../../components/CallGraph').then((m) => ({ default: m.CallGraph })))
+const DEFAULT_TAB = 'annotations'
+
+export function FileDetailTabs({ selectedFile }: FileDetailTabsProps) {
+  const [activeTab, setActiveTab] = useState(DEFAULT_TAB)
+
+  const isAnnotationsTabActive = activeTab === 'annotations'
+  const isComplexityTabActive = activeTab === 'complexity'
+  const isCallSitesTabActive = activeTab === 'callSites'
+  const isTestsTabActive = activeTab === 'tests'
+  const isDependenciesTabActive = activeTab === 'dependencies'
+
+  const { data: annotations = [], isLoading: annotationsLoading } = useAnnotations(selectedFile ?? '', isAnnotationsTabActive)
+  const { data: complexity = [], isLoading: complexityLoading } = useComplexity(selectedFile ?? '', isComplexityTabActive)
+  const { data: callSites = [], isLoading: callSitesLoading } = useCallSites(selectedFile ?? '', undefined, isCallSitesTabActive)
+  const { data: tests = [], isLoading: testsLoading } = useTests(selectedFile ?? '', isTestsTabActive)
 
   return (
     <SectionCard>
-      <Tabs defaultValue='annotations'>
+      <Tabs
+        keepMounted={false}
+        onChange={(value) => setActiveTab(value ?? DEFAULT_TAB)}
+        value={activeTab}
+      >
         <Tabs.List>
           <Tabs.Tab value='annotations'>
             Annotations{' '}
@@ -278,7 +281,12 @@ export function FileDetailTabs({
           pt='sm'
           value='dependencies'
         >
-          <CallGraph file={selectedFile} />
+          <Suspense fallback={<Loader size='sm' />}>
+            <CallGraph
+              enabled={isDependenciesTabActive}
+              file={selectedFile}
+            />
+          </Suspense>
         </Tabs.Panel>
       </Tabs>
     </SectionCard>

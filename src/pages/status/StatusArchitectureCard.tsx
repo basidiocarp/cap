@@ -1,6 +1,9 @@
 import { Card, Title } from '@mantine/core'
+import { lazy, Suspense } from 'react'
 
-import { EcosystemFlow } from '../../components/EcosystemFlow'
+import { PageLoader } from '../../components/PageLoader'
+
+const EcosystemFlow = lazy(() => import('../../components/EcosystemFlow').then((m) => ({ default: m.EcosystemFlow })))
 
 export function StatusArchitectureCard() {
   return (
@@ -16,7 +19,9 @@ export function StatusArchitectureCard() {
         Ecosystem Architecture
       </Title>
       <div style={{ height: 400 }}>
-        <EcosystemFlow />
+        <Suspense fallback={<PageLoader mt='md' />}>
+          <EcosystemFlow />
+        </Suspense>
       </div>
     </Card>
   )
