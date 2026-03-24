@@ -9,6 +9,7 @@ import { PageLoader } from '../components/PageLoader'
 import { ProjectSelector } from '../components/ProjectSelector'
 import { SectionCard } from '../components/SectionCard'
 import { getCodexPresentationModel } from '../lib/codex'
+import { summarizeHyphaeMemoryFlow } from '../lib/hyphae'
 import {
   buildOnboardingActions,
   failingDoctorChecks,
@@ -204,6 +205,7 @@ export function Onboard() {
   const lifecycleGaps = missingLifecycleHooks(status)
   const steps = initPlanSteps(repairPlanQuery.data)
   const codex = getCodexPresentationModel(status)
+  const hyphaeFlow = summarizeHyphaeMemoryFlow(status)
   const recommendedAction = primaryActions[0] ?? secondaryActions[0] ?? manualActions[0] ?? null
   const recommendedRunAction = recommendedAction?.runAction
 
@@ -276,6 +278,39 @@ export function Onboard() {
             title='Codex adapter health'
           >
             {codex.adapter.detail}
+          </Alert>
+
+          <Alert
+            color={hyphaeFlow.color}
+            title='Hyphae memory flow'
+          >
+            <Stack gap='xs'>
+              <Text size='sm'>{hyphaeFlow.detail}</Text>
+              <Text
+                c='dimmed'
+                size='sm'
+              >
+                {hyphaeFlow.recommendation}
+              </Text>
+              <Group gap='xs'>
+                <Button
+                  component={Link}
+                  size='xs'
+                  to='/status'
+                  variant='subtle'
+                >
+                  Refresh status
+                </Button>
+                <Button
+                  component={Link}
+                  size='xs'
+                  to='/memories'
+                  variant='subtle'
+                >
+                  Open memories
+                </Button>
+              </Group>
+            </Stack>
           </Alert>
 
           {recommendedAction && (

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { CodexNotifyStatus, EcosystemStatus, StipeRepairPlan } from '../../src/lib/api'
 import { getCodexModeSteps, summarizeCodexAdapter, summarizeCodexMode } from '../../src/lib/codex'
+import { summarizeHyphaeMemoryFlow } from '../../src/lib/hyphae'
 import { buildOnboardingActions, getOnboardingActionGroups, missingLifecycleHooks, summarizeOnboarding } from '../../src/lib/onboarding'
 import { buildStipeArgs, parseStipeAction } from '../routes/settings'
 
@@ -320,5 +321,40 @@ describe('onboarding helpers', () => {
     expect(groups.optionalClaude.every((action) => action.scope === 'claude-optional')).toBe(true)
     expect(groups.optionalCore.every((action) => action.scope !== 'claude-optional')).toBe(true)
     expect(groups.secondary.some((action) => action.scope === 'claude-optional')).toBe(true)
+  })
+
+  it('reports when Codex memory flow is still waiting for a first turn', () => {
+    const status = createCodexStatus({
+      command: 'hyphae codex-notify',
+      config_path: '/Users/test/.codex/config.toml',
+      configured: true,
+      contract_matched: true,
+    })
+
+    expect(summarizeHyphaeMemoryFlow(status)).toMatchObject({
+      label: 'No Codex memories yet',
+      recommendation: 'Complete one real Codex turn, then refresh this page to confirm end-to-end flow.',
+    })
+  })
+
+  it('reports Codex memory flow once a Codex memory is present', () => {
+    const status = createCodexStatus({
+      command: 'hyphae codex-notify',
+      config_path: '/Users/test/.codex/config.toml',
+      configured: true,
+      contract_matched: true,
+    })
+    status.hyphae.activity = {
+      codex_memory_count: 2,
+      last_codex_memory_at: '2026-03-24T10:00:00Z',
+      last_session_memory_at: '2026-03-24T10:00:00Z',
+      last_session_topic: 'session/my-project',
+      recent_session_memory_count: 3,
+    }
+
+    expect(summarizeHyphaeMemoryFlow(status)).toMatchObject({
+      label: 'Flowing',
+      recommendation: 'Open Memories to inspect the latest Codex session entries.',
+    })
   })
 })

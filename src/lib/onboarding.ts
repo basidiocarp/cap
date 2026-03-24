@@ -1,5 +1,5 @@
 import type { EcosystemStatus, StipeDoctorCheck, StipeInitStep, StipeRepairAction, StipeRepairPlan } from './api'
-import { getCodexPresentationModel, missingLifecycleHooks } from './codex'
+import { getCodexPresentationModel, isClaudeHooksUnhealthy, missingLifecycleHooks } from './codex'
 
 export { missingLifecycleHooks } from './codex'
 
@@ -37,14 +37,6 @@ function hasCodexConfigured(status: EcosystemStatus): boolean {
 
 function hasCodexDetected(status: EcosystemStatus): boolean {
   return status.agents.codex.adapter.detected || status.agents.codex.adapter.configured
-}
-
-function isHooksUnhealthy(status: EcosystemStatus): boolean {
-  if (!hasClaudeConfigured(status)) {
-    return false
-  }
-
-  return status.hooks.installed_hooks.length === 0 || status.hooks.error_count > 0 || missingLifecycleHooks(status).length > 0
 }
 
 export interface OnboardingActionGroups {
@@ -111,7 +103,7 @@ function manualInstallAction(tool: 'hyphae' | 'mycelium' | 'rhizome'): Onboardin
 function buildFallbackActions(status: EcosystemStatus): OnboardingAction[] {
   const actions: OnboardingAction[] = []
   const coreGap = hasCoreGap(status)
-  const hooksUnhealthy = isHooksUnhealthy(status)
+  const hooksUnhealthy = isClaudeHooksUnhealthy(status)
   const primaryRepair = coreGap || (hooksUnhealthy && !hasCodexConfigured(status))
 
   addAction(actions, {
@@ -204,7 +196,7 @@ export function summarizeOnboarding(status: EcosystemStatus, repairPlan?: StipeR
 
   const codex = status.agents.codex.adapter.configured ? getCodexPresentationModel(status) : null
 
-  if (missing.length === 0 && !isHooksUnhealthy(status)) {
+  if (missing.length === 0 && !isClaudeHooksUnhealthy(status)) {
     if (codex) {
       if (codex.mode.ready) {
         return 'Codex mode is ready. Use the required steps below for drift checks and required tool installs; Claude lifecycle hooks stay optional unless you also use Claude Code.'

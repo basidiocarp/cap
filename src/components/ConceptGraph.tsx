@@ -3,17 +3,16 @@ import { Loader, Text } from '@mantine/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
 
+import type { ConceptInspection } from '../lib/api'
 import { parseJsonArray } from '../lib/parse'
-import { useMemoirInspect } from '../lib/queries'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface ConceptGraphProps {
-  concept?: string
-  depth?: number
-  memoir: string
+  inspection?: ConceptInspection | null
+  isLoading?: boolean
   onNodeClick?: (concept: string) => void
 }
 
@@ -87,12 +86,10 @@ const GRAPH_HEIGHT = 450
 const MIN_NODE_SIZE = 3
 const MAX_NODE_SIZE = 10
 
-export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: ConceptGraphProps) {
+export function ConceptGraph({ inspection, isLoading = false, onNodeClick }: ConceptGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const graphRef = useRef<ForceGraphMethods<GraphNode, GraphLink> | undefined>(undefined)
   const [width, setWidth] = useState(600)
-
-  const { data: inspection, isLoading, isFetching } = useMemoirInspect(memoir, concept ?? '', depth)
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -218,17 +215,6 @@ export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: Concep
     return link.color ?? DEFAULT_EDGE_COLOR
   }, [])
 
-  if (!concept) {
-    return (
-      <Text
-        c='dimmed'
-        size='sm'
-      >
-        Select a concept to view its knowledge graph
-      </Text>
-    )
-  }
-
   if (isLoading && !inspection) {
     return <Loader size='sm' />
   }
@@ -247,7 +233,7 @@ export function ConceptGraph({ concept, depth = 2, memoir, onNodeClick }: Concep
   return (
     <div
       ref={containerRef}
-      style={{ opacity: isFetching ? 0.6 : 1, transition: 'opacity 0.2s', width: '100%' }}
+      style={{ opacity: isLoading ? 0.6 : 1, transition: 'opacity 0.2s', width: '100%' }}
     >
       <ForceGraph2D<GraphNode, GraphLink>
         backgroundColor='transparent'

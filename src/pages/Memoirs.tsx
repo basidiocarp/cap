@@ -14,10 +14,9 @@ import {
   UnstyledButton,
 } from '@mantine/core'
 import { IconArrowLeft } from '@tabler/icons-react'
-import { useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useMemo, useRef, useState } from 'react'
 
 import type { Concept } from '../lib/api'
-import { ConceptGraph } from '../components/ConceptGraph'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
@@ -45,6 +44,13 @@ const EDGE_LEGEND = [
   { color: '#9775fa', label: 'implements' },
   { color: '#00bcd4', label: 'imports' },
 ]
+
+const CONCEPT_GRAPH_HEIGHT = 450
+
+const ConceptGraph = lazy(async () => {
+  const { ConceptGraph: Graph } = await import('../components/ConceptGraph')
+  return { default: Graph }
+})
 
 function GraphLegend() {
   return (
@@ -84,6 +90,26 @@ function GraphLegend() {
         ))}
       </Group>
     </Group>
+  )
+}
+
+function GraphLoadingState() {
+  return (
+    <Stack
+      align='center'
+      aria-live='polite'
+      justify='center'
+      mih={CONCEPT_GRAPH_HEIGHT}
+      role='status'
+    >
+      <Loader size='sm' />
+      <Text
+        c='dimmed'
+        size='sm'
+      >
+        Loading graph
+      </Text>
+    </Stack>
   )
 }
 
@@ -266,12 +292,13 @@ export function Memoirs() {
                     </Group>
 
                     {/* Graph visualization */}
-                    <ConceptGraph
-                      concept={inspectConcept}
-                      depth={Number(graphDepth)}
-                      memoir={selected ?? ''}
-                      onNodeClick={handleInspect}
-                    />
+                    <Suspense fallback={<GraphLoadingState />}>
+                      <ConceptGraph
+                        inspection={inspection}
+                        isLoading={inspectLoading}
+                        onNodeClick={handleInspect}
+                      />
+                    </Suspense>
 
                     <GraphLegend />
 

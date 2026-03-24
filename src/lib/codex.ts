@@ -40,6 +40,14 @@ export function missingLifecycleHooks(status: EcosystemStatus): string[] {
   return status.hooks.lifecycle.filter((hook) => !hook.installed).map((hook) => hook.event)
 }
 
+export function isClaudeHooksUnhealthy(status: EcosystemStatus): boolean {
+  if (!status.agents.claude_code.adapter.configured) {
+    return false
+  }
+
+  return status.hooks.installed_hooks.length === 0 || status.hooks.error_count > 0 || missingLifecycleHooks(status).length > 0
+}
+
 export function getCodexModeSteps(status: EcosystemStatus): CodexModeStep[] {
   const steps: CodexModeStep[] = []
 
@@ -108,7 +116,7 @@ export function getCodexModeSteps(status: EcosystemStatus): CodexModeStep[] {
   let claudeStatus: CodexModeStep['status'] = 'optional'
   let claudeDetail = 'Claude lifecycle hooks are optional unless you also want Claude Code coverage.'
 
-  if (status.agents.claude_code.adapter.configured && isHooksUnhealthy(status)) {
+  if (status.agents.claude_code.adapter.configured && isClaudeHooksUnhealthy(status)) {
     claudeStatus = 'repair'
     claudeDetail = 'Claude hooks are installed but need repair. This only matters if you also want Claude Code coverage.'
   } else if (status.agents.claude_code.adapter.configured) {
@@ -240,14 +248,6 @@ export function summarizeCodexMode(status: EcosystemStatus): CodexModeSummary {
     ready: required.length === 0,
     required,
   }
-}
-
-function isHooksUnhealthy(status: EcosystemStatus): boolean {
-  if (!status.agents.claude_code.adapter.configured) {
-    return false
-  }
-
-  return status.hooks.installed_hooks.length === 0 || status.hooks.error_count > 0 || missingLifecycleHooks(status).length > 0
 }
 
 export function getCodexPresentationModel(status: EcosystemStatus): CodexPresentationModel {
