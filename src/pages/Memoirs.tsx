@@ -3,6 +3,7 @@ import {
   Grid,
   Group,
   Loader,
+  Pagination,
   ScrollArea,
   SegmentedControl,
   Stack,
@@ -14,7 +15,7 @@ import {
   UnstyledButton,
 } from '@mantine/core'
 import { IconArrowLeft } from '@tabler/icons-react'
-import { lazy, Suspense, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useDeferredValue, useRef, useState } from 'react'
 
 import type { Concept } from '../lib/api'
 import { EmptyState } from '../components/EmptyState'
@@ -46,6 +47,7 @@ const EDGE_LEGEND = [
 ]
 
 const CONCEPT_GRAPH_HEIGHT = 450
+const CONCEPTS_PAGE_SIZE = 200
 
 const ConceptGraph = lazy(async () => {
   const { ConceptGraph: Graph } = await import('../components/ConceptGraph')
@@ -121,26 +123,28 @@ export function Memoirs() {
   const [selected, setSelected] = useState<string | null>(null)
   const [inspectConcept, setInspectConcept] = useState('')
   const [conceptFilter, setConceptFilter] = useState('')
+  const [conceptPage, setConceptPage] = useState(1)
   const [graphDepth, setGraphDepth] = useState('2')
   const [history, setHistory] = useState<string[]>([])
   const inspectRef = useRef<HTMLDivElement>(null)
+  const deferredConceptFilter = useDeferredValue(conceptFilter.trim())
 
   const { data: memoirs = [], error: memoirsError, isLoading: memoirsLoading } = useMemoirs()
-  const { data: detail, isLoading: detailLoading } = useMemoir(selected ?? '')
+  const { data: detail, isLoading: detailLoading } = useMemoir(selected ?? '', {
+    limit: CONCEPTS_PAGE_SIZE,
+    offset: (conceptPage - 1) * CONCEPTS_PAGE_SIZE,
+    q: deferredConceptFilter || undefined,
+  })
   const { data: inspection, isLoading: inspectLoading } = useMemoirInspect(selected ?? '', inspectConcept, Number(graphDepth))
-
-  const filteredConcepts = useMemo(() => {
-    if (!detail?.concepts || !conceptFilter.trim()) {
-      return detail?.concepts ?? []
-    }
-    const filterLower = conceptFilter.toLowerCase()
-    return detail.concepts.filter((c: Concept) => c.name.toLowerCase().includes(filterLower))
-  }, [detail?.concepts, conceptFilter])
+  const totalPages = detail ? Math.max(1, Math.ceil(detail.total_concepts / CONCEPTS_PAGE_SIZE)) : 1
+  const currentRangeStart = detail && detail.total_concepts > 0 ? detail.offset + 1 : 0
+  const currentRangeEnd = detail ? Math.min(detail.offset + detail.concepts.length, detail.total_concepts) : 0
 
   function handleSelectMemoir(name: string) {
     setSelected(name)
     setInspectConcept('')
     setConceptFilter('')
+    setConceptPage(1)
     setHistory([])
   }
 
@@ -416,21 +420,39 @@ export function Memoirs() {
                     size='sm'
                     variant='light'
                   >
-                    {filteredConcepts.length}/{detail.concepts.length}
+                    {currentRangeStart}-{currentRangeEnd} of {detail.total_concepts}
                   </Badge>
                 </Group>
 
-                {detail.concepts.length > 0 && (
+                <Stack gap='xs'>
                   <TextInput
-                    mb='sm'
-                    onChange={(e) => setConceptFilter(e.currentTarget.value)}
-                    placeholder='Filter concepts...'
+                    onChange={(e) => {
+                      setConceptFilter(e.currentTarget.value)
+                      setConceptPage(1)
+                    }}
+                    placeholder='Filter concepts by name or definition...'
                     size='xs'
                     value={conceptFilter}
                   />
-                )}
+                  <Group justify='space-between'>
+                    <Text
+                      c='dimmed'
+                      size='xs'
+                    >
+                      Large memoirs are loaded in pages of {CONCEPTS_PAGE_SIZE} concepts to keep the UI responsive.
+                    </Text>
+                    {detail.total_concepts > CONCEPTS_PAGE_SIZE && (
+                      <Pagination
+                        onChange={setConceptPage}
+                        size='sm'
+                        total={totalPages}
+                        value={conceptPage}
+                      />
+                    )}
+                  </Group>
+                </Stack>
 
-                {filteredConcepts.length > 0 ? (
+                {detail.concepts.length > 0 ? (
                   <ScrollArea mah={400}>
                     <Table highlightOnHover>
                       <Table.Thead>
@@ -442,7 +464,7 @@ export function Memoirs() {
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>
-                        {filteredConcepts.map((c: Concept) => (
+                        {detail.concepts.map((c: Concept) => (
                           <Table.Tr
                             key={c.id}
                             onClick={() => handleInspect(c.name)}
@@ -492,7 +514,7 @@ export function Memoirs() {
                     </Table>
                   </ScrollArea>
                 ) : (
-                  <EmptyState>{conceptFilter ? 'No concepts match the filter' : 'No concepts yet'}</EmptyState>
+                  <EmptyState>{conceptFilter ? 'No concepts match the filter' : 'No concepts in this memoir yet'}</EmptyState>
                 )}
               </SectionCard>
             </Stack>

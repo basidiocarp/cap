@@ -151,6 +151,42 @@ describe('API Routes', () => {
     })
   })
 
+  describe('GET /api/hyphae/memoirs/:name', () => {
+    it('forwards memoir paging and filter parameters', async () => {
+      const memoirShowSpy = vi.spyOn(hyphae, 'memoirShow').mockReturnValue({
+        concepts: [],
+        limit: 200,
+        memoir: {
+          consolidation_threshold: 50,
+          created_at: '2026-03-24T00:00:00Z',
+          description: 'Memoir description',
+          id: 'memoir-1',
+          name: 'code:williamnewton',
+          updated_at: '2026-03-24T00:00:00Z',
+        },
+        offset: 400,
+        query: 'router',
+        total_concepts: 12,
+      })
+
+      const req = new Request('http://localhost:3001/api/hyphae/memoirs/code%3Awilliamnewton?limit=200&offset=400&q=router')
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(memoirShowSpy).toHaveBeenCalledWith('code:williamnewton', {
+        limit: 200,
+        offset: 400,
+        q: 'router',
+      })
+      await expect(res.json()).resolves.toMatchObject({
+        limit: 200,
+        offset: 400,
+        query: 'router',
+        total_concepts: 12,
+      })
+    })
+  })
+
   describe('POST /api/rhizome edit workflows', () => {
     it('forwards rename requests to Rhizome', async () => {
       const client = {

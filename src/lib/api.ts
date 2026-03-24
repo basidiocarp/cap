@@ -193,7 +193,12 @@ export const hyphaeApi = {
   invalidateMemory: (id: string, reason?: string) =>
     post<{ result: string }>(`/hyphae/memories/${encodeURIComponent(id)}/invalidate`, reason ? { reason } : {}),
   lessons: () => get<Lesson[]>('/hyphae/lessons'),
-  memoir: (name: string) => get<MemoirDetail>(`/hyphae/memoirs/${encodeURIComponent(name)}`),
+  memoir: (name: string, options?: { limit?: number; offset?: number; q?: string }) =>
+    get<MemoirDetail>(`/hyphae/memoirs/${encodeURIComponent(name)}`, {
+      limit: options?.limit ? String(options.limit) : '',
+      offset: options?.offset ? String(options.offset) : '',
+      q: options?.q ?? '',
+    }),
   memoirInspect: (memoir: string, concept: string, depth?: number) =>
     get<ConceptInspection>(`/hyphae/memoirs/${encodeURIComponent(memoir)}/inspect/${encodeURIComponent(concept)}`, {
       depth: depth ? String(depth) : '',

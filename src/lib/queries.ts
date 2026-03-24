@@ -9,7 +9,8 @@ export const hyphaeKeys = {
   context: (task: string, project?: string) => ['hyphae', 'context', task, project] as const,
   health: (topic?: string) => ['hyphae', 'health', topic] as const,
   lessons: () => ['hyphae', 'lessons'] as const,
-  memoir: (name: string) => ['hyphae', 'memoir', name] as const,
+  memoir: (name: string, options?: { limit?: number; offset?: number; q?: string }) =>
+    ['hyphae', 'memoir', name, options?.limit, options?.offset, options?.q] as const,
   memoirInspect: (memoir: string, concept: string, depth?: number) => ['hyphae', 'memoir', memoir, 'inspect', concept, depth] as const,
   memoirSearch: (memoir: string, q: string) => ['hyphae', 'memoir', memoir, 'search', q] as const,
   memoirSearchAll: (q: string) => ['hyphae', 'memoirSearchAll', q] as const,
@@ -72,11 +73,12 @@ export function useMemory(id: string) {
   })
 }
 
-export function useMemoir(name: string) {
+export function useMemoir(name: string, options?: { limit?: number; offset?: number; q?: string }) {
   return useQuery({
     enabled: !!name,
-    queryFn: () => hyphaeApi.memoir(name),
-    queryKey: hyphaeKeys.memoir(name),
+    placeholderData: keepPreviousData,
+    queryFn: () => hyphaeApi.memoir(name, options),
+    queryKey: hyphaeKeys.memoir(name, options),
   })
 }
 

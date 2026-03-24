@@ -172,13 +172,52 @@ export function memoirList(): MemoirRow[] {
   return db.prepare('SELECT * FROM memoirs ORDER BY updated_at DESC').all() as MemoirRow[]
 }
 
-export function memoirShow(name: string): { memoir: MemoirRow; concepts: ConceptRow[] } | null {
+export function memoirShow(
+  name: string,
+  options?: { limit?: number; offset?: number; q?: string }
+): { memoir: MemoirRow; concepts: ConceptRow[]; limit: number; offset: number; query?: string | null; total_concepts: number } | null {
   const db = getDb()
   if (!db) return null
   const memoir = db.prepare('SELECT * FROM memoirs WHERE name = ?').get(name) as MemoirRow | undefined
   if (!memoir) return null
-  const concepts = db.prepare('SELECT * FROM concepts WHERE memoir_id = ? ORDER BY confidence DESC').all(memoir.id) as ConceptRow[]
-  return { concepts, memoir }
+
+  const limit = Math.min(Math.max(Math.floor(options?.limit ?? 200), 1), 500)
+  const offset = Math.max(Math.floor(options?.offset ?? 0), 0)
+  const query = options?.q?.trim()
+
+  if (query) {
+    const like = `%${query.toLowerCase()}%`
+    const total_concepts = (
+      db
+        .prepare(
+          `SELECT COUNT(*) as count
+           FROM concepts
+           WHERE memoir_id = ?
+             AND (lower(name) LIKE ? OR lower(definition) LIKE ?)`
+        )
+        .get(memoir.id, like, like) as { count: number }
+    ).count
+
+    const concepts = db
+      .prepare(
+        `SELECT *
+         FROM concepts
+         WHERE memoir_id = ?
+           AND (lower(name) LIKE ? OR lower(definition) LIKE ?)
+         ORDER BY confidence DESC, name ASC
+         LIMIT ? OFFSET ?`
+      )
+      .all(memoir.id, like, like, limit, offset) as ConceptRow[]
+
+    return { concepts, limit, memoir, offset, query, total_concepts }
+  }
+
+  const total_concepts = (db.prepare('SELECT COUNT(*) as count FROM concepts WHERE memoir_id = ?').get(memoir.id) as { count: number })
+    .count
+  const concepts = db
+    .prepare('SELECT * FROM concepts WHERE memoir_id = ? ORDER BY confidence DESC, name ASC LIMIT ? OFFSET ?')
+    .all(memoir.id, limit, offset) as ConceptRow[]
+  return { concepts, limit, memoir, offset, query: null, total_concepts }
 }
 
 export function memoirInspect(

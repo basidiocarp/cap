@@ -58,7 +58,17 @@ app.get('/memoirs/search-all', (c) => {
 })
 
 app.get('/memoirs/:name', (c) => {
-  const data = hyphae.memoirShow(c.req.param('name'))
+  const limit = c.req.query('limit')
+  const offset = c.req.query('offset')
+  const query = c.req.query('q')
+  const clampedLimit = clampParam(limit, 200, 500)
+  const parsedOffset = Number(offset)
+  const clampedOffset = Number.isFinite(parsedOffset) ? Math.max(0, Math.floor(parsedOffset)) : 0
+  const data = hyphae.memoirShow(c.req.param('name'), {
+    limit: clampedLimit,
+    offset: clampedOffset,
+    q: query ?? undefined,
+  })
   if (!data) return c.json({ error: 'Not found' }, 404)
   return c.json(data)
 })

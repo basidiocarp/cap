@@ -82,6 +82,10 @@ export interface ConceptLink {
 export interface MemoirDetail {
   memoir: Memoir
   concepts: Concept[]
+  limit: number
+  offset: number
+  query?: string | null
+  total_concepts: number
 }
 
 export interface ConceptNeighbor {
