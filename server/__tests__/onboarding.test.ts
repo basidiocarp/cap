@@ -375,5 +375,7 @@ describe('onboarding helpers', () => {
     expect(readiness.hyphaeFlow.label).toBe('No Codex memories yet')
     expect(readiness.recommendedAction?.command).toBe('stipe init')
     expect(readiness.groups.primary[0]?.command).toBe('stipe init')
+    expect(readiness.recommendedQuickActions[0]).toMatchObject({ kind: 'run', runAction: 'init' })
+    expect(readiness.hyphaeQuickActions[0]).toMatchObject({ kind: 'refresh', label: 'Refresh status' })
   })
 })

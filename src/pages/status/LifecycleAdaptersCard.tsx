@@ -3,77 +3,12 @@ import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react'
 
 import type { EcosystemStatus } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'
-import { missingLifecycleHooks } from '../../lib/onboarding'
-import { HookSummaryIcon, summarizeHookHealth, timeAgo } from './statusHelpers'
-
-export function LanguageServersCard({ status }: { status: EcosystemStatus }) {
-  const installed = status.lsps.filter((lsp) => lsp.available)
-  const missing = status.lsps.filter((lsp) => !lsp.available)
-
-  return (
-    <SectionCard title='Language Servers'>
-      {installed.length === 0 ? (
-        <Text
-          c='dimmed'
-          size='sm'
-        >
-          No language servers detected.
-        </Text>
-      ) : (
-        <Table striped>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Server</Table.Th>
-              <Table.Th>Language</Table.Th>
-              <Table.Th>Status</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {installed.map((lsp) => (
-              <Table.Tr key={lsp.bin}>
-                <Table.Td>
-                  <Text size='sm'>{lsp.name}</Text>
-                </Table.Td>
-                <Table.Td>
-                  <Text size='sm'>{lsp.language}</Text>
-                </Table.Td>
-                <Table.Td>
-                  <Badge
-                    color={lsp.running ? 'mycelium' : 'chitin'}
-                    size='sm'
-                    variant='light'
-                  >
-                    {lsp.running ? 'Running' : 'Installed'}
-                  </Badge>
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      )}
-
-      {missing.length > 0 && (
-        <Stack
-          gap='xs'
-          mt='md'
-        >
-          <Text
-            c='dimmed'
-            size='xs'
-          >
-            Not found: {missing.map((lsp) => lsp.name).join(', ')}
-          </Text>
-        </Stack>
-      )}
-    </SectionCard>
-  )
-}
+import { timeAgo } from '../../lib/time'
+import { getLifecycleAdaptersModel } from './lifecycleModel'
+import { HookSummaryIcon } from './statusHelpers'
 
 export function LifecycleAdaptersCard({ status }: { status: EcosystemStatus }) {
-  const hooks = status.hooks
-  const hasErrors = hooks.error_count > 0
-  const missingLifecycle = missingLifecycleHooks(status)
-  const summary = summarizeHookHealth(status)
+  const { emptyState, hasErrors, hooks, missingLifecycle, summary } = getLifecycleAdaptersModel(status)
 
   return (
     <SectionCard title='Lifecycle adapters'>
@@ -133,11 +68,9 @@ export function LifecycleAdaptersCard({ status }: { status: EcosystemStatus }) {
       {hooks.installed_hooks.length === 0 ? (
         <Alert
           color='gray'
-          title='No Claude lifecycle adapter installed'
+          title={emptyState.title}
         >
-          {status.agents.claude_code.adapter.configured
-            ? 'Claude Code is detected, but no Claude lifecycle hooks are installed yet.'
-            : 'No Claude lifecycle adapter is installed yet. Use onboarding to wire SessionStart, PostToolUse, PreCompact, and SessionEnd into Claude lifecycle capture.'}
+          {emptyState.detail}
         </Alert>
       ) : (
         <>

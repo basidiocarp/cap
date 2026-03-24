@@ -2,16 +2,17 @@ import { Stack } from '@mantine/core'
 
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
-import { useEcosystemStatus, useStipeRepairPlan } from '../lib/queries'
+import { useEcosystemStatusController } from '../lib/ecosystem-status'
+import { LanguageServersCard } from './status/LanguageServersCard'
+import { LifecycleAdaptersCard } from './status/LifecycleAdaptersCard'
 import { StatusArchitectureCard } from './status/StatusArchitectureCard'
 import { StatusGettingStartedCard } from './status/StatusGettingStartedCard'
 import { StatusHeader } from './status/StatusHeader'
-import { LanguageServersCard, LifecycleAdaptersCard } from './status/StatusInfrastructureSections'
 import { StatusOverviewGrid } from './status/StatusOverviewGrid'
 
 export function Status() {
-  const { data: status, error, isLoading, refetch } = useEcosystemStatus()
-  const repairPlanQuery = useStipeRepairPlan()
+  const { refreshAll, repairPlanQuery, statusQuery } = useEcosystemStatusController()
+  const { data: status, error, isLoading } = statusQuery
 
   if (isLoading) {
     return <PageLoader mt='xl' />
@@ -19,20 +20,25 @@ export function Status() {
 
   return (
     <Stack>
-      <StatusHeader onRefresh={refetch} />
+      <StatusHeader onRefresh={refreshAll} />
 
       <ErrorAlert error={error} />
 
       {status && (
         <>
           <StatusGettingStartedCard
+            onRefresh={refreshAll}
             repairPlan={repairPlanQuery.data}
             status={status}
           />
 
           <StatusArchitectureCard />
 
-          <StatusOverviewGrid status={status} />
+          <StatusOverviewGrid
+            onRefresh={refreshAll}
+            repairPlan={repairPlanQuery.data}
+            status={status}
+          />
 
           <LanguageServersCard status={status} />
 

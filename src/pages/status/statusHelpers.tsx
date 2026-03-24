@@ -2,23 +2,13 @@ import { Badge } from '@mantine/core'
 import { IconAlertCircle, IconCircleCheck, IconCircleX } from '@tabler/icons-react'
 
 import type { EcosystemStatus } from '../../lib/api'
+import { getClaudeLifecycleAdapterEmptyState } from '../../lib/host-guidance'
 import { missingLifecycleHooks } from '../../lib/onboarding'
 
 export interface HookHealthSummary {
   color: string
   detail: string
   label: string
-}
-
-export function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const minutes = Math.floor(diff / 60_000)
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
 }
 
 export function AvailabilityBadge({ available }: { available: boolean }) {
@@ -44,11 +34,13 @@ export function summarizeHookHealth(status: EcosystemStatus): HookHealthSummary 
   const claudeConfigured = status.agents.claude_code.adapter.configured
 
   if (hookCount === 0) {
+    const emptyState = getClaudeLifecycleAdapterEmptyState(status)
+
     return {
       color: 'gray',
       detail: claudeConfigured
-        ? 'Claude Code is detected, but no Claude lifecycle hooks are installed yet.'
-        : 'No Claude lifecycle adapter is installed yet. Codex readiness is shown separately in the agent runtimes and Codex mode sections.',
+        ? emptyState.detail
+        : `${emptyState.detail} Codex readiness is shown separately in the agent runtimes and Codex mode sections.`,
       label: 'Not configured',
     }
   }

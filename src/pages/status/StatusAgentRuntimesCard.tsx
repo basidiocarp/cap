@@ -3,8 +3,10 @@ import { Badge, Card, Group, Stack, Text } from '@mantine/core'
 import type { EcosystemStatus } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'
 import { summarizeCodexAdapter } from '../../lib/codex'
+import { getAgentRuntimeGuidance } from '../../lib/host-guidance'
 
 export function StatusAgentRuntimesCard({ status }: { status: EcosystemStatus }) {
+  const runtimeGuidance = getAgentRuntimeGuidance()
   const runtimes = [
     { key: 'claude-code', label: 'Claude Code', status: status.agents.claude_code },
     { key: 'codex', label: 'Codex', status: status.agents.codex },
@@ -18,7 +20,7 @@ export function StatusAgentRuntimesCard({ status }: { status: EcosystemStatus })
           c='dimmed'
           size='sm'
         >
-          Claude uses lifecycle hooks. The Codex row below reports adapter health; the Codex mode section covers the full required setup.
+          {runtimeGuidance.detail}
         </Text>
         {runtimes.map((runtime) => {
           const badgeColor = runtime.status.configured ? 'mycelium' : runtime.status.detected ? 'orange' : 'gray'

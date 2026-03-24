@@ -1,21 +1,30 @@
 import { Badge, Button, Group, Stack, Text } from '@mantine/core'
-import { IconAlertCircle } from '@tabler/icons-react'
 import { Link } from 'react-router-dom'
 
 import type { EcosystemStatus, StipeRepairPlan } from '../../lib/api'
-import { CodexModeChecklist } from '../../components/CodexModeChecklist'
+import { EcosystemReadinessPanels } from '../../components/EcosystemReadinessPanels'
 import { SectionCard } from '../../components/SectionCard'
+import { StipeActionFeedback } from '../../components/StipeActionFeedback'
 import { getEcosystemReadinessModel } from '../../lib/readiness'
+import { useStipeActionController } from '../../lib/stipe-actions'
 
-export function StatusGettingStartedCard({ repairPlan, status }: { repairPlan?: StipeRepairPlan; status: EcosystemStatus }) {
+export function StatusGettingStartedCard({
+  onRefresh,
+  repairPlan,
+  status,
+}: {
+  onRefresh: () => void
+  repairPlan?: StipeRepairPlan
+  status: EcosystemStatus
+}) {
   const readiness = getEcosystemReadinessModel(status, repairPlan)
   const actions = [...readiness.groups.primary, ...readiness.groups.secondary].slice(0, 3)
+  const { actionIsRunning, runAction, runStipe } = useStipeActionController()
 
   return (
     <SectionCard title='Codex mode'>
       <Stack gap='sm'>
         <Text size='sm'>{readiness.summary}</Text>
-        <CodexModeChecklist status={status} />
         <Text
           c='dimmed'
           size='sm'
@@ -56,14 +65,13 @@ export function StatusGettingStartedCard({ repairPlan, status }: { repairPlan?: 
         >
           Best next step: {readiness.recommendedAction?.command ?? 'Open onboarding for guided repair'}
         </Text>
-        <Button
-          component={Link}
-          leftSection={<IconAlertCircle size={14} />}
-          to='/onboard'
-          variant='light'
-        >
-          Open onboarding
-        </Button>
+        <EcosystemReadinessPanels
+          actionIsRunning={actionIsRunning}
+          onRefresh={onRefresh}
+          onRun={runAction}
+          readiness={readiness}
+          status={status}
+        />
         <Group gap='xs'>
           <Button
             component={Link}
@@ -82,6 +90,7 @@ export function StatusGettingStartedCard({ repairPlan, status }: { repairPlan?: 
             Review memories
           </Button>
         </Group>
+        <StipeActionFeedback mutation={runStipe} />
       </Stack>
     </SectionCard>
   )

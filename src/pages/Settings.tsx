@@ -6,6 +6,7 @@ import type { EcosystemSettings } from '../lib/api'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
+import { getToolSettingsGuidance } from '../lib/host-guidance'
 import { useActivateMode, useModes, usePruneHyphae, useSettings, useUpdateMycelium, useUpdateRhizome } from '../lib/queries'
 import { LspManager } from './settings/LspManager'
 
@@ -234,6 +235,7 @@ function ModeSelector() {
 
 export function Settings() {
   const { data: settings, error, isLoading } = useSettings()
+  const toolGuidance = getToolSettingsGuidance()
 
   if (isLoading) {
     return <PageLoader mt='xl' />
@@ -244,6 +246,13 @@ export function Settings() {
       <Title order={2}>Settings</Title>
 
       <ErrorAlert error={error} />
+
+      <Alert
+        color='gray'
+        title={toolGuidance.title}
+      >
+        {toolGuidance.detail}
+      </Alert>
 
       <Tabs defaultValue='config'>
         <Tabs.List>
