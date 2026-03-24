@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Box, Group, Loader, ScrollArea, SegmentedControl, Stack, Text, TextInput, Title } from '@mantine/core'
+import { ActionIcon, Box, Group, SimpleGrid, Stack, Title } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconLayoutSidebar } from '@tabler/icons-react'
 import { useCallback, useMemo, useState } from 'react'
@@ -7,14 +7,13 @@ import { useSearchParams } from 'react-router-dom'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
-import { ProjectContextSummary } from '../components/ProjectContextSummary'
-import { SectionCard } from '../components/SectionCard'
 import { useFileTreeState } from '../hooks/useFileTreeState'
 import { useDefinition, useExports, useFileSummary, useProject, useRhizomeStatus, useSymbols } from '../lib/queries'
 import { useProjectContextView } from '../store/project-context'
+import { CodeExplorerHeader } from './code-explorer/CodeExplorerHeader'
+import { CodeExplorerSidebar } from './code-explorer/CodeExplorerSidebar'
+import { CodeExplorerSymbolBrowser } from './code-explorer/CodeExplorerSymbolBrowser'
 import { FileDetailTabs } from './code-explorer/FileDetailTabs'
-import { FileTreeNode } from './code-explorer/FileTreeNode'
-import { SymbolTable } from './code-explorer/SymbolTable'
 
 const CODE_EXTENSIONS = new Set([
   'c',
@@ -150,24 +149,11 @@ export function CodeExplorer() {
 
   return (
     <Stack>
-      <Group justify='space-between'>
-        <Title order={2}>Code Explorer</Title>
-      </Group>
-
-      {activeProject ? (
-        <ProjectContextSummary
-          activeProject={activeProject}
-          note={`Exploring symbols and structure in ${projectName}.`}
-          recentProjects={recentProjects}
-        />
-      ) : (
-        <Text
-          c='dimmed'
-          size='sm'
-        >
-          Exploring symbols and structure in {projectName}
-        </Text>
-      )}
+      <CodeExplorerHeader
+        activeProject={activeProject}
+        projectName={projectName}
+        recentProjects={recentProjects}
+      />
 
       <ErrorAlert
         error={tree.error}
@@ -175,7 +161,10 @@ export function CodeExplorer() {
         withCloseButton
       />
 
-      <Group align='start'>
+      <Group
+        align='start'
+        justify='space-between'
+      >
         <ActionIcon
           hiddenFrom='sm'
           onClick={toggleTree}
@@ -184,133 +173,45 @@ export function CodeExplorer() {
         >
           <IconLayoutSidebar size={20} />
         </ActionIcon>
+      </Group>
 
+      <SimpleGrid
+        cols={{ base: 1, lg: 2 }}
+        spacing='lg'
+        verticalSpacing='lg'
+      >
         <Box display={{ base: treeOpen ? 'block' : 'none', sm: 'block' }}>
-          <SectionCard miw={280}>
-            <Title
-              mb='sm'
-              order={5}
-            >
-              Files
-            </Title>
-            <ScrollArea h={600}>
-              {tree.rootNodes.length > 0 ? (
-                <Stack gap={0}>
-                  {tree.rootNodes.map((node) => (
-                    <FileTreeNode
-                      expanded={tree.expanded}
-                      fileTree={tree.fileTree}
-                      key={node.path}
-                      level={0}
-                      node={node}
-                      onExpand={tree.handleExpand}
-                      onSelect={handleLoadSymbols}
-                      selectedFile={tree.selectedFile}
-                    />
-                  ))}
-                </Stack>
-              ) : (
-                <EmptyState>No files found</EmptyState>
-              )}
-            </ScrollArea>
-          </SectionCard>
+          <CodeExplorerSidebar
+            fileTree={tree}
+            onSelect={handleLoadSymbols}
+          />
         </Box>
 
         <Stack style={{ flex: 1 }}>
           {tree.selectedFile ? (
             <>
-              <Text
-                c='dimmed'
-                ff='monospace'
-                size='sm'
-              >
-                {tree.selectedFile}
-              </Text>
-
-              {!summaryLoading && fileSummary && (
-                <Stack gap={4}>
-                  <Text
-                    c='dimmed'
-                    size='sm'
-                  >
-                    {fileSummary.language} · {fileSummary.lines} lines · {fileSummary.functions} functions · {fileSummary.types} types ·{' '}
-                    {fileSummary.exports} exports · {fileSummary.imports} imports
-                  </Text>
-                  {fileSummary.description && (
-                    <Text
-                      c='dimmed'
-                      size='sm'
-                    >
-                      {fileSummary.description}
-                    </Text>
-                  )}
-                </Stack>
-              )}
-
-              <Group gap='sm'>
-                <SegmentedControl
-                  data={[
-                    { label: 'All', value: 'all' },
-                    {
-                      label: (
-                        <Group gap={4}>
-                          <span>Exports only</span>
-                          {!exportsLoading && exports.length > 0 && (
-                            <Badge
-                              color='mycelium'
-                              size='xs'
-                              variant='light'
-                            >
-                              {exports.length}
-                            </Badge>
-                          )}
-                        </Group>
-                      ),
-                      value: 'exports',
-                    },
-                  ]}
-                  onChange={(v) => setSymbolMode(v as 'all' | 'exports')}
-                  size='xs'
-                  value={symbolMode}
-                />
-              </Group>
-
-              <TextInput
-                onChange={(e) => setSymbolFilter(e.currentTarget.value)}
-                placeholder='Filter symbols...'
-                value={symbolFilter}
+              <CodeExplorerSymbolBrowser
+                definition={definition}
+                defLoading={defLoading}
+                defPreview={defPreview}
+                displaySymbols={displaySymbols}
+                expandedSymbol={expandedSymbol}
+                exports={exports}
+                exportsLoading={exportsLoading}
+                fileSummary={summaryLoading ? undefined : fileSummary}
+                filteredSymbols={filteredSymbols}
+                hasMoreLines={hasMoreLines}
+                isCodeFile={isCodeFile(tree.selectedFile)}
+                onSymbolClick={handleSymbolClick}
+                onSymbolFilterChange={setSymbolFilter}
+                onSymbolModeChange={setSymbolMode}
+                onToggleFullDef={() => setShowFullDef((value) => !value)}
+                selectedFile={tree.selectedFile}
+                showFullDef={showFullDef}
+                symbolFilter={symbolFilter}
+                symbolMode={symbolMode}
+                symbolsLoading={symbolsLoading}
               />
-
-              {(symbolsLoading || (symbolMode === 'exports' && exportsLoading)) && <Loader size='sm' />}
-
-              {!(symbolsLoading || (symbolMode === 'exports' && exportsLoading)) && filteredSymbols.length > 0 && (
-                <SymbolTable
-                  definition={definition}
-                  defLoading={defLoading}
-                  defPreview={defPreview}
-                  expandedSymbol={expandedSymbol}
-                  filteredSymbols={filteredSymbols}
-                  hasMoreLines={hasMoreLines}
-                  onSymbolClick={handleSymbolClick}
-                  onToggleFullDef={() => setShowFullDef((v) => !v)}
-                  selectedFile={tree.selectedFile}
-                  showFullDef={showFullDef}
-                />
-              )}
-
-              {!(symbolsLoading || (symbolMode === 'exports' && exportsLoading)) &&
-                filteredSymbols.length === 0 &&
-                displaySymbols.length > 0 && <EmptyState>No symbols match "{symbolFilter}"</EmptyState>}
-
-              {!(symbolsLoading || (symbolMode === 'exports' && exportsLoading)) && displaySymbols.length === 0 && (
-                <EmptyState>
-                  {!isCodeFile(tree.selectedFile)
-                    ? 'Code intelligence is not available for this file type'
-                    : symbolMode === 'exports'
-                      ? 'No exported symbols found in this file'
-                      : 'No symbols found in this file'}
-                </EmptyState>
-              )}
 
               <FileDetailTabs selectedFile={tree.selectedFile} />
             </>
@@ -318,7 +219,7 @@ export function CodeExplorer() {
             <EmptyState>Select a file to explore its symbols</EmptyState>
           )}
         </Stack>
-      </Group>
+      </SimpleGrid>
     </Stack>
   )
 }
