@@ -1,19 +1,22 @@
-import { Badge, Button, Group, Stack, Text } from '@mantine/core'
+import { Badge, Button, Group, Text } from '@mantine/core'
 import { Link } from 'react-router-dom'
 
 import type { EcosystemStatus, StipeRepairPlan } from '../../lib/api'
 import { EcosystemReadinessPanels } from '../../components/EcosystemReadinessPanels'
-import { ProjectContextSummary } from '../../components/ProjectContextSummary'
+import { HostCoveragePanel } from '../../components/HostCoveragePanel'
 import { SectionCard } from '../../components/SectionCard'
 import { StipeActionFeedback } from '../../components/StipeActionFeedback'
 import { getEcosystemReadinessModel } from '../../lib/readiness'
 import { useStipeActionController } from '../../lib/stipe-actions'
+import { useHostCoverageStore } from '../../store/host-coverage'
 
 export function StatusGettingStartedCard({
   onRefresh,
   repairPlan,
+  hostCoverageMode,
   status,
 }: {
+  hostCoverageMode: 'auto' | 'both' | 'claude' | 'codex'
   onRefresh: () => void
   repairPlan?: StipeRepairPlan
   status: EcosystemStatus
@@ -21,15 +24,17 @@ export function StatusGettingStartedCard({
   const readiness = getEcosystemReadinessModel(status, repairPlan)
   const actions = [...readiness.groups.primary, ...readiness.groups.secondary].slice(0, 3)
   const { actionIsRunning, runAction, runStipe } = useStipeActionController()
+  const setHostCoverageMode = useHostCoverageStore((state) => state.setMode)
 
   return (
     <SectionCard title='Host coverage'>
-      <Stack gap='sm'>
-        <Text size='sm'>{readiness.summary}</Text>
-        <ProjectContextSummary
-          activeProject={status.project.active}
-          recentProjects={status.project.recent}
-        />
+      <HostCoveragePanel
+        mode={hostCoverageMode}
+        onModeChange={setHostCoverageMode}
+        showProjectContext
+        status={status}
+        summary={<Text size='sm'>{readiness.summary}</Text>}
+      >
         <Group gap='xs'>
           <Badge
             color={readiness.codex.mode.color}
@@ -90,7 +95,7 @@ export function StatusGettingStartedCard({
           </Button>
         </Group>
         <StipeActionFeedback mutation={runStipe} />
-      </Stack>
+      </HostCoveragePanel>
     </SectionCard>
   )
 }

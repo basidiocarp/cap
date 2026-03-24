@@ -1,8 +1,10 @@
-import { Badge, Grid, Stack, Table, Text, Title } from '@mantine/core'
+import { Badge, Grid, Group, Stack, Table, Text, Title } from '@mantine/core'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { SessionUsage, UsageAggregate, UsageTrend } from '../../lib/api'
 import { KpiCard } from '../../components/KpiCard'
+import { getHostCoverageView } from '../../lib/host-coverage-view'
+import { useHostCoverageStore } from '../../store/host-coverage'
 
 interface Props {
   aggregate: UsageAggregate | null
@@ -26,6 +28,8 @@ function formatTokens(tokens: number): string {
 }
 
 export function UsageCostTab({ aggregate, sessions, trend }: Props) {
+  const hostCoveragePreference = useHostCoverageStore((state) => state.mode)
+
   if (!aggregate) {
     return (
       <Text
@@ -38,9 +42,78 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
   }
 
   const hasCodexSessions = sessions?.some((session) => session.runtime === 'codex') ?? false
+  const hasClaudeSessions = sessions?.some((session) => session.runtime === 'claude-code') ?? false
+  const hostCoverage = getHostCoverageView(
+    {
+      agents: {
+        claude_code: {
+          adapter: {
+            configured: hasClaudeSessions,
+            detected: false,
+            kind: 'hooks',
+            label: 'Claude lifecycle hooks',
+          },
+          config_path: null,
+          configured: hasClaudeSessions,
+          detected: false,
+          integration: 'hooks',
+        },
+        codex: {
+          adapter: { configured: hasCodexSessions, detected: false, kind: 'mcp', label: 'Codex MCP' },
+          config_path: null,
+          configured: hasCodexSessions,
+          detected: false,
+          integration: 'mcp',
+        },
+      },
+      hooks: { error_count: 0, installed_hooks: [], lifecycle: [], recent_errors: [] },
+      hyphae: {
+        activity: {
+          codex_memory_count: 0,
+          last_codex_memory_at: null,
+          last_session_memory_at: null,
+          last_session_topic: null,
+          recent_session_memory_count: 0,
+        },
+        available: true,
+        memoirs: 0,
+        memories: 0,
+        version: null,
+      },
+      lsps: [],
+      mycelium: { available: true, version: null },
+      project: { active: 'usage', recent: ['usage'] },
+      rhizome: { available: true, backend: null, languages: [] },
+    },
+    hostCoveragePreference
+  )
 
   return (
     <Stack gap='lg'>
+      <Stack gap={2}>
+        <Group justify='space-between'>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            {hostCoverage.detail}
+          </Text>
+          <Badge
+            color='gray'
+            size='sm'
+            variant='light'
+          >
+            {hostCoverage.label}
+          </Badge>
+        </Group>
+        <Text
+          c='dimmed'
+          size='xs'
+        >
+          {hostCoverage.usageNote}
+        </Text>
+      </Stack>
+
       <Grid>
         <Grid.Col span={{ base: 12, md: 3 }}>
           <KpiCard
@@ -192,7 +265,8 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
               c='dimmed'
               size='xs'
             >
-              Codex sessions are parsed from `~/.codex/sessions`, and costs stay `n/a` when the model pricing is unknown.
+              Codex sessions are parsed from `~/.codex/sessions`, and costs stay `n/a` when the model pricing is unknown.{' '}
+              {hostCoverage.usageNote}
             </Text>
           )}
         </>

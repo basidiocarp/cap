@@ -4,25 +4,40 @@ import type { EcosystemStatus } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'
 import { summarizeCodexAdapter } from '../../lib/codex'
 import { getAgentRuntimeGuidance } from '../../lib/host-guidance'
+import { getHostCoverageView } from '../../lib/readiness'
+import { useHostCoverageStore } from '../../store/host-coverage'
 
 export function StatusAgentRuntimesCard({ status }: { status: EcosystemStatus }) {
   const runtimeGuidance = getAgentRuntimeGuidance()
+  const hostCoveragePreference = useHostCoverageStore((state) => state.mode)
+  const hostCoverageView = getHostCoverageView(status, hostCoveragePreference)
   const runtimes = [
     { key: 'claude-code', label: 'Claude Code', status: status.agents.claude_code },
     { key: 'codex', label: 'Codex', status: status.agents.codex },
   ] as const
   const codexAdapter = summarizeCodexAdapter(status)
+  const runtimeOrder = new Map(hostCoverageView.runtimeOrder.map((key, index) => [key, index]))
+  const orderedRuntimes = [...runtimes].sort((a, b) => (runtimeOrder.get(a.key) ?? 0) - (runtimeOrder.get(b.key) ?? 0))
 
   return (
     <SectionCard title='Agent runtimes'>
       <Stack gap='sm'>
-        <Text
-          c='dimmed'
-          size='sm'
-        >
-          {runtimeGuidance.detail}
-        </Text>
-        {runtimes.map((runtime) => {
+        <Group justify='space-between'>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            {runtimeGuidance.detail}
+          </Text>
+          <Badge
+            color='gray'
+            size='sm'
+            variant='light'
+          >
+            {hostCoverageView.label}
+          </Badge>
+        </Group>
+        {orderedRuntimes.map((runtime) => {
           const badgeColor = runtime.status.configured ? 'mycelium' : runtime.status.detected ? 'orange' : 'gray'
           const badgeLabel = runtime.status.configured ? 'Configured' : runtime.status.detected ? 'Detected' : 'Not found'
 

@@ -1,4 +1,4 @@
-import { Badge, Card, Group, ScrollArea, SimpleGrid, Stack, Table, Text, TextInput, Title } from '@mantine/core'
+import { Badge, Card, Group, ScrollArea, SimpleGrid, Stack, Table, Text, TextInput, Title, UnstyledButton } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { IconCode, IconSearch, IconX } from '@tabler/icons-react'
 import { useState } from 'react'
@@ -102,37 +102,42 @@ export function SymbolSearch() {
           </Text>
           <SimpleGrid cols={{ base: 2, md: 3 }}>
             {SEARCH_EXAMPLES.map((ex) => (
-              <Card
+              <UnstyledButton
+                aria-label={`Search example: ${ex.pattern}`}
                 key={ex.pattern}
                 onClick={() => handleExampleClick(ex.pattern)}
-                padding='sm'
-                radius='md'
-                shadow='xs'
-                style={{ cursor: 'pointer' }}
-                withBorder
+                style={{ display: 'block', width: '100%' }}
               >
-                <Group gap='sm'>
-                  <IconCode
-                    color='var(--mantine-color-mycelium-6)'
-                    size={16}
-                  />
-                  <div>
-                    <Text
-                      ff='monospace'
-                      fw={500}
-                      size='sm'
-                    >
-                      {ex.pattern}
-                    </Text>
-                    <Text
-                      c='dimmed'
-                      size='xs'
-                    >
-                      {ex.description}
-                    </Text>
-                  </div>
-                </Group>
-              </Card>
+                <Card
+                  padding='sm'
+                  radius='md'
+                  shadow='xs'
+                  style={{ cursor: 'pointer' }}
+                  withBorder
+                >
+                  <Group gap='sm'>
+                    <IconCode
+                      color='var(--mantine-color-mycelium-6)'
+                      size={16}
+                    />
+                    <div>
+                      <Text
+                        ff='monospace'
+                        fw={500}
+                        size='sm'
+                      >
+                        {ex.pattern}
+                      </Text>
+                      <Text
+                        c='dimmed'
+                        size='xs'
+                      >
+                        {ex.description}
+                      </Text>
+                    </div>
+                  </Group>
+                </Card>
+              </UnstyledButton>
             ))}
           </SimpleGrid>
         </Stack>

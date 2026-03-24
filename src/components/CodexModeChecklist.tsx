@@ -1,8 +1,10 @@
-import { Alert, Badge, Grid, Group, List, Stack, Text } from '@mantine/core'
+import { Badge, Grid, Group, List, Stack, Text } from '@mantine/core'
 
 import type { EcosystemStatus } from '../lib/api'
 import type { CodexModeStep } from '../lib/codex'
 import { getCodexPresentationModel } from '../lib/codex'
+import { getHostCoverageView } from '../lib/readiness'
+import { useHostCoverageStore } from '../store/host-coverage'
 
 function getStepColor(step: CodexModeStep): string {
   switch (step.status) {
@@ -80,32 +82,43 @@ function StepSection({ emptyText, steps, title }: { emptyText: string; steps: Co
 }
 
 export function CodexModeChecklist({ status }: { status: EcosystemStatus }) {
+  const hostCoveragePreference = useHostCoverageStore((state) => state.mode)
   const { mode, sections } = getCodexPresentationModel(status)
   const { optional, required } = sections
+  const hostCoverageView = getHostCoverageView(status, hostCoveragePreference)
 
   return (
     <Stack gap='sm'>
-      <Alert
-        color={mode.color}
-        title={mode.label}
-      >
-        <Text size='sm'>{mode.detail}</Text>
-      </Alert>
+      <Group gap='xs'>
+        <Badge
+          color={mode.color}
+          size='sm'
+          variant='light'
+        >
+          {mode.label}
+        </Badge>
+        <Text
+          c='dimmed'
+          size='sm'
+        >
+          {mode.detail}
+        </Text>
+      </Group>
 
       <Grid>
         <Grid.Col span={{ base: 12, md: 8 }}>
           <StepSection
-            emptyText='All required Codex coverage steps are already configured.'
+            emptyText='All required coverage steps are already configured.'
             steps={required}
-            title='Required for Codex coverage'
+            title={hostCoverageView.requiredSectionTitle}
           />
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 4 }}>
           <StepSection
-            emptyText='Claude coverage is optional unless you also use Claude Code.'
+            emptyText='Optional coverage is already configured or not needed right now.'
             steps={optional}
-            title='Claude coverage'
+            title={hostCoverageView.optionalSectionTitle}
           />
         </Grid.Col>
       </Grid>

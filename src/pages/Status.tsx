@@ -3,6 +3,7 @@ import { Stack } from '@mantine/core'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { useEcosystemStatusController } from '../lib/ecosystem-status'
+import { useHostCoverageStore } from '../store/host-coverage'
 import { LanguageServersCard } from './status/LanguageServersCard'
 import { LifecycleAdaptersCard } from './status/LifecycleAdaptersCard'
 import { StatusArchitectureCard } from './status/StatusArchitectureCard'
@@ -13,6 +14,7 @@ import { StatusOverviewGrid } from './status/StatusOverviewGrid'
 export function Status() {
   const { refreshAll, repairPlanQuery, statusQuery } = useEcosystemStatusController()
   const { data: status, error, isLoading } = statusQuery
+  const hostCoverageMode = useHostCoverageStore((state) => state.mode)
 
   if (isLoading) {
     return <PageLoader mt='xl' />
@@ -27,6 +29,7 @@ export function Status() {
       {status && (
         <>
           <StatusGettingStartedCard
+            hostCoverageMode={hostCoverageMode}
             onRefresh={refreshAll}
             repairPlan={repairPlanQuery.data}
             status={status}

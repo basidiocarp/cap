@@ -6,6 +6,9 @@ import { getCodexPresentationModel } from './codex'
 import { summarizeHyphaeMemoryFlow } from './hyphae'
 import { buildOnboardingActions, getOnboardingActionGroups, summarizeOnboarding } from './onboarding'
 
+export type { HostCoverageMode, HostCoverageView } from './host-coverage-view'
+export { getHostCoverageView, resolveHostCoverageMode } from './host-coverage-view'
+
 export interface EcosystemReadinessModel {
   actions: OnboardingAction[]
   codex: CodexPresentationModel
