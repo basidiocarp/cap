@@ -309,9 +309,9 @@ export function useFileTree(path?: string, depth?: number) {
   })
 }
 
-export function useSymbols(file: string) {
+export function useSymbols(file: string, enabled = true) {
   return useQuery({
-    enabled: !!file,
+    enabled: !!file && enabled,
     queryFn: () => rhizomeApi.symbols(file),
     queryKey: rhizomeKeys.symbols(file),
     staleTime: 300_000,
@@ -359,9 +359,9 @@ export function useCallSites(file: string, fn?: string, enabled = true) {
   })
 }
 
-export function useExports(file: string) {
+export function useExports(file: string, enabled = true) {
   return useQuery({
-    enabled: !!file,
+    enabled: !!file && enabled,
     queryFn: () => rhizomeApi.exports(file),
     queryKey: rhizomeKeys.exports(file),
     staleTime: 300_000,

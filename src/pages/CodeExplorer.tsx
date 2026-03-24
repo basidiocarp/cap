@@ -72,10 +72,11 @@ export function CodeExplorer() {
   const tree = useFileTreeState(fileParam, symbolParam, unavailable, onFileSelected)
 
   const codeFile = isCodeFile(tree.selectedFile) ? (tree.selectedFile ?? '') : ''
+  const isExportsMode = symbolMode === 'exports'
 
-  const { data: symbols = [], isLoading: symbolsLoading } = useSymbols(codeFile)
+  const { data: symbols = [], isLoading: symbolsLoading } = useSymbols(codeFile, !isExportsMode)
   const { data: definition, isLoading: defLoading } = useDefinition(codeFile, expandedSymbol ?? '')
-  const { data: exports = [], isLoading: exportsLoading } = useExports(codeFile)
+  const { data: exports = [], isLoading: exportsLoading } = useExports(codeFile, isExportsMode)
   const { data: fileSummary, isLoading: summaryLoading } = useFileSummary(codeFile)
 
   const handleLoadSymbols = useCallback(
@@ -102,7 +103,7 @@ export function CodeExplorer() {
   )
 
   const displaySymbols = useMemo(() => {
-    if (symbolMode === 'exports') {
+    if (isExportsMode) {
       return exports.map((e) => ({
         doc_comment: null,
         kind: e.kind,
@@ -112,7 +113,7 @@ export function CodeExplorer() {
       }))
     }
     return symbols
-  }, [exports, tree.selectedFile, symbolMode, symbols])
+  }, [exports, isExportsMode, tree.selectedFile, symbols])
 
   const filteredSymbols = useMemo(() => {
     if (!symbolFilter.trim()) return displaySymbols
