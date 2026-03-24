@@ -2,7 +2,7 @@ import { Stack } from '@mantine/core'
 
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
-import { useEcosystemStatus } from '../lib/queries'
+import { useEcosystemStatus, useStipeRepairPlan } from '../lib/queries'
 import { StatusArchitectureCard } from './status/StatusArchitectureCard'
 import { StatusGettingStartedCard } from './status/StatusGettingStartedCard'
 import { StatusHeader } from './status/StatusHeader'
@@ -11,6 +11,7 @@ import { StatusOverviewGrid } from './status/StatusOverviewGrid'
 
 export function Status() {
   const { data: status, error, isLoading, refetch } = useEcosystemStatus()
+  const repairPlanQuery = useStipeRepairPlan()
 
   if (isLoading) {
     return <PageLoader mt='xl' />
@@ -24,7 +25,10 @@ export function Status() {
 
       {status && (
         <>
-          <StatusGettingStartedCard status={status} />
+          <StatusGettingStartedCard
+            repairPlan={repairPlanQuery.data}
+            status={status}
+          />
 
           <StatusArchitectureCard />
 

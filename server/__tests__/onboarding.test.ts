@@ -4,6 +4,7 @@ import type { CodexNotifyStatus, EcosystemStatus, StipeRepairPlan } from '../../
 import { getCodexModeSteps, summarizeCodexAdapter, summarizeCodexMode } from '../../src/lib/codex'
 import { summarizeHyphaeMemoryFlow } from '../../src/lib/hyphae'
 import { buildOnboardingActions, getOnboardingActionGroups, missingLifecycleHooks, summarizeOnboarding } from '../../src/lib/onboarding'
+import { getEcosystemReadinessModel } from '../../src/lib/readiness'
 import { buildStipeArgs, parseStipeAction } from '../routes/settings'
 
 function createMissingStatus(): EcosystemStatus {
@@ -356,5 +357,23 @@ describe('onboarding helpers', () => {
       label: 'Flowing',
       recommendation: 'Open Memories to inspect the latest Codex session entries.',
     })
+  })
+
+  it('builds a shared readiness model for status and onboarding views', () => {
+    const readiness = getEcosystemReadinessModel(
+      createCodexStatus({
+        command: 'hyphae codex-notify',
+        config_path: '/Users/test/.codex/config.toml',
+        configured: true,
+        contract_matched: true,
+      }),
+      createRepairPlan()
+    )
+
+    expect(readiness.summary).toBe('1 checks need attention.')
+    expect(readiness.codex.mode.label).toBe('Codex mode ready')
+    expect(readiness.hyphaeFlow.label).toBe('No Codex memories yet')
+    expect(readiness.recommendedAction?.command).toBe('stipe init')
+    expect(readiness.groups.primary[0]?.command).toBe('stipe init')
   })
 })

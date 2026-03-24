@@ -2,20 +2,19 @@ import { Badge, Button, Group, Stack, Text } from '@mantine/core'
 import { IconAlertCircle } from '@tabler/icons-react'
 import { Link } from 'react-router-dom'
 
-import type { EcosystemStatus } from '../../lib/api'
+import type { EcosystemStatus, StipeRepairPlan } from '../../lib/api'
 import { CodexModeChecklist } from '../../components/CodexModeChecklist'
 import { SectionCard } from '../../components/SectionCard'
-import { buildOnboardingActions, summarizeOnboarding } from '../../lib/onboarding'
+import { getEcosystemReadinessModel } from '../../lib/readiness'
 
-export function StatusGettingStartedCard({ status }: { status: EcosystemStatus }) {
-  const actions = buildOnboardingActions(status)
-    .filter((action) => action.tier !== 'manual')
-    .slice(0, 3)
+export function StatusGettingStartedCard({ repairPlan, status }: { repairPlan?: StipeRepairPlan; status: EcosystemStatus }) {
+  const readiness = getEcosystemReadinessModel(status, repairPlan)
+  const actions = [...readiness.groups.primary, ...readiness.groups.secondary].slice(0, 3)
 
   return (
     <SectionCard title='Codex mode'>
       <Stack gap='sm'>
-        <Text size='sm'>{summarizeOnboarding(status)}</Text>
+        <Text size='sm'>{readiness.summary}</Text>
         <CodexModeChecklist status={status} />
         <Text
           c='dimmed'
@@ -23,6 +22,22 @@ export function StatusGettingStartedCard({ status }: { status: EcosystemStatus }
         >
           Active project: {status.project.active}
         </Text>
+        <Group gap='xs'>
+          <Badge
+            color={readiness.codex.mode.color}
+            size='sm'
+            variant='light'
+          >
+            {readiness.codex.mode.label}
+          </Badge>
+          <Badge
+            color={readiness.hyphaeFlow.color}
+            size='sm'
+            variant='light'
+          >
+            {readiness.hyphaeFlow.label}
+          </Badge>
+        </Group>
         <Group gap='xs'>
           {actions.map((action) => (
             <Badge
@@ -39,7 +54,7 @@ export function StatusGettingStartedCard({ status }: { status: EcosystemStatus }
           c='dimmed'
           size='sm'
         >
-          Best next step: {actions[0]?.command ?? 'Open onboarding for guided repair'}
+          Best next step: {readiness.recommendedAction?.command ?? 'Open onboarding for guided repair'}
         </Text>
         <Button
           component={Link}

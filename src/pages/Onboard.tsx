@@ -8,17 +8,9 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { ProjectSelector } from '../components/ProjectSelector'
 import { SectionCard } from '../components/SectionCard'
-import { getCodexPresentationModel } from '../lib/codex'
-import { summarizeHyphaeMemoryFlow } from '../lib/hyphae'
-import {
-  buildOnboardingActions,
-  failingDoctorChecks,
-  getOnboardingActionGroups,
-  initPlanSteps,
-  missingLifecycleHooks,
-  summarizeOnboarding,
-} from '../lib/onboarding'
+import { failingDoctorChecks, initPlanSteps, missingLifecycleHooks } from '../lib/onboarding'
 import { useEcosystemStatus, useRunStipeAction, useStipeRepairPlan } from '../lib/queries'
+import { getEcosystemReadinessModel } from '../lib/readiness'
 
 function CommandCard({
   command,
@@ -193,20 +185,17 @@ export function Onboard() {
     return <ErrorAlert error={error ?? new Error('No status data available')} />
   }
 
-  const actions = buildOnboardingActions(status, repairPlanQuery.data)
+  const readiness = getEcosystemReadinessModel(status, repairPlanQuery.data)
   const {
     manual: manualActions,
     optionalClaude: optionalClaudeActions,
     optionalCore: otherOptionalActions,
     primary: primaryActions,
-    secondary: secondaryActions,
-  } = getOnboardingActionGroups(actions)
+  } = readiness.groups
   const failingChecks = failingDoctorChecks(repairPlanQuery.data)
   const lifecycleGaps = missingLifecycleHooks(status)
   const steps = initPlanSteps(repairPlanQuery.data)
-  const codex = getCodexPresentationModel(status)
-  const hyphaeFlow = summarizeHyphaeMemoryFlow(status)
-  const recommendedAction = primaryActions[0] ?? secondaryActions[0] ?? manualActions[0] ?? null
+  const { codex, hyphaeFlow, recommendedAction, summary } = readiness
   const recommendedRunAction = recommendedAction?.runAction
 
   function actionIsRunning(actionKey?: string) {
@@ -226,7 +215,7 @@ export function Onboard() {
             c='dimmed'
             size='sm'
           >
-            {summarizeOnboarding(status, repairPlanQuery.data)}
+            {summary}
           </Text>
         </div>
         <Group>
