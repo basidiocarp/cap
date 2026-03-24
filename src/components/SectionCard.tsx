@@ -15,6 +15,7 @@ export function SectionCard({
   return (
     <Card
       padding='lg'
+      radius='md'
       shadow='sm'
       withBorder
       {...rest}

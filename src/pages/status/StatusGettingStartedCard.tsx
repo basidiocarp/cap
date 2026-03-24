@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import type { EcosystemStatus, StipeRepairPlan } from '../../lib/api'
 import { EcosystemReadinessPanels } from '../../components/EcosystemReadinessPanels'
+import { ProjectContextSummary } from '../../components/ProjectContextSummary'
 import { SectionCard } from '../../components/SectionCard'
 import { StipeActionFeedback } from '../../components/StipeActionFeedback'
 import { getEcosystemReadinessModel } from '../../lib/readiness'
@@ -22,15 +23,13 @@ export function StatusGettingStartedCard({
   const { actionIsRunning, runAction, runStipe } = useStipeActionController()
 
   return (
-    <SectionCard title='Codex mode'>
+    <SectionCard title='Host coverage'>
       <Stack gap='sm'>
         <Text size='sm'>{readiness.summary}</Text>
-        <Text
-          c='dimmed'
-          size='sm'
-        >
-          Active project: {status.project.active}
-        </Text>
+        <ProjectContextSummary
+          activeProject={status.project.active}
+          recentProjects={status.project.recent}
+        />
         <Group gap='xs'>
           <Badge
             color={readiness.codex.mode.color}

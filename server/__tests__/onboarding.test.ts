@@ -242,10 +242,10 @@ describe('onboarding helpers', () => {
     })
 
     expect(summarizeCodexAdapter(mcpOnly)).toMatchObject({ label: 'MCP only' })
-    expect(summarizeOnboarding(mcpOnly)).toContain('Codex mode is partially configured')
+    expect(summarizeOnboarding(mcpOnly)).toContain('Codex partial')
 
     expect(summarizeCodexAdapter(adapter)).toMatchObject({ label: 'Notify adapter' })
-    expect(summarizeOnboarding(adapter)).toContain('Codex mode is ready')
+    expect(summarizeOnboarding(adapter)).toContain('Codex ready')
   })
 
   it('summarizes Codex mode with required steps and optional Claude coverage', () => {
@@ -258,7 +258,7 @@ describe('onboarding helpers', () => {
     const steps = getCodexModeSteps(status)
 
     expect(summarizeCodexMode(status)).toMatchObject({
-      label: 'Codex mode ready',
+      label: 'Codex ready',
       ready: true,
       required: [],
     })
@@ -278,10 +278,52 @@ describe('onboarding helpers', () => {
     })
 
     expect(summarizeCodexMode(status)).toMatchObject({
-      label: 'Codex mode partial',
+      label: 'Codex partial',
       ready: false,
     })
     expect(summarizeCodexMode(status).required).toContain('Codex notify')
+  })
+
+  it('reports when Codex and Claude are both ready together', () => {
+    const status = createCodexStatus({
+      command: 'hyphae codex-notify',
+      config_path: '/Users/test/.codex/config.toml',
+      configured: true,
+      contract_matched: true,
+    })
+    status.agents.claude_code = {
+      adapter: {
+        configured: true,
+        detected: true,
+        kind: 'hooks',
+        label: 'Claude lifecycle hooks',
+      },
+      config_path: '/Users/test/.claude/settings.json',
+      configured: true,
+      detected: true,
+      integration: 'hooks',
+    }
+    status.hooks = {
+      error_count: 0,
+      installed_hooks: [
+        { command: 'hyphae session-start', event: 'SessionStart', matcher: '.*' },
+        { command: 'hyphae post-tool', event: 'PostToolUse', matcher: '.*' },
+        { command: 'hyphae precompact', event: 'PreCompact', matcher: '.*' },
+        { command: 'hyphae session-end', event: 'SessionEnd', matcher: '.*' },
+      ],
+      lifecycle: [
+        { event: 'SessionStart', installed: true, matching_hooks: 1 },
+        { event: 'PostToolUse', installed: true, matching_hooks: 1 },
+        { event: 'PreCompact', installed: true, matching_hooks: 1 },
+        { event: 'SessionEnd', installed: true, matching_hooks: 1 },
+      ],
+      recent_errors: [],
+    }
+
+    expect(summarizeCodexMode(status)).toMatchObject({
+      label: 'Codex + Claude ready',
+      ready: true,
+    })
   })
 
   it('keeps Mycelium in the required Codex flow', () => {
@@ -371,7 +413,7 @@ describe('onboarding helpers', () => {
     )
 
     expect(readiness.summary).toBe('1 checks need attention.')
-    expect(readiness.codex.mode.label).toBe('Codex mode ready')
+    expect(readiness.codex.mode.label).toBe('Codex ready')
     expect(readiness.hyphaeFlow.label).toBe('No Codex memories yet')
     expect(readiness.recommendedAction?.command).toBe('stipe init')
     expect(readiness.groups.primary[0]?.command).toBe('stipe init')

@@ -6,7 +6,7 @@ import type { OnboardingAction } from '../lib/onboarding'
 import { EcosystemReadinessPanels } from '../components/EcosystemReadinessPanels'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
-import { ProjectSelector } from '../components/ProjectSelector'
+import { ProjectContextSummary } from '../components/ProjectContextSummary'
 import { SectionCard } from '../components/SectionCard'
 import { StipeActionFeedback } from '../components/StipeActionFeedback'
 import { useEcosystemStatusController } from '../lib/ecosystem-status'
@@ -89,22 +89,13 @@ export function Onboard() {
         </Group>
       </Group>
 
-      <SectionCard title='Codex mode'>
+      <SectionCard title='Host coverage'>
         <Stack gap='sm'>
           <Text size='sm'>{codexGuidance.detail}</Text>
-          <Group
-            align='start'
-            justify='space-between'
-          >
-            <Text
-              c='dimmed'
-              ff='monospace'
-              size='xs'
-            >
-              Active project: {status.project.active}
-            </Text>
-            <ProjectSelector variant='button' />
-          </Group>
+          <ProjectContextSummary
+            activeProject={status.project.active}
+            recentProjects={status.project.recent}
+          />
 
           <EcosystemReadinessPanels
             actionIsRunning={actionIsRunning}
@@ -117,7 +108,7 @@ export function Onboard() {
           {status.agents.claude_code.adapter.configured && lifecycleGaps.length > 0 && (
             <Alert
               color='gray'
-              title='Optional Claude coverage is incomplete'
+              title='Claude coverage needs repair'
             >
               Missing recommended lifecycle events: {lifecycleGaps.join(', ')}
             </Alert>
@@ -175,11 +166,11 @@ export function Onboard() {
         <Grid.Col span={{ base: 12, md: 6 }}>
           <OnboardingActionSection
             actions={optionalClaudeActions}
-            emptyMessage='No Claude-specific steps are needed right now.'
+            emptyMessage='No Claude coverage steps are needed right now.'
             onRun={runOnboardingAction}
             recentlyRan={actionRecentlyRan}
             running={actionIsPending}
-            title='Optional Claude steps'
+            title='Claude coverage steps'
           />
         </Grid.Col>
 

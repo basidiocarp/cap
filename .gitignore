@@ -32,3 +32,4 @@ dist-ssr
 /.rhizome/cache.json
 .rhizome/
 .plans/
+/mantine-llm.txt

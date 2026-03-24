@@ -3,6 +3,7 @@ import { IconFolder, IconFolderOpen } from '@tabler/icons-react'
 import { useState } from 'react'
 
 import { useProject, useSwitchProject } from '../lib/queries'
+import { useProjectContextView } from '../store/project-context'
 
 function basename(path: string): string {
   return path.split('/').pop() ?? path
@@ -13,8 +14,9 @@ export function ProjectSelector({ fullWidth = false, variant = 'icon' }: { fullW
   const switchProject = useSwitchProject()
   const combobox = useCombobox()
   const [customPath, setCustomPath] = useState('')
+  const { activeProject, isSwitchingProject, recentProjects } = useProjectContextView(project)
 
-  if (!project) return null
+  if (!activeProject) return null
 
   const handleSelect = (path: string) => {
     switchProject.mutate(path)
@@ -30,7 +32,7 @@ export function ProjectSelector({ fullWidth = false, variant = 'icon' }: { fullW
     }
   }
 
-  const activeBasename = basename(project.active)
+  const activeBasename = basename(activeProject)
 
   return (
     <Combobox
@@ -42,11 +44,11 @@ export function ProjectSelector({ fullWidth = false, variant = 'icon' }: { fullW
           <Button
             justify='space-between'
             leftSection={<IconFolder size={16} />}
-            loading={switchProject.isPending}
+            loading={isSwitchingProject || switchProject.isPending}
             onClick={() => combobox.toggleDropdown()}
             rightSection={<IconFolderOpen size={14} />}
             size='sm'
-            title={`Project: ${project.active}`}
+            title={`Project: ${activeProject}`}
             variant='light'
             w={fullWidth ? '100%' : undefined}
           >
@@ -55,10 +57,10 @@ export function ProjectSelector({ fullWidth = false, variant = 'icon' }: { fullW
         ) : (
           <ActionIcon
             color='mycelium'
-            loading={switchProject.isPending}
+            loading={isSwitchingProject || switchProject.isPending}
             onClick={() => combobox.toggleDropdown()}
             size='lg'
-            title={`Project: ${project.active}`}
+            title={`Project: ${activeProject}`}
             variant='subtle'
           >
             <IconFolder size={20} />
@@ -77,7 +79,7 @@ export function ProjectSelector({ fullWidth = false, variant = 'icon' }: { fullW
         </Combobox.Header>
 
         <Combobox.Options>
-          {project.recent.map((path) => (
+          {recentProjects.map((path) => (
             <Combobox.Option
               key={path}
               value={path}
@@ -86,7 +88,7 @@ export function ProjectSelector({ fullWidth = false, variant = 'icon' }: { fullW
                 <IconFolderOpen size={14} />
                 <div>
                   <Text
-                    fw={path === project.active ? 600 : 400}
+                    fw={path === activeProject ? 600 : 400}
                     size='sm'
                   >
                     {basename(path)}

@@ -7,11 +7,12 @@ import { useNavigate } from 'react-router-dom'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
-import { ProjectSelector } from '../components/ProjectSelector'
+import { ProjectContextSummary } from '../components/ProjectContextSummary'
 import { SectionCard } from '../components/SectionCard'
 import { symbolKindColor } from '../lib/colors'
 import { onActivate } from '../lib/keyboard'
 import { useProject, useRhizomeStatus, useSymbolSearch } from '../lib/queries'
+import { useProjectContextView } from '../store/project-context'
 
 const SEARCH_EXAMPLES = [
   { description: 'Find all functions', pattern: 'fn ' },
@@ -29,9 +30,10 @@ export function SymbolSearch() {
 
   const { data: status } = useRhizomeStatus()
   const { data: project } = useProject()
+  const { activeProject, recentProjects } = useProjectContextView(project)
   const { data: results = [], error, isLoading: loading } = useSymbolSearch(debouncedQuery)
 
-  const projectName = project?.active.split('/').pop() ?? 'project'
+  const projectName = activeProject?.split('/').pop() ?? 'project'
 
   function handleExampleClick(pattern: string) {
     setQuery(pattern)
@@ -53,21 +55,22 @@ export function SymbolSearch() {
     <Stack>
       <Group justify='space-between'>
         <Title order={2}>Symbol Search</Title>
-        <ProjectSelector variant='button' />
       </Group>
 
-      <Text
-        c='dimmed'
-        size='sm'
-      >
-        Search functions, classes, types, and modules across{' '}
+      {activeProject ? (
+        <ProjectContextSummary
+          activeProject={activeProject}
+          note={`Search functions, classes, types, and modules across ${projectName}.`}
+          recentProjects={recentProjects}
+        />
+      ) : (
         <Text
-          component='span'
-          fw={500}
+          c='dimmed'
+          size='sm'
         >
-          {projectName}
+          Search functions, classes, types, and modules across {projectName}
         </Text>
-      </Text>
+      )}
 
       <TextInput
         leftSection={<IconSearch size={16} />}

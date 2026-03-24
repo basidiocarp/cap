@@ -6,6 +6,7 @@ export function KpiCard({ accent, children, label, value }: { accent: string; ch
     <Card
       h='100%'
       padding='lg'
+      radius='md'
       shadow='sm'
       styles={{ root: { overflow: 'visible' } }}
       withBorder

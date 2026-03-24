@@ -1,3 +1,8 @@
+import { existsSync, readFileSync } from 'node:fs'
+import { homedir, platform } from 'node:os'
+import { join } from 'node:path'
+import Database from 'better-sqlite3'
+
 import { cachedAsync } from './lib/cache.ts'
 import { createCliRunner } from './lib/cli.ts'
 import { MYCELIUM_BIN } from './lib/config.ts'
@@ -6,11 +11,25 @@ import { logger } from './logger.ts'
 const run = createCliRunner(MYCELIUM_BIN, 'mycelium')
 
 interface GainCliOutput {
-  by_command?: [string, number, number, number][]
-  by_day?: [string, number][]
-  total_commands?: number
-  total_input?: number
-  total_saved?: number
+  daily?: Array<{
+    avg_time_ms: number
+    commands: number
+    date: string
+    input_tokens: number
+    output_tokens: number
+    saved_tokens: number
+    savings_pct: number
+    total_time_ms: number
+  }>
+  summary?: {
+    avg_savings_pct: number
+    avg_time_ms: number
+    total_commands: number
+    total_input: number
+    total_output: number
+    total_saved: number
+    total_time_ms: number
+  }
 }
 
 interface CommandHistoryEntry {
@@ -29,6 +48,88 @@ export interface CommandHistory {
 function parseGainOutput(raw: unknown): GainCliOutput {
   if (raw && typeof raw === 'object') return raw as GainCliOutput
   return {}
+}
+
+function resolveMyceliumDbPath(): string {
+  const envPath = process.env.MYCELIUM_DB_PATH
+  if (envPath?.trim()) {
+    return envPath
+  }
+
+  const configPath = join(homedir(), '.config', 'mycelium', 'config.toml')
+  if (existsSync(configPath)) {
+    try {
+      const config = readFileSync(configPath, 'utf-8')
+      const match = config.match(/\[tracking\][\s\S]*?database_path\s*=\s*"([^"]+)"/)
+      if (match?.[1]) {
+        return match[1]
+      }
+    } catch (err) {
+      logger.debug({ configPath, err }, 'Failed to read mycelium config while resolving DB path')
+    }
+  }
+
+  if (platform() === 'darwin') {
+    return join(homedir(), 'Library', 'Application Support', 'mycelium', 'history.db')
+  }
+
+  if (platform() === 'win32') {
+    return join(process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'), 'mycelium', 'history.db')
+  }
+
+  return join(process.env.XDG_DATA_HOME ?? join(homedir(), '.local', 'share'), 'mycelium', 'history.db')
+}
+
+function getMyceliumDb(): Database.Database | null {
+  const dbPath = resolveMyceliumDbPath()
+  if (!existsSync(dbPath)) {
+    return null
+  }
+
+  try {
+    return new Database(dbPath, { fileMustExist: true, readonly: true })
+  } catch (err) {
+    logger.debug({ dbPath, err }, 'Failed to open mycelium history database')
+    return null
+  }
+}
+
+function getCommandAggregates(limit = 10): Array<{
+  avg_savings_percent: number
+  command: string
+  count: number
+  tokens_input: number
+  tokens_saved: number
+}> {
+  const db = getMyceliumDb()
+  if (!db) return []
+
+  try {
+    return db
+      .prepare(
+        `SELECT mycelium_cmd as command,
+                COUNT(*) as count,
+                AVG(savings_pct) as avg_savings_percent,
+                SUM(input_tokens) as tokens_input,
+                SUM(saved_tokens) as tokens_saved
+         FROM commands
+         GROUP BY mycelium_cmd
+         ORDER BY count DESC, SUM(saved_tokens) DESC
+         LIMIT ?`
+      )
+      .all(limit) as Array<{
+      avg_savings_percent: number
+      command: string
+      count: number
+      tokens_input: number
+      tokens_saved: number
+    }>
+  } catch (err) {
+    logger.debug({ err }, 'Failed to query top mycelium commands')
+    return []
+  } finally {
+    db.close()
+  }
 }
 
 export async function getGain(format: 'json' | 'text' = 'json') {
@@ -61,43 +162,44 @@ function isGainCliOutput(v: GainCliOutput | { raw: string } | null): v is GainCl
 
 async function computeAnalytics() {
   try {
-    const [gain, history] = await Promise.allSettled([getGain('json'), getGainHistory('json')])
+    const [gain, daily] = await Promise.allSettled([
+      getGain('json'),
+      run(['gain', '--daily', '--format', 'json']).then((raw) => parseGainOutput(JSON.parse(raw))),
+    ])
 
     const gainRaw = gain.status === 'fulfilled' ? gain.value : null
-    const historyRaw = history.status === 'fulfilled' ? history.value : null
+    const dailyRaw = daily.status === 'fulfilled' ? daily.value : null
     const gainData = isGainCliOutput(gainRaw) ? gainRaw : null
-    const historyData = isGainCliOutput(historyRaw) ? historyRaw : null
+    const dailyData = isGainCliOutput(dailyRaw) ? dailyRaw : null
 
-    const byCommand = gainData?.by_command ?? []
-    const savings_by_category = byCommand.map((cmd: [string, number, number, number]) => ({
-      category: cmd[0] ?? 'unknown',
-      commands: 1,
-      rate: cmd[3] ?? 0,
-      tokens_input: cmd[1] ?? 0,
-      tokens_saved: (cmd[1] ?? 0) - (cmd[2] ?? 0),
+    const summary = gainData?.summary ?? dailyData?.summary
+    const byDay = dailyData?.daily ?? []
+    const commandAggregates = getCommandAggregates(10)
+
+    const savings_by_category = commandAggregates.map((cmd) => ({
+      category: cmd.command,
+      commands: cmd.count,
+      rate: cmd.avg_savings_percent / 100,
+      tokens_input: cmd.tokens_input,
+      tokens_saved: cmd.tokens_saved,
     }))
 
-    const byDay = historyData?.by_day ?? gainData?.by_day ?? []
-    const savings_trend = byDay.map((entry: [string, number]) => ({
-      commands: 0,
-      date: entry[0],
-      tokens_saved: entry[1] ?? 0,
+    const savings_trend = byDay.map((entry) => ({
+      commands: entry.commands,
+      date: entry.date,
+      tokens_saved: entry.saved_tokens,
     }))
 
-    const totalCommands = gainData?.total_commands ?? 0
-    const totalInput = gainData?.total_input ?? 0
-    const totalSaved = gainData?.total_saved ?? 0
+    const totalCommands = summary?.total_commands ?? 0
+    const totalInput = summary?.total_input ?? 0
+    const totalSaved = summary?.total_saved ?? 0
     const filtered = totalSaved > 0 ? totalCommands : 0
     const passthrough = totalCommands - filtered
-
-    const top_commands = byCommand
-      .map((cmd: [string, number, number, number]) => ({
-        avg_savings_percent: cmd[3] ?? 0,
-        command: cmd[0] ?? 'unknown',
-        count: 1,
-      }))
-      .sort((a: { count: number }, b: { count: number }) => b.count - a.count)
-      .slice(0, 10)
+    const top_commands = commandAggregates.map((cmd) => ({
+      avg_savings_percent: cmd.avg_savings_percent,
+      command: cmd.command,
+      count: cmd.count,
+    }))
 
     return {
       filter_hit_rate: { filtered, passthrough, rate: totalCommands > 0 ? filtered / totalCommands : 0 },
@@ -119,29 +221,32 @@ async function computeAnalytics() {
 export const getAnalytics = cachedAsync(computeAnalytics, 60_000)
 
 export async function getCommandHistory(limit = 50): Promise<CommandHistory> {
-  try {
-    const gainHistory = await getGainHistory('json')
-    if (!isGainCliOutput(gainHistory)) {
-      return { commands: [], total: 0 }
-    }
+  const db = getMyceliumDb()
+  if (!db) {
+    return { commands: [], total: 0 }
+  }
 
-    const byCommand = gainHistory.by_command ?? []
-    const commands = byCommand
-      .map((cmd: [string, number, number, number]) => ({
-        command: cmd[0] ?? 'unknown',
-        filtered_tokens: cmd[2] ?? 0,
-        original_tokens: cmd[1] ?? 0,
-        savings_pct: cmd[3] ?? 0,
-        timestamp: new Date().toISOString(), // Note: Mycelium CLI doesn't provide per-command timestamps
-      }))
-      .slice(0, limit)
+  try {
+    const commands = db
+      .prepare(
+        `SELECT timestamp, mycelium_cmd as command, input_tokens as original_tokens,
+                output_tokens as filtered_tokens, savings_pct
+         FROM commands
+         ORDER BY timestamp DESC
+         LIMIT ?`
+      )
+      .all(limit) as CommandHistoryEntry[]
+
+    const totalRow = db.prepare('SELECT COUNT(*) as count FROM commands').get() as { count: number } | undefined
 
     return {
       commands,
-      total: commands.length,
+      total: totalRow?.count ?? commands.length,
     }
   } catch (err) {
     logger.debug({ err }, 'Failed to get command history')
     return { commands: [], total: 0 }
+  } finally {
+    db.close()
   }
 }

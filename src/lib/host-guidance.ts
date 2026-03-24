@@ -7,7 +7,8 @@ export interface GuidanceCopy {
 
 export function getAgentRuntimeGuidance(): GuidanceCopy {
   return {
-    detail: 'Claude uses lifecycle hooks. The Codex row reports adapter health; the Codex mode section covers the full required setup.',
+    detail:
+      'Claude uses lifecycle hooks. Codex uses MCP plus notify. Both can be configured at the same time; the host coverage section shows the combined setup state.',
     title: 'Agent runtimes',
   }
 }
@@ -24,8 +25,8 @@ export function getClaudeLifecycleAdapterEmptyState(status: EcosystemStatus): Gu
 export function getCodexModeGuidance(): GuidanceCopy {
   return {
     detail:
-      'Use this page when you want the shortest path to a working Codex setup. Mycelium, Hyphae, Rhizome, Codex MCP, and Codex notify are required in the same flow; Claude lifecycle capture stays optional unless you also want Claude Code coverage.',
-    title: 'Codex mode',
+      'Use this page when you want host coverage working cleanly. Mycelium, Hyphae, Rhizome, Codex MCP, and Codex notify make Codex usable; Claude lifecycle hooks can be enabled alongside that when you also use Claude Code.',
+    title: 'Host coverage',
   }
 }
 

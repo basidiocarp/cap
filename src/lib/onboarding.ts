@@ -199,10 +199,10 @@ export function summarizeOnboarding(status: EcosystemStatus, repairPlan?: StipeR
   if (missing.length === 0 && !isClaudeHooksUnhealthy(status)) {
     if (codex) {
       if (codex.mode.ready) {
-        return 'Codex mode is ready. Use the required steps below for drift checks and required tool installs; Claude lifecycle hooks stay optional unless you also use Claude Code.'
+        return `${codex.mode.label}. Use the required steps below for drift checks and tool installs; Claude and Codex can both use the ecosystem at the same time when both adapters are healthy.`
       }
 
-      return `Codex mode is partially configured. ${codex.mode.detail}`
+      return `${codex.mode.label}. ${codex.mode.detail}`
     }
 
     return 'The core ecosystem is installed. Use the commands below for drift checks or optional profiles.'

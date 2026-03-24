@@ -14,6 +14,7 @@ const cardDefaults = {
     Card: Card.extend({
       defaultProps: {
         padding: 'sm',
+        radius: 'md',
       },
     }),
   },

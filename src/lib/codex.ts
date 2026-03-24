@@ -48,6 +48,10 @@ export function isClaudeHooksUnhealthy(status: EcosystemStatus): boolean {
   return status.hooks.installed_hooks.length === 0 || status.hooks.error_count > 0 || missingLifecycleHooks(status).length > 0
 }
 
+function isClaudeCoverageReady(status: EcosystemStatus): boolean {
+  return status.agents.claude_code.adapter.configured && !isClaudeHooksUnhealthy(status)
+}
+
 export function getCodexModeSteps(status: EcosystemStatus): CodexModeStep[] {
   const steps: CodexModeStep[] = []
 
@@ -114,14 +118,14 @@ export function getCodexModeSteps(status: EcosystemStatus): CodexModeStep[] {
   })
 
   let claudeStatus: CodexModeStep['status'] = 'optional'
-  let claudeDetail = 'Claude lifecycle hooks are optional unless you also want Claude Code coverage.'
+  let claudeDetail = 'Claude lifecycle hooks are optional unless you also use Claude Code alongside Codex.'
 
   if (status.agents.claude_code.adapter.configured && isClaudeHooksUnhealthy(status)) {
     claudeStatus = 'repair'
-    claudeDetail = 'Claude hooks are installed but need repair. This only matters if you also want Claude Code coverage.'
+    claudeDetail = 'Claude hooks are installed but need repair. Fix them if you use Claude Code alongside Codex.'
   } else if (status.agents.claude_code.adapter.configured) {
     claudeStatus = 'ready'
-    claudeDetail = 'Claude lifecycle hooks are available if you also want Claude Code coverage.'
+    claudeDetail = 'Claude lifecycle hooks are available, so Claude Code can use the ecosystem alongside Codex.'
   }
 
   steps.push({
@@ -195,12 +199,16 @@ export function summarizeCodexMode(status: EcosystemStatus): CodexModeSummary {
   const required = codexRequiredSteps(status)
   const optional = codexOptionalSteps(status)
   const codex = status.agents.codex
+  const claudeReady = isClaudeCoverageReady(status)
+  const claudeConfigured = status.agents.claude_code.adapter.configured
+  const claudeNeedsRepair = claudeConfigured && isClaudeHooksUnhealthy(status)
 
   if (!codex.configured) {
     return {
       color: 'gray',
-      detail: 'Install the Codex profile and the hyphae notify adapter to make Codex mode usable.',
-      label: 'Codex mode not configured',
+      detail:
+        'Install the Codex profile and the hyphae notify adapter to make Codex coverage usable. Claude coverage can coexist once its hooks are configured.',
+      label: 'Codex not configured',
       optional,
       ready: false,
       required,
@@ -210,8 +218,9 @@ export function summarizeCodexMode(status: EcosystemStatus): CodexModeSummary {
   if (!codex.notify?.configured) {
     return {
       color: 'orange',
-      detail: 'Codex MCP is configured, but the hyphae notify adapter is still missing.',
-      label: 'Codex mode partial',
+      detail:
+        'Codex MCP is configured, but the hyphae notify adapter is still missing. Claude coverage can still coexist once Codex notify is fixed.',
+      label: 'Codex partial',
       optional,
       ready: false,
       required,
@@ -222,7 +231,7 @@ export function summarizeCodexMode(status: EcosystemStatus): CodexModeSummary {
     return {
       color: 'orange',
       detail: 'Codex notify is present, but it does not match the expected notify = ["hyphae", "codex-notify"] contract.',
-      label: 'Codex mode needs repair',
+      label: 'Codex needs repair',
       optional,
       ready: false,
       required,
@@ -232,18 +241,42 @@ export function summarizeCodexMode(status: EcosystemStatus): CodexModeSummary {
   if (required.length > 0) {
     return {
       color: 'orange',
-      detail: `Codex mode is missing: ${required.join(', ')}. Claude lifecycle capture is optional.`,
-      label: 'Codex mode partial',
+      detail: `Codex coverage is missing: ${required.join(', ')}. Claude lifecycle capture can run alongside it when needed.`,
+      label: 'Codex partial',
       optional,
       ready: false,
       required,
     }
   }
 
+  if (claudeReady) {
+    return {
+      color: 'mycelium',
+      detail: 'Codex and Claude are both configured. Mycelium, Hyphae, and Rhizome are available across both hosts.',
+      label: 'Codex + Claude ready',
+      optional,
+      ready: true,
+      required,
+    }
+  }
+
+  if (claudeNeedsRepair) {
+    return {
+      color: 'orange',
+      detail:
+        'Codex coverage is ready. Claude is also configured, but its lifecycle hooks need repair before both hosts are fully healthy together.',
+      label: 'Codex ready, Claude needs repair',
+      optional,
+      ready: true,
+      required,
+    }
+  }
+
   return {
     color: 'mycelium',
-    detail: 'Mycelium, Hyphae, Rhizome, Codex MCP, and Codex notify are configured. Claude lifecycle capture is optional.',
-    label: 'Codex mode ready',
+    detail:
+      'Mycelium, Hyphae, Rhizome, Codex MCP, and Codex notify are configured. Claude lifecycle capture can be added alongside Codex if you use both hosts.',
+    label: 'Codex ready',
     optional,
     ready: required.length === 0,
     required,

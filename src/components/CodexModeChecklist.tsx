@@ -95,17 +95,17 @@ export function CodexModeChecklist({ status }: { status: EcosystemStatus }) {
       <Grid>
         <Grid.Col span={{ base: 12, md: 8 }}>
           <StepSection
-            emptyText='All required Codex steps are already configured.'
+            emptyText='All required Codex coverage steps are already configured.'
             steps={required}
-            title='Required for Codex mode'
+            title='Required for Codex coverage'
           />
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 4 }}>
           <StepSection
-            emptyText='No Claude-specific steps are needed right now.'
+            emptyText='Claude coverage is optional unless you also use Claude Code.'
             steps={optional}
-            title='Optional Claude coverage'
+            title='Claude coverage'
           />
         </Grid.Col>
       </Grid>

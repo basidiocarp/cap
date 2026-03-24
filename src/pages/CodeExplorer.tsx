@@ -7,10 +7,11 @@ import { useSearchParams } from 'react-router-dom'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
-import { ProjectSelector } from '../components/ProjectSelector'
+import { ProjectContextSummary } from '../components/ProjectContextSummary'
 import { SectionCard } from '../components/SectionCard'
 import { useFileTreeState } from '../hooks/useFileTreeState'
 import { useDefinition, useExports, useFileSummary, useProject, useRhizomeStatus, useSymbols } from '../lib/queries'
+import { useProjectContextView } from '../store/project-context'
 import { FileDetailTabs } from './code-explorer/FileDetailTabs'
 import { FileTreeNode } from './code-explorer/FileTreeNode'
 import { SymbolTable } from './code-explorer/SymbolTable'
@@ -60,8 +61,9 @@ export function CodeExplorer() {
 
   const { data: statusData } = useRhizomeStatus()
   const { data: project } = useProject()
+  const { activeProject, recentProjects } = useProjectContextView(project)
   const unavailable = statusData ? !statusData.available : false
-  const projectName = project?.active.split('/').pop() ?? 'project'
+  const projectName = activeProject?.split('/').pop() ?? 'project'
 
   const onFileSelected = useCallback((_file: string | null, symbol: string | null) => {
     setSymbolFilter('')
@@ -150,34 +152,22 @@ export function CodeExplorer() {
     <Stack>
       <Group justify='space-between'>
         <Title order={2}>Code Explorer</Title>
-        <ProjectSelector variant='button' />
       </Group>
 
-      <Text
-        c='dimmed'
-        size='sm'
-      >
-        Exploring symbols and structure in{' '}
+      {activeProject ? (
+        <ProjectContextSummary
+          activeProject={activeProject}
+          note={`Exploring symbols and structure in ${projectName}.`}
+          recentProjects={recentProjects}
+        />
+      ) : (
         <Text
-          component='span'
-          fw={500}
+          c='dimmed'
+          size='sm'
         >
-          {projectName}
+          Exploring symbols and structure in {projectName}
         </Text>
-        {project?.active ? (
-          <>
-            {' '}
-            <Text
-              c='dimmed'
-              component='span'
-              ff='monospace'
-              size='xs'
-            >
-              ({project.active})
-            </Text>
-          </>
-        ) : null}
-      </Text>
+      )}
 
       <ErrorAlert
         error={tree.error}

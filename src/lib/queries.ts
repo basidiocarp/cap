@@ -1,5 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 
+import { useProjectContextStore } from '../store/project-context'
 import { hyphaeApi, lspApi, myceliumApi, rhizomeApi, settingsApi, statusApi, stipeApi, usageApi } from './api'
 
 // Hyphae
@@ -256,19 +258,41 @@ export function useRhizomeStatus() {
 }
 
 export function useProject() {
-  return useQuery({
+  const syncProject = useProjectContextStore((state) => state.syncProject)
+  const query = useQuery({
     queryFn: () => rhizomeApi.project(),
     queryKey: rhizomeKeys.project(),
     staleTime: 30_000,
   })
+
+  useEffect(() => {
+    if (query.data) {
+      syncProject(query.data)
+    }
+  }, [query.data, syncProject])
+
+  return query
 }
 
 export function useSwitchProject() {
   const queryClient = useQueryClient()
+  const failProjectSwitch = useProjectContextStore((state) => state.failProjectSwitch)
+  const finishProjectSwitch = useProjectContextStore((state) => state.finishProjectSwitch)
+  const startProjectSwitch = useProjectContextStore((state) => state.startProjectSwitch)
+
   return useMutation({
     mutationFn: (path: string) => rhizomeApi.switchProject(path),
-    onSuccess: () => {
+    onError: () => {
+      failProjectSwitch()
+    },
+    onMutate: (path) => {
+      startProjectSwitch(path)
+    },
+    onSuccess: (project) => {
+      finishProjectSwitch(project)
+      queryClient.setQueryData(rhizomeKeys.project(), project)
       queryClient.invalidateQueries({ queryKey: ['rhizome'] })
+      queryClient.invalidateQueries({ queryKey: ['status'] })
     },
   })
 }
