@@ -6,23 +6,11 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { useSessions } from '../lib/queries'
+import { timeAgo } from '../lib/time'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const minutes = Math.floor(diff / 60_000)
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 30) return `${days}d ago`
-  const months = Math.floor(days / 30)
-  return `${months}mo ago`
-}
 
 function statusColor(status: string): string {
   switch (status.toLowerCase()) {
@@ -99,7 +87,7 @@ function SessionCard({ session }: { session: SessionRecord }) {
             fw={500}
             size='sm'
           >
-            {timeAgo(session.started_at)}
+            {timeAgo(session.started_at, { allowMonths: true })}
           </Text>
         </Group>
 
