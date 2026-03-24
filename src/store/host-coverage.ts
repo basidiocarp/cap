@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { subscribeWithSelector } from 'zustand/middleware'
+import { createJSONStorage, persist, subscribeWithSelector } from 'zustand/middleware'
 
 import type { EcosystemStatus } from '../lib/api'
 import type { HostCoverageMode } from '../lib/host-coverage-view'
@@ -24,6 +24,20 @@ export interface HostCoverageSummary {
   label: string
 }
 
+const FALLBACK_STORAGE = {
+  getItem: () => null,
+  removeItem: () => {},
+  setItem: () => {},
+}
+
+const hostCoverageStorage = createJSONStorage<HostCoverageState>(() => {
+  if (typeof globalThis !== 'undefined' && 'localStorage' in globalThis && globalThis.localStorage) {
+    return globalThis.localStorage as Storage
+  }
+
+  return FALLBACK_STORAGE
+})
+
 export function summarizeHostCoverage(mode: HostCoverageMode, status: EcosystemStatus): HostCoverageSummary {
   const view = getHostCoverageView(status, mode)
   const color = view.effectiveMode === 'claude' ? 'grape' : view.effectiveMode === 'codex' ? 'mycelium' : 'gray'
@@ -36,13 +50,22 @@ export function summarizeHostCoverage(mode: HostCoverageMode, status: EcosystemS
 }
 
 export const useHostCoverageStore = create<HostCoverageStore>()(
-  subscribeWithSelector((set) => ({
-    mode: 'auto',
-    resetMode: () => {
-      set({ mode: 'auto' })
-    },
-    setMode: (mode) => {
-      set({ mode })
-    },
-  }))
+  subscribeWithSelector(
+    persist(
+      (set) => ({
+        mode: 'auto',
+        resetMode: () => {
+          set({ mode: 'auto' })
+        },
+        setMode: (mode) => {
+          set({ mode })
+        },
+      }),
+      {
+        name: 'cap-host-coverage',
+        partialize: (state) => ({ mode: state.mode }),
+        storage: hostCoverageStorage,
+      }
+    )
+  )
 )
