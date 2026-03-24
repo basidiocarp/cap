@@ -7,6 +7,14 @@ export interface CodexNotifyStatus {
   contract_matched: boolean
 }
 
+export interface HyphaeMemoryActivity {
+  codex_memory_count: number
+  last_codex_memory_at: string | null
+  last_session_memory_at: string | null
+  last_session_topic: string | null
+  recent_session_memory_count: number
+}
+
 export interface AgentAdapterStatus {
   configured: boolean
   detected: boolean
@@ -53,7 +61,13 @@ export interface EcosystemStatus {
     claude_code: AgentRuntimeStatus
     codex: AgentRuntimeStatus
   }
-  hyphae: { available: boolean; memories: number; memoirs: number; version: string | null }
+  hyphae: {
+    activity: HyphaeMemoryActivity
+    available: boolean
+    memories: number
+    memoirs: number
+    version: string | null
+  }
   hooks: HookHealthResult
   lsps: LspInfo[]
   mycelium: { available: boolean; version: string | null }

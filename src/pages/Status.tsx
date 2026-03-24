@@ -83,6 +83,53 @@ function HookSummaryIcon({ label }: { label: string }) {
   return ['Covered', 'Codex ready', 'Optional'].includes(label) ? <IconCircleCheck size={12} /> : <IconAlertCircle size={12} />
 }
 
+function summarizeHyphaeActivity(status: EcosystemStatus): {
+  color: string
+  detail: string
+  label: string
+} {
+  if (!status.hyphae.available) {
+    return {
+      color: 'gray',
+      detail: 'Hyphae is not available, so memory flow cannot be checked yet.',
+      label: 'Unavailable',
+    }
+  }
+
+  const { activity } = status.hyphae
+  const codexConfigured = Boolean(status.agents.codex.notify?.configured || status.agents.codex.adapter.configured)
+
+  if (activity.last_codex_memory_at) {
+    return {
+      color: 'mycelium',
+      detail: `Last Codex memory ${timeAgo(activity.last_codex_memory_at)}. Recent session memories: ${activity.recent_session_memory_count} in the past day.`,
+      label: 'Flowing',
+    }
+  }
+
+  if (codexConfigured) {
+    return {
+      color: 'orange',
+      detail: 'Codex is configured, but Hyphae has not stored a Codex memory yet. Complete one real Codex turn to confirm end-to-end flow.',
+      label: 'No Codex memories yet',
+    }
+  }
+
+  if (activity.last_session_memory_at) {
+    return {
+      color: 'gray',
+      detail: `Hyphae is storing session memories, but no Codex-tagged memory has landed yet. Last session memory: ${timeAgo(activity.last_session_memory_at)}.`,
+      label: 'Session activity only',
+    }
+  }
+
+  return {
+    color: 'gray',
+    detail: 'Hyphae is available, but no recent session memory activity was found.',
+    label: 'No recent activity',
+  }
+}
+
 function ToolCard({
   available,
   children,
@@ -599,6 +646,8 @@ export function Status() {
     return <PageLoader mt='xl' />
   }
 
+  const hyphaeFlow = status ? summarizeHyphaeActivity(status) : null
+
   return (
     <Stack>
       <Group justify='space-between'>
@@ -695,46 +744,93 @@ export function Status() {
                 description='Persistent memory store'
                 title='Hyphae'
               >
-                {status.hyphae.version && (
-                  <Badge
-                    color='spore'
-                    mb='sm'
-                    size='sm'
-                    variant='light'
-                  >
-                    v{status.hyphae.version}
-                  </Badge>
-                )}
-                {status.hyphae.available && (
-                  <Group
-                    gap='lg'
-                    mt='sm'
-                  >
-                    <Badge
-                      color='spore'
-                      size='sm'
-                      variant='outline'
-                    >
-                      {status.hyphae.memories} memories
-                    </Badge>
-                    <Badge
-                      color='spore'
-                      size='sm'
-                      variant='outline'
-                    >
-                      {status.hyphae.memoirs} memoirs
-                    </Badge>
+                <Stack gap='xs'>
+                  <Group justify='space-between'>
+                    {status.hyphae.version && (
+                      <Badge
+                        color='spore'
+                        size='sm'
+                        variant='light'
+                      >
+                        v{status.hyphae.version}
+                      </Badge>
+                    )}
+                    {hyphaeFlow && (
+                      <Badge
+                        color={hyphaeFlow.color}
+                        leftSection={hyphaeFlow.label === 'Flowing' ? <IconCircleCheck size={12} /> : <IconAlertCircle size={12} />}
+                        size='sm'
+                        variant='light'
+                      >
+                        {hyphaeFlow.label}
+                      </Badge>
+                    )}
                   </Group>
-                )}
-                {!status.hyphae.available && (
-                  <Text
-                    c='dimmed'
-                    mt='sm'
-                    size='xs'
-                  >
-                    Install with: cargo install hyphae
-                  </Text>
-                )}
+
+                  {hyphaeFlow && (
+                    <Text
+                      c='dimmed'
+                      size='sm'
+                    >
+                      {hyphaeFlow.detail}
+                    </Text>
+                  )}
+
+                  {status.hyphae.available && (
+                    <Group gap='xs'>
+                      <Badge
+                        color='spore'
+                        size='sm'
+                        variant='outline'
+                      >
+                        {status.hyphae.memories} memories
+                      </Badge>
+                      <Badge
+                        color='spore'
+                        size='sm'
+                        variant='outline'
+                      >
+                        {status.hyphae.memoirs} memoirs
+                      </Badge>
+                      <Badge
+                        color='gray'
+                        size='sm'
+                        variant='outline'
+                      >
+                        {status.hyphae.activity.codex_memory_count} Codex
+                      </Badge>
+                    </Group>
+                  )}
+
+                  {status.hyphae.activity.last_session_topic && (
+                    <Text
+                      c='dimmed'
+                      size='xs'
+                    >
+                      Last session topic: {status.hyphae.activity.last_session_topic}
+                    </Text>
+                  )}
+
+                  <Group gap='xs'>
+                    <Button
+                      component={Link}
+                      size='xs'
+                      to='/memories'
+                      variant='subtle'
+                    >
+                      Review memories
+                    </Button>
+                  </Group>
+
+                  {!status.hyphae.available && (
+                    <Text
+                      c='dimmed'
+                      size='xs'
+                    >
+                      Install with: cargo install hyphae
+                    </Text>
+                  )}
+                </Stack>
               </ToolCard>
             </Grid.Col>
 

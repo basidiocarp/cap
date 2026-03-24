@@ -89,6 +89,7 @@ describe('API Routes', () => {
       expect(json).toHaveProperty('agents')
       expect(json).toHaveProperty('project')
       expect(json).toHaveProperty('hooks')
+      expect(json).toHaveProperty('hyphae')
 
       const agents = json.agents as Record<string, unknown>
       expect(agents).toHaveProperty('claude_code')
@@ -109,6 +110,15 @@ describe('API Routes', () => {
       expect(Array.isArray(hooks.lifecycle)).toBe(true)
       const lifecycle = hooks.lifecycle as Array<Record<string, unknown>>
       expect(lifecycle.map((entry) => entry.event)).toEqual(['SessionStart', 'PostToolUse', 'PreCompact', 'SessionEnd'])
+
+      const hyphae = json.hyphae as Record<string, unknown>
+      expect(hyphae).toHaveProperty('activity')
+      const activity = hyphae.activity as Record<string, unknown>
+      expect(activity).toHaveProperty('codex_memory_count')
+      expect(activity).toHaveProperty('last_codex_memory_at')
+      expect(activity).toHaveProperty('last_session_memory_at')
+      expect(activity).toHaveProperty('last_session_topic')
+      expect(activity).toHaveProperty('recent_session_memory_count')
     })
   })
 

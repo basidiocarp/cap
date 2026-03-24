@@ -86,6 +86,14 @@ interface AgentRuntimeStatus {
   notify?: CodexNotifyStatus
 }
 
+interface HyphaeMemoryActivity {
+  codex_memory_count: number
+  last_codex_memory_at: string | null
+  last_session_memory_at: string | null
+  last_session_topic: string | null
+  recent_session_memory_count: number
+}
+
 type PromiseFilled<T> = { status: 'fulfilled'; value: T }
 
 interface StatusResult {
@@ -93,7 +101,13 @@ interface StatusResult {
     claude_code: AgentRuntimeStatus
     codex: AgentRuntimeStatus
   }
-  hyphae: { available: boolean; memories: number; memoirs: number; version: string | null }
+  hyphae: {
+    activity: HyphaeMemoryActivity
+    available: boolean
+    memories: number
+    memoirs: number
+    version: string | null
+  }
   hooks: HookHealthResult
   lsps: LspInfo[]
   mycelium: { available: boolean; version: string | null }
@@ -103,6 +117,16 @@ interface StatusResult {
 
 const RECOMMENDED_HOOK_EVENTS = ['SessionStart', 'PostToolUse', 'PreCompact', 'SessionEnd'] as const
 const DEFAULT_HOOK_ERROR_LOG = join(tmpdir(), 'hyphae-hook-errors.log')
+
+function emptyHyphaeActivity(): HyphaeMemoryActivity {
+  return {
+    codex_memory_count: 0,
+    last_codex_memory_at: null,
+    last_session_memory_at: null,
+    last_session_topic: null,
+    recent_session_memory_count: 0,
+  }
+}
 
 function buildLifecycleCoverage(installedHooks: HookInfo[]): HookLifecycleStatus[] {
   return RECOMMENDED_HOOK_EVENTS.map((event) => ({
@@ -133,6 +157,7 @@ async function checkHyphae(): Promise<StatusResult['hyphae']> {
 
     let memories = 0
     let memoirs = 0
+    let activity = emptyHyphaeActivity()
     try {
       const db = getDb()
       if (db) {
@@ -140,15 +165,35 @@ async function checkHyphae(): Promise<StatusResult['hyphae']> {
         memories = memRow.count
         const memoirRow = db.prepare('SELECT COUNT(*) as count FROM memoirs').get() as { count: number }
         memoirs = memoirRow.count
+        const codexCountRow = db.prepare("SELECT COUNT(*) as count FROM memories WHERE keywords LIKE '%host:codex%'").get() as {
+          count: number
+        }
+        const lastCodexRow = db
+          .prepare("SELECT created_at FROM memories WHERE keywords LIKE '%host:codex%' ORDER BY created_at DESC LIMIT 1")
+          .get() as { created_at: string } | undefined
+        const lastSessionRow = db
+          .prepare("SELECT topic, created_at FROM memories WHERE topic LIKE 'session/%' ORDER BY created_at DESC LIMIT 1")
+          .get() as { created_at: string; topic: string } | undefined
+        const recentSessionRow = db
+          .prepare("SELECT COUNT(*) as count FROM memories WHERE topic LIKE 'session/%' AND created_at >= datetime('now', '-1 day')")
+          .get() as { count: number }
+
+        activity = {
+          codex_memory_count: codexCountRow.count,
+          last_codex_memory_at: lastCodexRow?.created_at ?? null,
+          last_session_memory_at: lastSessionRow?.created_at ?? null,
+          last_session_topic: lastSessionRow?.topic ?? null,
+          recent_session_memory_count: recentSessionRow.count,
+        }
       }
     } catch (dbErr) {
       logger.debug({ err: dbErr }, 'Hyphae DB query failed')
     }
 
-    return { available: true, memoirs, memories, version }
+    return { activity, available: true, memoirs, memories, version }
   } catch (err) {
     logger.debug({ err }, 'Hyphae not available')
-    return { available: false, memoirs: 0, memories: 0, version: null }
+    return { activity: emptyHyphaeActivity(), available: false, memoirs: 0, memories: 0, version: null }
   }
 }
 
@@ -299,7 +344,10 @@ async function fetchStatus(): Promise<StatusResult> {
       hooksResult.status === 'fulfilled'
         ? hooksResult.value
         : { error_count: 0, installed_hooks: [], lifecycle: buildLifecycleCoverage([]), recent_errors: [] },
-    hyphae: hyphaeResult.status === 'fulfilled' ? hyphaeResult.value : { available: false, memoirs: 0, memories: 0, version: null },
+    hyphae:
+      hyphaeResult.status === 'fulfilled'
+        ? hyphaeResult.value
+        : { activity: emptyHyphaeActivity(), available: false, memoirs: 0, memories: 0, version: null },
     lsps: await checkLsps(),
     mycelium: myceliumResult.status === 'fulfilled' ? myceliumResult.value : { available: false, version: null },
     project: {
