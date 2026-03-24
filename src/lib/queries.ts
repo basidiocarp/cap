@@ -89,8 +89,12 @@ export function useMemoirInspect(memoir: string, concept: string, depth?: number
   })
 }
 
-export function useHyphaeAnalytics() {
-  return useQuery({ queryFn: () => hyphaeApi.analytics(), queryKey: hyphaeKeys.analytics() })
+export function useHyphaeAnalytics(enabled = true) {
+  return useQuery({
+    enabled,
+    queryFn: () => hyphaeApi.analytics(),
+    queryKey: hyphaeKeys.analytics(),
+  })
 }
 
 export function useSearchGlobal(q: string, limit?: number) {
@@ -175,12 +179,17 @@ export function useGain() {
   return useQuery({ queryFn: () => myceliumApi.gain(), queryKey: myceliumKeys.gain() })
 }
 
-export function useMyceliumAnalytics() {
-  return useQuery({ queryFn: () => myceliumApi.analytics(), queryKey: myceliumKeys.analytics() })
+export function useMyceliumAnalytics(enabled = true) {
+  return useQuery({
+    enabled,
+    queryFn: () => myceliumApi.analytics(),
+    queryKey: myceliumKeys.analytics(),
+  })
 }
 
-export function useCommandHistory(limit?: number) {
+export function useCommandHistory(limit?: number, enabled = true) {
   return useQuery({
+    enabled,
     queryFn: () => myceliumApi.commandHistory(limit),
     queryKey: myceliumKeys.commandHistory(limit),
   })
@@ -333,8 +342,12 @@ export function useDiagnostics(file?: string) {
   })
 }
 
-export function useRhizomeAnalytics() {
-  return useQuery({ queryFn: () => rhizomeApi.analytics(), queryKey: rhizomeKeys.analytics() })
+export function useRhizomeAnalytics(enabled = true) {
+  return useQuery({
+    enabled,
+    queryFn: () => rhizomeApi.analytics(),
+    queryKey: rhizomeKeys.analytics(),
+  })
 }
 
 export function useCallSites(file: string, fn?: string) {
@@ -407,8 +420,9 @@ export const stipeKeys = {
   repairPlan: () => ['stipe', 'repair-plan'] as const,
 }
 
-export function useEcosystemStatus() {
+export function useEcosystemStatus(enabled = true) {
   return useQuery({
+    enabled,
     queryFn: () => statusApi.ecosystem(),
     queryKey: statusKeys.ecosystem(),
     refetchInterval: 30_000,
@@ -444,32 +458,36 @@ export const usageKeys = {
   trend: (days?: number) => ['usage', 'trend', days] as const,
 }
 
-export function useUsageAggregate() {
+export function useUsageAggregate(enabled = true) {
   return useQuery({
+    enabled,
     queryFn: () => usageApi.aggregate(),
     queryKey: usageKeys.aggregate(),
     staleTime: 60_000,
   })
 }
 
-export function useUsageTrend(days = 30) {
+export function useUsageTrend(days = 30, enabled = true) {
   return useQuery({
+    enabled,
     queryFn: () => usageApi.trend(days),
     queryKey: usageKeys.trend(days),
     staleTime: 60_000,
   })
 }
 
-export function useUsageSessions(limit = 20) {
+export function useUsageSessions(limit = 20, enabled = true) {
   return useQuery({
+    enabled,
     queryFn: () => usageApi.sessions(undefined, limit),
     queryKey: usageKeys.sessions(undefined, limit),
     staleTime: 60_000,
   })
 }
 
-export function useTelemetry() {
+export function useTelemetry(enabled = true) {
   return useQuery({
+    enabled,
     queryFn: () => usageApi.telemetry(),
     queryKey: usageKeys.telemetry(),
     staleTime: 60_000,

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Grid, Stack, Tabs, Title } from '@mantine/core'
 import { IconActivity, IconBrain, IconChartBar, IconCode, IconCurrencyDollar, IconHistory, IconNetwork } from '@tabler/icons-react'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 
 import { KpiCard } from '../components/KpiCard'
 import { PageLoader } from '../components/PageLoader'
@@ -16,31 +16,40 @@ import {
   useUsageSessions,
   useUsageTrend,
 } from '../lib/queries'
-import { CommandHistoryTab } from './analytics/CommandHistoryTab'
-import { EcosystemTab } from './analytics/EcosystemTab'
 
 const TokenSavingsTab = lazy(() => import('./analytics/TokenSavingsTab').then((m) => ({ default: m.TokenSavingsTab })))
+const CommandHistoryTab = lazy(() => import('./analytics/CommandHistoryTab').then((m) => ({ default: m.CommandHistoryTab })))
 const MemoryHealthTab = lazy(() => import('./analytics/MemoryHealthTab').then((m) => ({ default: m.MemoryHealthTab })))
 const TelemetryTab = lazy(() => import('./analytics/TelemetryTab').then((m) => ({ default: m.TelemetryTab })))
 const CodeIntelligenceTab = lazy(() => import('./analytics/CodeIntelligenceTab').then((m) => ({ default: m.CodeIntelligenceTab })))
+const EcosystemTab = lazy(() => import('./analytics/EcosystemTab').then((m) => ({ default: m.EcosystemTab })))
 const UsageCostTab = lazy(() => import('./analytics/UsageCostTab').then((m) => ({ default: m.UsageCostTab })))
+
+const DEFAULT_TAB = 'token-savings'
 
 function AnalyticsPanel({ children }: { children: ReactNode }) {
   return <Suspense fallback={<PageLoader mt='md' />}>{children}</Suspense>
 }
 
 export function Analytics() {
-  const { data: ecosystemData = null, isLoading: ecosystemLoading } = useEcosystemStatus()
+  const [activeTab, setActiveTab] = useState(DEFAULT_TAB)
+
+  const isCommandHistoryTabActive = activeTab === 'command-history'
+  const isTelemetryTabActive = activeTab === 'telemetry'
+  const isEcosystemTabActive = activeTab === 'ecosystem'
+  const isUsageTabActive = activeTab === 'usage'
+
+  const { data: ecosystemData = null } = useEcosystemStatus(isEcosystemTabActive)
   const { data: hyphaeData = null, isLoading: hyphaeLoading } = useHyphaeAnalytics()
   const { data: myceliumData = null, isLoading: myceliumLoading } = useMyceliumAnalytics()
   const { data: rhizomeData = null, isLoading: rhizomeLoading } = useRhizomeAnalytics()
-  const { data: telemetryData = null } = useTelemetry()
-  const { data: usageAggregate = null } = useUsageAggregate()
-  const { data: usageTrend = null } = useUsageTrend(30)
-  const { data: usageSessions = null } = useUsageSessions(20)
-  const { data: commandHistory = null } = useCommandHistory(50)
+  const { data: telemetryData = null } = useTelemetry(isTelemetryTabActive)
+  const { data: usageAggregate = null } = useUsageAggregate(isUsageTabActive)
+  const { data: usageTrend = null } = useUsageTrend(30, isUsageTabActive)
+  const { data: usageSessions = null } = useUsageSessions(20, isUsageTabActive)
+  const { data: commandHistory = null } = useCommandHistory(50, isCommandHistoryTabActive)
 
-  const loading = ecosystemLoading || hyphaeLoading || myceliumLoading || rhizomeLoading
+  const loading = hyphaeLoading || myceliumLoading || rhizomeLoading
 
   const totalTokensSaved = myceliumData ? myceliumData.total_stats.total_tokens_saved : null
 
@@ -79,8 +88,9 @@ export function Analytics() {
       </Grid>
 
       <Tabs
-        defaultValue='token-savings'
         keepMounted={false}
+        onChange={(value) => setActiveTab(value ?? DEFAULT_TAB)}
+        value={activeTab}
       >
         <Tabs.List>
           <Tabs.Tab
@@ -140,7 +150,9 @@ export function Analytics() {
           pt='md'
           value='command-history'
         >
-          <CommandHistoryTab data={commandHistory} />
+          <AnalyticsPanel>
+            <CommandHistoryTab data={commandHistory} />
+          </AnalyticsPanel>
         </Tabs.Panel>
 
         <Tabs.Panel
@@ -174,7 +186,9 @@ export function Analytics() {
           pt='md'
           value='ecosystem'
         >
-          <EcosystemTab data={ecosystemData} />
+          <AnalyticsPanel>
+            <EcosystemTab data={ecosystemData} />
+          </AnalyticsPanel>
         </Tabs.Panel>
 
         <Tabs.Panel
