@@ -55,6 +55,9 @@ describe('CodeExplorerSymbolBrowser', () => {
             onSymbolModeChange(value)
           }}
           onToggleFullDef={vi.fn()}
+          searchMemoirsHref='/memoirs?memoir=code%3Acap&concept=renderStatus'
+          searchMemoriesHref='/memories?q=renderStatus'
+          searchSymbolsHref='/symbols?q=renderStatus'
           selectedFile='src/status.ts'
           showFullDef={false}
           symbolFilter={symbolFilter}
@@ -96,6 +99,9 @@ describe('CodeExplorerSymbolBrowser', () => {
         onSymbolFilterChange={vi.fn()}
         onSymbolModeChange={vi.fn()}
         onToggleFullDef={vi.fn()}
+        searchMemoirsHref='/memoirs?memoir=code%3Acap&concept=renderStatus'
+        searchMemoriesHref='/memories?q=renderStatus'
+        searchSymbolsHref='/symbols?q=renderStatus'
         selectedFile='src/status.ts'
         showFullDef={false}
         symbolFilter=''
@@ -122,6 +128,9 @@ describe('CodeExplorerSymbolBrowser', () => {
         onSymbolFilterChange={vi.fn()}
         onSymbolModeChange={vi.fn()}
         onToggleFullDef={vi.fn()}
+        searchMemoirsHref='/memoirs?memoir=code%3Acap&concept=renderStatus'
+        searchMemoriesHref='/memories?q=renderStatus'
+        searchSymbolsHref='/symbols?q=renderStatus'
         selectedFile='src/status.ts'
         showFullDef={false}
         symbolFilter=''

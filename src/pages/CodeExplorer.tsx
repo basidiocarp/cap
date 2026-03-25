@@ -9,6 +9,7 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { useFileTreeState } from '../hooks/useFileTreeState'
 import { useDefinition, useExports, useFileSummary, useProject, useRhizomeStatus, useSymbols } from '../lib/queries'
+import { memoirsHref, memoriesHref, symbolSearchHref } from '../lib/routes'
 import { useProjectContextView } from '../store/project-context'
 import { CodeExplorerHeader } from './code-explorer/CodeExplorerHeader'
 import { CodeExplorerSidebar } from './code-explorer/CodeExplorerSidebar'
@@ -60,6 +61,7 @@ export function CodeExplorer() {
   const { activeProject, recentProjects } = useProjectContextView(project)
   const unavailable = statusData ? !statusData.available : false
   const projectName = activeProject?.split('/').pop() ?? 'project'
+  const codeMemoirName = `code:${projectName}`
   const selectedFile = urlState.file || null
   const expandedSymbol = urlState.symbol || null
   const symbolFilter = urlState.filter
@@ -221,6 +223,9 @@ export function CodeExplorer() {
                   }))
                 }}
                 onToggleFullDef={() => setShowFullDef((value) => !value)}
+                searchMemoirsHref={expandedSymbol ? memoirsHref({ concept: expandedSymbol, memoir: codeMemoirName }) : memoirsHref()}
+                searchMemoriesHref={expandedSymbol ? memoriesHref({ q: expandedSymbol }) : memoriesHref()}
+                searchSymbolsHref={expandedSymbol ? symbolSearchHref(expandedSymbol) : symbolSearchHref()}
                 selectedFile={selectedFile}
                 showFullDef={showFullDef}
                 symbolFilter={symbolFilter}

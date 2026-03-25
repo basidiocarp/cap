@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Grid, Stack, Tabs, Title } from '@mantine/core'
+import { Alert, Grid, Stack, Tabs, Title } from '@mantine/core'
 import { IconActivity, IconBrain, IconChartBar, IconCode, IconCurrencyDollar, IconHistory, IconNetwork } from '@tabler/icons-react'
 import { lazy, Suspense, useState } from 'react'
 
@@ -60,6 +60,14 @@ export function Analytics() {
   return (
     <Stack>
       <Title order={2}>Analytics</Title>
+
+      <Alert
+        color='gray'
+        title='Tool-scoped analytics'
+      >
+        Each tab reports one tool&apos;s own record stream. Empty Mycelium tabs usually mean Mycelium has no captured commands yet, not that
+        Claude Code or Codex were inactive overall.
+      </Alert>
 
       {loading && <PageLoader mt='xl' />}
 

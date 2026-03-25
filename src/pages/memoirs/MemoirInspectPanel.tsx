@@ -1,7 +1,8 @@
 import type { RefObject } from 'react'
-import { Badge, Group, Loader, ScrollArea, SegmentedControl, Stack, Table, Text, Tooltip, UnstyledButton } from '@mantine/core'
+import { Badge, Button, Group, Loader, ScrollArea, SegmentedControl, Stack, Table, Text, Tooltip, UnstyledButton } from '@mantine/core'
 import { IconArrowLeft } from '@tabler/icons-react'
 import { lazy, Suspense } from 'react'
+import { Link } from 'react-router-dom'
 
 import type { ConceptInspection } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'
@@ -101,6 +102,8 @@ interface MemoirInspectPanelProps {
   onChangeDepth: (value: string) => void
   onInspect: (conceptName: string) => void
   panelRef: RefObject<HTMLDivElement | null>
+  searchMemoriesHref: string
+  searchSymbolsHref: string | null
 }
 
 export function MemoirInspectPanel({
@@ -113,6 +116,8 @@ export function MemoirInspectPanel({
   onChangeDepth,
   onInspect,
   panelRef,
+  searchMemoriesHref,
+  searchSymbolsHref,
 }: MemoirInspectPanelProps) {
   if (!inspectConcept) {
     return null
@@ -210,6 +215,29 @@ export function MemoirInspectPanel({
               >
                 Confidence: {(inspection.concept.confidence * 100).toFixed(0)}% | Revision: {inspection.concept.revision}
               </Text>
+              <Group
+                gap='xs'
+                mt='sm'
+              >
+                <Button
+                  component={Link}
+                  size='xs'
+                  to={searchMemoriesHref}
+                  variant='light'
+                >
+                  Search memories
+                </Button>
+                {searchSymbolsHref && (
+                  <Button
+                    component={Link}
+                    size='xs'
+                    to={searchSymbolsHref}
+                    variant='subtle'
+                  >
+                    Find in code
+                  </Button>
+                )}
+              </Group>
             </SectionCard>
 
             {inspection.neighbors.length > 0 && (

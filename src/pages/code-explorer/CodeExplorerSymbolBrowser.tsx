@@ -1,4 +1,5 @@
-import { Badge, Group, Loader, SegmentedControl, Stack, Text, TextInput, Title } from '@mantine/core'
+import { Badge, Button, Group, Loader, SegmentedControl, Stack, Text, TextInput, Title } from '@mantine/core'
+import { Link } from 'react-router-dom'
 
 import type { RhizomeSymbol, SymbolDefinition } from '../../lib/api'
 import { EmptyState } from '../../components/EmptyState'
@@ -39,6 +40,9 @@ interface CodeExplorerSymbolBrowserProps {
   onSymbolModeChange: (mode: 'all' | 'exports') => void
   onToggleFullDef: () => void
   selectedFile: string
+  searchMemoriesHref: string
+  searchMemoirsHref: string
+  searchSymbolsHref: string
   showFullDef: boolean
   symbolFilter: string
   symbolMode: 'all' | 'exports'
@@ -62,6 +66,9 @@ export function CodeExplorerSymbolBrowser({
   onSymbolModeChange,
   onToggleFullDef,
   selectedFile,
+  searchMemoriesHref,
+  searchMemoirsHref,
+  searchSymbolsHref,
   showFullDef,
   symbolFilter,
   symbolMode,
@@ -140,6 +147,37 @@ export function CodeExplorerSymbolBrowser({
             placeholder='Filter symbols'
             value={symbolFilter}
           />
+        </Group>
+
+        <Group gap='xs'>
+          <Button
+            component={Link}
+            size='xs'
+            to={searchMemoirsHref}
+            variant='subtle'
+          >
+            Open memoirs
+          </Button>
+          {expandedSymbol && (
+            <>
+              <Button
+                component={Link}
+                size='xs'
+                to={searchMemoriesHref}
+                variant='light'
+              >
+                Search memories
+              </Button>
+              <Button
+                component={Link}
+                size='xs'
+                to={searchSymbolsHref}
+                variant='subtle'
+              >
+                Search symbol index
+              </Button>
+            </>
+          )}
         </Group>
 
         {loading && (

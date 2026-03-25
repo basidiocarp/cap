@@ -48,6 +48,8 @@ describe('MemoirInspectPanel', () => {
         onChangeDepth={onChangeDepth}
         onInspect={onInspect}
         panelRef={createRef<HTMLDivElement>()}
+        searchMemoriesHref='/memories?q=getReadinessPanels'
+        searchSymbolsHref='/symbols?q=getReadinessPanels'
       />
     )
 
@@ -80,6 +82,8 @@ describe('MemoirInspectPanel', () => {
         onChangeDepth={vi.fn()}
         onInspect={vi.fn()}
         panelRef={createRef<HTMLDivElement>()}
+        searchMemoriesHref='/memories?q=getReadinessPanels'
+        searchSymbolsHref='/symbols?q=getReadinessPanels'
       />
     )
 

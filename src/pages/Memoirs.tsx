@@ -1,11 +1,12 @@
-import { Badge, Grid, Group, Loader, Stack, Text, Title } from '@mantine/core'
+import { Badge, Button, Grid, Group, Loader, Stack, Text, Title } from '@mantine/core'
 import { useDeferredValue, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { useMemoir, useMemoirInspect, useMemoirs } from '../lib/queries'
+import { memoriesHref, symbolSearchHref } from '../lib/routes'
 import { MemoirConceptsPanel } from './memoirs/MemoirConceptsPanel'
 import { MemoirInspectPanel } from './memoirs/MemoirInspectPanel'
 import { MemoirListSidebar } from './memoirs/MemoirListSidebar'
@@ -140,6 +141,26 @@ export function Memoirs() {
                     {detail.concepts.length} concepts
                   </Badge>
                 </Group>
+                <Group gap='xs'>
+                  <Button
+                    component={Link}
+                    size='xs'
+                    to={inspectConcept ? memoriesHref({ q: inspectConcept }) : memoriesHref()}
+                    variant='subtle'
+                  >
+                    Search memories
+                  </Button>
+                  {detail.memoir.name.startsWith('code:') && inspectConcept && (
+                    <Button
+                      component={Link}
+                      size='xs'
+                      to={symbolSearchHref(inspectConcept)}
+                      variant='light'
+                    >
+                      Find in code
+                    </Button>
+                  )}
+                </Group>
               </Group>
 
               <Text
@@ -168,6 +189,8 @@ export function Memoirs() {
                 }}
                 onInspect={handleInspect}
                 panelRef={inspectRef}
+                searchMemoriesHref={inspectConcept ? memoriesHref({ q: inspectConcept }) : memoriesHref()}
+                searchSymbolsHref={detail.memoir.name.startsWith('code:') && inspectConcept ? symbolSearchHref(inspectConcept) : null}
               />
 
               <MemoirConceptsPanel

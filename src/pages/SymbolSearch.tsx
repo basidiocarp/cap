@@ -1,8 +1,8 @@
 import { Badge, Card, Group, ScrollArea, SimpleGrid, Stack, Table, Text, TextInput, Title, UnstyledButton } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { IconCode, IconSearch, IconX } from '@tabler/icons-react'
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
@@ -12,6 +12,7 @@ import { SectionCard } from '../components/SectionCard'
 import { symbolKindColor } from '../lib/colors'
 import { onActivate } from '../lib/keyboard'
 import { useProject, useRhizomeStatus, useSymbolSearch } from '../lib/queries'
+import { codeExplorerHref } from '../lib/routes'
 import { useProjectContextView } from '../store/project-context'
 
 const SEARCH_EXAMPLES = [
@@ -25,7 +26,8 @@ const SEARCH_EXAMPLES = [
 
 export function SymbolSearch() {
   const navigate = useNavigate()
-  const [query, setQuery] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [query, setQuery] = useState(() => searchParams.get('q') ?? '')
   const [debouncedQuery] = useDebouncedValue(query, 400)
 
   const { data: status } = useRhizomeStatus()
@@ -35,8 +37,17 @@ export function SymbolSearch() {
 
   const projectName = activeProject?.split('/').pop() ?? 'project'
 
+  useEffect(() => {
+    setQuery(searchParams.get('q') ?? '')
+  }, [searchParams])
+
   function handleExampleClick(pattern: string) {
     setQuery(pattern)
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current)
+      next.set('q', pattern)
+      return next
+    })
   }
 
   if (status && !status.available) {
@@ -74,12 +85,28 @@ export function SymbolSearch() {
 
       <TextInput
         leftSection={<IconSearch size={16} />}
-        onChange={(e) => setQuery(e.currentTarget.value)}
+        onChange={(e) => {
+          const nextValue = e.currentTarget.value
+          setQuery(nextValue)
+          setSearchParams((current) => {
+            const next = new URLSearchParams(current)
+            if (nextValue.trim()) next.set('q', nextValue)
+            else next.delete('q')
+            return next
+          })
+        }}
         placeholder='Search symbols — try a function name, class, or type...'
         rightSection={
           query ? (
             <IconX
-              onClick={() => setQuery('')}
+              onClick={() => {
+                setQuery('')
+                setSearchParams((current) => {
+                  const next = new URLSearchParams(current)
+                  next.delete('q')
+                  return next
+                })
+              }}
               size={14}
               style={{ cursor: 'pointer' }}
             />
@@ -207,8 +234,8 @@ export function SymbolSearch() {
                 {results.map((r) => (
                   <Table.Tr
                     key={`${r.file}:${r.line}:${r.name}`}
-                    onClick={() => navigate(`/code?file=${encodeURIComponent(r.file)}&symbol=${encodeURIComponent(r.name)}`)}
-                    onKeyDown={onActivate(() => navigate(`/code?file=${encodeURIComponent(r.file)}&symbol=${encodeURIComponent(r.name)}`))}
+                    onClick={() => navigate(codeExplorerHref({ file: r.file, symbol: r.name }))}
+                    onKeyDown={onActivate(() => navigate(codeExplorerHref({ file: r.file, symbol: r.name })))}
                     style={{ cursor: 'pointer' }}
                     tabIndex={0}
                   >

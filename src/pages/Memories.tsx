@@ -23,8 +23,8 @@ import {
 } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { IconAlertCircle, IconSearch, IconTrash, IconX } from '@tabler/icons-react'
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 
 import type { Memory } from '../lib/api'
 import { ActionEmptyState } from '../components/ActionEmptyState'
@@ -45,6 +45,7 @@ import {
   useTopics,
   useUpdateImportance,
 } from '../lib/queries'
+import { codeExplorerHref, memoirsHref } from '../lib/routes'
 import { timeAgo } from '../lib/time'
 
 function weightColor(weight: number): string {
@@ -757,12 +758,15 @@ function DocumentsSection() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function Memories() {
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(() => searchParams.get('topic'))
+  const [query, setQuery] = useState(() => searchParams.get('q') ?? '')
   const [debouncedQuery] = useDebouncedValue(query, 400)
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null)
   const [isGlobalSearch, setIsGlobalSearch] = useState(false)
-  const [reviewFilter, setReviewFilter] = useState<'active' | 'all' | 'invalidated' | 'stale'>('all')
+  const [reviewFilter, setReviewFilter] = useState<'active' | 'all' | 'invalidated' | 'stale'>(
+    () => (searchParams.get('review') as 'active' | 'all' | 'invalidated' | 'stale') ?? 'all'
+  )
 
   const { data: topics = [], isLoading: topicsLoading } = useTopics()
 
@@ -787,15 +791,40 @@ export function Memories() {
 
   const showBrowseView = !hasQuery && !selectedTopic && !loading
 
+  useEffect(() => {
+    setSelectedTopic(searchParams.get('topic'))
+    setQuery(searchParams.get('q') ?? '')
+    setReviewFilter((searchParams.get('review') as 'active' | 'all' | 'invalidated' | 'stale') ?? 'all')
+  }, [searchParams])
+
+  function updateSearchState(next: { q?: string; review?: 'active' | 'all' | 'invalidated' | 'stale'; topic?: string | null }) {
+    setSearchParams((current) => {
+      const params = new URLSearchParams(current)
+
+      if (next.q?.trim()) params.set('q', next.q)
+      else params.delete('q')
+
+      if (next.topic) params.set('topic', next.topic)
+      else params.delete('topic')
+
+      if (next.review && next.review !== 'all') params.set('review', next.review)
+      else params.delete('review')
+
+      return params
+    })
+  }
+
   function handleTopicClick(topic: string) {
     setSelectedTopic(topic)
     setQuery('')
+    updateSearchState({ q: '', review: reviewFilter, topic })
   }
 
   function handleClearFilters() {
     setSelectedTopic(null)
     setQuery('')
     setReviewFilter('all')
+    updateSearchState({ q: '', review: 'all', topic: null })
   }
 
   return (
@@ -817,12 +846,19 @@ export function Memories() {
         <Group>
           <TextInput
             leftSection={<IconSearch size={16} />}
-            onChange={(e) => setQuery(e.currentTarget.value)}
+            onChange={(e) => {
+              const nextValue = e.currentTarget.value
+              setQuery(nextValue)
+              updateSearchState({ q: nextValue, review: reviewFilter, topic: selectedTopic })
+            }}
             placeholder='Search memories...'
             rightSection={
               query ? (
                 <IconX
-                  onClick={() => setQuery('')}
+                  onClick={() => {
+                    setQuery('')
+                    updateSearchState({ q: '', review: reviewFilter, topic: selectedTopic })
+                  }}
                   size={14}
                   style={{ cursor: 'pointer' }}
                 />
@@ -873,7 +909,11 @@ export function Memories() {
                   { label: 'Stale', value: 'stale' },
                   { label: 'Invalidated', value: 'invalidated' },
                 ]}
-                onChange={(value) => setReviewFilter((value as 'active' | 'all' | 'invalidated' | 'stale') ?? 'all')}
+                onChange={(value) => {
+                  const nextValue = (value as 'active' | 'all' | 'invalidated' | 'stale') ?? 'all'
+                  setReviewFilter(nextValue)
+                  updateSearchState({ q: query, review: nextValue, topic: selectedTopic })
+                }}
                 size='xs'
                 value={reviewFilter}
                 w={190}
@@ -1057,7 +1097,10 @@ export function Memories() {
           actions={
             <>
               <Button
-                onClick={() => setReviewFilter('all')}
+                onClick={() => {
+                  setReviewFilter('all')
+                  updateSearchState({ q: query, review: 'all', topic: selectedTopic })
+                }}
                 size='xs'
                 variant='light'
               >
@@ -1066,7 +1109,7 @@ export function Memories() {
               <Button
                 component={Link}
                 size='xs'
-                to='/memoirs'
+                to={memoirsHref()}
                 variant='subtle'
               >
                 Open memoirs
@@ -1094,7 +1137,7 @@ export function Memories() {
               <Button
                 component={Link}
                 size='xs'
-                to='/code'
+                to={codeExplorerHref()}
                 variant='subtle'
               >
                 Open code explorer
@@ -1102,7 +1145,7 @@ export function Memories() {
               <Button
                 component={Link}
                 size='xs'
-                to='/memoirs'
+                to={memoirsHref()}
                 variant='subtle'
               >
                 Open memoirs
