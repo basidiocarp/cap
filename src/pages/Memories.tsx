@@ -45,7 +45,7 @@ import {
   useTopics,
   useUpdateImportance,
 } from '../lib/queries'
-import { codeExplorerHref, memoirsHref } from '../lib/routes'
+import { codeExplorerHref, memoirsHref, memoriesHref, symbolSearchHref } from '../lib/routes'
 import { timeAgo } from '../lib/time'
 
 function weightColor(weight: number): string {
@@ -107,6 +107,17 @@ function getReviewFilterHint(filter: 'active' | 'all' | 'invalidated' | 'stale')
   if (filter === 'stale') return 'Stale memories should be reviewed before you trust them again.'
   if (filter === 'invalidated') return 'Invalidated memories stay visible for audit, but should stop driving normal recall.'
   return 'Review states help you separate reusable memories from items that need attention.'
+}
+
+function getMemoryFollowUpQuery(memory: Memory): string | null {
+  const keywords = getKeywords(memory.keywords)
+
+  if (keywords.length > 0) {
+    return keywords[0]
+  }
+
+  const topicParts = memory.topic.split('/').filter(Boolean)
+  return topicParts.length > 1 ? topicParts[topicParts.length - 1] : null
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -254,6 +265,10 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
   const updateImportance = useUpdateImportance()
   const detail = freshMemory ?? memory
   const review = getMemoryReviewState(detail)
+  const followUpQuery = getMemoryFollowUpQuery(detail)
+  const relatedMemoriesHref = followUpQuery ? memoriesHref({ q: followUpQuery, review: 'all' }) : memoriesHref({ topic: detail.topic })
+  const relatedMemoirsHref = followUpQuery ? memoirsHref({ filter: followUpQuery }) : memoirsHref()
+  const relatedCodeHref = followUpQuery ? symbolSearchHref(followUpQuery) : codeExplorerHref()
 
   const handleDelete = async () => {
     try {
@@ -599,6 +614,43 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
                   </Button>
                 </Stack>
               )}
+
+              <Stack gap={6}>
+                <Text
+                  c='dimmed'
+                  size='xs'
+                >
+                  {detail.invalidated_at
+                    ? 'Next step: inspect the concept or code surface that should replace this memory.'
+                    : 'Use related concept and code views when you need to validate or replace this memory.'}
+                </Text>
+                <Group gap='xs'>
+                  <Button
+                    component={Link}
+                    size='xs'
+                    to={relatedMemoriesHref}
+                    variant='light'
+                  >
+                    Search related memories
+                  </Button>
+                  <Button
+                    component={Link}
+                    size='xs'
+                    to={relatedMemoirsHref}
+                    variant='subtle'
+                  >
+                    Inspect related concepts
+                  </Button>
+                  <Button
+                    component={Link}
+                    size='xs'
+                    to={relatedCodeHref}
+                    variant='subtle'
+                  >
+                    Search code symbols
+                  </Button>
+                </Group>
+              </Stack>
             </Stack>
 
             {deleteMemory.isError && (

@@ -56,6 +56,8 @@ describe('MemoirInspectPanel', () => {
     expect(screen.getByLabelText('Concept graph')).toBeInTheDocument()
     expect(await screen.findByText('Graph for getReadinessPanels')).toBeInTheDocument()
     expect(screen.getByText(/Confidence: 92% \| Revision: 3/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Search related memories' })).toHaveAttribute('href', '/memories?q=getReadinessPanels')
+    expect(screen.getByRole('link', { name: 'Search code symbols' })).toHaveAttribute('href', '/symbols?q=getReadinessPanels')
 
     await user.click(screen.getByRole('button', { name: /back to HostCoveragePanel/i }))
     expect(onBack).toHaveBeenCalled()

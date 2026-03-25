@@ -225,7 +225,7 @@ export function MemoirInspectPanel({
                   to={searchMemoriesHref}
                   variant='light'
                 >
-                  Search memories
+                  Search related memories
                 </Button>
                 {searchSymbolsHref && (
                   <Button
@@ -234,7 +234,7 @@ export function MemoirInspectPanel({
                     to={searchSymbolsHref}
                     variant='subtle'
                   >
-                    Find in code
+                    Search code symbols
                   </Button>
                 )}
               </Group>

@@ -1,6 +1,7 @@
 import { Alert, Badge, Button, Grid, Group, NumberInput, SegmentedControl, Stack, Switch, Tabs, Text, Title } from '@mantine/core'
 import { IconBrain, IconCode, IconDatabase, IconServer, IconSettings, IconShield } from '@tabler/icons-react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import type { EcosystemSettings } from '../lib/api'
 import { ErrorAlert } from '../components/ErrorAlert'
@@ -9,6 +10,7 @@ import { SectionCard } from '../components/SectionCard'
 import { ToolingUnavailableState } from '../components/ToolingUnavailableState'
 import { getToolSettingsGuidance } from '../lib/host-guidance'
 import { useActivateMode, useModes, usePruneHyphae, useSettings, useUpdateMycelium, useUpdateRhizome } from '../lib/queries'
+import { codeExplorerHref, memoirsHref } from '../lib/routes'
 import { LspManager } from './settings/LspManager'
 
 function formatBytes(bytes: number): string {
@@ -16,6 +18,39 @@ function formatBytes(bytes: number): string {
     return `${(bytes / 1024 / 1024).toFixed(2)} MB`
   }
   return `${(bytes / 1024).toFixed(2)} KB`
+}
+
+function SettingsCardActions({
+  primaryHref,
+  primaryLabel,
+  secondaryHref,
+  secondaryLabel,
+}: {
+  primaryHref: string
+  primaryLabel: string
+  secondaryHref: string
+  secondaryLabel: string
+}) {
+  return (
+    <Group gap='xs'>
+      <Button
+        component={Link}
+        size='xs'
+        to={primaryHref}
+        variant='light'
+      >
+        {primaryLabel}
+      </Button>
+      <Button
+        component={Link}
+        size='xs'
+        to={secondaryHref}
+        variant='subtle'
+      >
+        {secondaryLabel}
+      </Button>
+    </Group>
+  )
 }
 
 function MyceliumCard({ settings }: { settings: EcosystemSettings['mycelium'] }) {
@@ -57,6 +92,12 @@ function MyceliumCard({ settings }: { settings: EcosystemSettings['mycelium'] })
             {update.error instanceof Error ? update.error.message : 'Update failed'}
           </Text>
         )}
+        <SettingsCardActions
+          primaryHref='/analytics'
+          primaryLabel='Open analytics'
+          secondaryHref='/status'
+          secondaryLabel='Check status'
+        />
       </Stack>
     </SectionCard>
   )
@@ -137,6 +178,12 @@ function HyphaeCard({ settings }: { settings: EcosystemSettings['hyphae'] }) {
             title='Prune failed'
           />
         )}
+        <SettingsCardActions
+          primaryHref='/memories'
+          primaryLabel='Open memories'
+          secondaryHref={memoirsHref()}
+          secondaryLabel='Open memoirs'
+        />
       </Stack>
     </SectionCard>
   )
@@ -182,6 +229,12 @@ function RhizomeCard({ settings }: { settings: EcosystemSettings['rhizome'] }) {
             {update.error instanceof Error ? update.error.message : 'Update failed'}
           </Text>
         )}
+        <SettingsCardActions
+          primaryHref={codeExplorerHref()}
+          primaryLabel='Open code explorer'
+          secondaryHref='/status'
+          secondaryLabel='Check status'
+        />
       </Stack>
     </SectionCard>
   )

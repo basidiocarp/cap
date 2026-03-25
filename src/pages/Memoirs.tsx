@@ -148,7 +148,7 @@ export function Memoirs() {
                     to={inspectConcept ? memoriesHref({ q: inspectConcept }) : memoriesHref()}
                     variant='subtle'
                   >
-                    Search memories
+                    Search related memories
                   </Button>
                   {detail.memoir.name.startsWith('code:') && inspectConcept && (
                     <Button
@@ -157,7 +157,7 @@ export function Memoirs() {
                       to={symbolSearchHref(inspectConcept)}
                       variant='light'
                     >
-                      Find in code
+                      Search code symbols
                     </Button>
                   )}
                 </Group>
