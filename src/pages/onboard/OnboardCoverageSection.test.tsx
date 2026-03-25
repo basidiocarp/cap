@@ -60,7 +60,7 @@ describe('OnboardCoverageSection', () => {
     expect(screen.getByText(/Missing recommended lifecycle events: PostToolUse, SessionEnd/i)).toBeInTheDocument()
     expect(screen.getByText(/Structured Stipe repair data was unavailable/i)).toBeInTheDocument()
 
-    await user.click(screen.getByRole('radio', { name: 'Claude only' }))
+    await user.click(screen.getByRole('radio', { name: 'Claude focus' }))
     expect(onModeChange).toHaveBeenCalledWith('claude')
 
     await user.click(screen.getByRole('button', { name: /refresh status/i }))

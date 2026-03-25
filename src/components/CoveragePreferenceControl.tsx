@@ -13,8 +13,8 @@ export function CoveragePreferenceControl({ onChange, value }: CoveragePreferenc
       aria-label='Coverage preference'
       data={[
         { label: 'Auto', value: 'auto' },
-        { label: 'Codex only', value: 'codex' },
-        { label: 'Claude only', value: 'claude' },
+        { label: 'Codex focus', value: 'codex' },
+        { label: 'Claude focus', value: 'claude' },
         { label: 'Both', value: 'both' },
       ]}
       onChange={(nextValue) => onChange(nextValue as HostCoverageMode)}

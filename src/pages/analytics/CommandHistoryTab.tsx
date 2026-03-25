@@ -1,6 +1,8 @@
-import { Alert, Badge, Group, Progress, Stack, Table, Text } from '@mantine/core'
+import { Alert, Badge, Button, Group, Progress, Stack, Table, Text } from '@mantine/core'
+import { Link } from 'react-router-dom'
 
 import type { CommandHistory, CommandHistoryEntry } from '../../lib/api'
+import { ActionEmptyState } from '../../components/ActionEmptyState'
 import { SectionCard } from '../../components/SectionCard'
 import { timeAgo } from '../../lib/time'
 
@@ -18,28 +20,74 @@ function savingsColor(pct: number): string {
 export function CommandHistoryTab({ data }: { data: CommandHistory | null }) {
   if (!data) {
     return (
-      <Alert
-        color='yellow'
-        title='Unavailable'
-      >
-        Command history data is not available. Run commands with mycelium to populate this view.
-      </Alert>
+      <ActionEmptyState
+        actions={
+          <>
+            <Button
+              component={Link}
+              size='xs'
+              to='/status'
+              variant='light'
+            >
+              Check status
+            </Button>
+            <Button
+              component={Link}
+              size='xs'
+              to='/onboard'
+              variant='subtle'
+            >
+              Open onboarding
+            </Button>
+          </>
+        }
+        description='Cap could not load command history from Mycelium yet.'
+        hint='This table only shows commands that were actually recorded by Mycelium. It does not try to mirror every shell command or every Claude Code or Codex turn.'
+        title='Command history is unavailable'
+      />
     )
   }
 
   if (data.total === 0) {
     return (
-      <Alert
-        color='blue'
-        title='No History'
-      >
-        No command history available yet. Use mycelium to filter commands and history will be recorded.
-      </Alert>
+      <ActionEmptyState
+        actions={
+          <>
+            <Button
+              component={Link}
+              size='xs'
+              to='/status'
+              variant='light'
+            >
+              Verify Mycelium
+            </Button>
+            <Button
+              component={Link}
+              size='xs'
+              to='/onboard'
+              variant='subtle'
+            >
+              Repair setup
+            </Button>
+          </>
+        }
+        description='Mycelium has not recorded any filtered commands yet.'
+        hint='Run commands through Mycelium to populate this table. If you are already using the ecosystem, check Status to confirm Mycelium is installed and active for the project you are viewing.'
+        title='No command history yet'
+      />
     )
   }
 
   return (
     <Stack>
+      <Alert
+        color='mycelium'
+        title='What appears here'
+      >
+        Command History shows the Mycelium-tracked command stream behind token filtering. If a command never passed through Mycelium, it
+        will not appear here even if you ran it in the same project.
+      </Alert>
+
       <SectionCard title={`Recent Commands (${data.total})`}>
         <Table striped>
           <Table.Thead>

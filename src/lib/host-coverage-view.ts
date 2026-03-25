@@ -42,7 +42,8 @@ export function getHostCoverageView(status: EcosystemStatus, preference: HostCov
 
   if (preference === 'auto') {
     return {
-      detail: 'Auto view follows the host coverage already configured in the ecosystem.',
+      detail:
+        'Auto view follows the host coverage already configured in the ecosystem while keeping Claude Code and Codex visible together.',
       effectiveMode,
       label: 'Auto',
       optionalSectionTitle: 'Claude coverage',
@@ -56,23 +57,23 @@ export function getHostCoverageView(status: EcosystemStatus, preference: HostCov
   if (preference === 'claude') {
     return {
       detail: claudeCoverage
-        ? 'Claude-first view keeps lifecycle hooks and Codex setup visible together.'
-        : 'Claude-first view is selected, but Claude lifecycle hooks still need repair.',
+        ? 'Claude focus keeps lifecycle hooks prominent while still showing Codex coverage alongside them.'
+        : 'Claude focus is selected, but Claude lifecycle hooks still need repair.',
       effectiveMode,
-      label: 'Claude-first',
+      label: 'Claude focus',
       optionalSectionTitle: 'Codex coverage',
       preference,
       requiredSectionTitle: 'Required for shared coverage',
       runtimeOrder: ['claude-code', 'codex'],
-      usageNote: 'Presentation mode: usage history is shown through a Claude-first lens, but Codex sessions are still included.',
+      usageNote: 'Presentation mode: usage history emphasizes Claude-facing health first, but Codex sessions are still included.',
     }
   }
 
   if (preference === 'both') {
     return {
-      detail: 'Shared view shows Claude Code and Codex coverage side by side.',
+      detail: 'Both view shows Claude Code and Codex coverage side by side without treating either host as secondary.',
       effectiveMode,
-      label: 'Shared',
+      label: 'Both hosts',
       optionalSectionTitle: 'Claude coverage',
       preference,
       requiredSectionTitle: 'Required for shared coverage',
@@ -83,14 +84,14 @@ export function getHostCoverageView(status: EcosystemStatus, preference: HostCov
 
   return {
     detail: codexCoverage
-      ? 'Codex-first view keeps Codex setup visible while Claude hooks remain available alongside it.'
-      : 'Codex-first view is selected, but Codex coverage still needs repair.',
+      ? 'Codex focus keeps Codex setup prominent while Claude lifecycle coverage remains available alongside it.'
+      : 'Codex focus is selected, but Codex coverage still needs repair.',
     effectiveMode,
-    label: 'Codex-first',
+    label: 'Codex focus',
     optionalSectionTitle: 'Claude coverage',
     preference,
     requiredSectionTitle: 'Required for Codex coverage',
     runtimeOrder: ['codex', 'claude-code'],
-    usageNote: 'Presentation mode: usage history is shown through a Codex-first lens, but Claude sessions are still included.',
+    usageNote: 'Presentation mode: usage history emphasizes Codex-facing health first, but Claude sessions are still included.',
   }
 }

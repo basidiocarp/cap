@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Improvements
+
+- **Action-oriented empty states**: Memories and analytics now explain why data may be missing and link directly to the relevant repair or follow-up pages instead of stopping at passive alerts.
+- **Clearer memory review flow**: Memories now explains active, stale, and invalidated states more clearly, with invalidation copy that makes the recall-vs-audit distinction explicit.
+- **Dual-host language cleanup**: Host coverage controls and runtime guidance now present Claude Code and Codex as coexisting coverage modes instead of treating one host as the implicit primary view.
+
 ## v0.10.0
 
 ### Features

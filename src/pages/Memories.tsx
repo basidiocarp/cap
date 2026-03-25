@@ -24,9 +24,10 @@ import {
 import { useDebouncedValue } from '@mantine/hooks'
 import { IconAlertCircle, IconSearch, IconTrash, IconX } from '@tabler/icons-react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import type { Memory } from '../lib/api'
-import { EmptyState } from '../components/EmptyState'
+import { ActionEmptyState } from '../components/ActionEmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
@@ -98,6 +99,13 @@ function reviewLabel(kind: 'active' | 'invalidated' | 'stale'): string {
   if (kind === 'invalidated') return 'Invalidated'
   if (kind === 'stale') return 'Stale'
   return 'Active'
+}
+
+function getReviewFilterHint(filter: 'active' | 'all' | 'invalidated' | 'stale'): string {
+  if (filter === 'active') return 'Active memories are available for normal recall.'
+  if (filter === 'stale') return 'Stale memories should be reviewed before you trust them again.'
+  if (filter === 'invalidated') return 'Invalidated memories stay visible for audit, but should stop driving normal recall.'
+  return 'Review states help you separate reusable memories from items that need attention.'
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -547,7 +555,7 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
                     label='Invalidation reason'
                     minRows={2}
                     onChange={(event) => setInvalidateReason(event.currentTarget.value)}
-                    placeholder='Why should this memory stop being reused?'
+                    placeholder='Explain why this memory should stay visible for audit but stop being reused.'
                     value={invalidateReason}
                   />
                   <Group gap='xs'>
@@ -557,7 +565,7 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
                       onClick={handleInvalidate}
                       size='sm'
                     >
-                      {invalidateMemory.isPending ? 'Invalidating...' : 'Confirm Invalidate'}
+                      {invalidateMemory.isPending ? 'Invalidating...' : 'Invalidate memory'}
                     </Button>
                     <Button
                       disabled={invalidateMemory.isPending}
@@ -573,14 +581,22 @@ function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () =>
                   </Group>
                 </>
               ) : (
-                <Button
-                  color='yellow'
-                  onClick={() => setShowInvalidateForm(true)}
-                  size='sm'
-                  variant='light'
-                >
-                  Mark as Invalidated
-                </Button>
+                <Stack gap={6}>
+                  <Text
+                    c='dimmed'
+                    size='xs'
+                  >
+                    Invalidated memories stay visible for audit and investigation, but Hyphae should stop reusing them during normal recall.
+                  </Text>
+                  <Button
+                    color='yellow'
+                    onClick={() => setShowInvalidateForm(true)}
+                    size='sm'
+                    variant='light'
+                  >
+                    Invalidate for recall
+                  </Button>
+                </Stack>
               )}
             </Stack>
 
@@ -666,7 +682,31 @@ function DocumentsSection() {
   if (sources.length === 0) {
     return (
       <SectionCard title='Ingested Documents'>
-        <EmptyState>No documents ingested yet. Documents are automatically indexed during RAG operations.</EmptyState>
+        <ActionEmptyState
+          actions={
+            <>
+              <Button
+                component={Link}
+                size='xs'
+                to='/status'
+                variant='light'
+              >
+                Check status
+              </Button>
+              <Button
+                component={Link}
+                size='xs'
+                to='/memoirs'
+                variant='subtle'
+              >
+                Open memoirs
+              </Button>
+            </>
+          }
+          description='No ingested documents are indexed yet.'
+          hint='Documents are usually created during context-gathering or RAG-style workflows. If you expected indexed material already, check Hyphae status first.'
+          title='No documents yet'
+        />
       </SectionCard>
     )
   }
@@ -824,41 +864,49 @@ export function Memories() {
         )}
 
         {!showBrowseView && (
-          <Group gap='xs'>
-            <Select
-              data={[
-                { label: 'All review states', value: 'all' },
-                { label: 'Active', value: 'active' },
-                { label: 'Stale', value: 'stale' },
-                { label: 'Invalidated', value: 'invalidated' },
-              ]}
-              onChange={(value) => setReviewFilter((value as 'active' | 'all' | 'invalidated' | 'stale') ?? 'all')}
+          <Stack gap={6}>
+            <Group gap='xs'>
+              <Select
+                data={[
+                  { label: 'All review states', value: 'all' },
+                  { label: 'Active', value: 'active' },
+                  { label: 'Stale', value: 'stale' },
+                  { label: 'Invalidated', value: 'invalidated' },
+                ]}
+                onChange={(value) => setReviewFilter((value as 'active' | 'all' | 'invalidated' | 'stale') ?? 'all')}
+                size='xs'
+                value={reviewFilter}
+                w={190}
+              />
+              <Badge
+                color='gray'
+                size='sm'
+                variant={reviewFilter === 'all' ? 'light' : 'outline'}
+              >
+                {reviewCounts.active} active
+              </Badge>
+              <Badge
+                color='yellow'
+                size='sm'
+                variant={reviewFilter === 'stale' ? 'light' : 'outline'}
+              >
+                {reviewCounts.stale} stale
+              </Badge>
+              <Badge
+                color='red'
+                size='sm'
+                variant={reviewFilter === 'invalidated' ? 'light' : 'outline'}
+              >
+                {reviewCounts.invalidated} invalidated
+              </Badge>
+            </Group>
+            <Text
+              c='dimmed'
               size='xs'
-              value={reviewFilter}
-              w={190}
-            />
-            <Badge
-              color='gray'
-              size='sm'
-              variant={reviewFilter === 'all' ? 'light' : 'outline'}
             >
-              {reviewCounts.active} active
-            </Badge>
-            <Badge
-              color='yellow'
-              size='sm'
-              variant={reviewFilter === 'stale' ? 'light' : 'outline'}
-            >
-              {reviewCounts.stale} stale
-            </Badge>
-            <Badge
-              color='red'
-              size='sm'
-              variant={reviewFilter === 'invalidated' ? 'light' : 'outline'}
-            >
-              {reviewCounts.invalidated} invalidated
-            </Badge>
-          </Group>
+              {getReviewFilterHint(reviewFilter)}
+            </Text>
+          </Stack>
         )}
       </Stack>
 
@@ -870,7 +918,32 @@ export function Memories() {
           {topicsLoading && <PageLoader size='sm' />}
 
           {!topicsLoading && topics.length === 0 && (
-            <EmptyState mt='md'>No memories stored yet. Memories are created automatically during agent sessions.</EmptyState>
+            <ActionEmptyState
+              actions={
+                <>
+                  <Button
+                    component={Link}
+                    size='xs'
+                    to='/status'
+                    variant='light'
+                  >
+                    Check status
+                  </Button>
+                  <Button
+                    component={Link}
+                    size='xs'
+                    to='/onboard'
+                    variant='subtle'
+                  >
+                    Open onboarding
+                  </Button>
+                </>
+              }
+              description='No memories have been stored for this project yet.'
+              hint='Memories are created automatically during agent sessions. If you expected memories already, check Status to confirm Hyphae flow is healthy for the host you are using.'
+              mt='md'
+              title='No memories yet'
+            />
           )}
 
           {!topicsLoading && topics.length > 0 && (
@@ -980,10 +1053,72 @@ export function Memories() {
 
       {/* No results */}
       {!loading && !showBrowseView && rawMemories.length > 0 && memories.length === 0 && !error && (
-        <EmptyState mt='md'>No memories match the current review filter.</EmptyState>
+        <ActionEmptyState
+          actions={
+            <>
+              <Button
+                onClick={() => setReviewFilter('all')}
+                size='xs'
+                variant='light'
+              >
+                Show all review states
+              </Button>
+              <Button
+                component={Link}
+                size='xs'
+                to='/memoirs'
+                variant='subtle'
+              >
+                Open memoirs
+              </Button>
+            </>
+          }
+          description='No memories match the current review filter in this result set.'
+          hint='Try another review state or open Memoirs if you want the longer-lived structured knowledge view instead of episodic memories.'
+          mt='md'
+          title={`No ${reviewFilter === 'all' ? 'matching' : reviewFilter} memories here`}
+        />
       )}
 
-      {!loading && !showBrowseView && rawMemories.length === 0 && !error && <EmptyState mt='md'>No results found.</EmptyState>}
+      {!loading && !showBrowseView && rawMemories.length === 0 && !error && (
+        <ActionEmptyState
+          actions={
+            <>
+              <Button
+                onClick={handleClearFilters}
+                size='xs'
+                variant='light'
+              >
+                Clear filters
+              </Button>
+              <Button
+                component={Link}
+                size='xs'
+                to='/code'
+                variant='subtle'
+              >
+                Open code explorer
+              </Button>
+              <Button
+                component={Link}
+                size='xs'
+                to='/memoirs'
+                variant='subtle'
+              >
+                Open memoirs
+              </Button>
+            </>
+          }
+          description={hasQuery ? 'No memories matched the current search.' : 'There are no memories in this topic yet.'}
+          hint={
+            hasQuery
+              ? 'Try a broader query, switch between this project and all projects, or open Code Explorer and Memoirs if the information you want is still structured as code or concepts.'
+              : 'If you expected activity here already, check Status first to confirm memory flow is healthy.'
+          }
+          mt='md'
+          title={hasQuery ? 'No memory results' : 'No memories in this topic'}
+        />
+      )}
 
       {/* Results table */}
       {memories.length > 0 && (

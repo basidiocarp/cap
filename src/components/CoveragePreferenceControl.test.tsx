@@ -19,7 +19,7 @@ describe('CoveragePreferenceControl', () => {
       </MantineProvider>
     )
 
-    await user.click(screen.getByRole('radio', { name: 'Claude only' }))
+    await user.click(screen.getByRole('radio', { name: 'Claude focus' }))
 
     expect(onChange).toHaveBeenCalledWith('claude')
   })

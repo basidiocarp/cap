@@ -1,7 +1,9 @@
 import { BarChart, LineChart } from '@mantine/charts'
-import { Alert, Grid, Stack, Table, Text } from '@mantine/core'
+import { Alert, Button, Grid, Stack, Table, Text } from '@mantine/core'
+import { Link } from 'react-router-dom'
 
 import type { MyceliumAnalytics } from '../../lib/api'
+import { ActionEmptyState } from '../../components/ActionEmptyState'
 import { KpiCard } from '../../components/KpiCard'
 import { SectionCard } from '../../components/SectionCard'
 import { ChartBox } from './ChartBox'
@@ -9,17 +11,74 @@ import { ChartBox } from './ChartBox'
 export function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
   if (!data) {
     return (
-      <Alert
-        color='yellow'
-        title='Unavailable'
-      >
-        Mycelium analytics data is not available.
-      </Alert>
+      <ActionEmptyState
+        actions={
+          <>
+            <Button
+              component={Link}
+              size='xs'
+              to='/status'
+              variant='light'
+            >
+              Check status
+            </Button>
+            <Button
+              component={Link}
+              size='xs'
+              to='/onboard'
+              variant='subtle'
+            >
+              Open onboarding
+            </Button>
+          </>
+        }
+        description='Cap could not load token savings from Mycelium yet.'
+        hint='This view only reflects commands that actually flowed through Mycelium. If you use Claude Code or Codex directly, those turns will not appear here.'
+        title='Token savings are unavailable'
+      />
+    )
+  }
+
+  if (data.total_stats.total_commands === 0) {
+    return (
+      <ActionEmptyState
+        actions={
+          <>
+            <Button
+              component={Link}
+              size='xs'
+              to='/status'
+              variant='light'
+            >
+              Verify Mycelium
+            </Button>
+            <Button
+              component={Link}
+              size='xs'
+              to='/onboard'
+              variant='subtle'
+            >
+              Repair setup
+            </Button>
+          </>
+        }
+        description='Mycelium has not recorded any filtered commands yet, so there is no savings history to chart.'
+        hint='Run commands through Mycelium to populate this page. Direct shell commands and host turns that bypass Mycelium will not count here.'
+        title='No token savings yet'
+      />
     )
   }
 
   return (
     <Stack>
+      <Alert
+        color='mycelium'
+        title='How to read token savings'
+      >
+        Token savings only reflect commands captured by Mycelium. Use Command History to inspect the underlying entries when this page looks
+        lower than your overall Claude Code or Codex activity.
+      </Alert>
+
       <Grid>
         <Grid.Col span={{ base: 12, md: 4 }}>
           <KpiCard

@@ -82,17 +82,17 @@ describe('host coverage', () => {
   it('uses the selected preference for runtime ordering and copy', () => {
     const view = getHostCoverageView(createStatus(), 'claude')
 
-    expect(view.label).toBe('Claude-first')
+    expect(view.label).toBe('Claude focus')
     expect(view.requiredSectionTitle).toBe('Required for shared coverage')
     expect(view.runtimeOrder).toEqual(['claude-code', 'codex'])
-    expect(view.usageNote).toContain('Claude-first lens')
+    expect(view.usageNote).toContain('Claude-facing health')
   })
 
   it('summarizes codex-first mode explicitly', () => {
     const summary = summarizeHostCoverage('codex', createStatus())
 
-    expect(summary.label).toBe('Codex-first')
-    expect(summary.detail).toContain('Codex-first view')
+    expect(summary.label).toBe('Codex focus')
+    expect(summary.detail).toContain('Codex focus')
   })
 
   it('makes Codex missing copy point to onboarding', () => {
