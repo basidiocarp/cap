@@ -418,6 +418,6 @@ describe('onboarding helpers', () => {
     expect(readiness.recommendedAction?.command).toBe('stipe init')
     expect(readiness.groups.primary[0]?.command).toBe('stipe init')
     expect(readiness.recommendedQuickActions[0]).toMatchObject({ kind: 'run', runAction: 'init' })
-    expect(readiness.hyphaeQuickActions[0]).toMatchObject({ kind: 'refresh', label: 'Refresh status' })
+    expect(readiness.hyphaeQuickActions[0]).toMatchObject({ href: '/memories', kind: 'link', label: 'Open memories' })
   })
 })

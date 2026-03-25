@@ -1,7 +1,9 @@
 import { BarChart, LineChart } from '@mantine/charts'
-import { Alert, Badge, Grid, Stack, Table, Text } from '@mantine/core'
+import { Alert, Badge, Button, Grid, Stack, Table, Text } from '@mantine/core'
+import { Link } from 'react-router-dom'
 
 import type { AggregateTelemetry } from '../../lib/types'
+import { ActionEmptyState } from '../../components/ActionEmptyState'
 import { KpiCard } from '../../components/KpiCard'
 import { SectionCard } from '../../components/SectionCard'
 import { ChartBox } from './ChartBox'
@@ -9,17 +11,44 @@ import { ChartBox } from './ChartBox'
 export function TelemetryTab({ data }: { data: AggregateTelemetry | null }) {
   if (!data) {
     return (
-      <Alert
-        color='yellow'
-        title='Unavailable'
-      >
-        Telemetry data is not available.
-      </Alert>
+      <ActionEmptyState
+        actions={
+          <>
+            <Button
+              component={Link}
+              size='xs'
+              to='/status'
+              variant='light'
+            >
+              Check status
+            </Button>
+            <Button
+              component={Link}
+              size='xs'
+              to='/onboard'
+              variant='subtle'
+            >
+              Open onboarding
+            </Button>
+          </>
+        }
+        description='Cap could not load aggregate session telemetry yet.'
+        hint='Telemetry summarizes tracked host sessions and tool usage. It is broader than Mycelium command history, but it still depends on session capture being available.'
+        title='Telemetry is unavailable'
+      />
     )
   }
 
   return (
     <Stack>
+      <Alert
+        color='fruiting'
+        title='What telemetry covers'
+      >
+        Telemetry summarizes captured session activity across supported hosts and tools. It complements, rather than replaces, the
+        tool-specific analytics in Mycelium, Hyphae, and Rhizome.
+      </Alert>
+
       <Grid>
         <Grid.Col span={{ base: 12, md: 3 }}>
           <KpiCard

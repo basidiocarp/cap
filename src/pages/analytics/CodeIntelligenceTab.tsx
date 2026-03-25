@@ -1,7 +1,9 @@
 import { PieChart } from '@mantine/charts'
-import { Alert, Badge, Grid, Group, Stack, Table } from '@mantine/core'
+import { Alert, Badge, Button, Grid, Group, Stack, Table } from '@mantine/core'
+import { Link } from 'react-router-dom'
 
 import type { RhizomeAnalytics } from '../../lib/api'
+import { ActionEmptyState } from '../../components/ActionEmptyState'
 import { KpiCard } from '../../components/KpiCard'
 import { SectionCard } from '../../components/SectionCard'
 import { PIE_COLORS } from '../../lib/colors'
@@ -9,23 +11,61 @@ import { PIE_COLORS } from '../../lib/colors'
 export function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null }) {
   if (!data) {
     return (
-      <Alert
-        color='yellow'
-        title='Unavailable'
-      >
-        Rhizome analytics data is not available.
-      </Alert>
+      <ActionEmptyState
+        actions={
+          <>
+            <Button
+              component={Link}
+              size='xs'
+              to='/status'
+              variant='light'
+            >
+              Check status
+            </Button>
+            <Button
+              component={Link}
+              size='xs'
+              to='/onboard'
+              variant='subtle'
+            >
+              Open onboarding
+            </Button>
+          </>
+        }
+        description='Cap could not load Rhizome analytics yet.'
+        hint='This tab only measures Rhizome’s code intelligence backend. It does not summarize all code work in the project.'
+        title='Code intelligence analytics are unavailable'
+      />
     )
   }
 
   if (!data.available) {
     return (
-      <Alert
-        color='substrate'
-        title='Rhizome Not Installed'
-      >
-        Rhizome is not installed or not available. Install it to see code intelligence analytics.
-      </Alert>
+      <ActionEmptyState
+        actions={
+          <>
+            <Button
+              component={Link}
+              size='xs'
+              to='/status'
+              variant='light'
+            >
+              Check status
+            </Button>
+            <Button
+              component={Link}
+              size='xs'
+              to='/settings'
+              variant='subtle'
+            >
+              Open settings
+            </Button>
+          </>
+        }
+        description='Rhizome is not installed or not reachable, so there is no code intelligence history to show yet.'
+        hint='Install or repair Rhizome first, then return here for supported tools, backend status, and language coverage.'
+        title='Rhizome is unavailable'
+      />
     )
   }
 
@@ -37,6 +77,14 @@ export function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null })
 
   return (
     <Stack>
+      <Alert
+        color='lichen'
+        title='How to read code intelligence analytics'
+      >
+        These charts describe Rhizome itself: which code tools are exposed, which backends are active, and what language support is
+        currently configured. They do not attempt to estimate overall engineering activity.
+      </Alert>
+
       <Grid>
         <Grid.Col span={{ base: 12, md: 4 }}>
           <KpiCard

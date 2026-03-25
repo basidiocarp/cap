@@ -1,22 +1,51 @@
-import { Alert, Badge, Grid, Group, Stack, Text } from '@mantine/core'
+import { Alert, Badge, Button, Grid, Group, Stack, Text } from '@mantine/core'
+import { Link } from 'react-router-dom'
 
 import type { EcosystemStatus } from '../../lib/api'
+import { ActionEmptyState } from '../../components/ActionEmptyState'
 import { SectionCard } from '../../components/SectionCard'
 
 export function EcosystemTab({ data }: { data: EcosystemStatus | null }) {
   if (!data) {
     return (
-      <Alert
-        color='yellow'
-        title='Unavailable'
-      >
-        Ecosystem status data is not available.
-      </Alert>
+      <ActionEmptyState
+        actions={
+          <>
+            <Button
+              component={Link}
+              size='xs'
+              to='/status'
+              variant='light'
+            >
+              Open status
+            </Button>
+            <Button
+              component={Link}
+              size='xs'
+              to='/onboard'
+              variant='subtle'
+            >
+              Open onboarding
+            </Button>
+          </>
+        }
+        description='Cap could not load the live ecosystem status snapshot.'
+        hint='This tab is a current-health summary for Mycelium, Hyphae, and Rhizome. It is not a historical analytics stream.'
+        title='Ecosystem status is unavailable'
+      />
     )
   }
 
   return (
     <Stack>
+      <Alert
+        color='gray'
+        title='What this tab summarizes'
+      >
+        Ecosystem status is a live snapshot of current tool health and wiring. Use the other analytics tabs for historical Mycelium, Hyphae,
+        Rhizome, or host telemetry trends.
+      </Alert>
+
       <SectionCard title='Service Status'>
         <Grid>
           <Grid.Col span={{ base: 12, md: 4 }}>

@@ -1,7 +1,9 @@
 import { BarChart } from '@mantine/charts'
-import { Alert, Grid, Group, RingProgress, Stack, Table, Text, Title } from '@mantine/core'
+import { Alert, Button, Grid, Group, RingProgress, Stack, Table, Text, Title } from '@mantine/core'
+import { Link } from 'react-router-dom'
 
 import type { HyphaeAnalytics } from '../../lib/api'
+import { ActionEmptyState } from '../../components/ActionEmptyState'
 import { KpiCard } from '../../components/KpiCard'
 import { SectionCard } from '../../components/SectionCard'
 import { weightColor } from '../../lib/colors'
@@ -10,12 +12,31 @@ import { ChartBox } from './ChartBox'
 export function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
   if (!data) {
     return (
-      <Alert
-        color='yellow'
-        title='Unavailable'
-      >
-        Hyphae analytics data is not available.
-      </Alert>
+      <ActionEmptyState
+        actions={
+          <>
+            <Button
+              component={Link}
+              size='xs'
+              to='/status'
+              variant='light'
+            >
+              Check status
+            </Button>
+            <Button
+              component={Link}
+              size='xs'
+              to='/onboard'
+              variant='subtle'
+            >
+              Open onboarding
+            </Button>
+          </>
+        }
+        description='Cap could not load Hyphae memory health analytics yet.'
+        hint='This tab only reflects Hyphae’s stored memory and memoir data. Claude Code or Codex activity that never made it into Hyphae will not appear here.'
+        title='Memory health is unavailable'
+      />
     )
   }
 
@@ -34,6 +55,14 @@ export function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
 
   return (
     <Stack>
+      <Alert
+        color='spore'
+        title='What this tab measures'
+      >
+        Memory Health reflects the Hyphae store itself: memory weight, lifecycle churn, memoir graph size, and topic distribution. It is not
+        a direct count of all host turns or all project activity.
+      </Alert>
+
       <Grid>
         <Grid.Col span={{ base: 12, md: 4 }}>
           <SectionCard

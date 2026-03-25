@@ -1,12 +1,16 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { EcosystemStatus } from '../lib/api'
 import { createEcosystemStatus } from '../test/fixtures'
 import { renderWithProviders } from '../test/render'
 import { Status } from './Status'
 
 const refreshAll = vi.fn()
+const refetchStatus = vi.fn()
+let mockStatus: EcosystemStatus | null = createEcosystemStatus()
+let mockStatusError: Error | null = null
 
 vi.mock('../lib/ecosystem-status', () => ({
   useEcosystemStatusController: () => ({
@@ -21,10 +25,10 @@ vi.mock('../lib/ecosystem-status', () => ({
       refetch: vi.fn(),
     },
     statusQuery: {
-      data: createEcosystemStatus(),
-      error: null,
+      data: mockStatus,
+      error: mockStatusError,
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: refetchStatus,
     },
   }),
 }))
@@ -84,6 +88,13 @@ vi.mock('./status/LifecycleAdaptersCard', () => ({
 }))
 
 describe('Status page', () => {
+  beforeEach(() => {
+    refreshAll.mockClear()
+    refetchStatus.mockClear()
+    mockStatus = createEcosystemStatus()
+    mockStatusError = null
+  })
+
   it('renders status sections and shares refresh across page cards', async () => {
     const user = userEvent.setup()
 
@@ -101,5 +112,22 @@ describe('Status page', () => {
     await user.click(screen.getByRole('button', { name: 'Refresh overview' }))
 
     expect(refreshAll).toHaveBeenCalledTimes(3)
+  })
+
+  it('renders an explicit unavailable state when status data is missing', async () => {
+    mockStatus = null
+    mockStatusError = new Error('Status backend unavailable')
+    const user = userEvent.setup()
+
+    renderWithProviders(<Status />, { route: '/status' })
+
+    expect(screen.getByText('Status is unavailable')).toBeInTheDocument()
+    expect(screen.getByText(/could not load ecosystem status/i)).toBeInTheDocument()
+    expect(screen.getByText('Status backend unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open onboarding' })).toHaveAttribute('href', '/onboard')
+    expect(screen.getByRole('link', { name: 'Open settings' })).toHaveAttribute('href', '/settings')
+
+    await user.click(screen.getByRole('button', { name: 'Retry loading status' }))
+    expect(refreshAll).toHaveBeenCalled()
   })
 })

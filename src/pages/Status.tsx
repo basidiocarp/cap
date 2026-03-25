@@ -2,6 +2,7 @@ import { Stack } from '@mantine/core'
 
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
+import { ToolingUnavailableState } from '../components/ToolingUnavailableState'
 import { useEcosystemStatusController } from '../lib/ecosystem-status'
 import { useHostCoverageStore } from '../store/host-coverage'
 import { LanguageServersCard } from './status/LanguageServersCard'
@@ -26,7 +27,16 @@ export function Status() {
 
       <ErrorAlert error={error} />
 
-      {status && (
+      {!status ? (
+        <ToolingUnavailableState
+          description='Cap could not load ecosystem status for this environment.'
+          hint='Status is the top-level health view for the project. If this keeps failing, use onboarding for guided repair or settings to confirm the local tool configuration is readable.'
+          includeStatusLink={false}
+          onRetry={refreshAll}
+          retryLabel='Retry loading status'
+          title='Status is unavailable'
+        />
+      ) : (
         <>
           <StatusGettingStartedCard
             hostCoverageMode={hostCoverageMode}

@@ -1,13 +1,12 @@
 import { Alert, Badge, Button, Grid, Group, NumberInput, SegmentedControl, Stack, Switch, Tabs, Text, Title } from '@mantine/core'
 import { IconBrain, IconCode, IconDatabase, IconServer, IconSettings, IconShield } from '@tabler/icons-react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 
 import type { EcosystemSettings } from '../lib/api'
-import { ActionEmptyState } from '../components/ActionEmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
+import { ToolingUnavailableState } from '../components/ToolingUnavailableState'
 import { getToolSettingsGuidance } from '../lib/host-guidance'
 import { useActivateMode, useModes, usePruneHyphae, useSettings, useUpdateMycelium, useUpdateRhizome } from '../lib/queries'
 import { LspManager } from './settings/LspManager'
@@ -250,36 +249,12 @@ export function Settings() {
 
         <ErrorAlert error={error} />
 
-        <ActionEmptyState
-          actions={
-            <>
-              <Button
-                onClick={() => void refetch()}
-                size='xs'
-                variant='light'
-              >
-                Retry loading settings
-              </Button>
-              <Button
-                component={Link}
-                size='xs'
-                to='/status'
-                variant='subtle'
-              >
-                Open status
-              </Button>
-              <Button
-                component={Link}
-                size='xs'
-                to='/onboard'
-                variant='subtle'
-              >
-                Open onboarding
-              </Button>
-            </>
-          }
+        <ToolingUnavailableState
           description='Cap could not load tool settings for this environment.'
           hint='Settings only tune tools that are already installed. If this keeps failing, check Status first to confirm the ecosystem is reachable, then use Onboarding for missing adapters or setup repair.'
+          includeSettingsLink={false}
+          onRetry={() => void refetch()}
+          retryLabel='Retry loading settings'
           title='Settings are unavailable'
         />
       </Stack>

@@ -1,14 +1,17 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { StipeRepairPlan } from '../lib/api'
+import type { EcosystemStatus, StipeRepairPlan } from '../lib/api'
 import { createEcosystemStatus } from '../test/fixtures'
 import { renderWithProviders } from '../test/render'
 import { Onboard } from './Onboard'
 
 const refreshAll = vi.fn()
 const runAction = vi.fn()
+const refetchStatus = vi.fn()
+let mockStatus: EcosystemStatus | null = createEcosystemStatus()
+let mockStatusError: Error | null = null
 
 function createRepairPlan(): StipeRepairPlan {
   return {
@@ -60,10 +63,10 @@ vi.mock('../lib/ecosystem-status', () => ({
       refetch: vi.fn(),
     },
     statusQuery: {
-      data: createEcosystemStatus(),
-      error: null,
+      data: mockStatus,
+      error: mockStatusError,
       isLoading: false,
-      refetch: vi.fn(),
+      refetch: refetchStatus,
     },
   }),
 }))
@@ -135,6 +138,14 @@ vi.mock('../components/StipeActionFeedback', () => ({
 }))
 
 describe('Onboard page', () => {
+  beforeEach(() => {
+    refreshAll.mockClear()
+    refetchStatus.mockClear()
+    runAction.mockClear()
+    mockStatus = createEcosystemStatus()
+    mockStatusError = null
+  })
+
   it('renders onboarding state and wires refresh and action controls', async () => {
     const user = userEvent.setup()
 
@@ -152,5 +163,23 @@ describe('Onboard page', () => {
 
     await user.click(screen.getByRole('button', { name: 'Run first onboarding action' }))
     expect(runAction).toHaveBeenCalledWith('doctor')
+  })
+
+  it('renders an explicit unavailable state when onboarding cannot load status', async () => {
+    mockStatus = null
+    mockStatusError = new Error('Status snapshot missing')
+    const user = userEvent.setup()
+
+    renderWithProviders(<Onboard />, { route: '/onboard' })
+
+    expect(screen.getByRole('heading', { name: 'Onboarding' })).toBeInTheDocument()
+    expect(screen.getByText('Onboarding is unavailable')).toBeInTheDocument()
+    expect(screen.getByText(/could not load the current ecosystem status/i)).toBeInTheDocument()
+    expect(screen.getByText('Status snapshot missing')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open status' })).toHaveAttribute('href', '/status')
+    expect(screen.getByRole('link', { name: 'Open settings' })).toHaveAttribute('href', '/settings')
+
+    await user.click(screen.getByRole('button', { name: 'Retry loading onboarding' }))
+    expect(refreshAll).toHaveBeenCalled()
   })
 })

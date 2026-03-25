@@ -5,6 +5,7 @@ import type { OnboardingAction, OnboardingActionGroups } from './onboarding'
 import { getCodexPresentationModel } from './codex'
 import { summarizeHyphaeMemoryFlow } from './hyphae'
 import { buildOnboardingActions, getOnboardingActionGroups, summarizeOnboarding } from './onboarding'
+import { memoirsHref } from './routes'
 
 export type { HostCoverageMode, HostCoverageView } from './host-coverage-view'
 export { getHostCoverageView, resolveHostCoverageMode } from './host-coverage-view'
@@ -55,15 +56,17 @@ function buildRecommendedQuickActions(recommendedAction: OnboardingAction | null
 function buildHyphaeQuickActions(summary: HyphaeMemoryFlowSummary, fallbackAction?: OnboardingAction['runAction']): ReadinessQuickAction[] {
   if (summary.label === 'Flowing') {
     return [
-      { href: '/memories', kind: 'link', label: 'Open memories', variant: 'subtle' },
+      { href: '/memories', kind: 'link', label: 'Open memories', variant: 'light' },
+      { href: memoirsHref(), kind: 'link', label: 'Open memoirs', variant: 'subtle' },
       { kind: 'refresh', label: 'Refresh status', variant: 'subtle' },
     ]
   }
 
   if (summary.label === 'No Codex memories yet') {
     return [
-      { kind: 'refresh', label: 'Refresh status', variant: 'light' },
-      { href: '/memories', kind: 'link', label: 'Open memories', variant: 'subtle' },
+      { href: '/memories', kind: 'link', label: 'Open memories', variant: 'light' },
+      { href: '/onboard', kind: 'link', label: 'Open onboarding', variant: 'subtle' },
+      { kind: 'refresh', label: 'Refresh status', variant: 'subtle' },
     ]
   }
 
@@ -82,6 +85,13 @@ function buildHyphaeQuickActions(summary: HyphaeMemoryFlowSummary, fallbackActio
     kind: 'refresh',
     label: 'Refresh status',
     variant: actions.length === 0 ? 'light' : 'subtle',
+  })
+
+  actions.push({
+    href: '/onboard',
+    kind: 'link',
+    label: 'Open onboarding',
+    variant: 'subtle',
   })
 
   return actions
@@ -115,10 +125,18 @@ export function getToolQuickActions(
       return readiness.hyphaeQuickActions
     case 'rhizome':
       return status.rhizome.available
-        ? [{ href: '/code', kind: 'link', label: 'Open code explorer', variant: 'subtle' }]
+        ? [
+            { href: '/code', kind: 'link', label: 'Open code explorer', variant: 'light' },
+            { href: '/settings', kind: 'link', label: 'Open settings', variant: 'subtle' },
+          ]
         : readiness.recommendedQuickActions
     case 'mycelium':
-      return status.mycelium.available ? [] : readiness.recommendedQuickActions
+      return status.mycelium.available
+        ? [
+            { href: '/analytics', kind: 'link', label: 'Open analytics', variant: 'light' },
+            { href: '/settings', kind: 'link', label: 'Open settings', variant: 'subtle' },
+          ]
+        : readiness.recommendedQuickActions
     default:
       return []
   }

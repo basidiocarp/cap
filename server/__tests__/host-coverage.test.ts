@@ -129,4 +129,17 @@ describe('host coverage', () => {
     expect(actions.some((action) => action.kind === 'link' && action.href === '/onboard')).toBe(true)
     expect(actions.some((action) => action.kind === 'run')).toBe(true)
   })
+
+  it('offers direct analytics actions when Mycelium is healthy', () => {
+    const status = createStatus()
+    const readiness = getEcosystemReadinessModel(status)
+    const actions = getToolQuickActions('mycelium', readiness, status)
+
+    expect(actions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ href: '/analytics', kind: 'link', label: 'Open analytics' }),
+        expect.objectContaining({ href: '/settings', kind: 'link', label: 'Open settings' }),
+      ])
+    )
+  })
 })

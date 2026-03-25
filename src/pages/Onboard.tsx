@@ -6,6 +6,7 @@ import type { OnboardingAction } from '../lib/onboarding'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { StipeActionFeedback } from '../components/StipeActionFeedback'
+import { ToolingUnavailableState } from '../components/ToolingUnavailableState'
 import { useEcosystemStatusController } from '../lib/ecosystem-status'
 import { getCodexModeGuidance } from '../lib/host-guidance'
 import { failingDoctorChecks, initPlanSteps, missingLifecycleHooks } from '../lib/onboarding'
@@ -29,7 +30,22 @@ export function Onboard() {
   }
 
   if (!status) {
-    return <ErrorAlert error={error ?? new Error('No status data available')} />
+    return (
+      <Stack>
+        <Title order={2}>Onboarding</Title>
+
+        <ErrorAlert error={error ?? new Error('No status data available')} />
+
+        <ToolingUnavailableState
+          description='Cap could not load the current ecosystem status, so it cannot build a guided onboarding plan yet.'
+          hint='Onboarding derives its repair steps from the same live health data as Status. If this persists, check Status first to confirm the ecosystem is reachable, then open Settings to verify local tool configuration.'
+          includeOnboardingLink={false}
+          onRetry={refreshAll}
+          retryLabel='Retry loading onboarding'
+          title='Onboarding is unavailable'
+        />
+      </Stack>
+    )
   }
 
   const readiness = getEcosystemReadinessModel(status, repairPlanQuery.data)
