@@ -8,7 +8,7 @@ export interface GuidanceCopy {
 export function getAgentRuntimeGuidance(): GuidanceCopy {
   return {
     detail:
-      'Claude uses lifecycle hooks. Codex uses MCP plus notify. Both can be configured at the same time; the host coverage section shows the combined setup state.',
+      'Claude uses lifecycle hooks. Codex uses MCP plus notify. If a runtime says it is not found, open onboarding to install the missing adapter before expecting more detailed status data.',
     title: 'Agent runtimes',
   }
 }
@@ -16,8 +16,8 @@ export function getAgentRuntimeGuidance(): GuidanceCopy {
 export function getClaudeLifecycleAdapterEmptyState(status: EcosystemStatus): GuidanceCopy {
   return {
     detail: status.agents.claude_code.adapter.configured
-      ? 'Claude Code is detected, but no Claude lifecycle hooks are installed yet.'
-      : 'No Claude lifecycle adapter is installed yet. Use onboarding to wire SessionStart, PostToolUse, PreCompact, and SessionEnd into Claude lifecycle capture.',
+      ? 'Claude Code is detected, but no Claude lifecycle hooks are installed yet. Open onboarding to add SessionStart, PostToolUse, PreCompact, and SessionEnd.'
+      : 'No Claude lifecycle adapter is installed yet. Open onboarding to wire SessionStart, PostToolUse, PreCompact, and SessionEnd into Claude lifecycle capture.',
     title: 'No Claude lifecycle adapter installed',
   }
 }
@@ -32,7 +32,8 @@ export function getCodexModeGuidance(): GuidanceCopy {
 
 export function getToolSettingsGuidance(): GuidanceCopy {
   return {
-    detail: 'Settings tune installed tools. Use Status or Onboarding for host-adapter repair and install guidance.',
+    detail:
+      'Settings tune installed tools. Use Status or Onboarding for host-adapter repair and install guidance; settings do not create missing adapters for you.',
     title: 'Tool configuration',
   }
 }

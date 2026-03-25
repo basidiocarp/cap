@@ -105,7 +105,7 @@ export function HyphaeStatusCard({
               c='dimmed'
               size='xs'
             >
-              Install with: cargo install hyphae
+              No Hyphae store is detected yet. Install with: cargo install hyphae, or open onboarding for the repair path.
             </Text>
           )}
         </Stack>

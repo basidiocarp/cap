@@ -155,7 +155,7 @@ export function summarizeCodexAdapter(status: EcosystemStatus): CodexAdapterSumm
   if (!codex.configured) {
     return {
       color: 'gray',
-      detail: 'No Codex config.toml was detected.',
+      detail: 'No Codex config.toml was detected yet. Open onboarding to install the Codex profile and MCP config.',
       label: 'Not configured',
     }
   }
@@ -163,7 +163,8 @@ export function summarizeCodexAdapter(status: EcosystemStatus): CodexAdapterSumm
   if (!notify?.configured) {
     return {
       color: 'orange',
-      detail: 'Codex MCP is configured, but notify = ["hyphae", "codex-notify"] is missing.',
+      detail:
+        'Codex MCP is configured, but notify = ["hyphae", "codex-notify"] is missing. Open onboarding to restore the missing adapter.',
       label: 'MCP only',
     }
   }
@@ -171,7 +172,7 @@ export function summarizeCodexAdapter(status: EcosystemStatus): CodexAdapterSumm
   if (!notify.contract_matched) {
     return {
       color: 'orange',
-      detail: 'Codex notify is present, but it does not match notify = ["hyphae", "codex-notify"].',
+      detail: 'Codex notify is present, but it does not match notify = ["hyphae", "codex-notify"]. Open onboarding to repair the contract.',
       label: 'Notify mismatch',
     }
   }
@@ -207,7 +208,7 @@ export function summarizeCodexMode(status: EcosystemStatus): CodexModeSummary {
     return {
       color: 'gray',
       detail:
-        'Install the Codex profile and the hyphae notify adapter to make Codex coverage usable. Claude coverage can coexist once its hooks are configured.',
+        'Install the Codex profile and the hyphae notify adapter to make Codex coverage usable. Open onboarding for the exact repair steps, and Claude coverage can coexist once its hooks are configured.',
       label: 'Codex not configured',
       optional,
       ready: false,
@@ -219,7 +220,7 @@ export function summarizeCodexMode(status: EcosystemStatus): CodexModeSummary {
     return {
       color: 'orange',
       detail:
-        'Codex MCP is configured, but the hyphae notify adapter is still missing. Claude coverage can still coexist once Codex notify is fixed.',
+        'Codex MCP is configured, but the hyphae notify adapter is still missing. Open onboarding to fix Codex notify, then Claude coverage can still coexist alongside it.',
       label: 'Codex partial',
       optional,
       ready: false,
@@ -230,7 +231,8 @@ export function summarizeCodexMode(status: EcosystemStatus): CodexModeSummary {
   if (!codex.notify.contract_matched) {
     return {
       color: 'orange',
-      detail: 'Codex notify is present, but it does not match the expected notify = ["hyphae", "codex-notify"] contract.',
+      detail:
+        'Codex notify is present, but it does not match the expected notify = ["hyphae", "codex-notify"] contract. Open onboarding to repair the contract.',
       label: 'Codex needs repair',
       optional,
       ready: false,
@@ -241,7 +243,7 @@ export function summarizeCodexMode(status: EcosystemStatus): CodexModeSummary {
   if (required.length > 0) {
     return {
       color: 'orange',
-      detail: `Codex coverage is missing: ${required.join(', ')}. Claude lifecycle capture can run alongside it when needed.`,
+      detail: `Codex coverage is missing: ${required.join(', ')}. Open onboarding to repair the missing steps; Claude lifecycle capture can run alongside it when needed.`,
       label: 'Codex partial',
       optional,
       ready: false,
@@ -264,7 +266,7 @@ export function summarizeCodexMode(status: EcosystemStatus): CodexModeSummary {
     return {
       color: 'orange',
       detail:
-        'Codex coverage is ready. Claude is also configured, but its lifecycle hooks need repair before both hosts are fully healthy together.',
+        'Codex coverage is ready. Claude is also configured, but its lifecycle hooks need repair before both hosts are fully healthy together. Open onboarding to fix the missing lifecycle events.',
       label: 'Codex ready, Claude needs repair',
       optional,
       ready: true,

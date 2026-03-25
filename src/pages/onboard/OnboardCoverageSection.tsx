@@ -52,9 +52,10 @@ export function OnboardCoverageSection({
         {status.agents.claude_code.adapter.configured && lifecycleGaps.length > 0 && (
           <Alert
             color='gray'
-            title='Claude coverage needs repair'
+            title='Claude coverage is incomplete'
           >
-            Missing recommended lifecycle events: {lifecycleGaps.join(', ')}
+            Missing recommended lifecycle events: {lifecycleGaps.join(', ')}. These gaps are why Claude coverage stays partial until the
+            hooks are installed.
           </Alert>
         )}
 
@@ -63,7 +64,8 @@ export function OnboardCoverageSection({
             color='orange'
             title='Using fallback onboarding guidance'
           >
-            Structured Stipe repair data was unavailable, so this page is using status-based suggestions only.
+            Structured Stipe repair data was unavailable, so this page is using live status signals only. Refresh after Stipe is available
+            again if you expect a narrower repair plan.
           </Alert>
         )}
       </HostCoveragePanel>

@@ -108,7 +108,7 @@ export function CodexModeChecklist({ status }: { status: EcosystemStatus }) {
       <Grid>
         <Grid.Col span={{ base: 12, md: 8 }}>
           <StepSection
-            emptyText='All required coverage steps are already configured.'
+            emptyText='No required coverage steps are missing right now. If this looks blank, the required adapter has not been detected yet.'
             steps={required}
             title={hostCoverageView.requiredSectionTitle}
           />
@@ -116,7 +116,7 @@ export function CodexModeChecklist({ status }: { status: EcosystemStatus }) {
 
         <Grid.Col span={{ base: 12, md: 4 }}>
           <StepSection
-            emptyText='Optional coverage is already configured or not needed right now.'
+            emptyText='Optional coverage is already configured, or Claude Code is not installed on this host.'
             steps={optional}
             title={hostCoverageView.optionalSectionTitle}
           />

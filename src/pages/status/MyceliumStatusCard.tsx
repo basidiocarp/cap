@@ -43,7 +43,7 @@ export function MyceliumStatusCard({
               mt='sm'
               size='xs'
             >
-              Install with: cargo install mycelium
+              No Mycelium proxy is detected yet. Install with: cargo install mycelium, or open onboarding for the repair path.
             </Text>
             <ReadinessQuickActions
               actionIsRunning={actionIsRunning}

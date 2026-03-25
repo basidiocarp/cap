@@ -1,5 +1,6 @@
-import { Alert, Badge, Card, Group, Stack, Table, Text } from '@mantine/core'
+import { Alert, Badge, Button, Card, Group, Stack, Table, Text } from '@mantine/core'
 import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react'
+import { Link } from 'react-router-dom'
 
 import type { EcosystemStatus } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'
@@ -56,12 +57,22 @@ export function LifecycleAdaptersCard({ status }: { status: EcosystemStatus }) {
           ))}
         </Group>
         {missingLifecycle.length > 0 && (
-          <Text
-            c='dimmed'
-            size='xs'
-          >
-            Missing recommended lifecycle events: {missingLifecycle.join(', ')}
-          </Text>
+          <Stack gap='xs'>
+            <Text
+              c='dimmed'
+              size='xs'
+            >
+              Missing recommended lifecycle events: {missingLifecycle.join(', ')}
+            </Text>
+            <Button
+              component={Link}
+              size='xs'
+              to='/onboard'
+              variant='subtle'
+            >
+              Open onboarding
+            </Button>
+          </Stack>
         )}
       </Stack>
 
@@ -70,7 +81,17 @@ export function LifecycleAdaptersCard({ status }: { status: EcosystemStatus }) {
           color='gray'
           title={emptyState.title}
         >
-          {emptyState.detail}
+          <Stack gap='xs'>
+            <Text size='sm'>{emptyState.detail}</Text>
+            <Button
+              component={Link}
+              size='xs'
+              to='/onboard'
+              variant='subtle'
+            >
+              Open onboarding
+            </Button>
+          </Stack>
         </Alert>
       ) : (
         <>

@@ -1,9 +1,10 @@
-import { Badge, Card, Group, Stack, Text } from '@mantine/core'
+import { Badge, Button, Card, Group, Stack, Text } from '@mantine/core'
+import { Link } from 'react-router-dom'
 
 import type { EcosystemStatus } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'
 import { summarizeCodexAdapter } from '../../lib/codex'
-import { getAgentRuntimeGuidance } from '../../lib/host-guidance'
+import { getAgentRuntimeGuidance, getClaudeLifecycleAdapterEmptyState } from '../../lib/host-guidance'
 import { getHostCoverageView } from '../../lib/readiness'
 import { useHostCoverageStore } from '../../store/host-coverage'
 
@@ -16,6 +17,7 @@ export function StatusAgentRuntimesCard({ status }: { status: EcosystemStatus })
     { key: 'codex', label: 'Codex', status: status.agents.codex },
   ] as const
   const codexAdapter = summarizeCodexAdapter(status)
+  const claudeEmptyState = getClaudeLifecycleAdapterEmptyState(status)
   const runtimeOrder = new Map(hostCoverageView.runtimeOrder.map((key, index) => [key, index]))
   const orderedRuntimes = [...runtimes].sort((a, b) => (runtimeOrder.get(a.key) ?? 0) - (runtimeOrder.get(b.key) ?? 0))
 
@@ -87,8 +89,22 @@ export function StatusAgentRuntimesCard({ status }: { status: EcosystemStatus })
                   c='dimmed'
                   size='xs'
                 >
-                  {runtime.key === 'codex' ? codexAdapter.detail : (runtime.status.config_path ?? 'No config file detected yet.')}
+                  {runtime.key === 'codex'
+                    ? codexAdapter.detail
+                    : runtime.status.configured
+                      ? (runtime.status.config_path ?? 'Claude lifecycle hooks are installed but no config path was recorded.')
+                      : claudeEmptyState.detail}
                 </Text>
+                {!runtime.status.configured && (
+                  <Button
+                    component={Link}
+                    size='xs'
+                    to='/onboard'
+                    variant='subtle'
+                  >
+                    Open onboarding
+                  </Button>
+                )}
               </Stack>
             </Card>
           )

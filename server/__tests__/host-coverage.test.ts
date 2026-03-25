@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import type { EcosystemStatus } from '../../src/lib/api'
-import { getHostCoverageView, resolveHostCoverageMode } from '../../src/lib/readiness'
+import { summarizeCodexAdapter } from '../../src/lib/codex'
+import { getEcosystemReadinessModel, getHostCoverageView, getToolQuickActions, resolveHostCoverageMode } from '../../src/lib/readiness'
 import { summarizeHostCoverage, useHostCoverageStore } from '../../src/store/host-coverage'
 
 function createStatus(): EcosystemStatus {
@@ -92,5 +93,40 @@ describe('host coverage', () => {
 
     expect(summary.label).toBe('Codex-first')
     expect(summary.detail).toContain('Codex-first view')
+  })
+
+  it('makes Codex missing copy point to onboarding', () => {
+    const status = createStatus()
+    const missingCodex = {
+      ...status,
+      agents: {
+        ...status.agents,
+        codex: {
+          ...status.agents.codex,
+          adapter: {
+            ...status.agents.codex.adapter,
+            configured: false,
+            detected: false,
+          },
+          config_path: null,
+          configured: false,
+          detected: false,
+        },
+      },
+    }
+
+    expect(summarizeCodexAdapter(missingCodex).detail).toContain('Open onboarding')
+  })
+
+  it('offers onboarding quick actions when Mycelium is missing', () => {
+    const status = {
+      ...createStatus(),
+      mycelium: { available: false, version: null },
+    }
+    const readiness = getEcosystemReadinessModel(status)
+    const actions = getToolQuickActions('mycelium', readiness, status)
+
+    expect(actions.some((action) => action.kind === 'link' && action.href === '/onboard')).toBe(true)
+    expect(actions.some((action) => action.kind === 'run')).toBe(true)
   })
 })

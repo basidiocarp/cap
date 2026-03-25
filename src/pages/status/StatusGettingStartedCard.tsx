@@ -67,7 +67,7 @@ export function StatusGettingStartedCard({
           c='dimmed'
           size='sm'
         >
-          Best next step: {readiness.recommendedAction?.command ?? 'Open onboarding for guided repair'}
+          Best next step: {readiness.recommendedAction?.label ?? 'Open onboarding for guided repair'}
         </Text>
         <EcosystemReadinessPanels
           actionIsRunning={actionIsRunning}
@@ -77,6 +77,14 @@ export function StatusGettingStartedCard({
           status={status}
         />
         <Group gap='xs'>
+          <Button
+            component={Link}
+            size='xs'
+            to='/onboard'
+            variant='light'
+          >
+            Open onboarding
+          </Button>
           <Button
             component={Link}
             size='xs'

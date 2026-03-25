@@ -1,8 +1,8 @@
 import type { EcosystemStatus } from '../../lib/api'
-import type { HookHealthSummary } from './statusHelpers'
+import type { HookHealthSummary } from '../../lib/status-health'
 import { getClaudeLifecycleAdapterEmptyState } from '../../lib/host-guidance'
 import { missingLifecycleHooks } from '../../lib/onboarding'
-import { summarizeHookHealth } from './statusHelpers'
+import { summarizeHookHealth } from '../../lib/status-health'
 
 export interface LifecycleAdaptersModel {
   emptyState: ReturnType<typeof getClaudeLifecycleAdapterEmptyState>

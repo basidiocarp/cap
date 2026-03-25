@@ -61,7 +61,7 @@ export function RhizomeStatusCard({
               mt='sm'
               size='xs'
             >
-              Install with: cargo install rhizome
+              No Rhizome backend is detected yet. Install with: cargo install rhizome, or open onboarding for the repair path.
             </Text>
             <ReadinessQuickActions
               actionIsRunning={actionIsRunning}
