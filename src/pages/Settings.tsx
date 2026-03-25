@@ -1,8 +1,10 @@
 import { Alert, Badge, Button, Grid, Group, NumberInput, SegmentedControl, Stack, Switch, Tabs, Text, Title } from '@mantine/core'
 import { IconBrain, IconCode, IconDatabase, IconServer, IconSettings, IconShield } from '@tabler/icons-react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import type { EcosystemSettings } from '../lib/api'
+import { ActionEmptyState } from '../components/ActionEmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
@@ -234,11 +236,54 @@ function ModeSelector() {
 }
 
 export function Settings() {
-  const { data: settings, error, isLoading } = useSettings()
+  const { data: settings, error, isLoading, refetch } = useSettings()
   const toolGuidance = getToolSettingsGuidance()
 
   if (isLoading) {
     return <PageLoader mt='xl' />
+  }
+
+  if (!settings) {
+    return (
+      <Stack>
+        <Title order={2}>Settings</Title>
+
+        <ErrorAlert error={error} />
+
+        <ActionEmptyState
+          actions={
+            <>
+              <Button
+                onClick={() => void refetch()}
+                size='xs'
+                variant='light'
+              >
+                Retry loading settings
+              </Button>
+              <Button
+                component={Link}
+                size='xs'
+                to='/status'
+                variant='subtle'
+              >
+                Open status
+              </Button>
+              <Button
+                component={Link}
+                size='xs'
+                to='/onboard'
+                variant='subtle'
+              >
+                Open onboarding
+              </Button>
+            </>
+          }
+          description='Cap could not load tool settings for this environment.'
+          hint='Settings only tune tools that are already installed. If this keeps failing, check Status first to confirm the ecosystem is reachable, then use Onboarding for missing adapters or setup repair.'
+          title='Settings are unavailable'
+        />
+      </Stack>
+    )
   }
 
   return (
@@ -277,19 +322,17 @@ export function Settings() {
           <Stack>
             <ModeSelector />
 
-            {settings && (
-              <Grid>
-                <Grid.Col span={{ base: 12, md: 4 }}>
-                  <MyceliumCard settings={settings.mycelium} />
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 4 }}>
-                  <HyphaeCard settings={settings.hyphae} />
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 4 }}>
-                  <RhizomeCard settings={settings.rhizome} />
-                </Grid.Col>
-              </Grid>
-            )}
+            <Grid>
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                <MyceliumCard settings={settings.mycelium} />
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                <HyphaeCard settings={settings.hyphae} />
+              </Grid.Col>
+              <Grid.Col span={{ base: 12, md: 4 }}>
+                <RhizomeCard settings={settings.rhizome} />
+              </Grid.Col>
+            </Grid>
           </Stack>
         </Tabs.Panel>
 
