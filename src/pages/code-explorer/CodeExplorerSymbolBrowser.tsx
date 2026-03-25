@@ -142,7 +142,21 @@ export function CodeExplorerSymbolBrowser({
           />
         </Group>
 
-        {loading && <Loader size='sm' />}
+        {loading && (
+          <Group
+            aria-live='polite'
+            justify='center'
+            role='status'
+          >
+            <Loader size='sm' />
+            <Text
+              c='dimmed'
+              size='sm'
+            >
+              Loading symbols
+            </Text>
+          </Group>
+        )}
 
         {!loading && filteredSymbols.length > 0 && (
           <SymbolTable

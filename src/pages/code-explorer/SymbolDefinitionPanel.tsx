@@ -22,9 +22,18 @@ export function SymbolDefinitionPanel({ defPreview, definition, hasMoreLines, on
           {definition.doc_comment}
         </Text>
       )}
-      <Code block>{showFullDef ? definition.body : defPreview}</Code>
+      <Code
+        block
+        id='symbol-definition-body'
+      >
+        {showFullDef ? definition.body : defPreview}
+      </Code>
       {hasMoreLines && (
-        <UnstyledButton onClick={onToggleFullDef}>
+        <UnstyledButton
+          aria-controls='symbol-definition-body'
+          aria-expanded={showFullDef}
+          onClick={onToggleFullDef}
+        >
           <Text
             c='mycelium'
             size='xs'

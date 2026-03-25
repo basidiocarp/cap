@@ -2,6 +2,7 @@ import { NavLink } from '@mantine/core'
 import { IconFile, IconFolder, IconFolderOpen } from '@tabler/icons-react'
 
 import type { FileNode } from '../../lib/api'
+import { onActivate } from '../../lib/keyboard'
 
 interface FileTreeNodeProps {
   expanded: Set<string>
@@ -22,11 +23,15 @@ export function FileTreeNode({ expanded, fileTree, level, node, onExpand, onSele
     <>
       <NavLink
         active={!isDir && selectedFile === node.path}
+        aria-current={!isDir && selectedFile === node.path ? 'page' : undefined}
+        aria-expanded={isDir ? isExpanded : undefined}
         label={node.name}
         leftSection={isDir ? isExpanded ? <IconFolderOpen size={16} /> : <IconFolder size={16} /> : <IconFile size={16} />}
         onClick={() => (isDir ? onExpand(node.path) : onSelect(node.path))}
+        onKeyDown={onActivate(() => (isDir ? onExpand(node.path) : onSelect(node.path)))}
         opened={isDir ? isExpanded : undefined}
         style={{ paddingLeft: level * 12 }}
+        tabIndex={0}
       />
       {isDir &&
         isExpanded &&

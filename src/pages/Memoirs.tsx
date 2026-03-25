@@ -1,5 +1,6 @@
 import { Badge, Grid, Group, Loader, Stack, Text, Title } from '@mantine/core'
 import { useDeferredValue, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
@@ -8,18 +9,32 @@ import { useMemoir, useMemoirInspect, useMemoirs } from '../lib/queries'
 import { MemoirConceptsPanel } from './memoirs/MemoirConceptsPanel'
 import { MemoirInspectPanel } from './memoirs/MemoirInspectPanel'
 import { MemoirListSidebar } from './memoirs/MemoirListSidebar'
+import { DEFAULT_MEMOIR_PAGE, readMemoirUrlState, writeMemoirUrlState } from './memoirs/memoir-url-state'
 
 const CONCEPTS_PAGE_SIZE = 200
 
 export function Memoirs() {
-  const [selected, setSelected] = useState<string | null>(null)
-  const [inspectConcept, setInspectConcept] = useState('')
-  const [conceptFilter, setConceptFilter] = useState('')
-  const [conceptPage, setConceptPage] = useState(1)
-  const [graphDepth, setGraphDepth] = useState('2')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialUrlState = readMemoirUrlState(searchParams)
+  const [selected, setSelected] = useState<string | null>(() => initialUrlState.memoir || null)
+  const [inspectConcept, setInspectConcept] = useState(initialUrlState.concept)
+  const [conceptFilter, setConceptFilter] = useState(initialUrlState.filter)
+  const [conceptPage, setConceptPage] = useState(initialUrlState.page)
+  const [graphDepth, setGraphDepth] = useState(initialUrlState.depth)
   const [history, setHistory] = useState<string[]>([])
   const inspectRef = useRef<HTMLDivElement>(null)
   const deferredConceptFilter = useDeferredValue(conceptFilter.trim())
+
+  useEffect(() => {
+    const nextUrlState = readMemoirUrlState(searchParams)
+
+    setHistory([])
+    setSelected(nextUrlState.memoir || null)
+    setInspectConcept(nextUrlState.concept)
+    setConceptFilter(nextUrlState.filter)
+    setConceptPage(nextUrlState.page)
+    setGraphDepth(nextUrlState.depth)
+  }, [searchParams])
 
   const { data: memoirs = [], error: memoirsError, isLoading: memoirsLoading } = useMemoirs()
   const { data: detail, isLoading: detailLoading } = useMemoir(selected ?? '', {
@@ -37,12 +52,23 @@ export function Memoirs() {
     inspectRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [inspectConcept])
 
+  function commitUrlState(nextState: { concept: string; depth: string; filter: string; memoir: string; page: number }) {
+    setSearchParams(writeMemoirUrlState(searchParams, nextState))
+  }
+
   function handleSelectMemoir(name: string) {
     setSelected(name)
     setInspectConcept('')
     setConceptFilter('')
     setConceptPage(1)
     setHistory([])
+    commitUrlState({
+      concept: '',
+      depth: graphDepth,
+      filter: '',
+      memoir: name,
+      page: DEFAULT_MEMOIR_PAGE,
+    })
   }
 
   function handleInspect(conceptName: string) {
@@ -51,6 +77,13 @@ export function Memoirs() {
       setHistory((prev) => [...prev.slice(-9), inspectConcept])
     }
     setInspectConcept(conceptName)
+    commitUrlState({
+      concept: conceptName,
+      depth: graphDepth,
+      filter: conceptFilter,
+      memoir: selected,
+      page: conceptPage,
+    })
   }
 
   function handleBack() {
@@ -58,6 +91,13 @@ export function Memoirs() {
     const prev = history[history.length - 1]
     setHistory((h) => h.slice(0, -1))
     setInspectConcept(prev)
+    commitUrlState({
+      concept: prev,
+      depth: graphDepth,
+      filter: conceptFilter,
+      memoir: selected ?? '',
+      page: conceptPage,
+    })
   }
 
   if (memoirsLoading) {
@@ -116,7 +156,16 @@ export function Memoirs() {
                 inspection={inspection}
                 inspectLoading={inspectLoading}
                 onBack={handleBack}
-                onChangeDepth={setGraphDepth}
+                onChangeDepth={(value) => {
+                  setGraphDepth(value)
+                  commitUrlState({
+                    concept: inspectConcept,
+                    depth: value,
+                    filter: conceptFilter,
+                    memoir: selected ?? '',
+                    page: conceptPage,
+                  })
+                }}
                 onInspect={handleInspect}
                 panelRef={inspectRef}
               />
@@ -131,8 +180,24 @@ export function Memoirs() {
                 onChangeFilter={(value) => {
                   setConceptFilter(value)
                   setConceptPage(1)
+                  commitUrlState({
+                    concept: inspectConcept,
+                    depth: graphDepth,
+                    filter: value,
+                    memoir: selected ?? '',
+                    page: 1,
+                  })
                 }}
-                onChangePage={setConceptPage}
+                onChangePage={(page) => {
+                  setConceptPage(page)
+                  commitUrlState({
+                    concept: inspectConcept,
+                    depth: graphDepth,
+                    filter: conceptFilter,
+                    memoir: selected ?? '',
+                    page,
+                  })
+                }}
                 onInspect={handleInspect}
                 pageSize={CONCEPTS_PAGE_SIZE}
                 totalPages={totalPages}

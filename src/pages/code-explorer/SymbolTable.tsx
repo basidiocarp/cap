@@ -1,4 +1,4 @@
-import { Loader, Stack, Table } from '@mantine/core'
+import { Group, Loader, Stack, Table, Text } from '@mantine/core'
 import { Fragment, useEffect, useMemo, useState } from 'react'
 
 import type { RhizomeCopyMoveResult, RhizomeSymbol, SymbolDefinition } from '../../lib/api'
@@ -135,7 +135,19 @@ export function SymbolTable({
                 <Table.Tr>
                   <Table.Td colSpan={4}>
                     {defLoading ? (
-                      <Loader size='sm' />
+                      <Group
+                        aria-live='polite'
+                        justify='center'
+                        role='status'
+                      >
+                        <Loader size='sm' />
+                        <Text
+                          c='dimmed'
+                          size='xs'
+                        >
+                          Loading symbol details
+                        </Text>
+                      </Group>
                     ) : definition ? (
                       <Stack gap='md'>
                         <SymbolDefinitionPanel

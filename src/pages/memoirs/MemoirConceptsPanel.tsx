@@ -55,6 +55,7 @@ export function MemoirConceptsPanel({
 
       <Stack gap='xs'>
         <TextInput
+          aria-label='Filter concepts by name or definition'
           onChange={(event) => onChangeFilter(event.currentTarget.value)}
           placeholder='Filter concepts by name or definition...'
           size='xs'
@@ -92,12 +93,15 @@ export function MemoirConceptsPanel({
             <Table.Tbody>
               {detail.concepts.map((concept: Concept) => (
                 <Table.Tr
+                  aria-current={inspectConcept === concept.name ? 'true' : undefined}
+                  aria-label={`Inspect concept ${concept.name}`}
                   key={concept.id}
                   onClick={() => onInspect(concept.name)}
                   onKeyDown={onActivate(() => onInspect(concept.name))}
                   style={{
                     background: inspectConcept === concept.name ? 'var(--mantine-color-mycelium-light)' : undefined,
                     cursor: 'pointer',
+                    outlineOffset: 2,
                   }}
                   tabIndex={0}
                 >

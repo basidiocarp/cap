@@ -128,7 +128,11 @@ export function MemoirInspectPanel({
           <Group gap='xs'>
             {history.length > 0 && (
               <Tooltip label={`Back to ${history[history.length - 1]}`}>
-                <UnstyledButton onClick={onBack}>
+                <UnstyledButton
+                  aria-label={`Back to ${history[history.length - 1]}`}
+                  onClick={onBack}
+                  type='button'
+                >
                   <IconArrowLeft size={16} />
                 </UnstyledButton>
               </Tooltip>
@@ -156,6 +160,7 @@ export function MemoirInspectPanel({
               Depth:
             </Text>
             <SegmentedControl
+              aria-label='Graph depth'
               data={['1', '2', '3', '4']}
               onChange={onChangeDepth}
               size='xs'
@@ -164,13 +169,15 @@ export function MemoirInspectPanel({
           </Group>
         </Group>
 
-        <Suspense fallback={<GraphLoadingState />}>
-          <ConceptGraph
-            inspection={inspection}
-            isLoading={inspectLoading}
-            onNodeClick={onInspect}
-          />
-        </Suspense>
+        <section aria-label='Concept graph'>
+          <Suspense fallback={<GraphLoadingState />}>
+            <ConceptGraph
+              inspection={inspection}
+              isLoading={inspectLoading}
+              onNodeClick={onInspect}
+            />
+          </Suspense>
+        </section>
 
         <GraphLegend />
 
@@ -219,6 +226,7 @@ export function MemoirInspectPanel({
                   <Table.Tbody>
                     {inspection.neighbors.map((neighbor) => (
                       <Table.Tr
+                        aria-label={`Inspect neighbor ${neighbor.concept.name}`}
                         key={neighbor.link.id}
                         onClick={() => onInspect(neighbor.concept.name)}
                         onKeyDown={onActivate(() => onInspect(neighbor.concept.name))}

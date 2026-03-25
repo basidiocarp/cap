@@ -21,12 +21,17 @@ export function MemoirListSidebar({ memoirs, onSelect, selected }: MemoirListSid
           <Stack gap='xs'>
             {memoirs.map((memoir) => (
               <UnstyledButton
+                aria-current={selected === memoir.name ? 'true' : undefined}
+                aria-label={`Open memoir ${memoir.name}`}
                 key={memoir.id}
                 onClick={() => onSelect(memoir.name)}
                 style={(theme) => ({
                   background: selected === memoir.name ? 'var(--mantine-color-mycelium-light)' : undefined,
                   borderRadius: theme.radius.sm,
+                  display: 'block',
                   padding: '6px 10px',
+                  textAlign: 'left',
+                  width: '100%',
                 })}
               >
                 <Text

@@ -15,6 +15,7 @@ export function SymbolTableRow({ expanded, onToggle, symbol }: SymbolTableRowPro
   return (
     <Table.Tr
       aria-expanded={expanded}
+      aria-selected={expanded}
       onClick={onToggle}
       onKeyDown={onActivate(onToggle)}
       style={{ cursor: 'pointer' }}

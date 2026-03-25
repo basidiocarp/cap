@@ -1,4 +1,4 @@
-import { Button, Loader, Stack, Text } from '@mantine/core'
+import { Button, Group, Loader, Stack, Text } from '@mantine/core'
 import { IconLink } from '@tabler/icons-react'
 
 import type { SymbolLocation } from '../../lib/api'
@@ -14,6 +14,8 @@ export function SymbolReferencesPanel({ onToggle, references, referencesLoading,
   return (
     <div>
       <Button
+        aria-controls='symbol-references-panel'
+        aria-expanded={showReferences}
         disabled={referencesLoading}
         leftSection={<IconLink size={14} />}
         onClick={onToggle}
@@ -26,9 +28,24 @@ export function SymbolReferencesPanel({ onToggle, references, referencesLoading,
       {showReferences && (
         <Stack
           gap='xs'
+          id='symbol-references-panel'
           mt='sm'
         >
-          {referencesLoading && <Loader size='sm' />}
+          {referencesLoading && (
+            <Group
+              aria-live='polite'
+              justify='center'
+              role='status'
+            >
+              <Loader size='sm' />
+              <Text
+                c='dimmed'
+                size='xs'
+              >
+                Loading references
+              </Text>
+            </Group>
+          )}
           {!referencesLoading && references.length === 0 && (
             <Text
               c='dimmed'

@@ -1,7 +1,7 @@
 import { ActionIcon, Box, Group, SimpleGrid, Stack, Title } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconLayoutSidebar } from '@tabler/icons-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import { EmptyState } from '../components/EmptyState'
@@ -13,6 +13,7 @@ import { useProjectContextView } from '../store/project-context'
 import { CodeExplorerHeader } from './code-explorer/CodeExplorerHeader'
 import { CodeExplorerSidebar } from './code-explorer/CodeExplorerSidebar'
 import { CodeExplorerSymbolBrowser } from './code-explorer/CodeExplorerSymbolBrowser'
+import { parseCodeExplorerUrlState, toDisplaySymbols, writeCodeExplorerUrlState } from './code-explorer/code-explorer-url-state'
 import { FileDetailTabs } from './code-explorer/FileDetailTabs'
 
 const CODE_EXTENSIONS = new Set([
@@ -48,14 +49,10 @@ function isCodeFile(path: string | null): boolean {
 }
 
 export function CodeExplorer() {
-  const [searchParams] = useSearchParams()
-  const fileParam = searchParams.get('file')
-  const symbolParam = searchParams.get('symbol')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const urlState = useMemo(() => parseCodeExplorerUrlState(searchParams), [searchParams])
 
   const [treeOpen, { toggle: toggleTree }] = useDisclosure(false)
-  const [symbolFilter, setSymbolFilter] = useState('')
-  const [symbolMode, setSymbolMode] = useState<'all' | 'exports'>('all')
-  const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null)
   const [showFullDef, setShowFullDef] = useState(false)
 
   const { data: statusData } = useRhizomeStatus()
@@ -63,17 +60,23 @@ export function CodeExplorer() {
   const { activeProject, recentProjects } = useProjectContextView(project)
   const unavailable = statusData ? !statusData.available : false
   const projectName = activeProject?.split('/').pop() ?? 'project'
-
-  const onFileSelected = useCallback((_file: string | null, symbol: string | null) => {
-    setSymbolFilter('')
-    setExpandedSymbol(symbol)
-    setShowFullDef(false)
-  }, [])
-
-  const tree = useFileTreeState(fileParam, symbolParam, unavailable, onFileSelected)
-
-  const codeFile = isCodeFile(tree.selectedFile) ? (tree.selectedFile ?? '') : ''
+  const selectedFile = urlState.file || null
+  const expandedSymbol = urlState.symbol || null
+  const symbolFilter = urlState.filter
+  const symbolMode = urlState.mode
   const isExportsMode = symbolMode === 'exports'
+  const codeFile = selectedFile && isCodeFile(selectedFile) ? selectedFile : ''
+  const tree = useFileTreeState(selectedFile, expandedSymbol, unavailable)
+  const treeView = { ...tree, selectedFile }
+  const symbolContext = `${selectedFile ?? ''}:${expandedSymbol ?? ''}:${symbolMode}`
+  const previousSymbolContext = useRef(symbolContext)
+
+  const updateUrlState = useCallback(
+    (updater: (state: ReturnType<typeof parseCodeExplorerUrlState>) => ReturnType<typeof parseCodeExplorerUrlState>) => {
+      setSearchParams((current) => writeCodeExplorerUrlState(current, updater(parseCodeExplorerUrlState(current))))
+    },
+    [setSearchParams]
+  )
 
   const { data: symbols = [], isLoading: symbolsLoading } = useSymbols(codeFile, !isExportsMode)
   const { data: definition, isLoading: defLoading } = useDefinition(codeFile, expandedSymbol ?? '')
@@ -83,44 +86,42 @@ export function CodeExplorer() {
   const handleLoadSymbols = useCallback(
     (filePath: string) => {
       tree.loadSymbols(filePath)
-      setExpandedSymbol(null)
       setShowFullDef(false)
-      setSymbolFilter('')
+      updateUrlState((state) => ({
+        ...state,
+        file: filePath,
+        symbol: '',
+      }))
     },
-    [tree]
+    [tree, updateUrlState]
   )
 
   const handleSymbolClick = useCallback(
     (symbolName: string) => {
-      if (expandedSymbol === symbolName) {
-        setExpandedSymbol(null)
-        setShowFullDef(false)
-      } else {
-        setExpandedSymbol(symbolName)
-        setShowFullDef(false)
-      }
+      setShowFullDef(false)
+      updateUrlState((state) => ({
+        ...state,
+        symbol: state.symbol === symbolName ? '' : symbolName,
+      }))
     },
-    [expandedSymbol]
+    [updateUrlState]
   )
 
   const displaySymbols = useMemo(() => {
-    if (isExportsMode) {
-      return exports.map((e) => ({
-        doc_comment: null,
-        kind: e.kind,
-        location: { column_end: 0, column_start: 0, file_path: tree.selectedFile ?? '', line_end: e.line, line_start: e.line },
-        name: e.name,
-        signature: e.signature,
-      }))
-    }
-    return symbols
-  }, [exports, isExportsMode, tree.selectedFile, symbols])
+    return toDisplaySymbols(symbols, exports, selectedFile ?? '', symbolMode)
+  }, [exports, selectedFile, symbolMode, symbols])
 
   const filteredSymbols = useMemo(() => {
     if (!symbolFilter.trim()) return displaySymbols
     const q = symbolFilter.toLowerCase()
     return displaySymbols.filter((s) => s.name.toLowerCase().includes(q))
   }, [displaySymbols, symbolFilter])
+
+  useEffect(() => {
+    if (previousSymbolContext.current === symbolContext) return
+    previousSymbolContext.current = symbolContext
+    setShowFullDef(false)
+  }, [symbolContext])
 
   const { defPreview, hasMoreLines } = useMemo(() => {
     if (!definition?.body) return { defPreview: '', hasMoreLines: false }
@@ -182,13 +183,13 @@ export function CodeExplorer() {
       >
         <Box display={{ base: treeOpen ? 'block' : 'none', sm: 'block' }}>
           <CodeExplorerSidebar
-            fileTree={tree}
+            fileTree={treeView}
             onSelect={handleLoadSymbols}
           />
         </Box>
 
         <Stack style={{ flex: 1 }}>
-          {tree.selectedFile ? (
+          {selectedFile ? (
             <>
               <CodeExplorerSymbolBrowser
                 definition={definition}
@@ -201,19 +202,33 @@ export function CodeExplorer() {
                 fileSummary={summaryLoading ? undefined : fileSummary}
                 filteredSymbols={filteredSymbols}
                 hasMoreLines={hasMoreLines}
-                isCodeFile={isCodeFile(tree.selectedFile)}
+                isCodeFile={isCodeFile(selectedFile)}
                 onSymbolClick={handleSymbolClick}
-                onSymbolFilterChange={setSymbolFilter}
-                onSymbolModeChange={setSymbolMode}
+                onSymbolFilterChange={(value) => {
+                  setShowFullDef(false)
+                  updateUrlState((state) => ({
+                    ...state,
+                    filter: value,
+                    symbol: '',
+                  }))
+                }}
+                onSymbolModeChange={(mode) => {
+                  setShowFullDef(false)
+                  updateUrlState((state) => ({
+                    ...state,
+                    mode,
+                    symbol: '',
+                  }))
+                }}
                 onToggleFullDef={() => setShowFullDef((value) => !value)}
-                selectedFile={tree.selectedFile}
+                selectedFile={selectedFile}
                 showFullDef={showFullDef}
                 symbolFilter={symbolFilter}
                 symbolMode={symbolMode}
                 symbolsLoading={symbolsLoading}
               />
 
-              <FileDetailTabs selectedFile={tree.selectedFile} />
+              <FileDetailTabs selectedFile={selectedFile} />
             </>
           ) : (
             <EmptyState>Select a file to explore its symbols</EmptyState>
