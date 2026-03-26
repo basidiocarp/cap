@@ -65,13 +65,16 @@ describe('Settings page', () => {
       hyphae: {
         config_path: '/Users/test/.config/hyphae/config.toml',
         config_present: true,
+        config_source: 'config_file',
         db_path: '/Users/test/.local/share/hyphae.db',
         db_size_bytes: 1024,
+        db_source: 'platform_default',
         resolved_config_path: '/Users/test/.config/hyphae/config.toml',
       },
       mycelium: {
         config_path: '/Users/test/.config/mycelium/config.toml',
         config_present: true,
+        config_source: 'config_file',
         filters: {
           hyphae: { enabled: true },
           rhizome: { enabled: true },
@@ -82,6 +85,7 @@ describe('Settings page', () => {
         auto_export: true,
         config_path: '/Users/test/.config/rhizome/config.toml',
         config_present: true,
+        config_source: 'config_file',
         languages_enabled: 3,
         resolved_config_path: '/Users/test/.config/rhizome/config.toml',
       },
@@ -95,5 +99,6 @@ describe('Settings page', () => {
     expect(screen.getByRole('link', { name: 'Open code explorer' })).toHaveAttribute('href', '/code')
     expect(screen.getAllByText('Resolved config file')).toHaveLength(3)
     expect(screen.getByText('/Users/test/.config/hyphae/config.toml')).toBeInTheDocument()
+    expect(screen.getAllByText('Config file').length).toBeGreaterThan(0)
   })
 })

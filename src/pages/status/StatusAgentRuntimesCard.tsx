@@ -104,7 +104,7 @@ export function StatusAgentRuntimesCard({ status }: { status: EcosystemStatus })
                       : 'This is the Claude settings file Cap expects to read on this machine.'
                   }
                   path={runtime.status.resolved_config_path}
-                  present={runtime.status.configured}
+                  source={runtime.status.resolved_config_source}
                 />
                 {!runtime.status.configured && (
                   <Button

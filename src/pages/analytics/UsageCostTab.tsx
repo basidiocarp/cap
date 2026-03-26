@@ -58,6 +58,7 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
           detected: false,
           integration: 'hooks',
           resolved_config_path: '/host/claude/settings.json',
+          resolved_config_source: 'platform_default',
         },
         codex: {
           adapter: { configured: hasCodexSessions, detected: false, kind: 'mcp', label: 'Codex MCP' },
@@ -66,6 +67,7 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
           detected: false,
           integration: 'mcp',
           resolved_config_path: '/host/codex/config.toml',
+          resolved_config_source: 'platform_default',
         },
       },
       hooks: { error_count: 0, installed_hooks: [], lifecycle: [], recent_errors: [] },

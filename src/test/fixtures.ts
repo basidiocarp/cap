@@ -15,6 +15,7 @@ export function createEcosystemStatus(overrides: Partial<EcosystemStatus> = {}):
         detected: true,
         integration: 'hooks',
         resolved_config_path: '/Users/test/.claude/settings.json',
+        resolved_config_source: 'config_file',
       },
       codex: {
         adapter: {
@@ -34,6 +35,7 @@ export function createEcosystemStatus(overrides: Partial<EcosystemStatus> = {}):
           contract_matched: true,
         },
         resolved_config_path: '/Users/test/.codex/config.toml',
+        resolved_config_source: 'config_file',
       },
     },
     hooks: {

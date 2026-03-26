@@ -15,6 +15,7 @@ function createStatus(): EcosystemStatus {
         detected: true,
         integration: 'hooks',
         resolved_config_path: '/Users/test/.claude/settings.json',
+        resolved_config_source: 'config_file',
       },
       codex: {
         adapter: { configured: true, detected: true, kind: 'mcp', label: 'Codex MCP' },
@@ -22,8 +23,9 @@ function createStatus(): EcosystemStatus {
         configured: true,
         detected: true,
         integration: 'mcp',
-        resolved_config_path: '/Users/test/.codex/config.toml',
         notify: { command: null, config_path: '/Users/test/.codex/config.toml', configured: true, contract_matched: true },
+        resolved_config_path: '/Users/test/.codex/config.toml',
+        resolved_config_source: 'config_file',
       },
     },
     hooks: {
@@ -99,7 +101,7 @@ describe('host coverage', () => {
 
   it('makes Codex missing copy point to onboarding', () => {
     const status = createStatus()
-    const missingCodex = {
+    const missingCodex: EcosystemStatus = {
       ...status,
       agents: {
         ...status.agents,
@@ -114,6 +116,7 @@ describe('host coverage', () => {
           configured: false,
           detected: false,
           resolved_config_path: '/Users/test/.codex/config.toml',
+          resolved_config_source: 'platform_default',
         },
       },
     }

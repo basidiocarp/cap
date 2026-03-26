@@ -76,13 +76,16 @@ function sectionEnabled(content: string, section: string): boolean {
 function getHyphaeSettings(): {
   config_path: string | null
   config_present: boolean
+  config_source: 'config_file' | 'platform_default'
   db_path: string
+  db_source: 'env_override' | 'platform_default'
   db_size_bytes: number
   resolved_config_path: string
 } {
   const configPath = appConfigPath('hyphae')
   const defaultDb = appDataPath('hyphae', 'hyphae.db')
   const dbPath = process.env.HYPHAE_DB ?? defaultDb
+  const dbSource = process.env.HYPHAE_DB ? 'env_override' : 'platform_default'
 
   let configExists = false
   try {
@@ -101,8 +104,10 @@ function getHyphaeSettings(): {
   return {
     config_path: configExists ? configPath : null,
     config_present: configExists,
+    config_source: configExists ? 'config_file' : 'platform_default',
     db_path: dbPath,
     db_size_bytes: dbSizeBytes,
+    db_source: dbSource,
     resolved_config_path: configPath,
   }
 }
@@ -110,6 +115,7 @@ function getHyphaeSettings(): {
 function getMyceliumSettings(): {
   config_path: string | null
   config_present: boolean
+  config_source: 'config_file' | 'platform_default'
   filters: {
     hyphae: { enabled: boolean }
     rhizome: { enabled: boolean }
@@ -123,6 +129,7 @@ function getMyceliumSettings(): {
     return {
       config_path: null,
       config_present: false,
+      config_source: 'platform_default',
       filters: {
         hyphae: { enabled: false },
         rhizome: { enabled: false },
@@ -134,6 +141,7 @@ function getMyceliumSettings(): {
   return {
     config_path: configPath,
     config_present: true,
+    config_source: 'config_file',
     filters: {
       hyphae: { enabled: sectionEnabled(content, 'filters.hyphae') },
       rhizome: { enabled: sectionEnabled(content, 'filters.rhizome') },
@@ -146,6 +154,7 @@ function getRhizomeSettings(): {
   auto_export: boolean
   config_path: string | null
   config_present: boolean
+  config_source: 'config_file' | 'platform_default'
   languages_enabled: number
   resolved_config_path: string
 } {
@@ -157,6 +166,7 @@ function getRhizomeSettings(): {
       auto_export: false,
       config_path: null,
       config_present: false,
+      config_source: 'platform_default',
       languages_enabled: 32,
       resolved_config_path: configPath,
     }
@@ -167,6 +177,7 @@ function getRhizomeSettings(): {
     auto_export: tomlBool(content, 'auto_export', false),
     config_path: configPath,
     config_present: true,
+    config_source: 'config_file',
     // No languages array means all 32 are enabled (default)
     languages_enabled: explicitLanguages > 0 ? explicitLanguages : 32,
     resolved_config_path: configPath,

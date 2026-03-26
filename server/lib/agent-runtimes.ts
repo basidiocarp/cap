@@ -79,6 +79,7 @@ export function detectAgentRuntimes(): {
       detected: existsSync(dirname(claudeConfig)),
       integration: 'hooks',
       resolved_config_path: claudeConfig,
+      resolved_config_source: claudeConfigured ? 'config_file' : 'platform_default',
     },
     codex: {
       adapter: buildAdapterStatus('mcp', 'Codex MCP', codexConfigured, existsSync(dirname(codexConfig))),
@@ -88,6 +89,7 @@ export function detectAgentRuntimes(): {
       integration: 'mcp',
       notify: loadCodexNotifyStatus(codexConfig),
       resolved_config_path: codexConfig,
+      resolved_config_source: codexConfigured ? 'config_file' : 'platform_default',
     },
   }
 }

@@ -68,7 +68,7 @@ function MyceliumCard({ settings }: { settings: EcosystemSettings['mycelium'] })
           label='Resolved config file'
           note='Cap writes Mycelium settings here when you toggle integrations on this page.'
           path={settings.resolved_config_path}
-          present={settings.config_present}
+          source={settings.config_source}
         />
         <Switch
           checked={settings.filters.hyphae.enabled}
@@ -116,13 +116,13 @@ function HyphaeCard({ settings }: { settings: EcosystemSettings['hyphae'] }) {
           label='Resolved config file'
           note='Hyphae will read this path if you add local config overrides.'
           path={settings.resolved_config_path}
-          present={settings.config_present}
+          source={settings.config_source}
         />
         <ResolvedPathDetails
           label='Resolved database path'
           note='This is the Hyphae database Cap is reading for memories and memoirs.'
           path={settings.db_path}
-          present
+          source={settings.db_source}
         />
         <Badge
           color='spore'
@@ -195,7 +195,7 @@ function RhizomeCard({ settings }: { settings: EcosystemSettings['rhizome'] }) {
           label='Resolved config file'
           note='Cap writes Rhizome settings here when you toggle auto-export.'
           path={settings.resolved_config_path}
-          present={settings.config_present}
+          source={settings.config_source}
         />
         <Switch
           checked={settings.auto_export}
