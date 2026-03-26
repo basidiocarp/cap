@@ -64,20 +64,26 @@ describe('Settings page', () => {
     mockSettings = {
       hyphae: {
         config_path: '/Users/test/.config/hyphae/config.toml',
+        config_present: true,
         db_path: '/Users/test/.local/share/hyphae.db',
         db_size_bytes: 1024,
+        resolved_config_path: '/Users/test/.config/hyphae/config.toml',
       },
       mycelium: {
         config_path: '/Users/test/.config/mycelium/config.toml',
+        config_present: true,
         filters: {
           hyphae: { enabled: true },
           rhizome: { enabled: true },
         },
+        resolved_config_path: '/Users/test/.config/mycelium/config.toml',
       },
       rhizome: {
         auto_export: true,
         config_path: '/Users/test/.config/rhizome/config.toml',
+        config_present: true,
         languages_enabled: 3,
+        resolved_config_path: '/Users/test/.config/rhizome/config.toml',
       },
     }
 
@@ -87,5 +93,7 @@ describe('Settings page', () => {
     expect(screen.getByRole('link', { name: 'Open memories' })).toHaveAttribute('href', '/memories')
     expect(screen.getByRole('link', { name: 'Open memoirs' })).toHaveAttribute('href', '/memoirs')
     expect(screen.getByRole('link', { name: 'Open code explorer' })).toHaveAttribute('href', '/code')
+    expect(screen.getAllByText('Resolved config file')).toHaveLength(3)
+    expect(screen.getByText('/Users/test/.config/hyphae/config.toml')).toBeInTheDocument()
   })
 })

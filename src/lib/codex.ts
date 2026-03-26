@@ -87,7 +87,7 @@ export function getCodexModeSteps(status: EcosystemStatus): CodexModeStep[] {
 
   steps.push({
     detail: status.agents.codex.adapter.configured
-      ? 'Codex MCP is configured through ~/.codex/config.toml.'
+      ? 'Codex MCP is configured through the local Codex config file.'
       : 'Install the Codex profile or add the Codex MCP config so Codex can reach the ecosystem services.',
     group: 'required',
     key: 'codex-mcp',
@@ -155,7 +155,7 @@ export function summarizeCodexAdapter(status: EcosystemStatus): CodexAdapterSumm
   if (!codex.configured) {
     return {
       color: 'gray',
-      detail: 'No Codex config.toml was detected yet. Open onboarding to install the Codex profile and MCP config.',
+      detail: 'No Codex config file was detected yet. Open onboarding to install the Codex profile and MCP config.',
       label: 'Not configured',
     }
   }

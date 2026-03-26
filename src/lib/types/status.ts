@@ -28,6 +28,7 @@ export interface AgentRuntimeStatus {
   configured: boolean
   detected: boolean
   integration: 'hooks' | 'mcp'
+  resolved_config_path: string
   notify?: CodexNotifyStatus
 }
 

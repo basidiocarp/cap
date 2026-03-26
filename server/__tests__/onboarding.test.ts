@@ -21,6 +21,7 @@ function createMissingStatus(): EcosystemStatus {
         configured: true,
         detected: true,
         integration: 'hooks',
+        resolved_config_path: '/Users/test/.claude/settings.json',
       },
       codex: {
         adapter: {
@@ -33,6 +34,7 @@ function createMissingStatus(): EcosystemStatus {
         configured: false,
         detected: false,
         integration: 'mcp',
+        resolved_config_path: '/Users/test/.codex/config.toml',
       },
     },
     hooks: {
@@ -83,6 +85,7 @@ function createCodexStatus(notify: CodexNotifyStatus): EcosystemStatus {
         config_path: null,
         configured: false,
         detected: false,
+        resolved_config_path: '/Users/test/.claude/settings.json',
       },
       codex: {
         ...status.agents.codex,
@@ -94,6 +97,7 @@ function createCodexStatus(notify: CodexNotifyStatus): EcosystemStatus {
         config_path: '/Users/test/.codex/config.toml',
         configured: true,
         detected: true,
+        resolved_config_path: '/Users/test/.codex/config.toml',
         notify,
       },
     },
@@ -302,6 +306,7 @@ describe('onboarding helpers', () => {
       configured: true,
       detected: true,
       integration: 'hooks',
+      resolved_config_path: '/Users/test/.claude/settings.json',
     }
     status.hooks = {
       error_count: 0,

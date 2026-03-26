@@ -133,7 +133,7 @@ Wraps rhizome CLI subprocess, implements MCP protocol over stdio.
 
 **Tool Call Timeout**: 10 seconds per call (configurable)
 
-**Availability Check**: Caches `which rhizome` result to avoid repeated filesystem checks
+**Availability Check**: Caches platform-aware command discovery for `rhizome` to avoid repeated filesystem checks
 
 ## Endpoint Factory Pattern
 

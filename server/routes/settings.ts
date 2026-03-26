@@ -1,13 +1,12 @@
 import { execFile } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
-import { homedir, platform } from 'node:os'
-import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { Hono } from 'hono'
 
 import { createCliRunner } from '../lib/cli.ts'
 import { HYPHAE_BIN } from '../lib/config.ts'
 import { activateMode, loadModes } from '../lib/modes.ts'
+import { appConfigDir, appConfigPath, appDataPath } from '../lib/platform.ts'
 import { logger } from '../logger.ts'
 
 const runHyphae = createCliRunner(HYPHAE_BIN, 'hyphae')
@@ -76,14 +75,13 @@ function sectionEnabled(content: string, section: string): boolean {
 
 function getHyphaeSettings(): {
   config_path: string | null
+  config_present: boolean
   db_path: string
   db_size_bytes: number
+  resolved_config_path: string
 } {
-  const configPath = join(homedir(), '.config', 'hyphae', 'config.toml')
-  const defaultDb =
-    platform() === 'darwin'
-      ? join(homedir(), 'Library', 'Application Support', 'hyphae', 'hyphae.db')
-      : join(process.env.XDG_DATA_HOME ?? join(homedir(), '.local', 'share'), 'hyphae', 'hyphae.db')
+  const configPath = appConfigPath('hyphae')
+  const defaultDb = appDataPath('hyphae', 'hyphae.db')
   const dbPath = process.env.HYPHAE_DB ?? defaultDb
 
   let configExists = false
@@ -102,53 +100,65 @@ function getHyphaeSettings(): {
 
   return {
     config_path: configExists ? configPath : null,
+    config_present: configExists,
     db_path: dbPath,
     db_size_bytes: dbSizeBytes,
+    resolved_config_path: configPath,
   }
 }
 
 function getMyceliumSettings(): {
   config_path: string | null
+  config_present: boolean
   filters: {
     hyphae: { enabled: boolean }
     rhizome: { enabled: boolean }
   }
+  resolved_config_path: string
 } {
-  const configPath = join(homedir(), '.config', 'mycelium', 'config.toml')
+  const configPath = appConfigPath('mycelium')
   const content = readToml(configPath)
 
   if (!content) {
     return {
       config_path: null,
+      config_present: false,
       filters: {
         hyphae: { enabled: false },
         rhizome: { enabled: false },
       },
+      resolved_config_path: configPath,
     }
   }
 
   return {
     config_path: configPath,
+    config_present: true,
     filters: {
       hyphae: { enabled: sectionEnabled(content, 'filters.hyphae') },
       rhizome: { enabled: sectionEnabled(content, 'filters.rhizome') },
     },
+    resolved_config_path: configPath,
   }
 }
 
 function getRhizomeSettings(): {
   auto_export: boolean
   config_path: string | null
+  config_present: boolean
   languages_enabled: number
+  resolved_config_path: string
 } {
-  const configPath = join(homedir(), '.config', 'rhizome', 'config.toml')
+  const configPath = appConfigPath('rhizome')
   const content = readToml(configPath)
 
   if (!content) {
     return {
       auto_export: false,
       config_path: null,
+      config_present: false,
       languages_enabled: 32,
+      resolved_config_path: configPath,
     }
   }
 
@@ -156,8 +166,10 @@ function getRhizomeSettings(): {
   return {
     auto_export: tomlBool(content, 'auto_export', false),
     config_path: configPath,
+    config_present: true,
     // No languages array means all 32 are enabled (default)
     languages_enabled: explicitLanguages > 0 ? explicitLanguages : 32,
+    resolved_config_path: configPath,
   }
 }
 
@@ -270,8 +282,8 @@ app.get('/stipe/repair-plan', async (c) => {
 app.put('/mycelium', async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}))
-    const configPath = join(homedir(), '.config', 'mycelium', 'config.toml')
-    const configDir = join(homedir(), '.config', 'mycelium')
+    const configPath = appConfigPath('mycelium')
+    const configDir = appConfigDir('mycelium')
 
     mkdirSync(configDir, { recursive: true })
 
@@ -294,8 +306,8 @@ app.put('/mycelium', async (c) => {
 app.put('/rhizome', async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}))
-    const configPath = join(homedir(), '.config', 'rhizome', 'config.toml')
-    const configDir = join(homedir(), '.config', 'rhizome')
+    const configPath = appConfigPath('rhizome')
+    const configDir = appConfigDir('rhizome')
 
     mkdirSync(configDir, { recursive: true })
 
@@ -321,8 +333,8 @@ app.put('/rhizome', async (c) => {
 app.put('/hyphae', async (c) => {
   try {
     const body = await c.req.json().catch(() => ({}))
-    const configPath = join(homedir(), '.config', 'hyphae', 'config.toml')
-    const configDir = join(homedir(), '.config', 'hyphae')
+    const configPath = appConfigPath('hyphae')
+    const configDir = appConfigDir('hyphae')
 
     mkdirSync(configDir, { recursive: true })
 

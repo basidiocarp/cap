@@ -641,21 +641,21 @@ Get current ecosystem settings.
 ```json
 {
   "mycelium": {
-    "config_path": "~/.config/mycelium/config.toml",
+    "config_path": "<platform config dir>/mycelium/config.toml",
     "filters": {
       "hyphae": { "enabled": true },
       "rhizome": { "enabled": true }
     }
   },
   "hyphae": {
-    "config_path": "~/.config/hyphae/config.toml",
-    "db_path": "~/.local/share/hyphae/hyphae.db",
+    "config_path": "<platform config dir>/hyphae/config.toml",
+    "db_path": "<platform data dir>/hyphae/hyphae.db",
     "db_size_bytes": 2345678,
     "embedding_model": "BAAI/bge-small-en-v1.5",
     "embedding_enabled": true
   },
   "rhizome": {
-    "config_path": "~/.config/rhizome/config.toml",
+    "config_path": "<platform config dir>/rhizome/config.toml",
     "lsp_servers": [
       { "language": "rust", "enabled": true, "version": "0.3.2017" }
     ],

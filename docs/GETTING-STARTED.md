@@ -65,7 +65,7 @@ Then refresh the Cap dashboard.
 
 **Rhizome unavailable**: Rhizome binary must be in your PATH. Verify:
 ```bash
-which rhizome
+command -v rhizome   # PowerShell: Get-Command rhizome
 rhizome --version
 ```
 If not installed, install from the Rhizome project. Once installed, restart the Cap backend.

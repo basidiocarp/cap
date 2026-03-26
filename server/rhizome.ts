@@ -1,6 +1,7 @@
 import type { ChildProcess } from 'node:child_process'
-import { execFileSync, spawn } from 'node:child_process'
+import { spawn } from 'node:child_process'
 
+import { isCommandAvailable } from './lib/platform.ts'
 import { logger } from './logger.ts'
 
 const RHIZOME_BIN = process.env.RHIZOME_BIN ?? 'rhizome'
@@ -42,12 +43,7 @@ export class RhizomeClient {
 
   isAvailable(): boolean {
     if (this.availableCache !== null) return this.availableCache
-    try {
-      execFileSync('which', [this.bin], { stdio: 'ignore' })
-      this.availableCache = true
-    } catch {
-      this.availableCache = false
-    }
+    this.availableCache = isCommandAvailable(this.bin)
     return this.availableCache
   }
 

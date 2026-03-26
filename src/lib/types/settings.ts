@@ -1,7 +1,24 @@
 export interface EcosystemSettings {
-  hyphae: { config_path: string | null; db_path: string; db_size_bytes: number }
-  mycelium: { config_path: string | null; filters: { hyphae: { enabled: boolean }; rhizome: { enabled: boolean } } }
-  rhizome: { auto_export: boolean; config_path: string | null; languages_enabled: number }
+  hyphae: {
+    config_path: string | null
+    config_present: boolean
+    db_path: string
+    db_size_bytes: number
+    resolved_config_path: string
+  }
+  mycelium: {
+    config_path: string | null
+    config_present: boolean
+    filters: { hyphae: { enabled: boolean }; rhizome: { enabled: boolean } }
+    resolved_config_path: string
+  }
+  rhizome: {
+    auto_export: boolean
+    config_path: string | null
+    config_present: boolean
+    languages_enabled: number
+    resolved_config_path: string
+  }
 }
 
 export interface Mode {

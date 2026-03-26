@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom'
 import type { EcosystemSettings } from '../lib/api'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
+import { ResolvedPathDetails } from '../components/ResolvedPathDetails'
 import { SectionCard } from '../components/SectionCard'
 import { ToolingUnavailableState } from '../components/ToolingUnavailableState'
 import { getToolSettingsGuidance } from '../lib/host-guidance'
@@ -63,15 +64,12 @@ function MyceliumCard({ settings }: { settings: EcosystemSettings['mycelium'] })
         <Title order={4}>Mycelium</Title>
       </Group>
       <Stack gap='sm'>
-        <Group gap='xs'>
-          <Text
-            c='dimmed'
-            size='sm'
-          >
-            Config:
-          </Text>
-          <Text size='sm'>{settings.config_path ?? 'Not set (using defaults)'}</Text>
-        </Group>
+        <ResolvedPathDetails
+          label='Resolved config file'
+          note='Cap writes Mycelium settings here when you toggle integrations on this page.'
+          path={settings.resolved_config_path}
+          present={settings.config_present}
+        />
         <Switch
           checked={settings.filters.hyphae.enabled}
           color='mycelium'
@@ -114,24 +112,18 @@ function HyphaeCard({ settings }: { settings: EcosystemSettings['hyphae'] }) {
         <Title order={4}>Hyphae</Title>
       </Group>
       <Stack gap='sm'>
-        <Group gap='xs'>
-          <Text
-            c='dimmed'
-            size='sm'
-          >
-            Config:
-          </Text>
-          <Text size='sm'>{settings.config_path ?? 'Not set (using defaults)'}</Text>
-        </Group>
-        <Group gap='xs'>
-          <Text
-            c='dimmed'
-            size='sm'
-          >
-            Database:
-          </Text>
-          <Text size='sm'>{settings.db_path}</Text>
-        </Group>
+        <ResolvedPathDetails
+          label='Resolved config file'
+          note='Hyphae will read this path if you add local config overrides.'
+          path={settings.resolved_config_path}
+          present={settings.config_present}
+        />
+        <ResolvedPathDetails
+          label='Resolved database path'
+          note='This is the Hyphae database Cap is reading for memories and memoirs.'
+          path={settings.db_path}
+          present
+        />
         <Badge
           color='spore'
           size='sm'
@@ -199,15 +191,12 @@ function RhizomeCard({ settings }: { settings: EcosystemSettings['rhizome'] }) {
         <Title order={4}>Rhizome</Title>
       </Group>
       <Stack gap='sm'>
-        <Group gap='xs'>
-          <Text
-            c='dimmed'
-            size='sm'
-          >
-            Config:
-          </Text>
-          <Text size='sm'>{settings.config_path ?? 'Not set (using defaults)'}</Text>
-        </Group>
+        <ResolvedPathDetails
+          label='Resolved config file'
+          note='Cap writes Rhizome settings here when you toggle auto-export.'
+          path={settings.resolved_config_path}
+          present={settings.config_present}
+        />
         <Switch
           checked={settings.auto_export}
           color='mycelium'

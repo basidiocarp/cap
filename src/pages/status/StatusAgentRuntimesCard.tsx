@@ -2,6 +2,7 @@ import { Badge, Button, Card, Group, Stack, Text } from '@mantine/core'
 import { Link } from 'react-router-dom'
 
 import type { EcosystemStatus } from '../../lib/api'
+import { ResolvedPathDetails } from '../../components/ResolvedPathDetails'
 import { SectionCard } from '../../components/SectionCard'
 import { summarizeCodexAdapter } from '../../lib/codex'
 import { getAgentRuntimeGuidance, getClaudeLifecycleAdapterEmptyState } from '../../lib/host-guidance'
@@ -95,6 +96,16 @@ export function StatusAgentRuntimesCard({ status }: { status: EcosystemStatus })
                       ? (runtime.status.config_path ?? 'Claude lifecycle hooks are installed but no config path was recorded.')
                       : claudeEmptyState.detail}
                 </Text>
+                <ResolvedPathDetails
+                  label='Resolved adapter config'
+                  note={
+                    runtime.key === 'codex'
+                      ? 'This is the Codex config file Cap expects to read on this machine.'
+                      : 'This is the Claude settings file Cap expects to read on this machine.'
+                  }
+                  path={runtime.status.resolved_config_path}
+                  present={runtime.status.configured}
+                />
                 {!runtime.status.configured && (
                   <Button
                     component={Link}

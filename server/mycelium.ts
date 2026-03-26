@@ -1,11 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { homedir, platform } from 'node:os'
-import { join } from 'node:path'
 import Database from 'better-sqlite3'
 
 import { cachedAsync } from './lib/cache.ts'
 import { createCliRunner } from './lib/cli.ts'
 import { MYCELIUM_BIN } from './lib/config.ts'
+import { appConfigPath, appDataPath } from './lib/platform.ts'
 import { logger } from './logger.ts'
 
 const run = createCliRunner(MYCELIUM_BIN, 'mycelium')
@@ -56,7 +55,7 @@ function resolveMyceliumDbPath(): string {
     return envPath
   }
 
-  const configPath = join(homedir(), '.config', 'mycelium', 'config.toml')
+  const configPath = appConfigPath('mycelium')
   if (existsSync(configPath)) {
     try {
       const config = readFileSync(configPath, 'utf-8')
@@ -69,15 +68,7 @@ function resolveMyceliumDbPath(): string {
     }
   }
 
-  if (platform() === 'darwin') {
-    return join(homedir(), 'Library', 'Application Support', 'mycelium', 'history.db')
-  }
-
-  if (platform() === 'win32') {
-    return join(process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'), 'mycelium', 'history.db')
-  }
-
-  return join(process.env.XDG_DATA_HOME ?? join(homedir(), '.local', 'share'), 'mycelium', 'history.db')
+  return appDataPath('mycelium', 'history.db')
 }
 
 function getMyceliumDb(): Database.Database | null {

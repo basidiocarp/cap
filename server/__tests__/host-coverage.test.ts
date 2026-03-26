@@ -14,6 +14,7 @@ function createStatus(): EcosystemStatus {
         configured: true,
         detected: true,
         integration: 'hooks',
+        resolved_config_path: '/Users/test/.claude/settings.json',
       },
       codex: {
         adapter: { configured: true, detected: true, kind: 'mcp', label: 'Codex MCP' },
@@ -21,6 +22,7 @@ function createStatus(): EcosystemStatus {
         configured: true,
         detected: true,
         integration: 'mcp',
+        resolved_config_path: '/Users/test/.codex/config.toml',
         notify: { command: null, config_path: '/Users/test/.codex/config.toml', configured: true, contract_matched: true },
       },
     },
@@ -111,6 +113,7 @@ describe('host coverage', () => {
           config_path: null,
           configured: false,
           detected: false,
+          resolved_config_path: '/Users/test/.codex/config.toml',
         },
       },
     }

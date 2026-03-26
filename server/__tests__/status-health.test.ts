@@ -18,6 +18,7 @@ function createStatus(): EcosystemStatus {
         configured: true,
         detected: true,
         integration: 'hooks',
+        resolved_config_path: '/Users/test/.claude/settings.json',
       },
       codex: {
         adapter: {
@@ -30,6 +31,7 @@ function createStatus(): EcosystemStatus {
         configured: false,
         detected: false,
         integration: 'mcp',
+        resolved_config_path: '/Users/test/.codex/config.toml',
       },
     },
     hooks: {

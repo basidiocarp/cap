@@ -57,6 +57,7 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
           configured: hasClaudeSessions,
           detected: false,
           integration: 'hooks',
+          resolved_config_path: '/host/claude/settings.json',
         },
         codex: {
           adapter: { configured: hasCodexSessions, detected: false, kind: 'mcp', label: 'Codex MCP' },
@@ -64,6 +65,7 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
           configured: hasCodexSessions,
           detected: false,
           integration: 'mcp',
+          resolved_config_path: '/host/codex/config.toml',
         },
       },
       hooks: { error_count: 0, installed_hooks: [], lifecycle: [], recent_errors: [] },
@@ -265,7 +267,7 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
               c='dimmed'
               size='xs'
             >
-              Codex sessions are parsed from `~/.codex/sessions`, and costs stay `n/a` when the model pricing is unknown.{' '}
+              Codex sessions are parsed from the local Codex sessions directory, and costs stay `n/a` when the model pricing is unknown.{' '}
               {hostCoverage.usageNote}
             </Text>
           )}

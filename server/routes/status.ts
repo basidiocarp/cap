@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
-import { homedir, tmpdir } from 'node:os'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { Hono } from 'hono'
@@ -9,6 +9,7 @@ import { getDb } from '../db.ts'
 import { detectAgentRuntimes } from '../lib/agent-runtimes.ts'
 import { cachedAsync } from '../lib/cache.ts'
 import { HYPHAE_BIN, MYCELIUM_BIN } from '../lib/config.ts'
+import { claudeSettingsPath, isCommandAvailable, isProcessRunning } from '../lib/platform.ts'
 import { registry } from '../lib/rhizome-registry.ts'
 import { logger } from '../logger.ts'
 
@@ -236,21 +237,10 @@ function checkRhizome(): StatusResult['rhizome'] {
 async function checkLsps(): Promise<LspInfo[]> {
   const results = await Promise.allSettled(
     LSP_SERVERS.map(async (server) => {
-      let available = false
+      const available = isCommandAvailable(server.bin)
       let running = false
-      try {
-        await exec('which', [server.bin], { timeout: 1000 })
-        available = true
-      } catch {
-        // not installed
-      }
       if (available) {
-        try {
-          await exec('pgrep', ['-x', server.bin], { timeout: 1000 })
-          running = true
-        } catch {
-          // installed but no active process
-        }
+        running = await isProcessRunning(server.bin)
       }
       return { available, bin: server.bin, language: server.language, name: server.name, running }
     })
@@ -260,7 +250,7 @@ async function checkLsps(): Promise<LspInfo[]> {
 
 async function loadHookHealth(): Promise<HookHealthResult> {
   try {
-    const settingsPath = join(homedir(), '.claude', 'settings.json')
+    const settingsPath = claudeSettingsPath()
     const errorLogPath = process.env.HYPHAE_HOOK_ERROR_LOG ?? DEFAULT_HOOK_ERROR_LOG
 
     // ─────────────────────────────────────────────────────────────────────────────

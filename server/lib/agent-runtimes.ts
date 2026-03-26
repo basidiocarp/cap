@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { dirname } from 'node:path'
 
 import type { AgentAdapterStatus, AgentRuntimeStatus, CodexNotifyStatus } from '../../src/lib/types/status.ts'
+import { claudeSettingsPath, codexConfigPath } from './platform.ts'
 
 const CODEX_NOTIFY_CONTRACT = ['hyphae', 'codex-notify'] as const
 
@@ -65,27 +65,29 @@ export function detectAgentRuntimes(): {
   claude_code: AgentRuntimeStatus
   codex: AgentRuntimeStatus
 } {
-  const claudeConfigPath = join(homedir(), '.claude', 'settings.json')
-  const codexConfigPath = join(homedir(), '.codex', 'config.toml')
+  const claudeConfig = claudeSettingsPath()
+  const codexConfig = codexConfigPath()
 
-  const claudeConfigured = existsSync(claudeConfigPath)
-  const codexConfigured = existsSync(codexConfigPath)
+  const claudeConfigured = existsSync(claudeConfig)
+  const codexConfigured = existsSync(codexConfig)
 
   return {
     claude_code: {
-      adapter: buildAdapterStatus('hooks', 'Claude lifecycle hooks', claudeConfigured, existsSync(join(homedir(), '.claude'))),
-      config_path: claudeConfigured ? claudeConfigPath : null,
+      adapter: buildAdapterStatus('hooks', 'Claude lifecycle hooks', claudeConfigured, existsSync(dirname(claudeConfig))),
+      config_path: claudeConfigured ? claudeConfig : null,
       configured: claudeConfigured,
-      detected: existsSync(join(homedir(), '.claude')),
+      detected: existsSync(dirname(claudeConfig)),
       integration: 'hooks',
+      resolved_config_path: claudeConfig,
     },
     codex: {
-      adapter: buildAdapterStatus('mcp', 'Codex MCP', codexConfigured, existsSync(join(homedir(), '.codex'))),
-      config_path: codexConfigured ? codexConfigPath : null,
+      adapter: buildAdapterStatus('mcp', 'Codex MCP', codexConfigured, existsSync(dirname(codexConfig))),
+      config_path: codexConfigured ? codexConfig : null,
       configured: codexConfigured,
-      detected: existsSync(join(homedir(), '.codex')),
+      detected: existsSync(dirname(codexConfig)),
       integration: 'mcp',
-      notify: loadCodexNotifyStatus(codexConfigPath),
+      notify: loadCodexNotifyStatus(codexConfig),
+      resolved_config_path: codexConfig,
     },
   }
 }

@@ -45,14 +45,18 @@ describe('API Routes', () => {
       // Verify hyphae structure
       const hyphae = json.hyphae as Record<string, unknown>
       expect(hyphae).toHaveProperty('config_path')
+      expect(hyphae).toHaveProperty('config_present')
       expect(hyphae).toHaveProperty('db_path')
       expect(hyphae).toHaveProperty('db_size_bytes')
+      expect(hyphae).toHaveProperty('resolved_config_path')
       expect(typeof hyphae.db_size_bytes).toBe('number')
 
       // Verify mycelium structure
       const mycelium = json.mycelium as Record<string, unknown>
       expect(mycelium).toHaveProperty('config_path')
+      expect(mycelium).toHaveProperty('config_present')
       expect(mycelium).toHaveProperty('filters')
+      expect(mycelium).toHaveProperty('resolved_config_path')
       const filters = mycelium.filters as Record<string, unknown>
       expect(filters).toHaveProperty('hyphae')
       expect(filters).toHaveProperty('rhizome')
@@ -61,7 +65,9 @@ describe('API Routes', () => {
       const rhizome = json.rhizome as Record<string, unknown>
       expect(rhizome).toHaveProperty('auto_export')
       expect(rhizome).toHaveProperty('config_path')
+      expect(rhizome).toHaveProperty('config_present')
       expect(rhizome).toHaveProperty('languages_enabled')
+      expect(rhizome).toHaveProperty('resolved_config_path')
       expect(typeof rhizome.languages_enabled).toBe('number')
     })
 
@@ -95,8 +101,12 @@ describe('API Routes', () => {
       expect(agents).toHaveProperty('claude_code')
       expect(agents).toHaveProperty('codex')
 
+      const claude = agents.claude_code as Record<string, unknown>
+      expect(claude).toHaveProperty('resolved_config_path')
+
       const codex = agents.codex as Record<string, unknown>
       expect(codex).toHaveProperty('notify')
+      expect(codex).toHaveProperty('resolved_config_path')
       const notify = codex.notify as Record<string, unknown>
       expect(notify).toHaveProperty('configured')
       expect(notify).toHaveProperty('contract_matched')
