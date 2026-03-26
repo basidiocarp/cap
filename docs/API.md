@@ -642,27 +642,38 @@ Get current ecosystem settings.
 {
   "mycelium": {
     "config_path": "<platform config dir>/mycelium/config.toml",
+    "config_present": true,
+    "config_source": "config_file",
     "filters": {
       "hyphae": { "enabled": true },
       "rhizome": { "enabled": true }
-    }
+    },
+    "resolved_config_path": "<platform config dir>/mycelium/config.toml"
   },
   "hyphae": {
     "config_path": "<platform config dir>/hyphae/config.toml",
+    "config_present": true,
+    "config_source": "config_file",
     "db_path": "<platform data dir>/hyphae/hyphae.db",
+    "db_source": "platform_default",
     "db_size_bytes": 2345678,
-    "embedding_model": "BAAI/bge-small-en-v1.5",
-    "embedding_enabled": true
+    "resolved_config_path": "<platform config dir>/hyphae/config.toml"
   },
   "rhizome": {
     "config_path": "<platform config dir>/rhizome/config.toml",
-    "lsp_servers": [
-      { "language": "rust", "enabled": true, "version": "0.3.2017" }
-    ],
-    "indexed_file_count": 234
+    "config_present": false,
+    "config_source": "platform_default",
+    "auto_export": false,
+    "languages_enabled": 32,
+    "resolved_config_path": "<platform config dir>/rhizome/config.toml"
   }
 }
 ```
+
+`config_path` is only populated when a file exists on disk. `resolved_config_path` is the path Cap will try to read or write on the current machine. The `*_source` fields explain why that path is active:
+- `config_file`: a real config file was found and is in use
+- `env_override`: an environment variable override selected the path
+- `platform_default`: no override was found, so Cap is using the default path for the current OS
 
 ### POST /settings/mycelium
 

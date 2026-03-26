@@ -53,7 +53,12 @@ hyphae init
 
 **Status**: Ecosystem architecture diagram showing how Mycelium, Hyphae, and Rhizome connect. Displays installed tool versions, LSP server status, database size, and overall health. Useful for troubleshooting connection issues.
 
-**Settings**: Configuration and system management. Mycelium section shows config path and integration toggles. Hyphae section shows database path, size, and pruning options (set a weight threshold to delete old, fading memories). Rhizome section shows available languages, indexed file count, and enable/disable toggles per language server. LSP Manager tab lets you install/uninstall language servers and view their status and version.
+**Settings**: Configuration and system management. Each tool card now shows the resolved file path Cap is using plus a provenance badge:
+- `Config file`: Cap found a real config file and is reading it
+- `Env override`: an environment variable selected this path
+- `Platform default`: Cap is using the current OS default path because no override file was found
+
+Mycelium shows config path and integration toggles. Hyphae shows config path, database path, size, and pruning options (set a weight threshold to delete old, fading memories). Rhizome shows config path, auto-export state, and language coverage. LSP Manager lets you install/uninstall language servers and view their status and version.
 
 ## Troubleshooting
 

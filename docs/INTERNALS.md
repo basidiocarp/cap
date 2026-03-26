@@ -135,6 +135,11 @@ Wraps rhizome CLI subprocess, implements MCP protocol over stdio.
 
 **Availability Check**: Caches platform-aware command discovery for `rhizome` to avoid repeated filesystem checks
 
+**Path Provenance**:
+- Settings and runtime status expose both the resolved path and the reason it was selected
+- Provenance values are `config_file`, `env_override`, and `platform_default`
+- This keeps the UI aligned with the backend instead of guessing whether a displayed path is active or just the fallback location
+
 ## Endpoint Factory Pattern
 
 **File**: `server/routes/rhizome.ts` (first 50 lines)
