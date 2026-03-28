@@ -17,9 +17,10 @@ vi.mock('../lib/queries', () => ({
 }))
 
 describe('Analytics page', () => {
-  it('links into the latest session drilldown and the full sessions timeline', () => {
+  it('links into the Canopy board and session views', () => {
     renderWithProviders(<Analytics />, { route: '/analytics' })
 
+    expect(screen.getByRole('link', { name: 'Open Canopy board' })).toHaveAttribute('href', '/canopy')
     expect(screen.getByRole('link', { name: 'Open latest session' })).toHaveAttribute('href', '/sessions?detail=latest')
     expect(screen.getByRole('link', { name: 'Open sessions timeline' })).toHaveAttribute('href', '/sessions')
   })

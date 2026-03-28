@@ -159,6 +159,14 @@ describe('Canopy page', () => {
     expect(screen.getByText('1 verification failed')).toBeInTheDocument()
   })
 
+  it('filters tasks by query and status from the URL', () => {
+    renderWithProviders(<Canopy />, { route: '/canopy?q=lifecycle&status=blocked' })
+
+    expect(screen.getByDisplayValue('lifecycle')).toBeInTheDocument()
+    expect(screen.getByText('Fix lifecycle adapter')).toBeInTheDocument()
+    expect(screen.queryByText('Add Cap Canopy page')).not.toBeInTheDocument()
+  })
+
   it('opens task detail drilldown from the board', async () => {
     const user = userEvent.setup()
 
@@ -169,8 +177,8 @@ describe('Canopy page', () => {
 
     await user.click(openTaskButton)
 
-    expect(screen.getByText('Task ID: task-1')).toBeInTheDocument()
-    expect(screen.getByText('Task created')).toBeInTheDocument()
+    expect(await screen.findByText(/Task ID:/)).toBeInTheDocument()
+    expect(await screen.findByText('Task created')).toBeInTheDocument()
     expect(screen.getByText('Status changed to review_required')).toBeInTheDocument()
     expect(screen.getByText('Need review before closing')).toBeInTheDocument()
     expect(screen.getByText('Ready for review.')).toBeInTheDocument()

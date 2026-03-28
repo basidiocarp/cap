@@ -1,5 +1,5 @@
-import { Badge, Button, Divider, Grid, Group, Modal, ScrollArea, Stack, Text, Title } from '@mantine/core'
-import { useMemo, useState } from 'react'
+import { Badge, Button, Divider, Grid, Group, Modal, ScrollArea, Select, Stack, Text, TextInput, Title } from '@mantine/core'
+import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import type { CanopyTask, CanopyTaskDetail, CanopyTaskEvent, CanopyTaskStatus } from '../lib/api'
@@ -19,6 +19,14 @@ const STATUS_ORDER: CanopyTaskStatus[] = [
   'completed',
   'closed',
   'cancelled',
+]
+
+const STATUS_FILTER_OPTIONS = [
+  { label: 'All statuses', value: 'all' },
+  ...STATUS_ORDER.map((status) => ({
+    label: status.replaceAll('_', ' '),
+    value: status,
+  })),
 ]
 
 function statusColor(status: CanopyTaskStatus): string {
@@ -344,7 +352,9 @@ function TaskDetailModal({ detail, opened, onClose }: { detail: CanopyTaskDetail
 export function Canopy() {
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedTaskId = searchParams.get('task') ?? ''
-  const [modalOpen, setModalOpen] = useState(Boolean(selectedTaskId))
+  const searchQuery = searchParams.get('q') ?? ''
+  const statusFilter = searchParams.get('status') ?? 'all'
+  const modalOpen = Boolean(selectedTaskId)
   const { data: project } = useProject()
   const snapshotQuery = useCanopySnapshot()
   const detailQuery = useCanopyTaskDetail(selectedTaskId)
@@ -353,9 +363,21 @@ export function Canopy() {
   const snapshot = snapshotQuery.data
   const filteredTasks = useMemo(() => {
     if (!snapshot) return []
-    if (!activeProject) return snapshot.tasks
-    return snapshot.tasks.filter((task) => task.project_root === activeProject)
-  }, [activeProject, snapshot])
+    const baseTasks = !activeProject ? snapshot.tasks : snapshot.tasks.filter((task) => task.project_root === activeProject)
+    const normalizedQuery = searchQuery.trim().toLowerCase()
+
+    return baseTasks.filter((task) => {
+      const matchesStatus = statusFilter === 'all' || task.status === statusFilter
+      const matchesQuery =
+        normalizedQuery.length === 0 ||
+        task.title.toLowerCase().includes(normalizedQuery) ||
+        (task.description?.toLowerCase().includes(normalizedQuery) ?? false) ||
+        task.task_id.toLowerCase().includes(normalizedQuery) ||
+        (task.owner_agent_id?.toLowerCase().includes(normalizedQuery) ?? false)
+
+      return matchesStatus && matchesQuery
+    })
+  }, [activeProject, searchQuery, snapshot, statusFilter])
 
   const filteredTaskIds = new Set(filteredTasks.map((task) => task.task_id))
   const filteredAgents = useMemo(() => {
@@ -377,18 +399,26 @@ export function Canopy() {
     tasks: filteredTasks.filter((task) => task.status === status),
   })).filter((group) => group.tasks.length > 0)
 
-  const openTask = (taskId: string) => {
+  const updateSearchParams = (updates: { q?: string | null; status?: string | null; task?: string | null }) => {
     const next = new URLSearchParams(searchParams)
-    next.set('task', taskId)
+
+    for (const [key, value] of Object.entries(updates)) {
+      if (!value || value === 'all') {
+        next.delete(key)
+      } else {
+        next.set(key, value)
+      }
+    }
+
     setSearchParams(next)
-    setModalOpen(true)
+  }
+
+  const openTask = (taskId: string) => {
+    updateSearchParams({ task: taskId })
   }
 
   const closeTask = () => {
-    const next = new URLSearchParams(searchParams)
-    next.delete('task')
-    setSearchParams(next)
-    setModalOpen(false)
+    updateSearchParams({ task: null })
   }
 
   if (snapshotQuery.isLoading) {
@@ -408,6 +438,27 @@ export function Canopy() {
       >
         Showing Canopy coordination state{activeProject ? ` for ${activeProject}` : ''}.
       </Text>
+
+      <SectionCard title='Task filters'>
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 8 }}>
+            <TextInput
+              label='Search tasks'
+              onChange={(event) => updateSearchParams({ q: event.currentTarget.value, task: null })}
+              placeholder='Filter by title, description, task id, or owner'
+              value={searchQuery}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Select
+              data={STATUS_FILTER_OPTIONS}
+              label='Status'
+              onChange={(value) => updateSearchParams({ status: value ?? 'all', task: null })}
+              value={statusFilter}
+            />
+          </Grid.Col>
+        </Grid>
+      </SectionCard>
 
       <Grid>
         <Grid.Col span={{ base: 6, md: 3 }}>
@@ -457,7 +508,11 @@ export function Canopy() {
 
       {filteredTasks.length === 0 ? (
         <SectionCard title='Tasks'>
-          <EmptyState>No Canopy tasks are in scope for the active project yet.</EmptyState>
+          <EmptyState>
+            {searchQuery || statusFilter !== 'all'
+              ? 'No Canopy tasks match the current filters.'
+              : 'No Canopy tasks are in scope for the active project yet.'}
+          </EmptyState>
         </SectionCard>
       ) : (
         <Stack gap='md'>

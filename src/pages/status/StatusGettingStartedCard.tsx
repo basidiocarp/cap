@@ -7,7 +7,7 @@ import { HostCoveragePanel } from '../../components/HostCoveragePanel'
 import { SectionCard } from '../../components/SectionCard'
 import { StipeActionFeedback } from '../../components/StipeActionFeedback'
 import { getEcosystemReadinessModel } from '../../lib/readiness'
-import { sessionsHref } from '../../lib/routes'
+import { canopyHref, sessionsHref } from '../../lib/routes'
 import { useStipeActionController } from '../../lib/stipe-actions'
 import { useHostCoverageStore } from '../../store/host-coverage'
 
@@ -81,8 +81,16 @@ export function StatusGettingStartedCard({
           <Button
             component={Link}
             size='xs'
-            to='/onboard'
+            to={canopyHref()}
             variant='light'
+          >
+            Open Canopy
+          </Button>
+          <Button
+            component={Link}
+            size='xs'
+            to='/onboard'
+            variant='subtle'
           >
             Open onboarding
           </Button>

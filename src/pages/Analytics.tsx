@@ -17,7 +17,7 @@ import {
   useUsageSessions,
   useUsageTrend,
 } from '../lib/queries'
-import { sessionsHref } from '../lib/routes'
+import { canopyHref, sessionsHref } from '../lib/routes'
 
 const TokenSavingsTab = lazy(() => import('./analytics/TokenSavingsTab').then((m) => ({ default: m.TokenSavingsTab })))
 const CommandHistoryTab = lazy(() => import('./analytics/CommandHistoryTab').then((m) => ({ default: m.CommandHistoryTab })))
@@ -76,8 +76,16 @@ export function Analytics() {
             <Button
               component={Link}
               size='xs'
-              to={sessionsHref({ detail: 'latest' })}
+              to={canopyHref()}
               variant='light'
+            >
+              Open Canopy board
+            </Button>
+            <Button
+              component={Link}
+              size='xs'
+              to={sessionsHref({ detail: 'latest' })}
+              variant='subtle'
             >
               Open latest session
             </Button>

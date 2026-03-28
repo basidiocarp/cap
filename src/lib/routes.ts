@@ -50,10 +50,12 @@ export function sessionsHref(params?: { detail?: 'latest'; session?: string }) {
   return query ? `/sessions?${query}` : '/sessions'
 }
 
-export function canopyHref(params?: { task?: string }) {
+export function canopyHref(params?: { q?: string; status?: string; task?: string }) {
   const search = new URLSearchParams()
 
   if (params?.task) search.set('task', params.task)
+  if (params?.q) search.set('q', params.q)
+  if (params?.status && params.status !== 'all') search.set('status', params.status)
 
   const query = search.toString()
   return query ? `/canopy?${query}` : '/canopy'
