@@ -1,4 +1,6 @@
 export type {
+  CanopyAgentHeartbeatEvent,
+  CanopyAgentHeartbeatSource,
   CanopyAgentRegistration,
   CanopyAgentStatus,
   CanopyCouncilMessage,

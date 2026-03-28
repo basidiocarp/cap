@@ -61,6 +61,8 @@ export type {
   AgentRuntimeStatus,
   Annotation,
   CallSite,
+  CanopyAgentHeartbeatEvent,
+  CanopyAgentHeartbeatSource,
   CanopyAgentRegistration,
   CanopyAgentStatus,
   CanopyCouncilMessage,
@@ -245,7 +247,12 @@ export const hyphaeApi = {
 }
 
 export const canopyApi = {
-  snapshot: () => get<CanopySnapshot>('/canopy/snapshot'),
+  snapshot: (options?: { project?: string; sort?: string; view?: string }) =>
+    get<CanopySnapshot>('/canopy/snapshot', {
+      project: options?.project ?? '',
+      sort: options?.sort ?? '',
+      view: options?.view ?? '',
+    }),
   task: (taskId: string) => get<CanopyTaskDetail>(`/canopy/tasks/${encodeURIComponent(taskId)}`),
 }
 

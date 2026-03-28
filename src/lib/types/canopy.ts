@@ -1,4 +1,5 @@
 export type CanopyAgentStatus = 'idle' | 'assigned' | 'in_progress' | 'blocked' | 'review_required'
+export type CanopyAgentHeartbeatSource = 'register' | 'heartbeat' | 'task_sync'
 export type CanopyTaskStatus = 'open' | 'assigned' | 'in_progress' | 'blocked' | 'review_required' | 'completed' | 'closed' | 'cancelled'
 export type CanopyVerificationState = 'unknown' | 'pending' | 'passed' | 'failed'
 export type CanopyHandoffStatus = 'open' | 'accepted' | 'rejected' | 'expired' | 'cancelled' | 'completed'
@@ -35,11 +36,22 @@ export interface CanopyAgentRegistration {
   worktree_id: string
 }
 
+export interface CanopyAgentHeartbeatEvent {
+  agent_id: string
+  created_at: string
+  current_task_id: string | null
+  heartbeat_id: string
+  related_task_id: string | null
+  source: CanopyAgentHeartbeatSource
+  status: CanopyAgentStatus
+}
+
 export interface CanopyTask {
   blocked_reason: string | null
   closed_at: string | null
   closed_by: string | null
   closure_summary: string | null
+  created_at: string
   description: string | null
   owner_agent_id: string | null
   project_root: string
@@ -47,6 +59,7 @@ export interface CanopyTask {
   status: CanopyTaskStatus
   task_id: string
   title: string
+  updated_at: string
   verification_state: CanopyVerificationState
   verified_at: string | null
   verified_by: string | null
@@ -66,14 +79,17 @@ export interface CanopyTaskEvent {
 }
 
 export interface CanopyHandoff {
+  created_at: string
   from_agent_id: string
   handoff_id: string
   handoff_type: CanopyHandoffType
   requested_action: string | null
+  resolved_at: string | null
   status: CanopyHandoffStatus
   summary: string
   task_id: string
   to_agent_id: string
+  updated_at: string
 }
 
 export interface CanopyCouncilMessage {
@@ -88,6 +104,10 @@ export interface CanopyEvidenceRef {
   evidence_id: string
   label: string
   related_handoff_id: string | null
+  related_file: string | null
+  related_memory_query: string | null
+  related_session_id: string | null
+  related_symbol: string | null
   source_kind: CanopyEvidenceSourceKind
   source_ref: string
   summary: string | null
@@ -97,6 +117,7 @@ export interface CanopyEvidenceRef {
 export interface CanopySnapshot {
   agents: CanopyAgentRegistration[]
   evidence: CanopyEvidenceRef[]
+  heartbeats: CanopyAgentHeartbeatEvent[]
   handoffs: CanopyHandoff[]
   tasks: CanopyTask[]
 }
@@ -104,6 +125,7 @@ export interface CanopySnapshot {
 export interface CanopyTaskDetail {
   evidence: CanopyEvidenceRef[]
   events: CanopyTaskEvent[]
+  heartbeats: CanopyAgentHeartbeatEvent[]
   handoffs: CanopyHandoff[]
   messages: CanopyCouncilMessage[]
   task: CanopyTask

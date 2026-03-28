@@ -2,7 +2,7 @@ import { Badge, Button, Divider, Grid, Group, Modal, ScrollArea, Select, Stack, 
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
-import type { CanopyTask, CanopyTaskDetail, CanopyTaskEvent, CanopyTaskStatus } from '../lib/api'
+import type { CanopyAgentHeartbeatEvent, CanopyTask, CanopyTaskDetail, CanopyTaskEvent, CanopyTaskStatus } from '../lib/api'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
@@ -41,87 +41,88 @@ const SAVED_VIEW_OPTIONS = [
 const SORT_OPTIONS = [
   { label: 'Status order', value: 'status' },
   { label: 'Title', value: 'title' },
-  { label: 'Owner', value: 'owner' },
+  { label: 'Last updated', value: 'updated_at' },
+  { label: 'Created at', value: 'created_at' },
   { label: 'Verification state', value: 'verification' },
 ] as const
 
 type CanopySavedView = (typeof SAVED_VIEW_OPTIONS)[number]['value']
 type CanopySortMode = (typeof SORT_OPTIONS)[number]['value']
+const SAVED_VIEW_VALUES = new Set<CanopySavedView>(SAVED_VIEW_OPTIONS.map((option) => option.value))
+const SORT_VALUES = new Set<CanopySortMode>(SORT_OPTIONS.map((option) => option.value))
+const STATUS_FILTER_VALUES = new Set<string>(STATUS_FILTER_OPTIONS.map((option) => option.value))
 
 interface EvidenceLink {
   label: string
   to: string
 }
 
-function compareText(left: string | null | undefined, right: string | null | undefined): number {
-  return (left ?? '').localeCompare(right ?? '', undefined, { sensitivity: 'base' })
+function ageHours(dateStr: string | null | undefined): number | null {
+  if (!dateStr) return null
+  const timestamp = new Date(dateStr).getTime()
+  if (Number.isNaN(timestamp)) return null
+  return (Date.now() - timestamp) / 3_600_000
 }
 
-function taskSortValue(task: CanopyTask, sortMode: CanopySortMode): string {
-  switch (sortMode) {
-    case 'owner':
-      return task.owner_agent_id ?? ''
-    case 'verification':
-      return task.verification_state
-    default:
-      return task.title
-  }
+function isOpenTask(task: CanopyTask): boolean {
+  return ['open', 'assigned', 'in_progress', 'blocked', 'review_required'].includes(task.status)
 }
 
-function sortTasks(tasks: CanopyTask[], sortMode: CanopySortMode): CanopyTask[] {
-  const next = [...tasks]
-
-  next.sort((left, right) => {
-    const primary = compareText(taskSortValue(left, sortMode), taskSortValue(right, sortMode))
-    if (primary !== 0) return primary
-    return compareText(left.title, right.title)
-  })
-
-  return next
+function taskAgeTone(task: CanopyTask): { color: string; label: string } {
+  const age = ageHours(task.updated_at)
+  if (!isOpenTask(task) || age == null) return { color: 'gray', label: 'stable' }
+  if (age >= 24) return { color: 'red', label: 'stale' }
+  if (age >= 6) return { color: 'yellow', label: 'aging' }
+  return { color: 'green', label: 'fresh' }
 }
 
-function matchesSavedView(task: CanopyTask, openHandoffTaskIds: Set<string>, view: CanopySavedView): boolean {
-  switch (view) {
-    case 'active':
-      return ['open', 'assigned', 'in_progress'].includes(task.status)
-    case 'blocked':
-      return task.status === 'blocked' || task.verification_state === 'failed'
-    case 'review':
-      return task.status === 'review_required' || task.verification_state === 'pending'
-    case 'handoffs':
-      return openHandoffTaskIds.has(task.task_id)
-    default:
-      return true
-  }
+function handoffAgeTone(createdAt: string, status: string): { color: string; label: string } {
+  const age = ageHours(createdAt)
+  if (status !== 'open' || age == null) return { color: 'gray', label: 'resolved' }
+  if (age >= 24) return { color: 'red', label: 'stale' }
+  if (age >= 6) return { color: 'yellow', label: 'aging' }
+  return { color: 'green', label: 'fresh' }
 }
 
-function evidenceSearchQuery(item: CanopyTaskDetail['evidence'][number]): string {
-  return item.source_ref.trim() || item.label.trim()
+function heartbeatSourceLabel(source: CanopyAgentHeartbeatEvent['source']): string {
+  if (source === 'task_sync') return 'task sync'
+  return source
 }
 
 function evidenceLinks(item: CanopyTaskDetail['evidence'][number]): EvidenceLink[] {
-  const query = evidenceSearchQuery(item)
+  const links: EvidenceLink[] = []
 
-  switch (item.source_kind) {
-    case 'hyphae_session':
-      return [
-        { label: 'Open session', to: sessionsHref({ session: item.source_ref }) },
-        { label: 'Search session memories', to: memoriesHref({ q: query }) },
-      ]
-    case 'hyphae_recall':
-    case 'hyphae_outcome':
-    case 'cortina_event':
-    case 'manual_note':
-      return [{ label: 'Search memories', to: memoriesHref({ q: query }) }]
-    case 'rhizome_impact':
-    case 'rhizome_export':
-      return [{ label: 'Open code explorer', to: codeExplorerHref({ filter: query }) }]
-    case 'mycelium_command':
-    case 'mycelium_explain':
-      return [{ label: 'Open sessions', to: sessionsHref() }]
-    default:
-      return []
+  if (item.related_session_id) {
+    links.push({ label: 'Open session', to: sessionsHref({ session: item.related_session_id }) })
+  } else if (item.source_kind === 'hyphae_session') {
+    links.push({ label: 'Open session', to: sessionsHref({ session: item.source_ref }) })
   }
+
+  if (item.related_memory_query) {
+    links.push({ label: 'Search memories', to: memoriesHref({ q: item.related_memory_query }) })
+  } else if (item.source_kind === 'hyphae_session') {
+    links.push({ label: 'Search session memories', to: memoriesHref({ q: item.source_ref }) })
+  } else if (['hyphae_recall', 'hyphae_outcome', 'cortina_event', 'manual_note'].includes(item.source_kind)) {
+    links.push({ label: 'Search memories', to: memoriesHref({ q: item.source_ref }) })
+  }
+
+  if (item.related_file || item.related_symbol) {
+    links.push({
+      label: 'Open code explorer',
+      to: codeExplorerHref({
+        file: item.related_file ?? undefined,
+        symbol: item.related_symbol ?? undefined,
+      }),
+    })
+  } else if (item.source_kind === 'rhizome_impact' || item.source_kind === 'rhizome_export') {
+    links.push({ label: 'Open code explorer', to: codeExplorerHref({ filter: item.source_ref }) })
+  }
+
+  if (links.length === 0 && (item.source_kind === 'mycelium_command' || item.source_kind === 'mycelium_explain')) {
+    links.push({ label: 'Open sessions', to: sessionsHref() })
+  }
+
+  return links
 }
 
 function statusColor(status: CanopyTaskStatus): string {
@@ -191,10 +192,20 @@ function TaskStatusBadge({ task }: { task: CanopyTask }) {
 }
 
 function TaskCard({ onOpen, task }: { onOpen: (taskId: string) => void; task: CanopyTask }) {
+  const freshness = taskAgeTone(task)
+
   return (
     <SectionCard title={task.title}>
       <Stack gap='sm'>
-        <TaskStatusBadge task={task} />
+        <Group justify='space-between'>
+          <TaskStatusBadge task={task} />
+          <Badge
+            color={freshness.color}
+            variant='outline'
+          >
+            {freshness.label}
+          </Badge>
+        </Group>
         {task.description ? <Text size='sm'>{task.description}</Text> : null}
         <Group gap='xs'>
           <Text
@@ -229,12 +240,20 @@ function TaskCard({ onOpen, task }: { onOpen: (taskId: string) => void; task: Ca
           </Text>
         ) : null}
         <Group justify='space-between'>
-          <Text
-            c='dimmed'
-            size='xs'
-          >
-            {task.project_root}
-          </Text>
+          <Stack gap={2}>
+            <Text
+              c='dimmed'
+              size='xs'
+            >
+              {task.project_root}
+            </Text>
+            <Text
+              c='dimmed'
+              size='xs'
+            >
+              Updated {timeAgo(task.updated_at, { allowMonths: true })}
+            </Text>
+          </Stack>
           <Button
             onClick={() => onOpen(task.task_id)}
             size='xs'
@@ -265,6 +284,26 @@ function TaskDetailModal({ detail, opened, onClose }: { detail: CanopyTaskDetail
             <Stack gap='xs'>
               <TaskStatusBadge task={detail.task} />
               <Text size='sm'>Task ID: {detail.task.task_id}</Text>
+              <Group gap='xs'>
+                <Badge
+                  color={taskAgeTone(detail.task).color}
+                  variant='outline'
+                >
+                  {taskAgeTone(detail.task).label}
+                </Badge>
+                <Text
+                  c='dimmed'
+                  size='sm'
+                >
+                  Created {timeAgo(detail.task.created_at, { allowMonths: true })}
+                </Text>
+                <Text
+                  c='dimmed'
+                  size='sm'
+                >
+                  Updated {timeAgo(detail.task.updated_at, { allowMonths: true })}
+                </Text>
+              </Group>
               {detail.task.description ? <Text size='sm'>{detail.task.description}</Text> : null}
               {detail.task.closure_summary ? <Text size='sm'>Closure summary: {detail.task.closure_summary}</Text> : null}
             </Stack>
@@ -331,41 +370,123 @@ function TaskDetailModal({ detail, opened, onClose }: { detail: CanopyTaskDetail
               <EmptyState>No lifecycle events recorded for this task yet.</EmptyState>
             )}
 
-            <Divider label='Handoffs' />
-            {detail.handoffs.length > 0 ? (
+            <Divider label='Heartbeats' />
+            {detail.heartbeats.length > 0 ? (
               <Stack gap='xs'>
-                {detail.handoffs.map((handoff) => (
+                {detail.heartbeats.map((heartbeat) => (
                   <SectionCard
-                    key={handoff.handoff_id}
+                    key={heartbeat.heartbeat_id}
                     p='sm'
                   >
                     <Stack gap={4}>
-                      <Group gap='xs'>
-                        <Badge
-                          color={handoff.status === 'open' ? 'yellow' : 'gray'}
+                      <Group justify='space-between'>
+                        <Group gap='xs'>
+                          <Badge
+                            color='blue'
+                            size='xs'
+                            variant='light'
+                          >
+                            {heartbeat.status}
+                          </Badge>
+                          <Badge
+                            color='gray'
+                            size='xs'
+                            variant='outline'
+                          >
+                            {heartbeatSourceLabel(heartbeat.source)}
+                          </Badge>
+                        </Group>
+                        <Text
+                          c='dimmed'
                           size='xs'
-                          variant='light'
                         >
-                          {handoff.status}
-                        </Badge>
-                        <Badge
-                          color='grape'
-                          size='xs'
-                          variant='outline'
-                        >
-                          {handoff.handoff_type}
-                        </Badge>
+                          {timeAgo(heartbeat.created_at, { allowMonths: true })}
+                        </Text>
                       </Group>
-                      <Text size='sm'>{handoff.summary}</Text>
-                      <Text
-                        c='dimmed'
-                        size='sm'
-                      >
-                        {handoff.from_agent_id} → {handoff.to_agent_id}
-                      </Text>
+                      <Text size='sm'>Agent: {heartbeat.agent_id}</Text>
+                      {heartbeat.current_task_id ? (
+                        <Text
+                          c='dimmed'
+                          size='sm'
+                        >
+                          Current task {heartbeat.current_task_id}
+                        </Text>
+                      ) : null}
+                      {heartbeat.related_task_id ? (
+                        <Text
+                          c='dimmed'
+                          size='sm'
+                        >
+                          Related task {heartbeat.related_task_id}
+                        </Text>
+                      ) : null}
                     </Stack>
                   </SectionCard>
                 ))}
+              </Stack>
+            ) : (
+              <EmptyState>No heartbeat history recorded for this task yet.</EmptyState>
+            )}
+
+            <Divider label='Handoffs' />
+            {detail.handoffs.length > 0 ? (
+              <Stack gap='xs'>
+                {detail.handoffs.map((handoff) => {
+                  const freshness = handoffAgeTone(handoff.created_at, handoff.status)
+                  return (
+                    <SectionCard
+                      key={handoff.handoff_id}
+                      p='sm'
+                    >
+                      <Stack gap={4}>
+                        <Group gap='xs'>
+                          <Badge
+                            color={handoff.status === 'open' ? 'yellow' : 'gray'}
+                            size='xs'
+                            variant='light'
+                          >
+                            {handoff.status}
+                          </Badge>
+                          <Badge
+                            color='grape'
+                            size='xs'
+                            variant='outline'
+                          >
+                            {handoff.handoff_type}
+                          </Badge>
+                          <Badge
+                            color={freshness.color}
+                            size='xs'
+                            variant='outline'
+                          >
+                            {freshness.label}
+                          </Badge>
+                        </Group>
+                        <Text size='sm'>{handoff.summary}</Text>
+                        <Text
+                          c='dimmed'
+                          size='sm'
+                        >
+                          {handoff.from_agent_id} → {handoff.to_agent_id}
+                        </Text>
+                        <Text
+                          c='dimmed'
+                          size='sm'
+                        >
+                          Created {timeAgo(handoff.created_at, { allowMonths: true })}
+                        </Text>
+                        {handoff.resolved_at ? (
+                          <Text
+                            c='dimmed'
+                            size='sm'
+                          >
+                            Resolved {timeAgo(handoff.resolved_at, { allowMonths: true })}
+                          </Text>
+                        ) : null}
+                      </Stack>
+                    </SectionCard>
+                  )
+                })}
               </Stack>
             ) : (
               <EmptyState>No handoffs attached to this task.</EmptyState>
@@ -463,28 +584,29 @@ export function Canopy() {
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedTaskId = searchParams.get('task') ?? ''
   const searchQuery = searchParams.get('q') ?? ''
-  const sortMode = (searchParams.get('sort') ?? 'status') as CanopySortMode
-  const statusFilter = searchParams.get('status') ?? 'all'
-  const savedView = (searchParams.get('view') ?? 'all') as CanopySavedView
+  const sortParam = searchParams.get('sort')
+  const statusParam = searchParams.get('status')
+  const viewParam = searchParams.get('view')
+  const sortMode: CanopySortMode = sortParam && SORT_VALUES.has(sortParam as CanopySortMode) ? (sortParam as CanopySortMode) : 'status'
+  const statusFilter = statusParam && STATUS_FILTER_VALUES.has(statusParam) ? statusParam : 'all'
+  const savedView: CanopySavedView =
+    viewParam && SAVED_VIEW_VALUES.has(viewParam as CanopySavedView) ? (viewParam as CanopySavedView) : 'all'
   const modalOpen = Boolean(selectedTaskId)
   const { data: project } = useProject()
-  const snapshotQuery = useCanopySnapshot()
-  const detailQuery = useCanopyTaskDetail(selectedTaskId)
-
   const activeProject = project?.active ?? null
+  const snapshotQuery = useCanopySnapshot({
+    project: activeProject ?? undefined,
+    sort: sortMode,
+    view: savedView,
+  })
+  const detailQuery = useCanopyTaskDetail(selectedTaskId)
   const snapshot = snapshotQuery.data
-  const openHandoffTaskIds = useMemo(
-    () => new Set((snapshot?.handoffs ?? []).filter((handoff) => handoff.status === 'open').map((handoff) => handoff.task_id)),
-    [snapshot]
-  )
   const filteredTasks = useMemo(() => {
     if (!snapshot) return []
-    const baseTasks = !activeProject ? snapshot.tasks : snapshot.tasks.filter((task) => task.project_root === activeProject)
     const normalizedQuery = searchQuery.trim().toLowerCase()
 
-    const next = baseTasks.filter((task) => {
+    return snapshot.tasks.filter((task) => {
       const matchesStatus = statusFilter === 'all' || task.status === statusFilter
-      const matchesView = matchesSavedView(task, openHandoffTaskIds, savedView)
       const matchesQuery =
         normalizedQuery.length === 0 ||
         task.title.toLowerCase().includes(normalizedQuery) ||
@@ -492,18 +614,15 @@ export function Canopy() {
         task.task_id.toLowerCase().includes(normalizedQuery) ||
         (task.owner_agent_id?.toLowerCase().includes(normalizedQuery) ?? false)
 
-      return matchesStatus && matchesView && matchesQuery
+      return matchesStatus && matchesQuery
     })
-
-    return sortTasks(next, sortMode)
-  }, [activeProject, openHandoffTaskIds, savedView, searchQuery, snapshot, sortMode, statusFilter])
+  }, [searchQuery, snapshot, statusFilter])
 
   const filteredTaskIds = new Set(filteredTasks.map((task) => task.task_id))
   const filteredAgents = useMemo(() => {
     if (!snapshot) return []
-    if (!activeProject) return snapshot.agents
-    return snapshot.agents.filter((agent) => agent.project_root === activeProject)
-  }, [activeProject, snapshot])
+    return snapshot.agents.filter((agent) => agent.current_task_id && filteredTaskIds.has(agent.current_task_id))
+  }, [filteredTaskIds, snapshot])
   const filteredHandoffs = useMemo(
     () => snapshot?.handoffs.filter((handoff) => filteredTaskIds.has(handoff.task_id)) ?? [],
     [filteredTaskIds, snapshot]
@@ -512,13 +631,11 @@ export function Canopy() {
     () => snapshot?.evidence.filter((item) => filteredTaskIds.has(item.task_id)) ?? [],
     [filteredTaskIds, snapshot]
   )
+  const renderGroupedByStatus = sortMode === 'status'
 
   const groupedTasks = STATUS_ORDER.map((status) => ({
     status,
-    tasks: sortTasks(
-      filteredTasks.filter((task) => task.status === status),
-      sortMode
-    ),
+    tasks: filteredTasks.filter((task) => task.status === status),
   })).filter((group) => group.tasks.length > 0)
 
   const updateSearchParams = (
@@ -623,7 +740,7 @@ export function Canopy() {
             c='dimmed'
             size='xs'
           >
-            {SAVED_VIEW_OPTIONS.find((view) => view.value === savedView)?.description}
+            {SAVED_VIEW_OPTIONS.find((view) => view.value === savedView)?.description}. Runtime sort: {sortMode.replaceAll('_', ' ')}.
           </Text>
         </Stack>
       </SectionCard>
@@ -681,6 +798,18 @@ export function Canopy() {
               ? 'No Canopy tasks match the current filters.'
               : 'No Canopy tasks are in scope for the active project yet.'}
           </EmptyState>
+        </SectionCard>
+      ) : !renderGroupedByStatus ? (
+        <SectionCard title={`Tasks (${filteredTasks.length})`}>
+          <Stack gap='md'>
+            {filteredTasks.map((task) => (
+              <TaskCard
+                key={task.task_id}
+                onOpen={openTask}
+                task={task}
+              />
+            ))}
+          </Stack>
         </SectionCard>
       ) : (
         <Stack gap='md'>

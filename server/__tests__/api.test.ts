@@ -291,20 +291,67 @@ describe('API Routes', () => {
     })
   })
 
+  describe('GET /api/canopy/snapshot', () => {
+    it('forwards project and normalized Canopy snapshot filters', async () => {
+      const snapshotSpy = vi.spyOn(canopy, 'getSnapshot').mockResolvedValue({
+        agents: [],
+        evidence: [],
+        handoffs: [],
+        heartbeats: [],
+        tasks: [],
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/snapshot?project=/workspace/cap&view=review&sort=updated_at')
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(snapshotSpy).toHaveBeenCalledWith({
+        projectRoot: '/workspace/cap',
+        sort: 'updated_at',
+        view: 'review',
+      })
+    })
+
+    it('drops invalid Canopy snapshot filters before invoking the backend', async () => {
+      const snapshotSpy = vi.spyOn(canopy, 'getSnapshot').mockResolvedValue({
+        agents: [],
+        evidence: [],
+        handoffs: [],
+        heartbeats: [],
+        tasks: [],
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/snapshot?project=/workspace/cap&view=bogus&sort=nope')
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(snapshotSpy).toHaveBeenCalledWith({
+        projectRoot: '/workspace/cap',
+        sort: undefined,
+        view: undefined,
+      })
+    })
+  })
+
   describe('GET /api/canopy', () => {
     it('forwards snapshot reads to Canopy', async () => {
       const snapshotSpy = vi.spyOn(canopy, 'getSnapshot').mockResolvedValue({
         agents: [{ agent_id: 'agent-1' }],
         evidence: [],
         handoffs: [],
+        heartbeats: [],
         tasks: [{ task_id: 'task-1', title: 'test task' }],
       })
 
-      const req = new Request('http://localhost:3001/api/canopy/snapshot')
+      const req = new Request('http://localhost:3001/api/canopy/snapshot?project=/workspace/cap&view=review&sort=updated_at')
       const res = await app.fetch(req)
 
       expect(res.status).toBe(200)
-      expect(snapshotSpy).toHaveBeenCalledWith()
+      expect(snapshotSpy).toHaveBeenCalledWith({
+        projectRoot: '/workspace/cap',
+        sort: 'updated_at',
+        view: 'review',
+      })
       await expect(res.json()).resolves.toMatchObject({
         agents: [{ agent_id: 'agent-1' }],
         tasks: [{ task_id: 'task-1', title: 'test task' }],
@@ -316,6 +363,7 @@ describe('API Routes', () => {
         events: [{ event_id: 'evt-1', event_type: 'created' }],
         evidence: [],
         handoffs: [],
+        heartbeats: [],
         messages: [],
         task: { task_id: 'task-1', title: 'test task' },
       })

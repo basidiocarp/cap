@@ -7,15 +7,16 @@ import { canopyApi, hyphaeApi, lspApi, myceliumApi, rhizomeApi, settingsApi, sta
 // Canopy
 
 export const canopyKeys = {
-  snapshot: () => ['canopy', 'snapshot'] as const,
+  snapshot: (options?: { project?: string; sort?: string; view?: string }) =>
+    ['canopy', 'snapshot', options?.project, options?.sort, options?.view] as const,
   task: (taskId: string) => ['canopy', 'task', taskId] as const,
 }
 
-export function useCanopySnapshot(enabled = true) {
+export function useCanopySnapshot(options?: { enabled?: boolean; project?: string; sort?: string; view?: string }) {
   return useQuery({
-    enabled,
-    queryFn: () => canopyApi.snapshot(),
-    queryKey: canopyKeys.snapshot(),
+    enabled: options?.enabled ?? true,
+    queryFn: () => canopyApi.snapshot({ project: options?.project, sort: options?.sort, view: options?.view }),
+    queryKey: canopyKeys.snapshot({ project: options?.project, sort: options?.sort, view: options?.view }),
   })
 }
 
