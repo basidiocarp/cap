@@ -50,6 +50,8 @@ export type CanopyAgentAttentionReason =
   | 'missing_heartbeat'
   | 'blocked_status'
   | 'review_required_status'
+export type CanopyOperatorActionKind = 'acknowledge_task' | 'verify_task' | 'reassign_task' | 'follow_up_handoff' | 'expire_handoff'
+export type CanopyOperatorActionTargetKind = 'task' | 'handoff'
 
 export interface CanopyAgentRegistration {
   agent_id: string
@@ -136,6 +138,15 @@ export interface CanopyHandoff {
   updated_at: string
 }
 
+export interface CanopyTaskAssignment {
+  assigned_at: string
+  assigned_by: string
+  assigned_to: string
+  assignment_id: string
+  reason: string | null
+  task_id: string
+}
+
 export interface CanopyHandoffAttention {
   freshness: CanopyFreshness
   handoff_id: string
@@ -176,6 +187,51 @@ export interface CanopyTaskAttention {
   task_id: string
 }
 
+export interface CanopyTaskOwnershipSummary {
+  assignment_count: number
+  current_owner_agent_id: string | null
+  last_assigned_at: string | null
+  last_assigned_by: string | null
+  last_assigned_to: string | null
+  last_assignment_reason: string | null
+  reassignment_count: number
+  task_id: string
+}
+
+export interface CanopyTaskHeartbeatSummary {
+  aging_agents: number
+  fresh_agents: number
+  heartbeat_count: number
+  last_heartbeat_at: string | null
+  missing_agents: number
+  related_agent_count: number
+  stale_agents: number
+  task_id: string
+}
+
+export interface CanopyAgentHeartbeatSummary {
+  agent_id: string
+  current_task_id: string | null
+  freshness: CanopyFreshness
+  heartbeat_count: number
+  last_heartbeat_at: string | null
+  last_status: CanopyAgentStatus | null
+}
+
+export interface CanopyOperatorAction {
+  action_id: string
+  agent_id: string | null
+  due_at: string | null
+  expires_at: string | null
+  handoff_id: string | null
+  kind: CanopyOperatorActionKind
+  level: CanopyAttentionLevel
+  summary: string
+  target_kind: CanopyOperatorActionTargetKind
+  task_id: string | null
+  title: string
+}
+
 export interface CanopySnapshotAttentionSummary {
   agents_needing_attention: number
   critical_tasks: number
@@ -187,24 +243,33 @@ export interface CanopySnapshotAttentionSummary {
 
 export interface CanopySnapshot {
   agent_attention: CanopyAgentAttention[]
+  agent_heartbeat_summaries: CanopyAgentHeartbeatSummary[]
   agents: CanopyAgentRegistration[]
   attention: CanopySnapshotAttentionSummary
   evidence: CanopyEvidenceRef[]
   heartbeats: CanopyAgentHeartbeatEvent[]
   handoff_attention: CanopyHandoffAttention[]
   handoffs: CanopyHandoff[]
+  operator_actions: CanopyOperatorAction[]
+  ownership: CanopyTaskOwnershipSummary[]
   task_attention: CanopyTaskAttention[]
+  task_heartbeat_summaries: CanopyTaskHeartbeatSummary[]
   tasks: CanopyTask[]
 }
 
 export interface CanopyTaskDetail {
   agent_attention: CanopyAgentAttention[]
+  agent_heartbeat_summaries: CanopyAgentHeartbeatSummary[]
+  assignments: CanopyTaskAssignment[]
   attention: CanopyTaskAttention
   evidence: CanopyEvidenceRef[]
   events: CanopyTaskEvent[]
+  heartbeat_summary: CanopyTaskHeartbeatSummary
   heartbeats: CanopyAgentHeartbeatEvent[]
   handoff_attention: CanopyHandoffAttention[]
   handoffs: CanopyHandoff[]
   messages: CanopyCouncilMessage[]
+  operator_actions: CanopyOperatorAction[]
+  ownership: CanopyTaskOwnershipSummary
   task: CanopyTask
 }

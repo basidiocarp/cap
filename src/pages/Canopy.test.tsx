@@ -31,6 +31,24 @@ const mockSnapshot: CanopySnapshot = {
       reasons: [],
     },
   ],
+  agent_heartbeat_summaries: [
+    {
+      agent_id: 'agent-2',
+      current_task_id: 'task-2',
+      freshness: 'stale',
+      heartbeat_count: 1,
+      last_heartbeat_at: '2026-03-27T10:05:00Z',
+      last_status: 'blocked',
+    },
+    {
+      agent_id: 'agent-1',
+      current_task_id: 'task-1',
+      freshness: 'fresh',
+      heartbeat_count: 3,
+      last_heartbeat_at: '2026-03-28T12:06:00Z',
+      last_status: 'in_progress',
+    },
+  ],
   agents: [
     {
       agent_id: 'agent-2',
@@ -103,6 +121,69 @@ const mockSnapshot: CanopySnapshot = {
       status: 'in_progress',
     },
   ],
+  operator_actions: [
+    {
+      action_id: 'action-1',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'verify_task',
+      level: 'needs_attention',
+      summary: 'Verify the UI changes before closing the task.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Verify pending review',
+    },
+    {
+      action_id: 'action-2',
+      agent_id: 'agent-2',
+      due_at: '2026-03-28T12:30:00Z',
+      expires_at: '2026-03-28T13:00:00Z',
+      handoff_id: 'handoff-1',
+      kind: 'follow_up_handoff',
+      level: 'needs_attention',
+      summary: 'Follow up on the open review handoff before it expires.',
+      target_kind: 'handoff',
+      task_id: 'task-1',
+      title: 'Review handoff aging',
+    },
+    {
+      action_id: 'action-3',
+      agent_id: 'agent-2',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'acknowledge_task',
+      level: 'critical',
+      summary: 'Acknowledge the blocked task before triage continues.',
+      target_kind: 'task',
+      task_id: 'task-2',
+      title: 'Acknowledge blocked task',
+    },
+  ],
+  ownership: [
+    {
+      assignment_count: 1,
+      current_owner_agent_id: 'agent-2',
+      last_assigned_at: '2026-03-27T10:00:00Z',
+      last_assigned_by: 'operator',
+      last_assigned_to: 'agent-2',
+      last_assignment_reason: 'adapter recovery owner',
+      reassignment_count: 0,
+      task_id: 'task-2',
+    },
+    {
+      assignment_count: 2,
+      current_owner_agent_id: 'agent-1',
+      last_assigned_at: '2026-03-28T12:04:00Z',
+      last_assigned_by: 'operator',
+      last_assigned_to: 'agent-1',
+      last_assignment_reason: 'handoff to strongest verifier',
+      reassignment_count: 1,
+      task_id: 'task-1',
+    },
+  ],
   task_attention: [
     {
       acknowledged: false,
@@ -120,6 +201,28 @@ const mockSnapshot: CanopySnapshot = {
       open_handoff_freshness: 'aging',
       owner_heartbeat_freshness: 'fresh',
       reasons: ['review_required', 'aging_open_handoff'],
+      task_id: 'task-1',
+    },
+  ],
+  task_heartbeat_summaries: [
+    {
+      aging_agents: 0,
+      fresh_agents: 0,
+      heartbeat_count: 1,
+      last_heartbeat_at: '2026-03-27T10:05:00Z',
+      missing_agents: 0,
+      related_agent_count: 1,
+      stale_agents: 1,
+      task_id: 'task-2',
+    },
+    {
+      aging_agents: 1,
+      fresh_agents: 1,
+      heartbeat_count: 3,
+      last_heartbeat_at: '2026-03-28T12:06:00Z',
+      missing_agents: 0,
+      related_agent_count: 2,
+      stale_agents: 0,
       task_id: 'task-1',
     },
   ],
@@ -175,6 +278,25 @@ const mockSnapshot: CanopySnapshot = {
 
 const mockTaskDetail: CanopyTaskDetail = {
   agent_attention: [mockSnapshot.agent_attention[1]],
+  agent_heartbeat_summaries: [mockSnapshot.agent_heartbeat_summaries[1]],
+  assignments: [
+    {
+      assigned_at: '2026-03-28T12:01:00Z',
+      assigned_by: 'operator',
+      assigned_to: 'agent-2',
+      assignment_id: 'assign-1',
+      reason: 'initial UI pass',
+      task_id: 'task-1',
+    },
+    {
+      assigned_at: '2026-03-28T12:04:00Z',
+      assigned_by: 'operator',
+      assigned_to: 'agent-1',
+      assignment_id: 'assign-2',
+      reason: 'handoff to strongest verifier',
+      task_id: 'task-1',
+    },
+  ],
   attention: mockSnapshot.task_attention[1],
   events: [
     {
@@ -257,6 +379,7 @@ const mockTaskDetail: CanopyTaskDetail = {
   ],
   handoff_attention: mockSnapshot.handoff_attention,
   handoffs: mockSnapshot.handoffs,
+  heartbeat_summary: mockSnapshot.task_heartbeat_summaries[1],
   heartbeats: mockSnapshot.heartbeats,
   messages: [
     {
@@ -267,8 +390,112 @@ const mockTaskDetail: CanopyTaskDetail = {
       task_id: 'task-1',
     },
   ],
+  operator_actions: mockSnapshot.operator_actions.filter((action) => action.task_id === 'task-1'),
+  ownership: mockSnapshot.ownership[1],
   task: mockSnapshot.tasks[1],
 }
+
+function snapshotForTaskIds(taskIds: string[]): CanopySnapshot {
+  const allowedTaskIds = new Set(taskIds)
+  const allowedAgentIds = new Set(
+    mockSnapshot.tasks
+      .filter((task) => allowedTaskIds.has(task.task_id))
+      .map((task) => task.owner_agent_id)
+      .filter(Boolean)
+  )
+  const orderedTasks = taskIds
+    .map((taskId) => mockSnapshot.tasks.find((task) => task.task_id === taskId))
+    .filter((task): task is CanopySnapshot['tasks'][number] => Boolean(task))
+
+  return {
+    ...mockSnapshot,
+    agent_attention: mockSnapshot.agent_attention.filter((attention) => {
+      const taskMatch = attention.current_task_id ? allowedTaskIds.has(attention.current_task_id) : false
+      return taskMatch || allowedAgentIds.has(attention.agent_id)
+    }),
+    agent_heartbeat_summaries: mockSnapshot.agent_heartbeat_summaries.filter((summary) => {
+      const taskMatch = summary.current_task_id ? allowedTaskIds.has(summary.current_task_id) : false
+      return taskMatch || allowedAgentIds.has(summary.agent_id)
+    }),
+    evidence: mockSnapshot.evidence.filter((item) => allowedTaskIds.has(item.task_id)),
+    handoff_attention: mockSnapshot.handoff_attention.filter((attention) => allowedTaskIds.has(attention.task_id)),
+    handoffs: mockSnapshot.handoffs.filter((handoff) => allowedTaskIds.has(handoff.task_id)),
+    heartbeats: mockSnapshot.heartbeats.filter((heartbeat) => {
+      const currentMatches = heartbeat.current_task_id ? allowedTaskIds.has(heartbeat.current_task_id) : false
+      const relatedMatches = heartbeat.related_task_id ? allowedTaskIds.has(heartbeat.related_task_id) : false
+      return currentMatches || relatedMatches
+    }),
+    operator_actions: mockSnapshot.operator_actions.filter((action) => (action.task_id ? allowedTaskIds.has(action.task_id) : false)),
+    ownership: mockSnapshot.ownership.filter((ownership) => allowedTaskIds.has(ownership.task_id)),
+    task_attention: mockSnapshot.task_attention.filter((attention) => allowedTaskIds.has(attention.task_id)),
+    task_heartbeat_summaries: mockSnapshot.task_heartbeat_summaries.filter((summary) => allowedTaskIds.has(summary.task_id)),
+    tasks: orderedTasks,
+  }
+}
+
+function responseKey(options?: {
+  acknowledged?: string
+  preset?: string
+  priorityAtLeast?: string
+  project?: string
+  severityAtLeast?: string
+  sort?: string
+  view?: string
+}): string {
+  return JSON.stringify({
+    acknowledged: options?.acknowledged ?? null,
+    preset: options?.preset ?? options?.view ?? 'default',
+    priorityAtLeast: options?.priorityAtLeast ?? null,
+    project: options?.project ?? null,
+    severityAtLeast: options?.severityAtLeast ?? null,
+    sort: options?.sort ?? null,
+  })
+}
+
+const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
+  [responseKey({ preset: 'critical', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'unacknowledged', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'unacknowledged', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'blocked', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'handoffs', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'handoffs', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'review_queue', project: '/workspace/cap', sort: 'updated_at' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'critical', project: '/workspace/cap', sort: 'attention' }), snapshotForTaskIds(['task-2'])],
+  [
+    responseKey({
+      acknowledged: 'true',
+      preset: 'default',
+      priorityAtLeast: 'critical',
+      project: '/workspace/cap',
+      severityAtLeast: 'critical',
+      sort: 'updated_at',
+    }),
+    snapshotForTaskIds(['task-1']),
+  ],
+  [
+    responseKey({
+      acknowledged: 'false',
+      preset: 'default',
+      priorityAtLeast: 'high',
+      project: '/workspace/cap',
+      severityAtLeast: 'critical',
+      sort: 'status',
+    }),
+    snapshotForTaskIds(['task-2']),
+  ],
+  [
+    responseKey({
+      preset: 'default',
+      priorityAtLeast: 'critical',
+      project: '/workspace/cap',
+      sort: 'status',
+    }),
+    snapshotForTaskIds(['task-2']),
+  ],
+  [responseKey({ preset: 'default', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2', 'task-1'])],
+  [responseKey({ preset: 'default', project: '/workspace/cap', sort: 'updated_at' }), snapshotForTaskIds(['task-1', 'task-2'])],
+  [responseKey({ project: '/workspace/cap', sort: 'updated_at' }), snapshotForTaskIds(['task-1', 'task-2'])],
+])
 
 const useCanopySnapshotMock = vi.fn(
   (options?: {
@@ -280,110 +507,15 @@ const useCanopySnapshotMock = vi.fn(
     sort?: string
     view?: string
   }) => {
-    let tasks = [...mockSnapshot.tasks]
+    const key = responseKey(options)
+    const data = SNAPSHOT_RESPONSES.get(key)
 
-    if (options?.project) {
-      tasks = tasks.filter((task) => task.project_root === options.project)
+    if (!data) {
+      throw new Error(`Unhandled Canopy snapshot test query: ${key}`)
     }
-
-    const preset = options?.preset ?? options?.view
-
-    if (preset === 'review_queue' || preset === 'review') {
-      tasks = tasks.filter((task) => task.status === 'review_required' || task.verification_state === 'pending')
-    }
-
-    if (preset === 'blocked') {
-      tasks = tasks.filter((task) => task.status === 'blocked' || task.verification_state === 'failed')
-    }
-
-    if (preset === 'active') {
-      tasks = tasks.filter((task) => ['open', 'assigned', 'in_progress'].includes(task.status))
-    }
-
-    if (preset === 'handoffs') {
-      const openTaskIds = new Set(mockSnapshot.handoffs.filter((handoff) => handoff.status === 'open').map((handoff) => handoff.task_id))
-      tasks = tasks.filter((task) => openTaskIds.has(task.task_id))
-    }
-
-    if (preset === 'attention') {
-      const attentionTaskIds = new Set(
-        mockSnapshot.task_attention.filter((attention) => attention.level !== 'normal').map((attention) => attention.task_id)
-      )
-      tasks = tasks.filter((task) => attentionTaskIds.has(task.task_id))
-    }
-
-    if (preset === 'critical') {
-      const criticalTaskIds = new Set(
-        mockSnapshot.task_attention.filter((attention) => attention.level === 'critical').map((attention) => attention.task_id)
-      )
-      tasks = tasks.filter((task) => criticalTaskIds.has(task.task_id))
-    }
-
-    if (preset === 'unacknowledged') {
-      const unacknowledgedTaskIds = new Set(
-        mockSnapshot.task_attention.filter((attention) => !attention.acknowledged).map((attention) => attention.task_id)
-      )
-      tasks = tasks.filter((task) => unacknowledgedTaskIds.has(task.task_id))
-    }
-
-    if (options?.priorityAtLeast) {
-      const priorityRank = { critical: 3, high: 2, low: 0, medium: 1 }
-      tasks = tasks.filter((task) => priorityRank[task.priority] >= priorityRank[options.priorityAtLeast as keyof typeof priorityRank])
-    }
-
-    if (options?.severityAtLeast) {
-      const severityRank = { critical: 4, high: 3, low: 1, medium: 2, none: 0 }
-      tasks = tasks.filter((task) => severityRank[task.severity] >= severityRank[options.severityAtLeast as keyof typeof severityRank])
-    }
-
-    if (options?.acknowledged === 'true') {
-      tasks = tasks.filter((task) => task.acknowledged_at)
-    }
-
-    if (options?.acknowledged === 'false') {
-      tasks = tasks.filter((task) => !task.acknowledged_at)
-    }
-
-    if (options?.sort === 'updated_at') {
-      tasks.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-    } else if (options?.sort === 'created_at') {
-      tasks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    } else if (options?.sort === 'title') {
-      tasks.sort((a, b) => a.title.localeCompare(b.title))
-    } else if (options?.sort === 'priority') {
-      const priorityRank = { critical: 3, high: 2, low: 0, medium: 1 }
-      tasks.sort((a, b) => priorityRank[b.priority] - priorityRank[a.priority])
-    } else if (options?.sort === 'severity') {
-      const severityRank = { critical: 4, high: 3, low: 1, medium: 2, none: 0 }
-      tasks.sort((a, b) => severityRank[b.severity] - severityRank[a.severity])
-    } else if (options?.sort === 'attention') {
-      const attentionMap = new Map(mockSnapshot.task_attention.map((attention) => [attention.task_id, attention]))
-      tasks.sort((a, b) => {
-        const rank = { critical: 2, needs_attention: 1, normal: 0 }
-        return rank[attentionMap.get(b.task_id)?.level ?? 'normal'] - rank[attentionMap.get(a.task_id)?.level ?? 'normal']
-      })
-    }
-
-    const taskIds = new Set(tasks.map((task) => task.task_id))
 
     return {
-      data: {
-        ...mockSnapshot,
-        agent_attention: mockSnapshot.agent_attention.filter((attention) => {
-          const taskMatch = attention.current_task_id ? taskIds.has(attention.current_task_id) : false
-          return taskMatch
-        }),
-        evidence: mockSnapshot.evidence.filter((item) => taskIds.has(item.task_id)),
-        handoff_attention: mockSnapshot.handoff_attention.filter((attention) => taskIds.has(attention.task_id)),
-        handoffs: mockSnapshot.handoffs.filter((handoff) => taskIds.has(handoff.task_id)),
-        heartbeats: mockSnapshot.heartbeats.filter((heartbeat) => {
-          const currentMatches = heartbeat.current_task_id ? taskIds.has(heartbeat.current_task_id) : false
-          const relatedMatches = heartbeat.related_task_id ? taskIds.has(heartbeat.related_task_id) : false
-          return currentMatches || relatedMatches
-        }),
-        task_attention: mockSnapshot.task_attention.filter((attention) => taskIds.has(attention.task_id)),
-        tasks,
-      },
+      data,
       error: null,
       isLoading: false,
     }
@@ -430,6 +562,8 @@ describe('Canopy page', () => {
     expect(screen.getByRole('button', { name: 'Critical · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Unacknowledged · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Open handoffs · 1' })).toBeInTheDocument()
+    expect(screen.getByText(/Assignments 2 · reassignments 1/)).toBeInTheDocument()
+    expect(screen.getByText('verify task')).toBeInTheDocument()
   })
 
   it('filters tasks by query and status from the URL', () => {
@@ -579,11 +713,21 @@ describe('Canopy page', () => {
     expect(screen.getAllByText('acknowledged').length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Operator note:/).length).toBeGreaterThan(0)
     expect(screen.getByText(/Owner heartbeat freshness:/)).toBeInTheDocument()
+    expect(screen.getByText('Runtime Summary')).toBeInTheDocument()
+    expect(screen.getByText('Current owner: agent-1')).toBeInTheDocument()
+    expect(screen.getByText('Assignments: 2')).toBeInTheDocument()
+    expect(screen.getByText(/Freshness: 1 fresh · 1 aging · 0 stale · 0 missing/)).toBeInTheDocument()
+    expect(screen.getByText('Verify pending review')).toBeInTheDocument()
+    expect(screen.getByText('Review handoff aging')).toBeInTheDocument()
     expect(await screen.findByText('Task created')).toBeInTheDocument()
     expect(screen.getByText('Triage updated')).toBeInTheDocument()
     expect(screen.getByText('Heartbeats')).toBeInTheDocument()
     expect(screen.getByText('Agent Attention')).toBeInTheDocument()
     expect(screen.getAllByText('Agent: agent-1').length).toBeGreaterThan(0)
+    expect(screen.getByText(/Heartbeats 3 · latest status in_progress/)).toBeInTheDocument()
+    expect(screen.getByText('Assignments')).toBeInTheDocument()
+    expect(screen.getByText('operator → agent-1')).toBeInTheDocument()
+    expect(screen.getAllByText('Reason: handoff to strongest verifier').length).toBeGreaterThan(0)
     expect(screen.getByText('Status changed to review_required')).toBeInTheDocument()
     expect(screen.getByText('Need review before closing')).toBeInTheDocument()
     expect(screen.getAllByText(/Due /).length).toBeGreaterThan(0)

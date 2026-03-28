@@ -1,0 +1,165 @@
+import type { CanopyOperatorAction, CanopySnapshot, CanopyTask, CanopyTaskStatus } from '../../lib/api'
+
+export const STATUS_ORDER: CanopyTaskStatus[] = [
+  'in_progress',
+  'review_required',
+  'blocked',
+  'assigned',
+  'open',
+  'completed',
+  'closed',
+  'cancelled',
+]
+
+export const STATUS_FILTER_OPTIONS = [
+  { label: 'All statuses', value: 'all' },
+  ...STATUS_ORDER.map((status) => ({
+    label: status.replaceAll('_', ' '),
+    value: status,
+  })),
+]
+
+export const SAVED_VIEW_OPTIONS = [
+  { description: 'Everything in the active project', label: 'All tasks', value: 'default' },
+  { description: 'Tasks Canopy already marks as needing attention', label: 'Needs attention', value: 'attention' },
+  { description: 'Review-required or pending verification', label: 'Review queue', value: 'review_queue' },
+  { description: 'Blocked tasks and failed verification', label: 'Blocked focus', value: 'blocked' },
+  { description: 'Tasks with open handoffs', label: 'Open handoffs', value: 'handoffs' },
+  { description: 'Critical tasks from the runtime attention model', label: 'Critical queue', value: 'critical' },
+  { description: 'Attention tasks that have not been acknowledged yet', label: 'Unacknowledged', value: 'unacknowledged' },
+] as const
+
+export const SORT_OPTIONS = [
+  { label: 'Status order', value: 'status' },
+  { label: 'Title', value: 'title' },
+  { label: 'Last updated', value: 'updated_at' },
+  { label: 'Created at', value: 'created_at' },
+  { label: 'Verification state', value: 'verification' },
+  { label: 'Priority', value: 'priority' },
+  { label: 'Severity', value: 'severity' },
+  { label: 'Attention', value: 'attention' },
+] as const
+
+export const PRIORITY_FILTER_OPTIONS = [
+  { label: 'Any priority', value: 'all' },
+  { label: 'Medium+', value: 'medium' },
+  { label: 'High+', value: 'high' },
+  { label: 'Critical only', value: 'critical' },
+] as const
+
+export const SEVERITY_FILTER_OPTIONS = [
+  { label: 'Any severity', value: 'all' },
+  { label: 'Low+', value: 'low' },
+  { label: 'Medium+', value: 'medium' },
+  { label: 'High+', value: 'high' },
+  { label: 'Critical only', value: 'critical' },
+] as const
+
+export const ACK_FILTER_OPTIONS = [
+  { label: 'All acknowledgment', value: 'all' },
+  { label: 'Acknowledged', value: 'true' },
+  { label: 'Unacknowledged', value: 'false' },
+] as const
+
+export type CanopySavedView = (typeof SAVED_VIEW_OPTIONS)[number]['value']
+export type CanopySortMode = (typeof SORT_OPTIONS)[number]['value']
+export type CanopyPriorityFilter = (typeof PRIORITY_FILTER_OPTIONS)[number]['value']
+export type CanopySeverityFilter = (typeof SEVERITY_FILTER_OPTIONS)[number]['value']
+export type CanopyAcknowledgedFilter = (typeof ACK_FILTER_OPTIONS)[number]['value']
+
+const SAVED_VIEW_VALUES = new Set<CanopySavedView>(SAVED_VIEW_OPTIONS.map((option) => option.value))
+const SORT_VALUES = new Set<CanopySortMode>(SORT_OPTIONS.map((option) => option.value))
+const STATUS_FILTER_VALUES = new Set<string>(STATUS_FILTER_OPTIONS.map((option) => option.value))
+const PRIORITY_FILTER_VALUES = new Set<CanopyPriorityFilter>(PRIORITY_FILTER_OPTIONS.map((option) => option.value))
+const SEVERITY_FILTER_VALUES = new Set<CanopySeverityFilter>(SEVERITY_FILTER_OPTIONS.map((option) => option.value))
+const ACK_FILTER_VALUES = new Set<CanopyAcknowledgedFilter>(ACK_FILTER_OPTIONS.map((option) => option.value))
+
+export interface CanopyViewState {
+  acknowledgedFilter: CanopyAcknowledgedFilter
+  priorityFilter: CanopyPriorityFilter
+  savedView: CanopySavedView
+  searchQuery: string
+  selectedTaskId: string
+  severityFilter: CanopySeverityFilter
+  sortMode: CanopySortMode
+  statusFilter: string
+}
+
+export function resolveCanopyViewState(searchParams: URLSearchParams): CanopyViewState {
+  const selectedTaskId = searchParams.get('task') ?? ''
+  const searchQuery = searchParams.get('q') ?? ''
+  const presetParam = searchParams.get('preset')
+  const priorityParam = searchParams.get('priority')
+  const severityParam = searchParams.get('severity')
+  const acknowledgedParam = searchParams.get('ack')
+  const sortParam = searchParams.get('sort')
+  const statusParam = searchParams.get('status')
+  const viewParam = searchParams.get('view')
+
+  const sortMode: CanopySortMode = sortParam && SORT_VALUES.has(sortParam as CanopySortMode) ? (sortParam as CanopySortMode) : 'status'
+  const statusFilter = statusParam && STATUS_FILTER_VALUES.has(statusParam) ? statusParam : 'all'
+  const legacyPreset = viewParam && SAVED_VIEW_VALUES.has(viewParam as CanopySavedView) ? (viewParam as CanopySavedView) : undefined
+  const savedView: CanopySavedView =
+    presetParam && SAVED_VIEW_VALUES.has(presetParam as CanopySavedView) ? (presetParam as CanopySavedView) : (legacyPreset ?? 'default')
+  const priorityFilter: CanopyPriorityFilter =
+    priorityParam && PRIORITY_FILTER_VALUES.has(priorityParam as CanopyPriorityFilter) ? (priorityParam as CanopyPriorityFilter) : 'all'
+  const severityFilter: CanopySeverityFilter =
+    severityParam && SEVERITY_FILTER_VALUES.has(severityParam as CanopySeverityFilter) ? (severityParam as CanopySeverityFilter) : 'all'
+  const acknowledgedFilter: CanopyAcknowledgedFilter =
+    acknowledgedParam && ACK_FILTER_VALUES.has(acknowledgedParam as CanopyAcknowledgedFilter)
+      ? (acknowledgedParam as CanopyAcknowledgedFilter)
+      : 'all'
+
+  return {
+    acknowledgedFilter,
+    priorityFilter,
+    savedView,
+    searchQuery,
+    selectedTaskId,
+    severityFilter,
+    sortMode,
+    statusFilter,
+  }
+}
+
+export function filterCanopyTasks(snapshot: CanopySnapshot | undefined, searchQuery: string, statusFilter: string): CanopyTask[] {
+  if (!snapshot) return []
+  const normalizedQuery = searchQuery.trim().toLowerCase()
+
+  return snapshot.tasks.filter((task) => {
+    const matchesStatus = statusFilter === 'all' || task.status === statusFilter
+    const matchesQuery =
+      normalizedQuery.length === 0 ||
+      task.title.toLowerCase().includes(normalizedQuery) ||
+      (task.description?.toLowerCase().includes(normalizedQuery) ?? false) ||
+      (task.owner_note?.toLowerCase().includes(normalizedQuery) ?? false) ||
+      task.task_id.toLowerCase().includes(normalizedQuery) ||
+      (task.owner_agent_id?.toLowerCase().includes(normalizedQuery) ?? false)
+
+    return matchesStatus && matchesQuery
+  })
+}
+
+export function groupOperatorActionsByTask(actions: CanopyOperatorAction[] | undefined): Map<string, CanopyOperatorAction[]> {
+  const grouped = new Map<string, CanopyOperatorAction[]>()
+
+  for (const action of actions ?? []) {
+    if (!action.task_id) continue
+    const existing = grouped.get(action.task_id)
+
+    if (existing) {
+      existing.push(action)
+    } else {
+      grouped.set(action.task_id, [action])
+    }
+  }
+
+  return grouped
+}
+
+export function groupTasksByStatus(tasks: CanopyTask[]) {
+  return STATUS_ORDER.map((status) => ({
+    status,
+    tasks: tasks.filter((task) => task.status === status),
+  })).filter((group) => group.tasks.length > 0)
+}
