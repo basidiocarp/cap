@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { CommandHistory, EcosystemStatus, ProjectInfo, RhizomeStatus, SessionTimelineRecord } from '../lib/api'
@@ -204,6 +205,125 @@ describe('Sessions page', () => {
     expect(screen.getByText('Tests passed')).toBeInTheDocument()
     expect(screen.getByText('mycelium cargo test')).toBeInTheDocument()
     expect(screen.getByText('800 tokens saved')).toBeInTheDocument()
+  })
+
+  it('opens a session detail drilldown with the full event and command trace', async () => {
+    const user = userEvent.setup()
+    mockTimeline = [
+      {
+        ended_at: '2026-03-27T12:10:00Z',
+        errors: '["lint failed","test flake"]',
+        events: Array.from({ length: 9 }, (_, index) => ({
+          detail: `detail ${index + 1}`,
+          id: `evt_${index + 1}`,
+          kind: index === 0 ? 'recall' : 'outcome',
+          memory_count: index === 0 ? 2 : null,
+          occurred_at: `2026-03-27T12:0${Math.min(index, 9)}:00Z`,
+          recall_event_id: index === 0 ? `evt_${index + 1}` : 'evt_1',
+          signal_type: index === 0 ? null : 'test_passed',
+          signal_value: index === 0 ? null : 1,
+          source: index === 0 ? null : 'cortina.post_tool_use.test',
+          title: `Event ${index + 1}`,
+        })),
+        files_modified: '["src/pages/Sessions.tsx","server/hyphae.ts","src/lib/api.ts"]',
+        id: 'ses_detail',
+        last_activity_at: '2026-03-27T12:10:00Z',
+        outcome_count: 8,
+        project: 'cap',
+        recall_count: 1,
+        scope: 'worker-b',
+        started_at: '2026-03-27T12:00:00Z',
+        status: 'completed',
+        summary: 'Detailed session for drilldown coverage.',
+        task: 'session drilldown',
+      },
+    ]
+    mockCommandHistory = {
+      commands: [
+        {
+          command: 'mycelium cargo test',
+          filtered_tokens: 200,
+          original_tokens: 1000,
+          project_path: '/workspace/cap',
+          saved_tokens: 800,
+          savings_pct: 80,
+          timestamp: '2026-03-27T12:01:00Z',
+        },
+        {
+          command: 'mycelium cargo clippy',
+          filtered_tokens: 150,
+          original_tokens: 900,
+          project_path: '/workspace/cap',
+          saved_tokens: 750,
+          savings_pct: 83,
+          timestamp: '2026-03-27T12:02:00Z',
+        },
+        {
+          command: 'mycelium cargo fmt --check',
+          filtered_tokens: 100,
+          original_tokens: 400,
+          project_path: '/workspace/cap',
+          saved_tokens: 300,
+          savings_pct: 75,
+          timestamp: '2026-03-27T12:03:00Z',
+        },
+        {
+          command: 'mycelium cargo build',
+          filtered_tokens: 250,
+          original_tokens: 1100,
+          project_path: '/workspace/cap',
+          saved_tokens: 850,
+          savings_pct: 77,
+          timestamp: '2026-03-27T12:04:00Z',
+        },
+      ],
+      total: 4,
+    }
+
+    renderWithProviders(<Sessions />, { route: '/sessions' })
+
+    expect(screen.queryByText('Event 9')).not.toBeInTheDocument()
+    expect(screen.queryByText('mycelium cargo build')).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'View details' }))
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText('Summary')).toBeInTheDocument()
+    expect(screen.getByText('Files Modified (3)')).toBeInTheDocument()
+    expect(screen.getByText('Errors (2)')).toBeInTheDocument()
+    expect(screen.getByText('Activity (9)')).toBeInTheDocument()
+    expect(screen.getByText('Mycelium Commands (4)')).toBeInTheDocument()
+    expect(screen.getByText('Event 9')).toBeInTheDocument()
+    expect(screen.getByText('mycelium cargo build')).toBeInTheDocument()
+  })
+
+  it('preserves count-only error payloads in the session drilldown', async () => {
+    const user = userEvent.setup()
+    mockTimeline = [
+      {
+        ended_at: '2026-03-27T12:10:00Z',
+        errors: '2',
+        events: [],
+        files_modified: '["src/pages/Sessions.tsx"]',
+        id: 'ses_count_errors',
+        last_activity_at: '2026-03-27T12:10:00Z',
+        outcome_count: 0,
+        project: 'cap',
+        recall_count: 0,
+        scope: 'worker-c',
+        started_at: '2026-03-27T12:00:00Z',
+        status: 'completed',
+        summary: 'Count-only errors should still surface in drilldown.',
+        task: 'count errors',
+      },
+    ]
+
+    renderWithProviders(<Sessions />, { route: '/sessions' })
+
+    await user.click(screen.getByRole('button', { name: 'View details' }))
+
+    expect(screen.getByText('Errors (2)')).toBeInTheDocument()
+    expect(screen.getByText('2 recorded errors were attached to this session without individual detail payloads.')).toBeInTheDocument()
   })
 
   it('shows repair guidance when core tool coverage is missing', () => {
