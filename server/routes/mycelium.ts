@@ -28,8 +28,9 @@ app.get('/analytics', async (c) => {
 app.get('/history', async (c) => {
   try {
     const limit = c.req.query('limit')
+    const project = c.req.query('project')
     const clampedLimit = Math.min(Math.max(parseInt(limit ?? '50', 10), 10), 200)
-    const data = await mycelium.getCommandHistory(clampedLimit)
+    const data = await mycelium.getCommandHistory(clampedLimit, project ?? undefined)
     return c.json(data)
   } catch (err) {
     return c.json({ error: err instanceof Error ? err.message : 'Failed to get history' }, 500)

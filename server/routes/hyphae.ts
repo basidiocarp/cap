@@ -94,6 +94,13 @@ app.get('/sessions', (c) => {
   return c.json(hyphae.getSessions(project ?? undefined, clampedLimit))
 })
 
+app.get('/sessions/timeline', (c) => {
+  const project = c.req.query('project')
+  const limit = c.req.query('limit')
+  const clampedLimit = clampParam(limit, 20, 200)
+  return c.json(hyphae.getSessionTimeline(project ?? undefined, clampedLimit))
+})
+
 app.get('/lessons', (c) => {
   return c.json(hyphae.extractLessons())
 })

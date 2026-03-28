@@ -35,6 +35,8 @@ interface CommandHistoryEntry {
   command: string
   filtered_tokens: number
   original_tokens: number
+  project_path: string
+  saved_tokens: number
   savings_pct: number
   timestamp: string
 }
@@ -211,24 +213,43 @@ async function computeAnalytics() {
 
 export const getAnalytics = cachedAsync(computeAnalytics, 60_000)
 
-export async function getCommandHistory(limit = 50): Promise<CommandHistory> {
+function projectHistoryParams(projectPath?: string): [string | null, string | null] {
+  if (!projectPath?.trim()) return [null, null]
+  const trimmed = projectPath.trim().replace(/[\\/]+$/, '')
+  return [trimmed, `${trimmed}/*`]
+}
+
+export async function getCommandHistory(limit = 50, projectPath?: string): Promise<CommandHistory> {
   const db = getMyceliumDb()
   if (!db) {
     return { commands: [], total: 0 }
   }
 
   try {
+    const [projectExact, projectGlob] = projectHistoryParams(projectPath)
     const commands = db
       .prepare(
-        `SELECT timestamp, mycelium_cmd as command, input_tokens as original_tokens,
-                output_tokens as filtered_tokens, savings_pct
+        `SELECT timestamp,
+                mycelium_cmd as command,
+                project_path,
+                input_tokens as original_tokens,
+                output_tokens as filtered_tokens,
+                saved_tokens,
+                savings_pct
          FROM commands
+         WHERE (?1 IS NULL OR project_path = ?1 OR project_path GLOB ?2)
          ORDER BY timestamp DESC
-         LIMIT ?`
+         LIMIT ?3`
       )
-      .all(limit) as CommandHistoryEntry[]
+      .all(projectExact, projectGlob, limit) as CommandHistoryEntry[]
 
-    const totalRow = db.prepare('SELECT COUNT(*) as count FROM commands').get() as { count: number } | undefined
+    const totalRow = db
+      .prepare(
+        `SELECT COUNT(*) as count
+         FROM commands
+         WHERE (?1 IS NULL OR project_path = ?1 OR project_path GLOB ?2)`
+      )
+      .get(projectExact, projectGlob) as { count: number } | undefined
 
     return {
       commands,

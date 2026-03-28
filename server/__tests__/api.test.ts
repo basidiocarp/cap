@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as hyphae from '../hyphae'
 import { createApp } from '../index'
 import { registry } from '../lib/rhizome-registry'
+import * as mycelium from '../mycelium'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // API Route Tests
@@ -199,6 +200,92 @@ describe('API Routes', () => {
         offset: 400,
         query: 'router',
         total_concepts: 12,
+      })
+    })
+  })
+
+  describe('GET /api/hyphae/sessions/timeline', () => {
+    it('forwards project and limit parameters to the Hyphae timeline read model', async () => {
+      const timelineSpy = vi.spyOn(hyphae, 'getSessionTimeline').mockReturnValue([
+        {
+          ended_at: '2026-03-27T12:10:00Z',
+          errors: '0',
+          events: [
+            {
+              detail: 'fix session attribution',
+              id: 'rec_1',
+              kind: 'recall',
+              memory_count: 3,
+              occurred_at: '2026-03-27T12:05:00Z',
+              recall_event_id: 'rec_1',
+              signal_type: null,
+              signal_value: null,
+              source: null,
+              title: 'Recalled 3 memories',
+            },
+          ],
+          files_modified: '["src/page.tsx"]',
+          id: 'ses_1',
+          last_activity_at: '2026-03-27T12:10:00Z',
+          outcome_count: 0,
+          project: 'cap',
+          recall_count: 1,
+          scope: 'worker-a',
+          started_at: '2026-03-27T12:00:00Z',
+          status: 'completed',
+          summary: 'Wired timeline endpoint',
+          task: 'build session timeline',
+        },
+      ])
+
+      const req = new Request('http://localhost:3001/api/hyphae/sessions/timeline?project=cap&limit=50')
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(timelineSpy).toHaveBeenCalledWith('cap', 50)
+      await expect(res.json()).resolves.toMatchObject([
+        {
+          id: 'ses_1',
+          outcome_count: 0,
+          project: 'cap',
+          recall_count: 1,
+          scope: 'worker-a',
+        },
+      ])
+    })
+  })
+
+  describe('GET /api/mycelium/history', () => {
+    it('forwards project and limit filters to Mycelium history', async () => {
+      const historySpy = vi.spyOn(mycelium, 'getCommandHistory').mockResolvedValue({
+        commands: [
+          {
+            command: 'mycelium cargo test',
+            filtered_tokens: 200,
+            original_tokens: 1000,
+            project_path: '/workspace/cap',
+            saved_tokens: 800,
+            savings_pct: 80,
+            timestamp: '2026-03-27T12:00:00Z',
+          },
+        ],
+        total: 1,
+      })
+
+      const req = new Request('http://localhost:3001/api/mycelium/history?project=%2Fworkspace%2Fcap&limit=25')
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(historySpy).toHaveBeenCalledWith(25, '/workspace/cap')
+      await expect(res.json()).resolves.toMatchObject({
+        commands: [
+          {
+            command: 'mycelium cargo test',
+            project_path: '/workspace/cap',
+            saved_tokens: 800,
+          },
+        ],
+        total: 1,
       })
     })
   })

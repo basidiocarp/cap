@@ -21,6 +21,7 @@ export const hyphaeKeys = {
   recall: (q: string, topic?: string, limit?: number) => ['hyphae', 'recall', q, topic, limit] as const,
   searchGlobal: (q: string, limit?: number) => ['hyphae', 'searchGlobal', q, limit] as const,
   sessions: (project?: string, limit?: number) => ['hyphae', 'sessions', project, limit] as const,
+  sessionTimeline: (project?: string, limit?: number) => ['hyphae', 'sessions', 'timeline', project, limit] as const,
   sources: () => ['hyphae', 'sources'] as const,
   stats: () => ['hyphae', 'stats'] as const,
   topicMemories: (topic: string, limit?: number) => ['hyphae', 'topicMemories', topic, limit] as const,
@@ -116,6 +117,13 @@ export function useSessions(project?: string, limit?: number) {
   })
 }
 
+export function useSessionTimeline(project?: string, limit?: number) {
+  return useQuery({
+    queryFn: () => hyphaeApi.sessionTimeline(project, limit),
+    queryKey: hyphaeKeys.sessionTimeline(project, limit),
+  })
+}
+
 export function useLessons() {
   return useQuery({
     queryFn: () => hyphaeApi.lessons(),
@@ -175,7 +183,7 @@ export function useConsolidate() {
 
 export const myceliumKeys = {
   analytics: () => ['mycelium', 'analytics'] as const,
-  commandHistory: (limit?: number) => ['mycelium', 'commandHistory', limit] as const,
+  commandHistory: (limit?: number, project?: string) => ['mycelium', 'commandHistory', limit, project] as const,
   gain: () => ['mycelium', 'gain'] as const,
 }
 
@@ -191,11 +199,11 @@ export function useMyceliumAnalytics(enabled = true) {
   })
 }
 
-export function useCommandHistory(limit?: number, enabled = true) {
+export function useCommandHistory(limit?: number, enabled = true, project?: string) {
   return useQuery({
     enabled,
-    queryFn: () => myceliumApi.commandHistory(limit),
-    queryKey: myceliumKeys.commandHistory(limit),
+    queryFn: () => myceliumApi.commandHistory(limit, project),
+    queryKey: myceliumKeys.commandHistory(limit, project),
   })
 }
 

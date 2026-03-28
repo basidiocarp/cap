@@ -43,7 +43,7 @@ export type {
   SymbolLocation,
   TestFunction,
 } from './rhizome'
-export type { Lesson, SessionRecord } from './sessions'
+export type { Lesson, SessionRecord, SessionTimelineEntry, SessionTimelineRecord } from './sessions'
 export type { EcosystemSettings, LspInstallResult, LspLanguageStatus, LspStatusResult, Mode, ModeConfig, PruneResult } from './settings'
 export type {
   AgentRuntimeStatus,

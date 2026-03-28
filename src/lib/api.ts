@@ -42,6 +42,7 @@ import type {
   ScopeVariable,
   SearchResult,
   SessionRecord,
+  SessionTimelineRecord,
   SessionUsage,
   Stats,
   SymbolBody,
@@ -105,6 +106,8 @@ export type {
   ScopeVariable,
   SearchResult,
   SessionRecord,
+  SessionTimelineEntry,
+  SessionTimelineRecord,
   SessionUsage,
   Stats,
   SymbolBody,
@@ -212,6 +215,8 @@ export const hyphaeApi = {
   searchGlobal: (q: string, limit?: number) => get<Memory[]>('/hyphae/search-global', { limit: limit ? String(limit) : '', q }),
   sessions: (project?: string, limit?: number) =>
     get<SessionRecord[]>('/hyphae/sessions', { limit: limit ? String(limit) : '', project: project ?? '' }),
+  sessionTimeline: (project?: string, limit?: number) =>
+    get<SessionTimelineRecord[]>('/hyphae/sessions/timeline', { limit: limit ? String(limit) : '', project: project ?? '' }),
   sources: () => get<IngestionSource[]>('/hyphae/sources'),
   stats: () => get<Stats>('/hyphae/stats'),
   topicMemories: (topic: string, limit?: number) =>
@@ -223,7 +228,8 @@ export const hyphaeApi = {
 
 export const myceliumApi = {
   analytics: () => get<MyceliumAnalytics>('/mycelium/analytics'),
-  commandHistory: (limit?: number) => get<CommandHistory>('/mycelium/history', { limit: limit ? String(limit) : '' }),
+  commandHistory: (limit?: number, project?: string) =>
+    get<CommandHistory>('/mycelium/history', { limit: limit ? String(limit) : '', project: project ?? '' }),
   gain: () => get<GainResult>('/mycelium/gain'),
   gainHistory: () => get<GainResult>('/mycelium/gain/history'),
 }

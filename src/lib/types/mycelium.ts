@@ -18,6 +18,8 @@ export interface CommandHistoryEntry {
   command: string
   filtered_tokens: number
   original_tokens: number
+  project_path: string
+  saved_tokens: number
   savings_pct: number
   timestamp: string
 }
