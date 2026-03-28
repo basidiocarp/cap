@@ -3,7 +3,7 @@ import { CANOPY_BIN } from './lib/config.ts'
 
 const run = createCliRunner(CANOPY_BIN, 'canopy')
 const ALLOWED_SORTS = new Set(['status', 'title', 'updated_at', 'created_at', 'verification'])
-const ALLOWED_VIEWS = new Set(['all', 'active', 'blocked', 'review', 'handoffs'])
+const ALLOWED_VIEWS = new Set(['all', 'active', 'blocked', 'review', 'handoffs', 'attention'])
 
 function parseJson<T>(raw: string, label: string): T {
   try {

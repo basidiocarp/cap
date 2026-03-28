@@ -2,6 +2,8 @@ export type CanopyAgentStatus = 'idle' | 'assigned' | 'in_progress' | 'blocked' 
 export type CanopyAgentHeartbeatSource = 'register' | 'heartbeat' | 'task_sync'
 export type CanopyTaskStatus = 'open' | 'assigned' | 'in_progress' | 'blocked' | 'review_required' | 'completed' | 'closed' | 'cancelled'
 export type CanopyVerificationState = 'unknown' | 'pending' | 'passed' | 'failed'
+export type CanopyAttentionLevel = 'normal' | 'needs_attention' | 'critical'
+export type CanopyFreshness = 'fresh' | 'aging' | 'stale' | 'missing'
 export type CanopyHandoffStatus = 'open' | 'accepted' | 'rejected' | 'expired' | 'cancelled' | 'completed'
 export type CanopyHandoffType =
   | 'request_help'
@@ -22,6 +24,24 @@ export type CanopyEvidenceSourceKind =
   | 'rhizome_export'
   | 'manual_note'
 export type CanopyTaskEventType = 'created' | 'assigned' | 'ownership_transferred' | 'status_changed'
+export type CanopyTaskAttentionReason =
+  | 'blocked'
+  | 'verification_failed'
+  | 'review_required'
+  | 'aging_update'
+  | 'stale_update'
+  | 'aging_owner_heartbeat'
+  | 'stale_owner_heartbeat'
+  | 'missing_owner_heartbeat'
+  | 'aging_open_handoff'
+  | 'stale_open_handoff'
+export type CanopyHandoffAttentionReason = 'aging_open_handoff' | 'stale_open_handoff'
+export type CanopyAgentAttentionReason =
+  | 'aging_heartbeat'
+  | 'stale_heartbeat'
+  | 'missing_heartbeat'
+  | 'blocked_status'
+  | 'review_required_status'
 
 export interface CanopyAgentRegistration {
   agent_id: string
@@ -44,6 +64,15 @@ export interface CanopyAgentHeartbeatEvent {
   related_task_id: string | null
   source: CanopyAgentHeartbeatSource
   status: CanopyAgentStatus
+}
+
+export interface CanopyAgentAttention {
+  agent_id: string
+  current_task_id: string | null
+  freshness: CanopyFreshness
+  last_heartbeat_at: string | null
+  level: CanopyAttentionLevel
+  reasons: CanopyAgentAttentionReason[]
 }
 
 export interface CanopyTask {
@@ -92,6 +121,14 @@ export interface CanopyHandoff {
   updated_at: string
 }
 
+export interface CanopyHandoffAttention {
+  freshness: CanopyFreshness
+  handoff_id: string
+  level: CanopyAttentionLevel
+  reasons: CanopyHandoffAttentionReason[]
+  task_id: string
+}
+
 export interface CanopyCouncilMessage {
   author_agent_id: string
   body: string
@@ -114,18 +151,43 @@ export interface CanopyEvidenceRef {
   task_id: string
 }
 
+export interface CanopyTaskAttention {
+  freshness: CanopyFreshness
+  level: CanopyAttentionLevel
+  open_handoff_freshness: CanopyFreshness | null
+  owner_heartbeat_freshness: CanopyFreshness | null
+  reasons: CanopyTaskAttentionReason[]
+  task_id: string
+}
+
+export interface CanopySnapshotAttentionSummary {
+  agents_needing_attention: number
+  critical_tasks: number
+  handoffs_needing_attention: number
+  stale_agents: number
+  stale_handoffs: number
+  tasks_needing_attention: number
+}
+
 export interface CanopySnapshot {
+  agent_attention: CanopyAgentAttention[]
   agents: CanopyAgentRegistration[]
+  attention: CanopySnapshotAttentionSummary
   evidence: CanopyEvidenceRef[]
   heartbeats: CanopyAgentHeartbeatEvent[]
+  handoff_attention: CanopyHandoffAttention[]
   handoffs: CanopyHandoff[]
+  task_attention: CanopyTaskAttention[]
   tasks: CanopyTask[]
 }
 
 export interface CanopyTaskDetail {
+  agent_attention: CanopyAgentAttention[]
+  attention: CanopyTaskAttention
   evidence: CanopyEvidenceRef[]
   events: CanopyTaskEvent[]
   heartbeats: CanopyAgentHeartbeatEvent[]
+  handoff_attention: CanopyHandoffAttention[]
   handoffs: CanopyHandoff[]
   messages: CanopyCouncilMessage[]
   task: CanopyTask

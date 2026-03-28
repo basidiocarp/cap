@@ -2,7 +2,16 @@ import { Badge, Button, Divider, Grid, Group, Modal, ScrollArea, Select, Stack, 
 import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
-import type { CanopyAgentHeartbeatEvent, CanopyTask, CanopyTaskDetail, CanopyTaskEvent, CanopyTaskStatus } from '../lib/api'
+import type {
+  CanopyAgentHeartbeatEvent,
+  CanopyAttentionLevel,
+  CanopyFreshness,
+  CanopyTask,
+  CanopyTaskAttention,
+  CanopyTaskDetail,
+  CanopyTaskEvent,
+  CanopyTaskStatus,
+} from '../lib/api'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
@@ -36,6 +45,7 @@ const SAVED_VIEW_OPTIONS = [
   { description: 'Blocked tasks and failed verification', label: 'Blocked focus', value: 'blocked' },
   { description: 'Review-required or pending verification', label: 'Review queue', value: 'review' },
   { description: 'Tasks with open handoffs', label: 'Open handoffs', value: 'handoffs' },
+  { description: 'Tasks Canopy already marks as needing attention', label: 'Needs attention', value: 'attention' },
 ] as const
 
 const SORT_OPTIONS = [
@@ -57,31 +67,38 @@ interface EvidenceLink {
   to: string
 }
 
-function ageHours(dateStr: string | null | undefined): number | null {
-  if (!dateStr) return null
-  const timestamp = new Date(dateStr).getTime()
-  if (Number.isNaN(timestamp)) return null
-  return (Date.now() - timestamp) / 3_600_000
+function freshnessColor(freshness: CanopyFreshness | null | undefined): string {
+  switch (freshness) {
+    case 'fresh':
+      return 'green'
+    case 'aging':
+      return 'yellow'
+    case 'stale':
+      return 'red'
+    case 'missing':
+      return 'gray'
+    default:
+      return 'gray'
+  }
 }
 
-function isOpenTask(task: CanopyTask): boolean {
-  return ['open', 'assigned', 'in_progress', 'blocked', 'review_required'].includes(task.status)
+function attentionColor(level: CanopyAttentionLevel): string {
+  switch (level) {
+    case 'critical':
+      return 'red'
+    case 'needs_attention':
+      return 'yellow'
+    default:
+      return 'green'
+  }
 }
 
-function taskAgeTone(task: CanopyTask): { color: string; label: string } {
-  const age = ageHours(task.updated_at)
-  if (!isOpenTask(task) || age == null) return { color: 'gray', label: 'stable' }
-  if (age >= 24) return { color: 'red', label: 'stale' }
-  if (age >= 6) return { color: 'yellow', label: 'aging' }
-  return { color: 'green', label: 'fresh' }
+function formatLabel(value: string): string {
+  return value.replaceAll('_', ' ')
 }
 
-function handoffAgeTone(createdAt: string, status: string): { color: string; label: string } {
-  const age = ageHours(createdAt)
-  if (status !== 'open' || age == null) return { color: 'gray', label: 'resolved' }
-  if (age >= 24) return { color: 'red', label: 'stale' }
-  if (age >= 6) return { color: 'yellow', label: 'aging' }
-  return { color: 'green', label: 'fresh' }
+function joinedReasons(reasons: string[]): string {
+  return reasons.map(formatLabel).join(', ')
 }
 
 function heartbeatSourceLabel(source: CanopyAgentHeartbeatEvent['source']): string {
@@ -157,6 +174,11 @@ function verificationColor(state: string): string {
   }
 }
 
+function attentionSummaryLabel(level: CanopyAttentionLevel): string {
+  if (level === 'needs_attention') return 'needs attention'
+  return level
+}
+
 function eventTitle(event: CanopyTaskEvent): string {
   switch (event.event_type) {
     case 'created':
@@ -191,20 +213,28 @@ function TaskStatusBadge({ task }: { task: CanopyTask }) {
   )
 }
 
-function TaskCard({ onOpen, task }: { onOpen: (taskId: string) => void; task: CanopyTask }) {
-  const freshness = taskAgeTone(task)
-
+function TaskCard({ attention, onOpen, task }: { attention?: CanopyTaskAttention; onOpen: (taskId: string) => void; task: CanopyTask }) {
   return (
     <SectionCard title={task.title}>
       <Stack gap='sm'>
         <Group justify='space-between'>
           <TaskStatusBadge task={task} />
-          <Badge
-            color={freshness.color}
-            variant='outline'
-          >
-            {freshness.label}
-          </Badge>
+          {attention ? (
+            <Group gap='xs'>
+              <Badge
+                color={attentionColor(attention.level)}
+                variant='light'
+              >
+                {attentionSummaryLabel(attention.level)}
+              </Badge>
+              <Badge
+                color={freshnessColor(attention.freshness)}
+                variant='outline'
+              >
+                {attention.freshness}
+              </Badge>
+            </Group>
+          ) : null}
         </Group>
         {task.description ? <Text size='sm'>{task.description}</Text> : null}
         <Group gap='xs'>
@@ -239,6 +269,30 @@ function TaskCard({ onOpen, task }: { onOpen: (taskId: string) => void; task: Ca
             Closure: {task.closure_summary}
           </Text>
         ) : null}
+        {attention?.reasons.length ? (
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Attention: {joinedReasons(attention.reasons)}
+          </Text>
+        ) : null}
+        {attention?.owner_heartbeat_freshness ? (
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Owner heartbeat: {formatLabel(attention.owner_heartbeat_freshness)}
+          </Text>
+        ) : null}
+        {attention?.open_handoff_freshness ? (
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Open handoff: {formatLabel(attention.open_handoff_freshness)}
+          </Text>
+        ) : null}
         <Group justify='space-between'>
           <Stack gap={2}>
             <Text
@@ -267,7 +321,22 @@ function TaskCard({ onOpen, task }: { onOpen: (taskId: string) => void; task: Ca
   )
 }
 
-function TaskDetailModal({ detail, opened, onClose }: { detail: CanopyTaskDetail | undefined; opened: boolean; onClose: () => void }) {
+function TaskDetailModal({
+  detail,
+  error,
+  opened,
+  onClose,
+}: {
+  detail: CanopyTaskDetail | undefined
+  error: Error | null
+  opened: boolean
+  onClose: () => void
+}) {
+  const handoffAttentionById = useMemo(
+    () => new Map(detail?.handoff_attention.map((attention) => [attention.handoff_id, attention]) ?? []),
+    [detail?.handoff_attention]
+  )
+
   return (
     <Modal
       centered
@@ -277,7 +346,14 @@ function TaskDetailModal({ detail, opened, onClose }: { detail: CanopyTaskDetail
       title={detail?.task.title ?? 'Task detail'}
     >
       {!detail ? (
-        <PageLoader mt='md' />
+        error ? (
+          <Stack gap='md'>
+            <ErrorAlert error={error} />
+            <EmptyState>Could not load task detail for the selected Canopy task.</EmptyState>
+          </Stack>
+        ) : (
+          <PageLoader mt='md' />
+        )
       ) : (
         <ScrollArea.Autosize mah={560}>
           <Stack gap='md'>
@@ -286,10 +362,16 @@ function TaskDetailModal({ detail, opened, onClose }: { detail: CanopyTaskDetail
               <Text size='sm'>Task ID: {detail.task.task_id}</Text>
               <Group gap='xs'>
                 <Badge
-                  color={taskAgeTone(detail.task).color}
+                  color={attentionColor(detail.attention.level)}
+                  variant='light'
+                >
+                  {attentionSummaryLabel(detail.attention.level)}
+                </Badge>
+                <Badge
+                  color={freshnessColor(detail.attention.freshness)}
                   variant='outline'
                 >
-                  {taskAgeTone(detail.task).label}
+                  {detail.attention.freshness}
                 </Badge>
                 <Text
                   c='dimmed'
@@ -304,6 +386,30 @@ function TaskDetailModal({ detail, opened, onClose }: { detail: CanopyTaskDetail
                   Updated {timeAgo(detail.task.updated_at, { allowMonths: true })}
                 </Text>
               </Group>
+              {detail.attention.reasons.length ? (
+                <Text
+                  c='dimmed'
+                  size='sm'
+                >
+                  Attention reasons: {joinedReasons(detail.attention.reasons)}
+                </Text>
+              ) : null}
+              {detail.attention.owner_heartbeat_freshness ? (
+                <Text
+                  c='dimmed'
+                  size='sm'
+                >
+                  Owner heartbeat freshness: {formatLabel(detail.attention.owner_heartbeat_freshness)}
+                </Text>
+              ) : null}
+              {detail.attention.open_handoff_freshness ? (
+                <Text
+                  c='dimmed'
+                  size='sm'
+                >
+                  Open handoff freshness: {formatLabel(detail.attention.open_handoff_freshness)}
+                </Text>
+              ) : null}
               {detail.task.description ? <Text size='sm'>{detail.task.description}</Text> : null}
               {detail.task.closure_summary ? <Text size='sm'>Closure summary: {detail.task.closure_summary}</Text> : null}
             </Stack>
@@ -428,11 +534,71 @@ function TaskDetailModal({ detail, opened, onClose }: { detail: CanopyTaskDetail
               <EmptyState>No heartbeat history recorded for this task yet.</EmptyState>
             )}
 
+            <Divider label='Agent Attention' />
+            {detail.agent_attention.length > 0 ? (
+              <Stack gap='xs'>
+                {detail.agent_attention.map((attention) => (
+                  <SectionCard
+                    key={attention.agent_id}
+                    p='sm'
+                  >
+                    <Stack gap={4}>
+                      <Group justify='space-between'>
+                        <Group gap='xs'>
+                          <Badge
+                            color={attentionColor(attention.level)}
+                            size='xs'
+                            variant='light'
+                          >
+                            {attentionSummaryLabel(attention.level)}
+                          </Badge>
+                          <Badge
+                            color={freshnessColor(attention.freshness)}
+                            size='xs'
+                            variant='outline'
+                          >
+                            {attention.freshness}
+                          </Badge>
+                        </Group>
+                        {attention.last_heartbeat_at ? (
+                          <Text
+                            c='dimmed'
+                            size='xs'
+                          >
+                            {timeAgo(attention.last_heartbeat_at, { allowMonths: true })}
+                          </Text>
+                        ) : null}
+                      </Group>
+                      <Text size='sm'>Agent: {attention.agent_id}</Text>
+                      {attention.current_task_id ? (
+                        <Text
+                          c='dimmed'
+                          size='sm'
+                        >
+                          Current task {attention.current_task_id}
+                        </Text>
+                      ) : null}
+                      {attention.reasons.length ? (
+                        <Text
+                          c='dimmed'
+                          size='sm'
+                        >
+                          Reasons: {joinedReasons(attention.reasons)}
+                        </Text>
+                      ) : null}
+                    </Stack>
+                  </SectionCard>
+                ))}
+              </Stack>
+            ) : (
+              <EmptyState>No agent attention summary for this task yet.</EmptyState>
+            )}
+
             <Divider label='Handoffs' />
             {detail.handoffs.length > 0 ? (
               <Stack gap='xs'>
                 {detail.handoffs.map((handoff) => {
-                  const freshness = handoffAgeTone(handoff.created_at, handoff.status)
+                  const attention = handoffAttentionById.get(handoff.handoff_id)
                   return (
                     <SectionCard
                       key={handoff.handoff_id}
@@ -454,13 +620,24 @@ function TaskDetailModal({ detail, opened, onClose }: { detail: CanopyTaskDetail
                           >
                             {handoff.handoff_type}
                           </Badge>
-                          <Badge
-                            color={freshness.color}
-                            size='xs'
-                            variant='outline'
-                          >
-                            {freshness.label}
-                          </Badge>
+                          {attention ? (
+                            <>
+                              <Badge
+                                color={attentionColor(attention.level)}
+                                size='xs'
+                                variant='light'
+                              >
+                                {attentionSummaryLabel(attention.level)}
+                              </Badge>
+                              <Badge
+                                color={freshnessColor(attention.freshness)}
+                                size='xs'
+                                variant='outline'
+                              >
+                                {attention.freshness}
+                              </Badge>
+                            </>
+                          ) : null}
                         </Group>
                         <Text size='sm'>{handoff.summary}</Text>
                         <Text
@@ -475,6 +652,14 @@ function TaskDetailModal({ detail, opened, onClose }: { detail: CanopyTaskDetail
                         >
                           Created {timeAgo(handoff.created_at, { allowMonths: true })}
                         </Text>
+                        {attention?.reasons.length ? (
+                          <Text
+                            c='dimmed'
+                            size='sm'
+                          >
+                            Reasons: {joinedReasons(attention.reasons)}
+                          </Text>
+                        ) : null}
                         {handoff.resolved_at ? (
                           <Text
                             c='dimmed'
@@ -601,6 +786,10 @@ export function Canopy() {
   })
   const detailQuery = useCanopyTaskDetail(selectedTaskId)
   const snapshot = snapshotQuery.data
+  const taskAttentionById = useMemo(
+    () => new Map(snapshot?.task_attention.map((attention) => [attention.task_id, attention]) ?? []),
+    [snapshot?.task_attention]
+  )
   const filteredTasks = useMemo(() => {
     if (!snapshot) return []
     const normalizedQuery = searchQuery.trim().toLowerCase()
@@ -619,13 +808,34 @@ export function Canopy() {
   }, [searchQuery, snapshot, statusFilter])
 
   const filteredTaskIds = new Set(filteredTasks.map((task) => task.task_id))
+  const filteredOwnerAgentIds = new Set(filteredTasks.map((task) => task.owner_agent_id).filter(Boolean))
   const filteredAgents = useMemo(() => {
     if (!snapshot) return []
     return snapshot.agents.filter((agent) => agent.current_task_id && filteredTaskIds.has(agent.current_task_id))
   }, [filteredTaskIds, snapshot])
+  const filteredAgentIds = new Set(filteredAgents.map((agent) => agent.agent_id))
+  const filteredTaskAttention = useMemo(
+    () => snapshot?.task_attention.filter((attention) => filteredTaskIds.has(attention.task_id)) ?? [],
+    [filteredTaskIds, snapshot]
+  )
+  const filteredAgentAttention = useMemo(
+    () =>
+      snapshot?.agent_attention.filter(
+        (attention) =>
+          filteredAgentIds.has(attention.agent_id) ||
+          filteredOwnerAgentIds.has(attention.agent_id) ||
+          (attention.current_task_id ? filteredTaskIds.has(attention.current_task_id) : false)
+      ) ?? [],
+    [filteredAgentIds, filteredOwnerAgentIds, filteredTaskIds, snapshot]
+  )
   const filteredHandoffs = useMemo(
     () => snapshot?.handoffs.filter((handoff) => filteredTaskIds.has(handoff.task_id)) ?? [],
     [filteredTaskIds, snapshot]
+  )
+  const filteredHandoffIds = new Set(filteredHandoffs.map((handoff) => handoff.handoff_id))
+  const filteredHandoffAttention = useMemo(
+    () => snapshot?.handoff_attention.filter((attention) => filteredHandoffIds.has(attention.handoff_id)) ?? [],
+    [filteredHandoffIds, snapshot]
   )
   const filteredEvidence = useMemo(
     () => snapshot?.evidence.filter((item) => filteredTaskIds.has(item.task_id)) ?? [],
@@ -757,8 +967,8 @@ export function Canopy() {
           </SectionCard>
         </Grid.Col>
         <Grid.Col span={{ base: 6, md: 3 }}>
-          <SectionCard title='Blocked'>
-            <Text size='xl'>{filteredTasks.filter((task) => task.status === 'blocked').length}</Text>
+          <SectionCard title='Needs Attention'>
+            <Text size='xl'>{filteredTaskAttention.filter((attention) => attention.level !== 'normal').length}</Text>
           </SectionCard>
         </Grid.Col>
         <Grid.Col span={{ base: 6, md: 3 }}>
@@ -771,16 +981,28 @@ export function Canopy() {
       <SectionCard title='Operator Snapshot'>
         <Group gap='xs'>
           <Badge
-            color='blue'
-            variant='light'
-          >
-            {filteredTasks.filter((task) => task.status === 'review_required').length} review required
-          </Badge>
-          <Badge
             color='red'
             variant='light'
           >
-            {filteredTasks.filter((task) => task.verification_state === 'failed').length} verification failed
+            {filteredTaskAttention.filter((attention) => attention.level === 'critical').length} critical tasks
+          </Badge>
+          <Badge
+            color='yellow'
+            variant='light'
+          >
+            {filteredTaskAttention.filter((attention) => attention.level !== 'normal').length} need attention
+          </Badge>
+          <Badge
+            color='orange'
+            variant='light'
+          >
+            {filteredAgentAttention.filter((attention) => attention.freshness === 'stale').length} stale agents
+          </Badge>
+          <Badge
+            color='grape'
+            variant='light'
+          >
+            {filteredHandoffAttention.filter((attention) => attention.freshness === 'stale').length} stale handoffs
           </Badge>
           <Badge
             color='teal'
@@ -804,6 +1026,7 @@ export function Canopy() {
           <Stack gap='md'>
             {filteredTasks.map((task) => (
               <TaskCard
+                attention={taskAttentionById.get(task.task_id)}
                 key={task.task_id}
                 onOpen={openTask}
                 task={task}
@@ -821,6 +1044,7 @@ export function Canopy() {
               <Stack gap='md'>
                 {group.tasks.map((task) => (
                   <TaskCard
+                    attention={taskAttentionById.get(task.task_id)}
                     key={task.task_id}
                     onOpen={openTask}
                     task={task}
@@ -834,6 +1058,7 @@ export function Canopy() {
 
       <TaskDetailModal
         detail={detailQuery.data}
+        error={detailQuery.error}
         onClose={closeTask}
         opened={modalOpen}
       />

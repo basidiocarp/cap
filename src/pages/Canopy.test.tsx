@@ -10,8 +10,27 @@ let mockProject: ProjectInfo | null = {
   active: '/workspace/cap',
   recent: ['/workspace/cap'],
 }
+let mockTaskDetailError: Error | null = null
 
 const mockSnapshot: CanopySnapshot = {
+  agent_attention: [
+    {
+      agent_id: 'agent-2',
+      current_task_id: 'task-2',
+      freshness: 'stale',
+      last_heartbeat_at: '2026-03-27T10:05:00Z',
+      level: 'critical',
+      reasons: ['blocked_status', 'stale_heartbeat'],
+    },
+    {
+      agent_id: 'agent-1',
+      current_task_id: 'task-1',
+      freshness: 'fresh',
+      last_heartbeat_at: '2026-03-28T12:00:00Z',
+      level: 'normal',
+      reasons: [],
+    },
+  ],
   agents: [
     {
       agent_id: 'agent-2',
@@ -38,7 +57,24 @@ const mockSnapshot: CanopySnapshot = {
       worktree_id: 'wt-1',
     },
   ],
+  attention: {
+    agents_needing_attention: 1,
+    critical_tasks: 1,
+    handoffs_needing_attention: 1,
+    stale_agents: 1,
+    stale_handoffs: 0,
+    tasks_needing_attention: 2,
+  },
   evidence: [],
+  handoff_attention: [
+    {
+      freshness: 'aging',
+      handoff_id: 'handoff-1',
+      level: 'needs_attention',
+      reasons: ['aging_open_handoff'],
+      task_id: 'task-1',
+    },
+  ],
   handoffs: [
     {
       created_at: '2026-03-28T12:08:00Z',
@@ -63,6 +99,24 @@ const mockSnapshot: CanopySnapshot = {
       related_task_id: 'task-1',
       source: 'heartbeat',
       status: 'in_progress',
+    },
+  ],
+  task_attention: [
+    {
+      freshness: 'stale',
+      level: 'critical',
+      open_handoff_freshness: null,
+      owner_heartbeat_freshness: 'stale',
+      reasons: ['blocked', 'verification_failed', 'stale_owner_heartbeat'],
+      task_id: 'task-2',
+    },
+    {
+      freshness: 'fresh',
+      level: 'needs_attention',
+      open_handoff_freshness: 'aging',
+      owner_heartbeat_freshness: 'fresh',
+      reasons: ['review_required', 'aging_open_handoff'],
+      task_id: 'task-1',
     },
   ],
   tasks: [
@@ -106,6 +160,8 @@ const mockSnapshot: CanopySnapshot = {
 }
 
 const mockTaskDetail: CanopyTaskDetail = {
+  agent_attention: [mockSnapshot.agent_attention[1]],
+  attention: mockSnapshot.task_attention[1],
   events: [
     {
       actor: 'operator',
@@ -173,6 +229,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       task_id: 'task-1',
     },
   ],
+  handoff_attention: mockSnapshot.handoff_attention,
   handoffs: mockSnapshot.handoffs,
   heartbeats: mockSnapshot.heartbeats,
   messages: [
@@ -184,7 +241,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       task_id: 'task-1',
     },
   ],
-  task: mockSnapshot.tasks[0],
+  task: mockSnapshot.tasks[1],
 }
 
 const useCanopySnapshotMock = vi.fn((options?: { project?: string; sort?: string; view?: string }) => {
@@ -211,6 +268,13 @@ const useCanopySnapshotMock = vi.fn((options?: { project?: string; sort?: string
     tasks = tasks.filter((task) => openTaskIds.has(task.task_id))
   }
 
+  if (options?.view === 'attention') {
+    const attentionTaskIds = new Set(
+      mockSnapshot.task_attention.filter((attention) => attention.level !== 'normal').map((attention) => attention.task_id)
+    )
+    tasks = tasks.filter((task) => attentionTaskIds.has(task.task_id))
+  }
+
   if (options?.sort === 'updated_at') {
     tasks.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
   } else if (options?.sort === 'created_at') {
@@ -224,13 +288,19 @@ const useCanopySnapshotMock = vi.fn((options?: { project?: string; sort?: string
   return {
     data: {
       ...mockSnapshot,
+      agent_attention: mockSnapshot.agent_attention.filter((attention) => {
+        const taskMatch = attention.current_task_id ? taskIds.has(attention.current_task_id) : false
+        return taskMatch
+      }),
       evidence: mockSnapshot.evidence.filter((item) => taskIds.has(item.task_id)),
+      handoff_attention: mockSnapshot.handoff_attention.filter((attention) => taskIds.has(attention.task_id)),
       handoffs: mockSnapshot.handoffs.filter((handoff) => taskIds.has(handoff.task_id)),
       heartbeats: mockSnapshot.heartbeats.filter((heartbeat) => {
         const currentMatches = heartbeat.current_task_id ? taskIds.has(heartbeat.current_task_id) : false
         const relatedMatches = heartbeat.related_task_id ? taskIds.has(heartbeat.related_task_id) : false
         return currentMatches || relatedMatches
       }),
+      task_attention: mockSnapshot.task_attention.filter((attention) => taskIds.has(attention.task_id)),
       tasks,
     },
     error: null,
@@ -241,8 +311,8 @@ const useCanopySnapshotMock = vi.fn((options?: { project?: string; sort?: string
 vi.mock('../lib/queries', () => ({
   useCanopySnapshot: (options?: { project?: string; sort?: string; view?: string }) => useCanopySnapshotMock(options),
   useCanopyTaskDetail: (taskId: string) => ({
-    data: taskId ? mockTaskDetail : undefined,
-    error: null,
+    data: taskId && !mockTaskDetailError ? mockTaskDetail : undefined,
+    error: mockTaskDetailError,
     isLoading: false,
   }),
   useProject: () => ({
@@ -254,6 +324,7 @@ vi.mock('../lib/queries', () => ({
 describe('Canopy page', () => {
   beforeEach(() => {
     mockProject = { active: '/workspace/cap', recent: ['/workspace/cap'] }
+    mockTaskDetailError = null
     useCanopySnapshotMock.mockClear()
   })
 
@@ -264,8 +335,8 @@ describe('Canopy page', () => {
     expect(screen.getByText('Showing Canopy coordination state for /workspace/cap.')).toBeInTheDocument()
     expect(screen.getByText('Add Cap Canopy page')).toBeInTheDocument()
     expect(screen.getByText('Fix lifecycle adapter')).toBeInTheDocument()
-    expect(screen.getByText('1 review required')).toBeInTheDocument()
-    expect(screen.getByText('1 verification failed')).toBeInTheDocument()
+    expect(screen.getByText('1 critical tasks')).toBeInTheDocument()
+    expect(screen.getByText('2 need attention')).toBeInTheDocument()
   })
 
   it('filters tasks by query and status from the URL', () => {
@@ -287,6 +358,19 @@ describe('Canopy page', () => {
       project: '/workspace/cap',
       sort: 'updated_at',
       view: 'review',
+    })
+  })
+
+  it('supports the runtime attention view', () => {
+    renderWithProviders(<Canopy />, { route: '/canopy?view=attention' })
+
+    expect(screen.getByText('Needs attention')).toBeInTheDocument()
+    expect(screen.getByText('Add Cap Canopy page')).toBeInTheDocument()
+    expect(screen.getByText('Fix lifecycle adapter')).toBeInTheDocument()
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      project: '/workspace/cap',
+      sort: 'status',
+      view: 'attention',
     })
   })
 
@@ -315,6 +399,7 @@ describe('Canopy page', () => {
 
     const activeAgentsCard = screen.getByRole('heading', { name: 'Active Agents' }).closest('div')
     expect(activeAgentsCard?.textContent).toContain('1')
+    expect(screen.getByText('1 stale agents')).toBeInTheDocument()
     expect(screen.queryByText('Add Cap Canopy page')).not.toBeInTheDocument()
     expect(screen.getByText('Fix lifecycle adapter')).toBeInTheDocument()
   })
@@ -330,9 +415,13 @@ describe('Canopy page', () => {
     await user.click(openTaskButton)
 
     expect(await screen.findByText(/Task ID:/)).toBeInTheDocument()
+    expect(screen.getAllByText('needs attention').length).toBeGreaterThan(0)
+    expect(screen.getByText(/Attention reasons:/)).toBeInTheDocument()
+    expect(screen.getByText(/Owner heartbeat freshness:/)).toBeInTheDocument()
     expect(await screen.findByText('Task created')).toBeInTheDocument()
     expect(screen.getByText('Heartbeats')).toBeInTheDocument()
-    expect(screen.getByText('Agent: agent-1')).toBeInTheDocument()
+    expect(screen.getByText('Agent Attention')).toBeInTheDocument()
+    expect(screen.getAllByText('Agent: agent-1').length).toBeGreaterThan(0)
     expect(screen.getByText('Status changed to review_required')).toBeInTheDocument()
     expect(screen.getByText('Need review before closing')).toBeInTheDocument()
     expect(screen.getByText('Ready for review.')).toBeInTheDocument()
@@ -343,5 +432,18 @@ describe('Canopy page', () => {
       'href',
       '/code?file=%2Fworkspace%2Fcap%2Fsrc%2Fpages%2FCanopy.tsx&symbol=Canopy'
     )
+  })
+
+  it('shows a modal-local error state when task detail cannot be loaded', async () => {
+    const user = userEvent.setup()
+    mockTaskDetailError = new Error('task detail failed')
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    const [openTaskButton] = screen.getAllByRole('button', { name: 'Open task detail' })
+    await user.click(openTaskButton)
+
+    expect(await screen.findByText('Could not load task detail for the selected Canopy task.')).toBeInTheDocument()
+    expect(screen.getAllByText('task detail failed').length).toBeGreaterThan(0)
   })
 })

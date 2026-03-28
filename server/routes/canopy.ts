@@ -4,7 +4,7 @@ import * as canopy from '../canopy.ts'
 
 const app = new Hono()
 const ALLOWED_SORTS = new Set(['status', 'title', 'updated_at', 'created_at', 'verification'])
-const ALLOWED_VIEWS = new Set(['all', 'active', 'blocked', 'review', 'handoffs'])
+const ALLOWED_VIEWS = new Set(['all', 'active', 'blocked', 'review', 'handoffs', 'attention'])
 
 app.get('/snapshot', async (c) => {
   try {
