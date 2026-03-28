@@ -112,6 +112,24 @@ const mockTaskDetail: CanopyTaskDetail = {
       summary: 'Task work linked to a Hyphae session.',
       task_id: 'task-1',
     },
+    {
+      evidence_id: 'evidence-2',
+      label: 'Recall signal',
+      related_handoff_id: null,
+      source_kind: 'hyphae_recall',
+      source_ref: 'memory-topic',
+      summary: 'Recall evidence for the task.',
+      task_id: 'task-1',
+    },
+    {
+      evidence_id: 'evidence-3',
+      label: 'Rhizome impact',
+      related_handoff_id: null,
+      source_kind: 'rhizome_impact',
+      source_ref: 'AddCapCanopyPage',
+      summary: 'Impact analysis captured in Rhizome.',
+      task_id: 'task-1',
+    },
   ],
   handoffs: mockSnapshot.handoffs,
   messages: [
@@ -167,6 +185,15 @@ describe('Canopy page', () => {
     expect(screen.queryByText('Add Cap Canopy page')).not.toBeInTheDocument()
   })
 
+  it('applies saved views and sorting from the URL', () => {
+    renderWithProviders(<Canopy />, { route: '/canopy?view=review&sort=owner' })
+
+    expect(screen.getByDisplayValue('owner')).toBeInTheDocument()
+    expect(screen.getByText('Review queue')).toBeInTheDocument()
+    expect(screen.getByText('Add Cap Canopy page')).toBeInTheDocument()
+    expect(screen.queryByText('Fix lifecycle adapter')).not.toBeInTheDocument()
+  })
+
   it('opens task detail drilldown from the board', async () => {
     const user = userEvent.setup()
 
@@ -183,5 +210,9 @@ describe('Canopy page', () => {
     expect(screen.getByText('Need review before closing')).toBeInTheDocument()
     expect(screen.getByText('Ready for review.')).toBeInTheDocument()
     expect(screen.getByText('Hyphae session')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open session' })).toHaveAttribute('href', '/sessions?session=ses_123')
+    expect(screen.getByRole('link', { name: 'Search session memories' })).toHaveAttribute('href', '/memories?q=ses_123')
+    expect(screen.getByRole('link', { name: 'Search memories' })).toHaveAttribute('href', '/memories?q=memory-topic')
+    expect(screen.getByRole('link', { name: 'Open code explorer' })).toHaveAttribute('href', '/code?filter=AddCapCanopyPage')
   })
 })

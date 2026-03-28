@@ -50,12 +50,14 @@ export function sessionsHref(params?: { detail?: 'latest'; session?: string }) {
   return query ? `/sessions?${query}` : '/sessions'
 }
 
-export function canopyHref(params?: { q?: string; status?: string; task?: string }) {
+export function canopyHref(params?: { q?: string; sort?: string; status?: string; task?: string; view?: string }) {
   const search = new URLSearchParams()
 
   if (params?.task) search.set('task', params.task)
   if (params?.q) search.set('q', params.q)
+  if (params?.sort && params.sort !== 'status') search.set('sort', params.sort)
   if (params?.status && params.status !== 'all') search.set('status', params.status)
+  if (params?.view && params.view !== 'all') search.set('view', params.view)
 
   const query = search.toString()
   return query ? `/canopy?${query}` : '/canopy'

@@ -1,6 +1,6 @@
 import { Badge, Button, Divider, Grid, Group, Modal, ScrollArea, Select, Stack, Text, TextInput, Title } from '@mantine/core'
 import { useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
 import type { CanopyTask, CanopyTaskDetail, CanopyTaskEvent, CanopyTaskStatus } from '../lib/api'
 import { EmptyState } from '../components/EmptyState'
@@ -8,6 +8,7 @@ import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { SectionCard } from '../components/SectionCard'
 import { useCanopySnapshot, useCanopyTaskDetail, useProject } from '../lib/queries'
+import { codeExplorerHref, memoriesHref, sessionsHref } from '../lib/routes'
 import { timeAgo } from '../lib/time'
 
 const STATUS_ORDER: CanopyTaskStatus[] = [
@@ -28,6 +29,100 @@ const STATUS_FILTER_OPTIONS = [
     value: status,
   })),
 ]
+
+const SAVED_VIEW_OPTIONS = [
+  { description: 'Everything in the active project', label: 'All tasks', value: 'all' },
+  { description: 'Open, assigned, and in-progress work', label: 'Active work', value: 'active' },
+  { description: 'Blocked tasks and failed verification', label: 'Blocked focus', value: 'blocked' },
+  { description: 'Review-required or pending verification', label: 'Review queue', value: 'review' },
+  { description: 'Tasks with open handoffs', label: 'Open handoffs', value: 'handoffs' },
+] as const
+
+const SORT_OPTIONS = [
+  { label: 'Status order', value: 'status' },
+  { label: 'Title', value: 'title' },
+  { label: 'Owner', value: 'owner' },
+  { label: 'Verification state', value: 'verification' },
+] as const
+
+type CanopySavedView = (typeof SAVED_VIEW_OPTIONS)[number]['value']
+type CanopySortMode = (typeof SORT_OPTIONS)[number]['value']
+
+interface EvidenceLink {
+  label: string
+  to: string
+}
+
+function compareText(left: string | null | undefined, right: string | null | undefined): number {
+  return (left ?? '').localeCompare(right ?? '', undefined, { sensitivity: 'base' })
+}
+
+function taskSortValue(task: CanopyTask, sortMode: CanopySortMode): string {
+  switch (sortMode) {
+    case 'owner':
+      return task.owner_agent_id ?? ''
+    case 'verification':
+      return task.verification_state
+    default:
+      return task.title
+  }
+}
+
+function sortTasks(tasks: CanopyTask[], sortMode: CanopySortMode): CanopyTask[] {
+  const next = [...tasks]
+
+  next.sort((left, right) => {
+    const primary = compareText(taskSortValue(left, sortMode), taskSortValue(right, sortMode))
+    if (primary !== 0) return primary
+    return compareText(left.title, right.title)
+  })
+
+  return next
+}
+
+function matchesSavedView(task: CanopyTask, openHandoffTaskIds: Set<string>, view: CanopySavedView): boolean {
+  switch (view) {
+    case 'active':
+      return ['open', 'assigned', 'in_progress'].includes(task.status)
+    case 'blocked':
+      return task.status === 'blocked' || task.verification_state === 'failed'
+    case 'review':
+      return task.status === 'review_required' || task.verification_state === 'pending'
+    case 'handoffs':
+      return openHandoffTaskIds.has(task.task_id)
+    default:
+      return true
+  }
+}
+
+function evidenceSearchQuery(item: CanopyTaskDetail['evidence'][number]): string {
+  return item.source_ref.trim() || item.label.trim()
+}
+
+function evidenceLinks(item: CanopyTaskDetail['evidence'][number]): EvidenceLink[] {
+  const query = evidenceSearchQuery(item)
+
+  switch (item.source_kind) {
+    case 'hyphae_session':
+      return [
+        { label: 'Open session', to: sessionsHref({ session: item.source_ref }) },
+        { label: 'Search session memories', to: memoriesHref({ q: query }) },
+      ]
+    case 'hyphae_recall':
+    case 'hyphae_outcome':
+    case 'cortina_event':
+    case 'manual_note':
+      return [{ label: 'Search memories', to: memoriesHref({ q: query }) }]
+    case 'rhizome_impact':
+    case 'rhizome_export':
+      return [{ label: 'Open code explorer', to: codeExplorerHref({ filter: query }) }]
+    case 'mycelium_command':
+    case 'mycelium_explain':
+      return [{ label: 'Open sessions', to: sessionsHref() }]
+    default:
+      return []
+  }
+}
 
 function statusColor(status: CanopyTaskStatus): string {
   switch (status) {
@@ -335,6 +430,21 @@ function TaskDetailModal({ detail, opened, onClose }: { detail: CanopyTaskDetail
                         {item.source_ref}
                       </Text>
                       {item.summary ? <Text size='sm'>{item.summary}</Text> : null}
+                      {evidenceLinks(item).length > 0 ? (
+                        <Group gap='xs'>
+                          {evidenceLinks(item).map((link) => (
+                            <Button
+                              component={Link}
+                              key={`${item.evidence_id}-${link.label}`}
+                              size='xs'
+                              to={link.to}
+                              variant='subtle'
+                            >
+                              {link.label}
+                            </Button>
+                          ))}
+                        </Group>
+                      ) : null}
                     </Stack>
                   </SectionCard>
                 ))}
@@ -353,7 +463,9 @@ export function Canopy() {
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedTaskId = searchParams.get('task') ?? ''
   const searchQuery = searchParams.get('q') ?? ''
+  const sortMode = (searchParams.get('sort') ?? 'status') as CanopySortMode
   const statusFilter = searchParams.get('status') ?? 'all'
+  const savedView = (searchParams.get('view') ?? 'all') as CanopySavedView
   const modalOpen = Boolean(selectedTaskId)
   const { data: project } = useProject()
   const snapshotQuery = useCanopySnapshot()
@@ -361,13 +473,18 @@ export function Canopy() {
 
   const activeProject = project?.active ?? null
   const snapshot = snapshotQuery.data
+  const openHandoffTaskIds = useMemo(
+    () => new Set((snapshot?.handoffs ?? []).filter((handoff) => handoff.status === 'open').map((handoff) => handoff.task_id)),
+    [snapshot]
+  )
   const filteredTasks = useMemo(() => {
     if (!snapshot) return []
     const baseTasks = !activeProject ? snapshot.tasks : snapshot.tasks.filter((task) => task.project_root === activeProject)
     const normalizedQuery = searchQuery.trim().toLowerCase()
 
-    return baseTasks.filter((task) => {
+    const next = baseTasks.filter((task) => {
       const matchesStatus = statusFilter === 'all' || task.status === statusFilter
+      const matchesView = matchesSavedView(task, openHandoffTaskIds, savedView)
       const matchesQuery =
         normalizedQuery.length === 0 ||
         task.title.toLowerCase().includes(normalizedQuery) ||
@@ -375,9 +492,11 @@ export function Canopy() {
         task.task_id.toLowerCase().includes(normalizedQuery) ||
         (task.owner_agent_id?.toLowerCase().includes(normalizedQuery) ?? false)
 
-      return matchesStatus && matchesQuery
+      return matchesStatus && matchesView && matchesQuery
     })
-  }, [activeProject, searchQuery, snapshot, statusFilter])
+
+    return sortTasks(next, sortMode)
+  }, [activeProject, openHandoffTaskIds, savedView, searchQuery, snapshot, sortMode, statusFilter])
 
   const filteredTaskIds = new Set(filteredTasks.map((task) => task.task_id))
   const filteredAgents = useMemo(() => {
@@ -396,10 +515,22 @@ export function Canopy() {
 
   const groupedTasks = STATUS_ORDER.map((status) => ({
     status,
-    tasks: filteredTasks.filter((task) => task.status === status),
+    tasks: sortTasks(
+      filteredTasks.filter((task) => task.status === status),
+      sortMode
+    ),
   })).filter((group) => group.tasks.length > 0)
 
-  const updateSearchParams = (updates: { q?: string | null; status?: string | null; task?: string | null }) => {
+  const updateSearchParams = (
+    updates: {
+      q?: string | null
+      sort?: string | null
+      status?: string | null
+      task?: string | null
+      view?: string | null
+    },
+    options?: { replace?: boolean }
+  ) => {
     const next = new URLSearchParams(searchParams)
 
     for (const [key, value] of Object.entries(updates)) {
@@ -410,15 +541,15 @@ export function Canopy() {
       }
     }
 
-    setSearchParams(next)
+    setSearchParams(next, { replace: options?.replace ?? true })
   }
 
   const openTask = (taskId: string) => {
-    updateSearchParams({ task: taskId })
+    updateSearchParams({ task: taskId }, { replace: false })
   }
 
   const closeTask = () => {
-    updateSearchParams({ task: null })
+    updateSearchParams({ task: null }, { replace: false })
   }
 
   if (snapshotQuery.isLoading) {
@@ -441,7 +572,7 @@ export function Canopy() {
 
       <SectionCard title='Task filters'>
         <Grid>
-          <Grid.Col span={{ base: 12, md: 8 }}>
+          <Grid.Col span={{ base: 12, md: 6 }}>
             <TextInput
               label='Search tasks'
               onChange={(event) => updateSearchParams({ q: event.currentTarget.value, task: null })}
@@ -449,7 +580,7 @@ export function Canopy() {
               value={searchQuery}
             />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 4 }}>
+          <Grid.Col span={{ base: 12, md: 3 }}>
             <Select
               data={STATUS_FILTER_OPTIONS}
               label='Status'
@@ -457,7 +588,44 @@ export function Canopy() {
               value={statusFilter}
             />
           </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 3 }}>
+            <Select
+              data={SORT_OPTIONS}
+              label='Sort'
+              onChange={(value) => updateSearchParams({ sort: value ?? 'status', task: null })}
+              value={sortMode}
+            />
+          </Grid.Col>
         </Grid>
+      </SectionCard>
+
+      <SectionCard title='Saved views'>
+        <Stack gap='sm'>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Switch the board between common operator slices without rebuilding filters by hand.
+          </Text>
+          <Group gap='xs'>
+            {SAVED_VIEW_OPTIONS.map((view) => (
+              <Button
+                key={view.value}
+                onClick={() => updateSearchParams({ task: null, view: view.value })}
+                size='xs'
+                variant={savedView === view.value ? 'filled' : 'light'}
+              >
+                {view.label}
+              </Button>
+            ))}
+          </Group>
+          <Text
+            c='dimmed'
+            size='xs'
+          >
+            {SAVED_VIEW_OPTIONS.find((view) => view.value === savedView)?.description}
+          </Text>
+        </Stack>
       </SectionCard>
 
       <Grid>
