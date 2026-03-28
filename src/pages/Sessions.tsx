@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import { Badge, Button, Card, Code, Divider, Group, Modal, ScrollArea, Stack, Text, ThemeIcon, Title } from '@mantine/core'
 import { IconAlertCircle, IconCircleCheck, IconClock, IconFiles, IconHistory, IconSearch } from '@tabler/icons-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 import type { AllowedStipeAction } from '../lib/onboarding'
 import type { EcosystemReadinessModel, ReadinessQuickAction } from '../lib/readiness'
@@ -816,6 +817,7 @@ function SessionCard({
 
 export function Sessions() {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
   const projectQuery = useProject()
   const { activeProject, recentProjects } = useProjectContextView(projectQuery.data ?? null)
   const activeProjectName = activeProject?.split('/').pop()
@@ -824,6 +826,33 @@ export function Sessions() {
   const timelineQuery = useSessionTimeline(activeProjectName, 30)
   const commandHistoryQuery = useCommandHistory(100, true, activeProject ?? undefined)
   const rhizomeStatusQuery = useRhizomeStatus()
+  const sessions = timelineQuery.data ?? []
+  const commands = commandHistoryQuery.data?.commands ?? []
+  const rhizomeStatus = rhizomeStatusQuery.data
+  const status = statusQuery.data
+  const readiness = status ? getEcosystemReadinessModel(status, repairPlanQuery.data) : null
+  const coverageIssues = buildCoverageIssues(commands.length, readiness, sessions, status)
+  const selectedSession = sessions.find((session) => session.id === selectedSessionId) ?? null
+  const requestedSessionId = searchParams.get('session')
+  const requestedDetail = searchParams.get('detail')
+
+  useEffect(() => {
+    if (selectedSessionId || sessions.length === 0) {
+      return
+    }
+
+    if (requestedSessionId) {
+      const matchedSession = sessions.find((session) => session.id === requestedSessionId)
+      if (matchedSession) {
+        setSelectedSessionId(matchedSession.id)
+      }
+      return
+    }
+
+    if (requestedDetail === 'latest') {
+      setSelectedSessionId(sessions[0]?.id ?? null)
+    }
+  }, [requestedDetail, requestedSessionId, selectedSessionId, sessions])
 
   if (timelineQuery.isLoading) {
     return <PageLoader />
@@ -838,20 +867,22 @@ export function Sessions() {
     )
   }
 
-  const sessions = timelineQuery.data ?? []
-  const commands = commandHistoryQuery.data?.commands ?? []
-  const rhizomeStatus = rhizomeStatusQuery.data
-  const status = statusQuery.data
-  const readiness = status ? getEcosystemReadinessModel(status, repairPlanQuery.data) : null
-  const coverageIssues = buildCoverageIssues(commands.length, readiness, sessions, status)
-  const selectedSession = sessions.find((session) => session.id === selectedSessionId) ?? null
-
   function refreshView() {
     refreshAll()
     projectQuery.refetch()
     timelineQuery.refetch()
     commandHistoryQuery.refetch()
     rhizomeStatusQuery.refetch()
+  }
+
+  function openSessionDetail(sessionId: string) {
+    setSelectedSessionId(sessionId)
+    setSearchParams({ session: sessionId })
+  }
+
+  function closeSessionDetail() {
+    setSelectedSessionId(null)
+    setSearchParams({})
   }
 
   return (
@@ -905,7 +936,7 @@ export function Sessions() {
               <SessionCard
                 commands={commandsForSession(session, commands)}
                 key={session.id}
-                onOpenDetail={() => setSelectedSessionId(session.id)}
+                onOpenDetail={() => openSessionDetail(session.id)}
                 session={session}
               />
             ))}
@@ -916,7 +947,7 @@ export function Sessions() {
       {selectedSession ? (
         <SessionDetailModal
           commands={commandsForSession(selectedSession, commands)}
-          onClose={() => setSelectedSessionId(null)}
+          onClose={closeSessionDetail}
           session={selectedSession}
         />
       ) : null}

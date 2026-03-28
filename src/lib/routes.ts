@@ -39,3 +39,13 @@ export function codeExplorerHref(params?: { file?: string; filter?: string; mode
   const query = search.toString()
   return query ? `/code?${query}` : '/code'
 }
+
+export function sessionsHref(params?: { detail?: 'latest'; session?: string }) {
+  const search = new URLSearchParams()
+
+  if (params?.session) search.set('session', params.session)
+  if (params?.detail === 'latest') search.set('detail', params.detail)
+
+  const query = search.toString()
+  return query ? `/sessions?${query}` : '/sessions'
+}

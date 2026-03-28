@@ -42,6 +42,8 @@ describe('StatusGettingStartedCard', () => {
     expect(screen.getByText('Flowing')).toBeInTheDocument()
     expect(screen.getByText(/Best next step:/i)).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: 'Open onboarding' })[0]).toHaveAttribute('href', '/onboard')
+    expect(screen.getByRole('link', { name: 'Latest session' })).toHaveAttribute('href', '/sessions?detail=latest')
+    expect(screen.getByRole('link', { name: 'Session timeline' })).toHaveAttribute('href', '/sessions')
 
     await user.click(screen.getByRole('button', { name: /run recommended step/i }))
     expect(runAction).toHaveBeenCalledWith('doctor')

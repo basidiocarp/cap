@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -324,6 +324,34 @@ describe('Sessions page', () => {
 
     expect(screen.getByText('Errors (2)')).toBeInTheDocument()
     expect(screen.getByText('2 recorded errors were attached to this session without individual detail payloads.')).toBeInTheDocument()
+  })
+
+  it('opens the latest session drilldown from the route query', () => {
+    mockTimeline = [
+      {
+        ended_at: '2026-03-27T12:10:00Z',
+        errors: null,
+        events: [],
+        files_modified: null,
+        id: 'ses_latest',
+        last_activity_at: '2026-03-27T12:10:00Z',
+        outcome_count: 0,
+        project: 'cap',
+        recall_count: 0,
+        scope: 'worker-d',
+        started_at: '2026-03-27T12:00:00Z',
+        status: 'completed',
+        summary: 'Latest route-driven session.',
+        task: 'latest route session',
+      },
+    ]
+
+    renderWithProviders(<Sessions />, { route: '/sessions?detail=latest' })
+
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toBeInTheDocument()
+    expect(within(dialog).getByText('Summary')).toBeInTheDocument()
+    expect(within(dialog).getByText('latest route session')).toBeInTheDocument()
   })
 
   it('shows repair guidance when core tool coverage is missing', () => {

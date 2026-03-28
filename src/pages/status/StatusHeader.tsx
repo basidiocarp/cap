@@ -2,6 +2,8 @@ import { Button, Group, Text, Title } from '@mantine/core'
 import { IconAlertCircle, IconRefresh } from '@tabler/icons-react'
 import { Link } from 'react-router-dom'
 
+import { sessionsHref } from '../../lib/routes'
+
 export interface StatusHeaderProps {
   onRefresh: () => void
 }
@@ -26,6 +28,14 @@ export function StatusHeader({ onRefresh }: StatusHeaderProps) {
           variant='light'
         >
           Onboarding
+        </Button>
+        <Button
+          component={Link}
+          size='sm'
+          to={sessionsHref({ detail: 'latest' })}
+          variant='subtle'
+        >
+          Latest session
         </Button>
         <Button
           leftSection={<IconRefresh size={16} />}

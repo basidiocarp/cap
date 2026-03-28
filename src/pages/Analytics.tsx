@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
-import { Alert, Grid, Stack, Tabs, Title } from '@mantine/core'
+import { Alert, Button, Grid, Group, Stack, Tabs, Title } from '@mantine/core'
 import { IconActivity, IconBrain, IconChartBar, IconCode, IconCurrencyDollar, IconHistory, IconNetwork } from '@tabler/icons-react'
 import { lazy, Suspense, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { KpiCard } from '../components/KpiCard'
 import { PageLoader } from '../components/PageLoader'
@@ -16,6 +17,7 @@ import {
   useUsageSessions,
   useUsageTrend,
 } from '../lib/queries'
+import { sessionsHref } from '../lib/routes'
 
 const TokenSavingsTab = lazy(() => import('./analytics/TokenSavingsTab').then((m) => ({ default: m.TokenSavingsTab })))
 const CommandHistoryTab = lazy(() => import('./analytics/CommandHistoryTab').then((m) => ({ default: m.CommandHistoryTab })))
@@ -65,8 +67,30 @@ export function Analytics() {
         color='gray'
         title='Tool-scoped analytics'
       >
-        Each tab reports one tool&apos;s own record stream. Empty Mycelium tabs usually mean Mycelium has no captured commands yet, not that
-        Claude Code or Codex were inactive overall.
+        <Stack gap='sm'>
+          <div>
+            Each tab reports one tool&apos;s own record stream. Empty Mycelium tabs usually mean Mycelium has no captured commands yet, not
+            that Claude Code or Codex were inactive overall.
+          </div>
+          <Group gap='xs'>
+            <Button
+              component={Link}
+              size='xs'
+              to={sessionsHref({ detail: 'latest' })}
+              variant='light'
+            >
+              Open latest session
+            </Button>
+            <Button
+              component={Link}
+              size='xs'
+              to={sessionsHref()}
+              variant='subtle'
+            >
+              Open sessions timeline
+            </Button>
+          </Group>
+        </Stack>
       </Alert>
 
       {loading && <PageLoader mt='xl' />}
