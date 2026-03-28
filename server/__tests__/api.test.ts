@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import * as canopy from '../canopy'
 import * as hyphae from '../hyphae'
 import { createApp } from '../index'
 import { registry } from '../lib/rhizome-registry'
@@ -286,6 +287,47 @@ describe('API Routes', () => {
           },
         ],
         total: 1,
+      })
+    })
+  })
+
+  describe('GET /api/canopy', () => {
+    it('forwards snapshot reads to Canopy', async () => {
+      const snapshotSpy = vi.spyOn(canopy, 'getSnapshot').mockResolvedValue({
+        agents: [{ agent_id: 'agent-1' }],
+        evidence: [],
+        handoffs: [],
+        tasks: [{ task_id: 'task-1', title: 'test task' }],
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/snapshot')
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(snapshotSpy).toHaveBeenCalledWith()
+      await expect(res.json()).resolves.toMatchObject({
+        agents: [{ agent_id: 'agent-1' }],
+        tasks: [{ task_id: 'task-1', title: 'test task' }],
+      })
+    })
+
+    it('forwards task detail reads to Canopy', async () => {
+      const detailSpy = vi.spyOn(canopy, 'getTaskDetail').mockResolvedValue({
+        events: [{ event_id: 'evt-1', event_type: 'created' }],
+        evidence: [],
+        handoffs: [],
+        messages: [],
+        task: { task_id: 'task-1', title: 'test task' },
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1')
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(detailSpy).toHaveBeenCalledWith('task-1')
+      await expect(res.json()).resolves.toMatchObject({
+        events: [{ event_id: 'evt-1', event_type: 'created' }],
+        task: { task_id: 'task-1', title: 'test task' },
       })
     })
   })

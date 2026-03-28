@@ -7,6 +7,7 @@ import { closeDb } from './db.ts'
 import { CAP_API_KEY, CAP_HOST, CORS_ORIGIN } from './lib/config.ts'
 import { registry } from './lib/rhizome-registry.ts'
 import { logger } from './logger.ts'
+import canopyRoutes from './routes/canopy.ts'
 import hyphaeRoutes from './routes/hyphae.ts'
 import lspRoutes from './routes/lsp.ts'
 import myceliumRoutes from './routes/mycelium.ts'
@@ -71,6 +72,7 @@ export function createApp(): Hono {
     return c.json({ error: 'Internal server error' }, 500)
   })
 
+  app.route('/api/canopy', canopyRoutes)
   app.route('/api/hyphae', hyphaeRoutes)
   app.route('/api/lsp', lspRoutes)
   app.route('/api/mycelium', myceliumRoutes)

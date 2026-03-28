@@ -49,3 +49,12 @@ export function sessionsHref(params?: { detail?: 'latest'; session?: string }) {
   const query = search.toString()
   return query ? `/sessions?${query}` : '/sessions'
 }
+
+export function canopyHref(params?: { task?: string }) {
+  const search = new URLSearchParams()
+
+  if (params?.task) search.set('task', params.task)
+
+  const query = search.toString()
+  return query ? `/canopy?${query}` : '/canopy'
+}

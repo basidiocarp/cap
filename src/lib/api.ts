@@ -3,6 +3,8 @@ import type {
   AggregateTelemetry,
   Annotation,
   CallSite,
+  CanopySnapshot,
+  CanopyTaskDetail,
   CommandHistory,
   ComplexityResult,
   Concept,
@@ -59,6 +61,22 @@ export type {
   AgentRuntimeStatus,
   Annotation,
   CallSite,
+  CanopyAgentRegistration,
+  CanopyAgentStatus,
+  CanopyCouncilMessage,
+  CanopyCouncilMessageType,
+  CanopyEvidenceRef,
+  CanopyEvidenceSourceKind,
+  CanopyHandoff,
+  CanopyHandoffStatus,
+  CanopyHandoffType,
+  CanopySnapshot,
+  CanopyTask,
+  CanopyTaskDetail,
+  CanopyTaskEvent,
+  CanopyTaskEventType,
+  CanopyTaskStatus,
+  CanopyVerificationState,
   CodexNotifyStatus,
   CommandHistory,
   CommandHistoryEntry,
@@ -224,6 +242,11 @@ export const hyphaeApi = {
   topics: () => get<TopicSummary[]>('/hyphae/topics'),
   updateImportance: (id: string, importance: string) =>
     put<{ result: string }>(`/hyphae/memories/${encodeURIComponent(id)}/importance`, { importance }),
+}
+
+export const canopyApi = {
+  snapshot: () => get<CanopySnapshot>('/canopy/snapshot'),
+  task: (taskId: string) => get<CanopyTaskDetail>(`/canopy/tasks/${encodeURIComponent(taskId)}`),
 }
 
 export const myceliumApi = {

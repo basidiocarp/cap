@@ -2,7 +2,30 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { useEffect } from 'react'
 
 import { useProjectContextStore } from '../store/project-context'
-import { hyphaeApi, lspApi, myceliumApi, rhizomeApi, settingsApi, statusApi, stipeApi, usageApi } from './api'
+import { canopyApi, hyphaeApi, lspApi, myceliumApi, rhizomeApi, settingsApi, statusApi, stipeApi, usageApi } from './api'
+
+// Canopy
+
+export const canopyKeys = {
+  snapshot: () => ['canopy', 'snapshot'] as const,
+  task: (taskId: string) => ['canopy', 'task', taskId] as const,
+}
+
+export function useCanopySnapshot(enabled = true) {
+  return useQuery({
+    enabled,
+    queryFn: () => canopyApi.snapshot(),
+    queryKey: canopyKeys.snapshot(),
+  })
+}
+
+export function useCanopyTaskDetail(taskId: string) {
+  return useQuery({
+    enabled: !!taskId,
+    queryFn: () => canopyApi.task(taskId),
+    queryKey: canopyKeys.task(taskId),
+  })
+}
 
 // Hyphae
 

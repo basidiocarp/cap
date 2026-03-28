@@ -7,6 +7,7 @@ import { PageLoader } from './components/PageLoader'
 import { Dashboard } from './pages/Dashboard'
 
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })))
+const Canopy = lazy(() => import('./pages/Canopy').then((m) => ({ default: m.Canopy })))
 const CodeExplorer = lazy(() => import('./pages/CodeExplorer').then((m) => ({ default: m.CodeExplorer })))
 const Diagnostics = lazy(() => import('./pages/Diagnostics').then((m) => ({ default: m.Diagnostics })))
 const Lessons = lazy(() => import('./pages/Lessons').then((m) => ({ default: m.Lessons })))
@@ -50,6 +51,10 @@ export function App() {
             <Route
               element={<Onboard />}
               path='onboard'
+            />
+            <Route
+              element={<Canopy />}
+              path='canopy'
             />
             <Route
               element={<Analytics />}

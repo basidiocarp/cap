@@ -8,6 +8,7 @@ import {
   IconCode,
   IconCompass,
   IconDashboard,
+  IconGitBranch,
   IconHeartbeat,
   IconHistory,
   IconNetwork,
@@ -38,6 +39,7 @@ const NAV_SECTIONS = [
   {
     items: [
       { icon: IconCompass, label: 'Onboarding', path: '/onboard' },
+      { icon: IconGitBranch, label: 'Canopy', path: '/canopy' },
       { icon: IconChartBar, label: 'Analytics', path: '/analytics' },
       { icon: IconHeartbeat, label: 'Status', path: '/status' },
       { icon: IconSettings, label: 'Settings', path: '/settings' },

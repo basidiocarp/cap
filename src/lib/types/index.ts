@@ -1,4 +1,22 @@
 export type {
+  CanopyAgentRegistration,
+  CanopyAgentStatus,
+  CanopyCouncilMessage,
+  CanopyCouncilMessageType,
+  CanopyEvidenceRef,
+  CanopyEvidenceSourceKind,
+  CanopyHandoff,
+  CanopyHandoffStatus,
+  CanopyHandoffType,
+  CanopySnapshot,
+  CanopyTask,
+  CanopyTaskDetail,
+  CanopyTaskEvent,
+  CanopyTaskEventType,
+  CanopyTaskStatus,
+  CanopyVerificationState,
+} from './canopy'
+export type {
   Concept,
   ConceptInspection,
   ConceptLink,
