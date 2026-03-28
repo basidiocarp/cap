@@ -4,6 +4,9 @@ export type CanopyTaskStatus = 'open' | 'assigned' | 'in_progress' | 'blocked' |
 export type CanopyVerificationState = 'unknown' | 'pending' | 'passed' | 'failed'
 export type CanopyAttentionLevel = 'normal' | 'needs_attention' | 'critical'
 export type CanopyFreshness = 'fresh' | 'aging' | 'stale' | 'missing'
+export type CanopySnapshotPreset = 'default' | 'attention' | 'review_queue' | 'blocked' | 'handoffs' | 'critical' | 'unacknowledged'
+export type CanopyTaskPriority = 'low' | 'medium' | 'high' | 'critical'
+export type CanopyTaskSeverity = 'none' | 'low' | 'medium' | 'high' | 'critical'
 export type CanopyHandoffStatus = 'open' | 'accepted' | 'rejected' | 'expired' | 'cancelled' | 'completed'
 export type CanopyHandoffType =
   | 'request_help'
@@ -23,11 +26,16 @@ export type CanopyEvidenceSourceKind =
   | 'rhizome_impact'
   | 'rhizome_export'
   | 'manual_note'
-export type CanopyTaskEventType = 'created' | 'assigned' | 'ownership_transferred' | 'status_changed'
+export type CanopyTaskEventType = 'created' | 'assigned' | 'ownership_transferred' | 'status_changed' | 'triage_updated'
 export type CanopyTaskAttentionReason =
   | 'blocked'
   | 'verification_failed'
   | 'review_required'
+  | 'unacknowledged'
+  | 'high_priority'
+  | 'critical_priority'
+  | 'high_severity'
+  | 'critical_severity'
   | 'aging_update'
   | 'stale_update'
   | 'aging_owner_heartbeat'
@@ -76,6 +84,8 @@ export interface CanopyAgentAttention {
 }
 
 export interface CanopyTask {
+  acknowledged_at: string | null
+  acknowledged_by: string | null
   blocked_reason: string | null
   closed_at: string | null
   closed_by: string | null
@@ -83,8 +93,11 @@ export interface CanopyTask {
   created_at: string
   description: string | null
   owner_agent_id: string | null
+  owner_note: string | null
+  priority: CanopyTaskPriority
   project_root: string
   requested_by: string
+  severity: CanopyTaskSeverity
   status: CanopyTaskStatus
   task_id: string
   title: string
@@ -109,6 +122,8 @@ export interface CanopyTaskEvent {
 
 export interface CanopyHandoff {
   created_at: string
+  due_at: string | null
+  expires_at: string | null
   from_agent_id: string
   handoff_id: string
   handoff_type: CanopyHandoffType
@@ -152,6 +167,7 @@ export interface CanopyEvidenceRef {
 }
 
 export interface CanopyTaskAttention {
+  acknowledged: boolean
   freshness: CanopyFreshness
   level: CanopyAttentionLevel
   open_handoff_freshness: CanopyFreshness | null

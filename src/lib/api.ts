@@ -4,7 +4,10 @@ import type {
   Annotation,
   CallSite,
   CanopySnapshot,
+  CanopySnapshotPreset,
   CanopyTaskDetail,
+  CanopyTaskPriority,
+  CanopyTaskSeverity,
   CommandHistory,
   ComplexityResult,
   Concept,
@@ -80,12 +83,15 @@ export type {
   CanopyHandoffType,
   CanopySnapshot,
   CanopySnapshotAttentionSummary,
+  CanopySnapshotPreset,
   CanopyTask,
   CanopyTaskAttention,
   CanopyTaskAttentionReason,
   CanopyTaskDetail,
   CanopyTaskEvent,
   CanopyTaskEventType,
+  CanopyTaskPriority,
+  CanopyTaskSeverity,
   CanopyTaskStatus,
   CanopyVerificationState,
   CodexNotifyStatus,
@@ -256,9 +262,23 @@ export const hyphaeApi = {
 }
 
 export const canopyApi = {
-  snapshot: (options?: { project?: string; sort?: string; view?: string }) =>
+  snapshot: (options?: {
+    acknowledged?: string
+    attentionAtLeast?: string
+    preset?: CanopySnapshotPreset | string
+    priorityAtLeast?: CanopyTaskPriority | string
+    project?: string
+    severityAtLeast?: CanopyTaskSeverity | string
+    sort?: string
+    view?: string
+  }) =>
     get<CanopySnapshot>('/canopy/snapshot', {
+      acknowledged: options?.acknowledged ?? '',
+      attention_at_least: options?.attentionAtLeast ?? '',
+      preset: options?.preset ?? '',
+      priority_at_least: options?.priorityAtLeast ?? '',
       project: options?.project ?? '',
+      severity_at_least: options?.severityAtLeast ?? '',
       sort: options?.sort ?? '',
       view: options?.view ?? '',
     }),

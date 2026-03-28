@@ -78,6 +78,8 @@ const mockSnapshot: CanopySnapshot = {
   handoffs: [
     {
       created_at: '2026-03-28T12:08:00Z',
+      due_at: '2026-03-28T12:30:00Z',
+      expires_at: '2026-03-28T13:00:00Z',
       from_agent_id: 'agent-1',
       handoff_id: 'handoff-1',
       handoff_type: 'request_review',
@@ -103,14 +105,16 @@ const mockSnapshot: CanopySnapshot = {
   ],
   task_attention: [
     {
+      acknowledged: false,
       freshness: 'stale',
       level: 'critical',
       open_handoff_freshness: null,
       owner_heartbeat_freshness: 'stale',
-      reasons: ['blocked', 'verification_failed', 'stale_owner_heartbeat'],
+      reasons: ['blocked', 'verification_failed', 'critical_severity', 'stale_owner_heartbeat', 'unacknowledged'],
       task_id: 'task-2',
     },
     {
+      acknowledged: true,
       freshness: 'fresh',
       level: 'needs_attention',
       open_handoff_freshness: 'aging',
@@ -121,6 +125,8 @@ const mockSnapshot: CanopySnapshot = {
   ],
   tasks: [
     {
+      acknowledged_at: null,
+      acknowledged_by: null,
       blocked_reason: 'waiting on host repair',
       closed_at: null,
       closed_by: null,
@@ -128,8 +134,11 @@ const mockSnapshot: CanopySnapshot = {
       created_at: '2026-03-27T10:00:00Z',
       description: 'Repair a broken adapter',
       owner_agent_id: 'agent-2',
+      owner_note: 'Waiting on a host-level fix before retrying.',
+      priority: 'critical',
       project_root: '/workspace/cap',
       requested_by: 'operator',
+      severity: 'critical',
       status: 'blocked',
       task_id: 'task-2',
       title: 'Fix lifecycle adapter',
@@ -139,6 +148,8 @@ const mockSnapshot: CanopySnapshot = {
       verified_by: null,
     },
     {
+      acknowledged_at: '2026-03-28T12:07:00Z',
+      acknowledged_by: 'operator',
       blocked_reason: null,
       closed_at: null,
       closed_by: null,
@@ -146,8 +157,11 @@ const mockSnapshot: CanopySnapshot = {
       created_at: '2026-03-28T11:55:00Z',
       description: 'Wire the first Cap integration path.',
       owner_agent_id: 'agent-1',
+      owner_note: 'Close after UI review.',
+      priority: 'high',
       project_root: '/workspace/cap',
       requested_by: 'operator',
+      severity: 'medium',
       status: 'review_required',
       task_id: 'task-1',
       title: 'Add Cap Canopy page',
@@ -182,6 +196,18 @@ const mockTaskDetail: CanopyTaskDetail = {
       event_type: 'status_changed',
       from_status: 'assigned',
       note: 'Ready for UI review',
+      owner_agent_id: 'agent-1',
+      task_id: 'task-1',
+      to_status: 'review_required',
+      verification_state: 'pending',
+    },
+    {
+      actor: 'operator',
+      created_at: '2026-03-28T12:07:00Z',
+      event_id: 'evt-3',
+      event_type: 'triage_updated',
+      from_status: 'review_required',
+      note: 'priority=high; acknowledged=true; owner_note_updated=true',
       owner_agent_id: 'agent-1',
       task_id: 'task-1',
       to_status: 'review_required',
@@ -244,72 +270,136 @@ const mockTaskDetail: CanopyTaskDetail = {
   task: mockSnapshot.tasks[1],
 }
 
-const useCanopySnapshotMock = vi.fn((options?: { project?: string; sort?: string; view?: string }) => {
-  let tasks = [...mockSnapshot.tasks]
+const useCanopySnapshotMock = vi.fn(
+  (options?: {
+    acknowledged?: string
+    preset?: string
+    priorityAtLeast?: string
+    project?: string
+    severityAtLeast?: string
+    sort?: string
+    view?: string
+  }) => {
+    let tasks = [...mockSnapshot.tasks]
 
-  if (options?.project) {
-    tasks = tasks.filter((task) => task.project_root === options.project)
+    if (options?.project) {
+      tasks = tasks.filter((task) => task.project_root === options.project)
+    }
+
+    const preset = options?.preset ?? options?.view
+
+    if (preset === 'review_queue' || preset === 'review') {
+      tasks = tasks.filter((task) => task.status === 'review_required' || task.verification_state === 'pending')
+    }
+
+    if (preset === 'blocked') {
+      tasks = tasks.filter((task) => task.status === 'blocked' || task.verification_state === 'failed')
+    }
+
+    if (preset === 'active') {
+      tasks = tasks.filter((task) => ['open', 'assigned', 'in_progress'].includes(task.status))
+    }
+
+    if (preset === 'handoffs') {
+      const openTaskIds = new Set(mockSnapshot.handoffs.filter((handoff) => handoff.status === 'open').map((handoff) => handoff.task_id))
+      tasks = tasks.filter((task) => openTaskIds.has(task.task_id))
+    }
+
+    if (preset === 'attention') {
+      const attentionTaskIds = new Set(
+        mockSnapshot.task_attention.filter((attention) => attention.level !== 'normal').map((attention) => attention.task_id)
+      )
+      tasks = tasks.filter((task) => attentionTaskIds.has(task.task_id))
+    }
+
+    if (preset === 'critical') {
+      const criticalTaskIds = new Set(
+        mockSnapshot.task_attention.filter((attention) => attention.level === 'critical').map((attention) => attention.task_id)
+      )
+      tasks = tasks.filter((task) => criticalTaskIds.has(task.task_id))
+    }
+
+    if (preset === 'unacknowledged') {
+      const unacknowledgedTaskIds = new Set(
+        mockSnapshot.task_attention.filter((attention) => !attention.acknowledged).map((attention) => attention.task_id)
+      )
+      tasks = tasks.filter((task) => unacknowledgedTaskIds.has(task.task_id))
+    }
+
+    if (options?.priorityAtLeast) {
+      const priorityRank = { critical: 3, high: 2, low: 0, medium: 1 }
+      tasks = tasks.filter((task) => priorityRank[task.priority] >= priorityRank[options.priorityAtLeast as keyof typeof priorityRank])
+    }
+
+    if (options?.severityAtLeast) {
+      const severityRank = { critical: 4, high: 3, low: 1, medium: 2, none: 0 }
+      tasks = tasks.filter((task) => severityRank[task.severity] >= severityRank[options.severityAtLeast as keyof typeof severityRank])
+    }
+
+    if (options?.acknowledged === 'true') {
+      tasks = tasks.filter((task) => task.acknowledged_at)
+    }
+
+    if (options?.acknowledged === 'false') {
+      tasks = tasks.filter((task) => !task.acknowledged_at)
+    }
+
+    if (options?.sort === 'updated_at') {
+      tasks.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+    } else if (options?.sort === 'created_at') {
+      tasks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    } else if (options?.sort === 'title') {
+      tasks.sort((a, b) => a.title.localeCompare(b.title))
+    } else if (options?.sort === 'priority') {
+      const priorityRank = { critical: 3, high: 2, low: 0, medium: 1 }
+      tasks.sort((a, b) => priorityRank[b.priority] - priorityRank[a.priority])
+    } else if (options?.sort === 'severity') {
+      const severityRank = { critical: 4, high: 3, low: 1, medium: 2, none: 0 }
+      tasks.sort((a, b) => severityRank[b.severity] - severityRank[a.severity])
+    } else if (options?.sort === 'attention') {
+      const attentionMap = new Map(mockSnapshot.task_attention.map((attention) => [attention.task_id, attention]))
+      tasks.sort((a, b) => {
+        const rank = { critical: 2, needs_attention: 1, normal: 0 }
+        return rank[attentionMap.get(b.task_id)?.level ?? 'normal'] - rank[attentionMap.get(a.task_id)?.level ?? 'normal']
+      })
+    }
+
+    const taskIds = new Set(tasks.map((task) => task.task_id))
+
+    return {
+      data: {
+        ...mockSnapshot,
+        agent_attention: mockSnapshot.agent_attention.filter((attention) => {
+          const taskMatch = attention.current_task_id ? taskIds.has(attention.current_task_id) : false
+          return taskMatch
+        }),
+        evidence: mockSnapshot.evidence.filter((item) => taskIds.has(item.task_id)),
+        handoff_attention: mockSnapshot.handoff_attention.filter((attention) => taskIds.has(attention.task_id)),
+        handoffs: mockSnapshot.handoffs.filter((handoff) => taskIds.has(handoff.task_id)),
+        heartbeats: mockSnapshot.heartbeats.filter((heartbeat) => {
+          const currentMatches = heartbeat.current_task_id ? taskIds.has(heartbeat.current_task_id) : false
+          const relatedMatches = heartbeat.related_task_id ? taskIds.has(heartbeat.related_task_id) : false
+          return currentMatches || relatedMatches
+        }),
+        task_attention: mockSnapshot.task_attention.filter((attention) => taskIds.has(attention.task_id)),
+        tasks,
+      },
+      error: null,
+      isLoading: false,
+    }
   }
-
-  if (options?.view === 'review') {
-    tasks = tasks.filter((task) => task.status === 'review_required' || task.verification_state === 'pending')
-  }
-
-  if (options?.view === 'blocked') {
-    tasks = tasks.filter((task) => task.status === 'blocked' || task.verification_state === 'failed')
-  }
-
-  if (options?.view === 'active') {
-    tasks = tasks.filter((task) => ['open', 'assigned', 'in_progress'].includes(task.status))
-  }
-
-  if (options?.view === 'handoffs') {
-    const openTaskIds = new Set(mockSnapshot.handoffs.filter((handoff) => handoff.status === 'open').map((handoff) => handoff.task_id))
-    tasks = tasks.filter((task) => openTaskIds.has(task.task_id))
-  }
-
-  if (options?.view === 'attention') {
-    const attentionTaskIds = new Set(
-      mockSnapshot.task_attention.filter((attention) => attention.level !== 'normal').map((attention) => attention.task_id)
-    )
-    tasks = tasks.filter((task) => attentionTaskIds.has(task.task_id))
-  }
-
-  if (options?.sort === 'updated_at') {
-    tasks.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
-  } else if (options?.sort === 'created_at') {
-    tasks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-  } else if (options?.sort === 'title') {
-    tasks.sort((a, b) => a.title.localeCompare(b.title))
-  }
-
-  const taskIds = new Set(tasks.map((task) => task.task_id))
-
-  return {
-    data: {
-      ...mockSnapshot,
-      agent_attention: mockSnapshot.agent_attention.filter((attention) => {
-        const taskMatch = attention.current_task_id ? taskIds.has(attention.current_task_id) : false
-        return taskMatch
-      }),
-      evidence: mockSnapshot.evidence.filter((item) => taskIds.has(item.task_id)),
-      handoff_attention: mockSnapshot.handoff_attention.filter((attention) => taskIds.has(attention.task_id)),
-      handoffs: mockSnapshot.handoffs.filter((handoff) => taskIds.has(handoff.task_id)),
-      heartbeats: mockSnapshot.heartbeats.filter((heartbeat) => {
-        const currentMatches = heartbeat.current_task_id ? taskIds.has(heartbeat.current_task_id) : false
-        const relatedMatches = heartbeat.related_task_id ? taskIds.has(heartbeat.related_task_id) : false
-        return currentMatches || relatedMatches
-      }),
-      task_attention: mockSnapshot.task_attention.filter((attention) => taskIds.has(attention.task_id)),
-      tasks,
-    },
-    error: null,
-    isLoading: false,
-  }
-})
+)
 
 vi.mock('../lib/queries', () => ({
-  useCanopySnapshot: (options?: { project?: string; sort?: string; view?: string }) => useCanopySnapshotMock(options),
+  useCanopySnapshot: (options?: {
+    acknowledged?: string
+    preset?: string
+    priorityAtLeast?: string
+    project?: string
+    severityAtLeast?: string
+    sort?: string
+    view?: string
+  }) => useCanopySnapshotMock(options),
   useCanopyTaskDetail: (taskId: string) => ({
     data: taskId && !mockTaskDetailError ? mockTaskDetail : undefined,
     error: mockTaskDetailError,
@@ -337,6 +427,9 @@ describe('Canopy page', () => {
     expect(screen.getByText('Fix lifecycle adapter')).toBeInTheDocument()
     expect(screen.getByText('1 critical tasks')).toBeInTheDocument()
     expect(screen.getByText('2 need attention')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Critical · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Unacknowledged · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Open handoffs · 1' })).toBeInTheDocument()
   })
 
   it('filters tasks by query and status from the URL', () => {
@@ -348,29 +441,90 @@ describe('Canopy page', () => {
   })
 
   it('applies saved views and sorting from the URL', () => {
-    renderWithProviders(<Canopy />, { route: '/canopy?view=review&sort=updated_at' })
+    renderWithProviders(<Canopy />, { route: '/canopy?preset=review_queue&sort=updated_at' })
 
     expect(screen.getByDisplayValue('updated_at')).toBeInTheDocument()
     expect(screen.getByText('Review queue')).toBeInTheDocument()
     expect(screen.getByText('Add Cap Canopy page')).toBeInTheDocument()
     expect(screen.queryByText('Fix lifecycle adapter')).not.toBeInTheDocument()
     expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'review_queue',
+      priorityAtLeast: undefined,
       project: '/workspace/cap',
+      severityAtLeast: undefined,
       sort: 'updated_at',
-      view: 'review',
     })
   })
 
-  it('supports the runtime attention view', () => {
-    renderWithProviders(<Canopy />, { route: '/canopy?view=attention' })
+  it('supports the runtime critical queue', () => {
+    renderWithProviders(<Canopy />, { route: '/canopy?preset=critical&sort=attention' })
 
-    expect(screen.getByText('Needs attention')).toBeInTheDocument()
-    expect(screen.getByText('Add Cap Canopy page')).toBeInTheDocument()
+    expect(screen.getByText('Critical queue')).toBeInTheDocument()
     expect(screen.getByText('Fix lifecycle adapter')).toBeInTheDocument()
+    expect(screen.queryByText('Add Cap Canopy page')).not.toBeInTheDocument()
     expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'critical',
+      priorityAtLeast: undefined,
       project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: 'attention',
+    })
+  })
+
+  it('opens the runtime unacknowledged queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, {
+      route: '/canopy?priority=critical&severity=critical&ack=true&status=review_required&q=cap&sort=updated_at',
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Unacknowledged · 1' }))
+
+    expect(screen.getByText('Fix lifecycle adapter')).toBeInTheDocument()
+    expect(screen.queryByText('Add Cap Canopy page')).not.toBeInTheDocument()
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'unacknowledged',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the runtime handoff queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy?priority=critical&status=blocked&q=adapter' })
+
+    await user.click(screen.getByRole('button', { name: 'Open handoffs · 1' }))
+
+    expect(screen.getByText('Add Cap Canopy page')).toBeInTheDocument()
+    expect(screen.queryByText('Fix lifecycle adapter')).not.toBeInTheDocument()
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'handoffs',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('supports runtime triage filters', () => {
+    renderWithProviders(<Canopy />, { route: '/canopy?priority=high&severity=critical&ack=false' })
+
+    expect(screen.getByText('Fix lifecycle adapter')).toBeInTheDocument()
+    expect(screen.queryByText('Add Cap Canopy page')).not.toBeInTheDocument()
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: 'false',
+      preset: 'default',
+      priorityAtLeast: 'high',
+      project: '/workspace/cap',
+      severityAtLeast: 'critical',
       sort: 'status',
-      view: 'attention',
     })
   })
 
@@ -382,15 +536,18 @@ describe('Canopy page', () => {
   })
 
   it('falls back to default query-state when URL values are invalid', () => {
-    renderWithProviders(<Canopy />, { route: '/canopy?view=bogus&sort=bogus&status=nope' })
+    renderWithProviders(<Canopy />, { route: '/canopy?preset=bogus&priority=nope&severity=nope&ack=nope&sort=bogus&status=nope' })
 
     expect(screen.getByDisplayValue('status')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('all')).toBeInTheDocument()
+    expect(screen.getAllByDisplayValue('all').length).toBeGreaterThan(0)
     expect(screen.getByText('All tasks')).toBeInTheDocument()
     expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'default',
+      priorityAtLeast: undefined,
       project: '/workspace/cap',
+      severityAtLeast: undefined,
       sort: 'status',
-      view: 'all',
     })
   })
 
@@ -417,13 +574,20 @@ describe('Canopy page', () => {
     expect(await screen.findByText(/Task ID:/)).toBeInTheDocument()
     expect(screen.getAllByText('needs attention').length).toBeGreaterThan(0)
     expect(screen.getByText(/Attention reasons:/)).toBeInTheDocument()
+    expect(screen.getAllByText('priority high').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('severity medium').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('acknowledged').length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Operator note:/).length).toBeGreaterThan(0)
     expect(screen.getByText(/Owner heartbeat freshness:/)).toBeInTheDocument()
     expect(await screen.findByText('Task created')).toBeInTheDocument()
+    expect(screen.getByText('Triage updated')).toBeInTheDocument()
     expect(screen.getByText('Heartbeats')).toBeInTheDocument()
     expect(screen.getByText('Agent Attention')).toBeInTheDocument()
     expect(screen.getAllByText('Agent: agent-1').length).toBeGreaterThan(0)
     expect(screen.getByText('Status changed to review_required')).toBeInTheDocument()
     expect(screen.getByText('Need review before closing')).toBeInTheDocument()
+    expect(screen.getAllByText(/Due /).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Expires /).length).toBeGreaterThan(0)
     expect(screen.getByText('Ready for review.')).toBeInTheDocument()
     expect(screen.getByText('Hyphae session')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Open session' })).toHaveAttribute('href', '/sessions?session=ses_123')

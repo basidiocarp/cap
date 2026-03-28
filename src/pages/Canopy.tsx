@@ -10,6 +10,8 @@ import type {
   CanopyTaskAttention,
   CanopyTaskDetail,
   CanopyTaskEvent,
+  CanopyTaskPriority,
+  CanopyTaskSeverity,
   CanopyTaskStatus,
 } from '../lib/api'
 import { EmptyState } from '../components/EmptyState'
@@ -40,12 +42,13 @@ const STATUS_FILTER_OPTIONS = [
 ]
 
 const SAVED_VIEW_OPTIONS = [
-  { description: 'Everything in the active project', label: 'All tasks', value: 'all' },
-  { description: 'Open, assigned, and in-progress work', label: 'Active work', value: 'active' },
-  { description: 'Blocked tasks and failed verification', label: 'Blocked focus', value: 'blocked' },
-  { description: 'Review-required or pending verification', label: 'Review queue', value: 'review' },
-  { description: 'Tasks with open handoffs', label: 'Open handoffs', value: 'handoffs' },
+  { description: 'Everything in the active project', label: 'All tasks', value: 'default' },
   { description: 'Tasks Canopy already marks as needing attention', label: 'Needs attention', value: 'attention' },
+  { description: 'Review-required or pending verification', label: 'Review queue', value: 'review_queue' },
+  { description: 'Blocked tasks and failed verification', label: 'Blocked focus', value: 'blocked' },
+  { description: 'Tasks with open handoffs', label: 'Open handoffs', value: 'handoffs' },
+  { description: 'Critical tasks from the runtime attention model', label: 'Critical queue', value: 'critical' },
+  { description: 'Attention tasks that have not been acknowledged yet', label: 'Unacknowledged', value: 'unacknowledged' },
 ] as const
 
 const SORT_OPTIONS = [
@@ -54,13 +57,43 @@ const SORT_OPTIONS = [
   { label: 'Last updated', value: 'updated_at' },
   { label: 'Created at', value: 'created_at' },
   { label: 'Verification state', value: 'verification' },
+  { label: 'Priority', value: 'priority' },
+  { label: 'Severity', value: 'severity' },
+  { label: 'Attention', value: 'attention' },
+] as const
+
+const PRIORITY_FILTER_OPTIONS = [
+  { label: 'Any priority', value: 'all' },
+  { label: 'Medium+', value: 'medium' },
+  { label: 'High+', value: 'high' },
+  { label: 'Critical only', value: 'critical' },
+] as const
+
+const SEVERITY_FILTER_OPTIONS = [
+  { label: 'Any severity', value: 'all' },
+  { label: 'Low+', value: 'low' },
+  { label: 'Medium+', value: 'medium' },
+  { label: 'High+', value: 'high' },
+  { label: 'Critical only', value: 'critical' },
+] as const
+
+const ACK_FILTER_OPTIONS = [
+  { label: 'All acknowledgment', value: 'all' },
+  { label: 'Acknowledged', value: 'true' },
+  { label: 'Unacknowledged', value: 'false' },
 ] as const
 
 type CanopySavedView = (typeof SAVED_VIEW_OPTIONS)[number]['value']
 type CanopySortMode = (typeof SORT_OPTIONS)[number]['value']
+type CanopyPriorityFilter = (typeof PRIORITY_FILTER_OPTIONS)[number]['value']
+type CanopySeverityFilter = (typeof SEVERITY_FILTER_OPTIONS)[number]['value']
+type CanopyAcknowledgedFilter = (typeof ACK_FILTER_OPTIONS)[number]['value']
 const SAVED_VIEW_VALUES = new Set<CanopySavedView>(SAVED_VIEW_OPTIONS.map((option) => option.value))
 const SORT_VALUES = new Set<CanopySortMode>(SORT_OPTIONS.map((option) => option.value))
 const STATUS_FILTER_VALUES = new Set<string>(STATUS_FILTER_OPTIONS.map((option) => option.value))
+const PRIORITY_FILTER_VALUES = new Set<CanopyPriorityFilter>(PRIORITY_FILTER_OPTIONS.map((option) => option.value))
+const SEVERITY_FILTER_VALUES = new Set<CanopySeverityFilter>(SEVERITY_FILTER_OPTIONS.map((option) => option.value))
+const ACK_FILTER_VALUES = new Set<CanopyAcknowledgedFilter>(ACK_FILTER_OPTIONS.map((option) => option.value))
 
 interface EvidenceLink {
   label: string
@@ -99,6 +132,34 @@ function formatLabel(value: string): string {
 
 function joinedReasons(reasons: string[]): string {
   return reasons.map(formatLabel).join(', ')
+}
+
+function priorityColor(priority: CanopyTaskPriority): string {
+  switch (priority) {
+    case 'critical':
+      return 'red'
+    case 'high':
+      return 'orange'
+    case 'medium':
+      return 'yellow'
+    default:
+      return 'gray'
+  }
+}
+
+function severityColor(severity: CanopyTaskSeverity): string {
+  switch (severity) {
+    case 'critical':
+      return 'red'
+    case 'high':
+      return 'orange'
+    case 'medium':
+      return 'yellow'
+    case 'low':
+      return 'blue'
+    default:
+      return 'gray'
+  }
 }
 
 function heartbeatSourceLabel(source: CanopyAgentHeartbeatEvent['source']): string {
@@ -189,6 +250,8 @@ function eventTitle(event: CanopyTaskEvent): string {
       return 'Ownership transferred'
     case 'status_changed':
       return `Status changed to ${event.to_status}`
+    case 'triage_updated':
+      return 'Triage updated'
     default:
       return event.event_type
   }
@@ -253,6 +316,34 @@ function TaskCard({ attention, onOpen, task }: { attention?: CanopyTaskAttention
             </Text>
           ) : null}
         </Group>
+        <Group gap='xs'>
+          <Badge
+            color={priorityColor(task.priority)}
+            variant='outline'
+          >
+            priority {task.priority}
+          </Badge>
+          <Badge
+            color={severityColor(task.severity)}
+            variant='outline'
+          >
+            severity {task.severity}
+          </Badge>
+          <Badge
+            color={attention?.acknowledged ? 'green' : 'gray'}
+            variant='light'
+          >
+            {attention?.acknowledged ? 'acknowledged' : 'unacknowledged'}
+          </Badge>
+        </Group>
+        {task.owner_note ? (
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Operator note: {task.owner_note}
+          </Text>
+        ) : null}
         {task.blocked_reason ? (
           <Text
             c='red'
@@ -386,6 +477,26 @@ function TaskDetailModal({
                   Updated {timeAgo(detail.task.updated_at, { allowMonths: true })}
                 </Text>
               </Group>
+              <Group gap='xs'>
+                <Badge
+                  color={priorityColor(detail.task.priority)}
+                  variant='outline'
+                >
+                  priority {detail.task.priority}
+                </Badge>
+                <Badge
+                  color={severityColor(detail.task.severity)}
+                  variant='outline'
+                >
+                  severity {detail.task.severity}
+                </Badge>
+                <Badge
+                  color={detail.attention.acknowledged ? 'green' : 'gray'}
+                  variant='light'
+                >
+                  {detail.attention.acknowledged ? 'acknowledged' : 'unacknowledged'}
+                </Badge>
+              </Group>
               {detail.attention.reasons.length ? (
                 <Text
                   c='dimmed'
@@ -408,6 +519,15 @@ function TaskDetailModal({
                   size='sm'
                 >
                   Open handoff freshness: {formatLabel(detail.attention.open_handoff_freshness)}
+                </Text>
+              ) : null}
+              {detail.task.owner_note ? <Text size='sm'>Operator note: {detail.task.owner_note}</Text> : null}
+              {detail.task.acknowledged_at ? (
+                <Text
+                  c='dimmed'
+                  size='sm'
+                >
+                  Acknowledged by {detail.task.acknowledged_by ?? 'operator'} {timeAgo(detail.task.acknowledged_at, { allowMonths: true })}
                 </Text>
               ) : null}
               {detail.task.description ? <Text size='sm'>{detail.task.description}</Text> : null}
@@ -652,6 +772,22 @@ function TaskDetailModal({
                         >
                           Created {timeAgo(handoff.created_at, { allowMonths: true })}
                         </Text>
+                        {handoff.due_at ? (
+                          <Text
+                            c='dimmed'
+                            size='sm'
+                          >
+                            Due {timeAgo(handoff.due_at, { allowMonths: true })}
+                          </Text>
+                        ) : null}
+                        {handoff.expires_at ? (
+                          <Text
+                            c='dimmed'
+                            size='sm'
+                          >
+                            Expires {timeAgo(handoff.expires_at, { allowMonths: true })}
+                          </Text>
+                        ) : null}
                         {attention?.reasons.length ? (
                           <Text
                             c='dimmed'
@@ -769,23 +905,59 @@ export function Canopy() {
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedTaskId = searchParams.get('task') ?? ''
   const searchQuery = searchParams.get('q') ?? ''
+  const presetParam = searchParams.get('preset')
+  const priorityParam = searchParams.get('priority')
+  const severityParam = searchParams.get('severity')
+  const acknowledgedParam = searchParams.get('ack')
   const sortParam = searchParams.get('sort')
   const statusParam = searchParams.get('status')
   const viewParam = searchParams.get('view')
   const sortMode: CanopySortMode = sortParam && SORT_VALUES.has(sortParam as CanopySortMode) ? (sortParam as CanopySortMode) : 'status'
   const statusFilter = statusParam && STATUS_FILTER_VALUES.has(statusParam) ? statusParam : 'all'
+  const legacyPreset = viewParam && SAVED_VIEW_VALUES.has(viewParam as CanopySavedView) ? (viewParam as CanopySavedView) : undefined
   const savedView: CanopySavedView =
-    viewParam && SAVED_VIEW_VALUES.has(viewParam as CanopySavedView) ? (viewParam as CanopySavedView) : 'all'
+    presetParam && SAVED_VIEW_VALUES.has(presetParam as CanopySavedView) ? (presetParam as CanopySavedView) : (legacyPreset ?? 'default')
+  const priorityFilter: CanopyPriorityFilter =
+    priorityParam && PRIORITY_FILTER_VALUES.has(priorityParam as CanopyPriorityFilter) ? (priorityParam as CanopyPriorityFilter) : 'all'
+  const severityFilter: CanopySeverityFilter =
+    severityParam && SEVERITY_FILTER_VALUES.has(severityParam as CanopySeverityFilter) ? (severityParam as CanopySeverityFilter) : 'all'
+  const acknowledgedFilter: CanopyAcknowledgedFilter =
+    acknowledgedParam && ACK_FILTER_VALUES.has(acknowledgedParam as CanopyAcknowledgedFilter)
+      ? (acknowledgedParam as CanopyAcknowledgedFilter)
+      : 'all'
   const modalOpen = Boolean(selectedTaskId)
   const { data: project } = useProject()
   const activeProject = project?.active ?? null
-  const snapshotQuery = useCanopySnapshot({
+  const criticalQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'critical',
     project: activeProject ?? undefined,
+  })
+  const unacknowledgedQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'unacknowledged',
+    project: activeProject ?? undefined,
+  })
+  const blockedQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'blocked',
+    project: activeProject ?? undefined,
+  })
+  const handoffQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'handoffs',
+    project: activeProject ?? undefined,
+  })
+  const snapshotQuery = useCanopySnapshot({
+    acknowledged: acknowledgedFilter === 'all' ? undefined : acknowledgedFilter,
+    preset: savedView,
+    priorityAtLeast: priorityFilter === 'all' ? undefined : priorityFilter,
+    project: activeProject ?? undefined,
+    severityAtLeast: severityFilter === 'all' ? undefined : severityFilter,
     sort: sortMode,
-    view: savedView,
   })
   const detailQuery = useCanopyTaskDetail(selectedTaskId)
   const snapshot = snapshotQuery.data
+  const criticalQueueSnapshot = criticalQueueSnapshotQuery.data
+  const unacknowledgedQueueSnapshot = unacknowledgedQueueSnapshotQuery.data
+  const blockedQueueSnapshot = blockedQueueSnapshotQuery.data
+  const handoffQueueSnapshot = handoffQueueSnapshotQuery.data
   const taskAttentionById = useMemo(
     () => new Map(snapshot?.task_attention.map((attention) => [attention.task_id, attention]) ?? []),
     [snapshot?.task_attention]
@@ -800,6 +972,7 @@ export function Canopy() {
         normalizedQuery.length === 0 ||
         task.title.toLowerCase().includes(normalizedQuery) ||
         (task.description?.toLowerCase().includes(normalizedQuery) ?? false) ||
+        (task.owner_note?.toLowerCase().includes(normalizedQuery) ?? false) ||
         task.task_id.toLowerCase().includes(normalizedQuery) ||
         (task.owner_agent_id?.toLowerCase().includes(normalizedQuery) ?? false)
 
@@ -850,18 +1023,24 @@ export function Canopy() {
 
   const updateSearchParams = (
     updates: {
+      ack?: string | null
+      preset?: string | null
+      priority?: string | null
       q?: string | null
+      severity?: string | null
       sort?: string | null
       status?: string | null
       task?: string | null
-      view?: string | null
     },
     options?: { replace?: boolean }
   ) => {
     const next = new URLSearchParams(searchParams)
+    if ('preset' in updates) {
+      next.delete('view')
+    }
 
     for (const [key, value] of Object.entries(updates)) {
-      if (!value || value === 'all') {
+      if (!value || value === 'all' || (key === 'preset' && value === 'default')) {
         next.delete(key)
       } else {
         next.set(key, value)
@@ -877,6 +1056,19 @@ export function Canopy() {
 
   const closeTask = () => {
     updateSearchParams({ task: null }, { replace: false })
+  }
+
+  const openQueuePreset = (preset: CanopySavedView) => {
+    updateSearchParams({
+      ack: null,
+      preset,
+      priority: null,
+      q: null,
+      severity: null,
+      sort: null,
+      status: null,
+      task: null,
+    })
   }
 
   if (snapshotQuery.isLoading) {
@@ -923,6 +1115,30 @@ export function Canopy() {
               value={sortMode}
             />
           </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Select
+              data={PRIORITY_FILTER_OPTIONS}
+              label='Priority threshold'
+              onChange={(value) => updateSearchParams({ priority: value ?? 'all', task: null })}
+              value={priorityFilter}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Select
+              data={SEVERITY_FILTER_OPTIONS}
+              label='Severity threshold'
+              onChange={(value) => updateSearchParams({ severity: value ?? 'all', task: null })}
+              value={severityFilter}
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Select
+              data={ACK_FILTER_OPTIONS}
+              label='Acknowledgment'
+              onChange={(value) => updateSearchParams({ ack: value ?? 'all', task: null })}
+              value={acknowledgedFilter}
+            />
+          </Grid.Col>
         </Grid>
       </SectionCard>
 
@@ -938,7 +1154,7 @@ export function Canopy() {
             {SAVED_VIEW_OPTIONS.map((view) => (
               <Button
                 key={view.value}
-                onClick={() => updateSearchParams({ task: null, view: view.value })}
+                onClick={() => updateSearchParams({ preset: view.value, task: null })}
                 size='xs'
                 variant={savedView === view.value ? 'filled' : 'light'}
               >
@@ -953,6 +1169,55 @@ export function Canopy() {
             {SAVED_VIEW_OPTIONS.find((view) => view.value === savedView)?.description}. Runtime sort: {sortMode.replaceAll('_', ' ')}.
           </Text>
         </Stack>
+      </SectionCard>
+
+      <SectionCard title='Operator queues'>
+        <Grid>
+          <Grid.Col span={{ base: 6, md: 3 }}>
+            <Button
+              fullWidth
+              onClick={() => openQueuePreset('critical')}
+              variant={savedView === 'critical' ? 'filled' : 'light'}
+            >
+              Critical
+              {' · '}
+              {criticalQueueSnapshot?.tasks.length ?? 0}
+            </Button>
+          </Grid.Col>
+          <Grid.Col span={{ base: 6, md: 3 }}>
+            <Button
+              fullWidth
+              onClick={() => openQueuePreset('unacknowledged')}
+              variant={savedView === 'unacknowledged' ? 'filled' : 'light'}
+            >
+              Unacknowledged
+              {' · '}
+              {unacknowledgedQueueSnapshot?.tasks.length ?? 0}
+            </Button>
+          </Grid.Col>
+          <Grid.Col span={{ base: 6, md: 3 }}>
+            <Button
+              fullWidth
+              onClick={() => openQueuePreset('blocked')}
+              variant={savedView === 'blocked' ? 'filled' : 'light'}
+            >
+              Blocked
+              {' · '}
+              {blockedQueueSnapshot?.tasks.length ?? 0}
+            </Button>
+          </Grid.Col>
+          <Grid.Col span={{ base: 6, md: 3 }}>
+            <Button
+              fullWidth
+              onClick={() => openQueuePreset('handoffs')}
+              variant={savedView === 'handoffs' ? 'filled' : 'light'}
+            >
+              Open handoffs
+              {' · '}
+              {handoffQueueSnapshot?.tasks.length ?? 0}
+            </Button>
+          </Grid.Col>
+        </Grid>
       </SectionCard>
 
       <Grid>

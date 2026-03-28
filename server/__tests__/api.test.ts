@@ -301,14 +301,21 @@ describe('API Routes', () => {
         tasks: [],
       })
 
-      const req = new Request('http://localhost:3001/api/canopy/snapshot?project=/workspace/cap&view=review&sort=updated_at')
+      const req = new Request(
+        'http://localhost:3001/api/canopy/snapshot?project=/workspace/cap&preset=review_queue&sort=attention&priority_at_least=high&severity_at_least=medium&acknowledged=false'
+      )
       const res = await app.fetch(req)
 
       expect(res.status).toBe(200)
       expect(snapshotSpy).toHaveBeenCalledWith({
+        acknowledged: 'false',
+        attentionAtLeast: undefined,
+        preset: 'review_queue',
+        priorityAtLeast: 'high',
         projectRoot: '/workspace/cap',
-        sort: 'updated_at',
-        view: 'review',
+        severityAtLeast: 'medium',
+        sort: 'attention',
+        view: undefined,
       })
     })
 
@@ -321,12 +328,19 @@ describe('API Routes', () => {
         tasks: [],
       })
 
-      const req = new Request('http://localhost:3001/api/canopy/snapshot?project=/workspace/cap&view=bogus&sort=nope')
+      const req = new Request(
+        'http://localhost:3001/api/canopy/snapshot?project=/workspace/cap&view=bogus&sort=nope&preset=nope&priority_at_least=nope&severity_at_least=nope&acknowledged=nope&attention_at_least=nope'
+      )
       const res = await app.fetch(req)
 
       expect(res.status).toBe(200)
       expect(snapshotSpy).toHaveBeenCalledWith({
+        acknowledged: undefined,
+        attentionAtLeast: undefined,
+        preset: undefined,
+        priorityAtLeast: undefined,
         projectRoot: '/workspace/cap',
+        severityAtLeast: undefined,
         sort: undefined,
         view: undefined,
       })
@@ -343,14 +357,21 @@ describe('API Routes', () => {
         tasks: [{ task_id: 'task-1', title: 'test task' }],
       })
 
-      const req = new Request('http://localhost:3001/api/canopy/snapshot?project=/workspace/cap&view=review&sort=updated_at')
+      const req = new Request(
+        'http://localhost:3001/api/canopy/snapshot?project=/workspace/cap&preset=review_queue&sort=updated_at&acknowledged=false'
+      )
       const res = await app.fetch(req)
 
       expect(res.status).toBe(200)
       expect(snapshotSpy).toHaveBeenCalledWith({
+        acknowledged: 'false',
+        attentionAtLeast: undefined,
+        preset: 'review_queue',
+        priorityAtLeast: undefined,
         projectRoot: '/workspace/cap',
+        severityAtLeast: undefined,
         sort: 'updated_at',
-        view: 'review',
+        view: undefined,
       })
       await expect(res.json()).resolves.toMatchObject({
         agents: [{ agent_id: 'agent-1' }],
