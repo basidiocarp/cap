@@ -28,7 +28,7 @@ vi.mock('../lib/queries', () => ({
     },
     isLoading: false,
   })),
-  useProject: vi.fn(() => ({
+  useProjectContextController: vi.fn(() => ({
     data: {
       active: '/workspace/cap',
       recent: ['/workspace/cap', '/workspace/hyphae'],

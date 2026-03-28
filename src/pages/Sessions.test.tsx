@@ -77,7 +77,7 @@ vi.mock('../lib/queries', () => ({
     data: mockCommandHistory,
     isLoading: false,
   }),
-  useProject: () => ({
+  useProjectContextController: () => ({
     data: mockProject,
     isLoading: false,
   }),

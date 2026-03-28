@@ -11,7 +11,7 @@ import { ProjectContextSummary } from '../components/ProjectContextSummary'
 import { SectionCard } from '../components/SectionCard'
 import { symbolKindColor } from '../lib/colors'
 import { onActivate } from '../lib/keyboard'
-import { useProject, useRhizomeStatus, useSymbolSearch } from '../lib/queries'
+import { useProjectContextController, useRhizomeStatus, useSymbolSearch } from '../lib/queries'
 import { codeExplorerHref } from '../lib/routes'
 import { useProjectContextView } from '../store/project-context'
 
@@ -31,7 +31,7 @@ export function SymbolSearch() {
   const [debouncedQuery] = useDebouncedValue(query, 400)
 
   const { data: status } = useRhizomeStatus()
-  const { data: project } = useProject()
+  const { data: project } = useProjectContextController()
   const { activeProject, recentProjects } = useProjectContextView(project)
   const { data: results = [], error, isLoading: loading } = useSymbolSearch(debouncedQuery)
 

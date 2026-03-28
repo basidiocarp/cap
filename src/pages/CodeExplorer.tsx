@@ -8,7 +8,7 @@ import { EmptyState } from '../components/EmptyState'
 import { ErrorAlert } from '../components/ErrorAlert'
 import { PageLoader } from '../components/PageLoader'
 import { useFileTreeState } from '../hooks/useFileTreeState'
-import { useDefinition, useExports, useFileSummary, useProject, useRhizomeStatus, useSymbols } from '../lib/queries'
+import { useDefinition, useExports, useFileSummary, useProjectContextController, useRhizomeStatus, useSymbols } from '../lib/queries'
 import { memoirsHref, memoriesHref, symbolSearchHref } from '../lib/routes'
 import { useProjectContextView } from '../store/project-context'
 import { CodeExplorerHeader } from './code-explorer/CodeExplorerHeader'
@@ -57,7 +57,7 @@ export function CodeExplorer() {
   const [showFullDef, setShowFullDef] = useState(false)
 
   const { data: statusData } = useRhizomeStatus()
-  const { data: project } = useProject()
+  const { data: project } = useProjectContextController()
   const { activeProject, recentProjects } = useProjectContextView(project)
   const unavailable = statusData ? !statusData.available : false
   const projectName = activeProject?.split('/').pop() ?? 'project'

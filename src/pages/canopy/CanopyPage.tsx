@@ -7,7 +7,7 @@ import { EmptyState } from '../../components/EmptyState'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { PageLoader } from '../../components/PageLoader'
 import { SectionCard } from '../../components/SectionCard'
-import { useCanopySnapshot, useCanopyTaskDetail, useProject } from '../../lib/queries'
+import { useCanopySnapshot, useCanopyTaskDetail, useProjectContextController } from '../../lib/queries'
 import {
   ACK_FILTER_OPTIONS,
   filterCanopyTasks,
@@ -29,7 +29,7 @@ export function CanopyPage() {
   const { acknowledgedFilter, priorityFilter, savedView, searchQuery, selectedTaskId, severityFilter, sortMode, statusFilter } =
     resolveCanopyViewState(searchParams)
   const modalOpen = Boolean(selectedTaskId)
-  const { data: project } = useProject()
+  const { data: project } = useProjectContextController()
   const activeProject = project?.active ?? null
 
   const criticalQueueSnapshotQuery = useCanopySnapshot({

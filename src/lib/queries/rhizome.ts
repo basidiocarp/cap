@@ -61,12 +61,16 @@ export function useRhizomeStatus() {
 }
 
 export function useProject() {
-  const syncProject = useProjectContextStore((state) => state.syncProject)
-  const query = useQuery({
+  return useQuery({
     queryFn: () => rhizomeApi.project(),
     queryKey: rhizomeKeys.project(),
     staleTime: 30_000,
   })
+}
+
+export function useProjectContextController() {
+  const syncProject = useProjectContextStore((state) => state.syncProject)
+  const query = useProject()
 
   useEffect(() => {
     if (query.data) {

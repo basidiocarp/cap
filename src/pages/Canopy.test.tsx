@@ -537,7 +537,7 @@ vi.mock('../lib/queries', () => ({
     error: mockTaskDetailError,
     isLoading: false,
   }),
-  useProject: () => ({
+  useProjectContextController: () => ({
     data: mockProject,
     isLoading: false,
   }),

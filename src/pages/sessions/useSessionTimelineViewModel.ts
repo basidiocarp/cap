@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import { useEcosystemStatusController } from '../../lib/ecosystem-status'
-import { useCommandHistory, useProject, useRhizomeStatus, useSessionTimeline } from '../../lib/queries'
+import { useCommandHistory, useProjectContextController, useRhizomeStatus, useSessionTimeline } from '../../lib/queries'
 import { getEcosystemReadinessModel } from '../../lib/readiness'
 import { useStipeActionController } from '../../lib/stipe-actions'
 import { useProjectContextView } from '../../store/project-context'
@@ -10,8 +10,9 @@ import { buildCoverageIssues } from './session-coverage'
 
 export function useSessionTimelineViewModel() {
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
+  const [handledRouteSelectionKey, setHandledRouteSelectionKey] = useState<string | null>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const projectQuery = useProject()
+  const projectQuery = useProjectContextController()
   const { activeProject, recentProjects } = useProjectContextView(projectQuery.data ?? null)
   const activeProjectName = activeProject?.split('/').pop()
   const { refreshAll, repairPlanQuery, statusQuery } = useEcosystemStatusController()
@@ -28,9 +29,17 @@ export function useSessionTimelineViewModel() {
   const selectedSession = sessions.find((session) => session.id === selectedSessionId) ?? null
   const requestedSessionId = searchParams.get('session')
   const requestedDetail = searchParams.get('detail')
+  const requestedSelectionKey = requestedSessionId ? `session:${requestedSessionId}` : requestedDetail === 'latest' ? 'detail:latest' : null
 
   useEffect(() => {
-    if (selectedSessionId || sessions.length === 0) {
+    if (!requestedSelectionKey) {
+      if (handledRouteSelectionKey !== null) {
+        setHandledRouteSelectionKey(null)
+      }
+      return
+    }
+
+    if (handledRouteSelectionKey === requestedSelectionKey || sessions.length === 0) {
       return
     }
 
@@ -38,14 +47,16 @@ export function useSessionTimelineViewModel() {
       const matchedSession = sessions.find((session) => session.id === requestedSessionId)
       if (matchedSession) {
         setSelectedSessionId(matchedSession.id)
+        setHandledRouteSelectionKey(requestedSelectionKey)
       }
       return
     }
 
     if (requestedDetail === 'latest') {
       setSelectedSessionId(sessions[0]?.id ?? null)
+      setHandledRouteSelectionKey(requestedSelectionKey)
     }
-  }, [requestedDetail, requestedSessionId, selectedSessionId, sessions])
+  }, [handledRouteSelectionKey, requestedDetail, requestedSelectionKey, requestedSessionId, sessions])
 
   function refreshView() {
     refreshAll()
@@ -57,10 +68,14 @@ export function useSessionTimelineViewModel() {
 
   function openSessionDetail(sessionId: string) {
     setSelectedSessionId(sessionId)
+    setHandledRouteSelectionKey(`session:${sessionId}`)
     setSearchParams({ session: sessionId })
   }
 
   function closeSessionDetail() {
+    if (requestedSelectionKey) {
+      setHandledRouteSelectionKey(requestedSelectionKey)
+    }
     setSelectedSessionId(null)
     setSearchParams({})
   }

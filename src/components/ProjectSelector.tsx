@@ -2,7 +2,7 @@ import { ActionIcon, Button, Combobox, Group, Text, TextInput, useCombobox } fro
 import { IconFolder, IconFolderOpen } from '@tabler/icons-react'
 import { useState } from 'react'
 
-import { useProject, useSwitchProject } from '../lib/queries'
+import { useProjectContextController, useSwitchProject } from '../lib/queries'
 import { useProjectContextView } from '../store/project-context'
 
 function basename(path: string): string {
@@ -10,7 +10,7 @@ function basename(path: string): string {
 }
 
 export function ProjectSelector({ fullWidth = false, variant = 'icon' }: { fullWidth?: boolean; variant?: 'button' | 'icon' }) {
-  const { data: project } = useProject()
+  const { data: project } = useProjectContextController()
   const switchProject = useSwitchProject()
   const combobox = useCombobox()
   const [customPath, setCustomPath] = useState('')
