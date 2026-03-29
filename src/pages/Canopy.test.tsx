@@ -86,7 +86,21 @@ const mockSnapshot: CanopySnapshot = {
     stale_handoffs: 0,
     tasks_needing_attention: 2,
   },
-  evidence: [],
+  evidence: [
+    {
+      evidence_id: 'evidence-4',
+      label: 'Operator closeout note',
+      related_file: null,
+      related_handoff_id: null,
+      related_memory_query: null,
+      related_session_id: null,
+      related_symbol: null,
+      source_kind: 'manual_note',
+      source_ref: 'closeout-note-1',
+      summary: 'Support context is already attached for closeout.',
+      task_id: 'task-4',
+    },
+  ],
   execution_summaries: [
     {
       active_execution_seconds: 420,
@@ -130,6 +144,21 @@ const mockSnapshot: CanopySnapshot = {
       run_count: 0,
       started_at: null,
       task_id: 'task-3',
+      total_execution_seconds: 0,
+      yield_count: 0,
+    },
+    {
+      active_execution_seconds: 0,
+      claim_count: 0,
+      claimed_at: null,
+      completion_count: 0,
+      last_execution_action: null,
+      last_execution_agent_id: null,
+      last_execution_at: null,
+      pause_count: 0,
+      run_count: 0,
+      started_at: null,
+      task_id: 'task-4',
       total_execution_seconds: 0,
       yield_count: 0,
     },
@@ -304,6 +333,16 @@ const mockSnapshot: CanopySnapshot = {
       stale_blocker_count: 0,
       task_id: 'task-3',
     },
+    {
+      active_blocker_count: 0,
+      blocker_count: 0,
+      blocking_count: 0,
+      follow_up_child_count: 0,
+      follow_up_parent_count: 0,
+      open_follow_up_child_count: 0,
+      stale_blocker_count: 0,
+      task_id: 'task-4',
+    },
   ],
   relationships: [
     {
@@ -341,8 +380,23 @@ const mockSnapshot: CanopySnapshot = {
       level: 'needs_attention',
       open_handoff_freshness: 'aging',
       owner_heartbeat_freshness: 'fresh',
-      reasons: ['review_required', 'review_with_graph_pressure', 'aging_open_handoff'],
+      reasons: [
+        'review_required',
+        'review_with_graph_pressure',
+        'review_handoff_follow_through',
+        'review_awaiting_support',
+        'aging_open_handoff',
+      ],
       task_id: 'task-1',
+    },
+    {
+      acknowledged: true,
+      freshness: 'fresh',
+      level: 'needs_attention',
+      open_handoff_freshness: null,
+      owner_heartbeat_freshness: null,
+      reasons: ['review_required', 'review_ready_for_closeout'],
+      task_id: 'task-4',
     },
   ],
   task_heartbeat_summaries: [
@@ -434,6 +488,29 @@ const mockSnapshot: CanopySnapshot = {
       title: 'Track rollout cleanups',
       updated_at: '2026-03-28T12:09:00Z',
       verification_state: 'unknown',
+      verified_at: null,
+      verified_by: null,
+    },
+    {
+      acknowledged_at: '2026-03-28T12:22:00Z',
+      acknowledged_by: 'operator',
+      blocked_reason: null,
+      closed_at: null,
+      closed_by: null,
+      closure_summary: null,
+      created_at: '2026-03-28T12:20:00Z',
+      description: 'Close the review once support context is confirmed.',
+      owner_agent_id: null,
+      owner_note: 'Support context is already attached.',
+      priority: 'medium',
+      project_root: '/workspace/cap',
+      requested_by: 'operator',
+      severity: 'low',
+      status: 'review_required',
+      task_id: 'task-4',
+      title: 'Close review after support arrives',
+      updated_at: '2026-03-28T12:22:00Z',
+      verification_state: 'pending',
       verified_at: null,
       verified_by: null,
     },
@@ -990,6 +1067,10 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'review_with_graph_pressure', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_handoff_follow_through', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_handoff_follow_through', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'review_awaiting_support', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'review_awaiting_support', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'review_ready_for_closeout', project: '/workspace/cap' }), snapshotForTaskIds(['task-4'])],
+  [responseKey({ preset: 'review_ready_for_closeout', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-4'])],
   [responseKey({ preset: 'handoffs', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'unclaimed', project: '/workspace/cap' }), snapshotForTaskIds(['task-3'])],
   [responseKey({ preset: 'unclaimed', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-3'])],
@@ -1137,6 +1218,8 @@ describe('Canopy page', () => {
     expect(screen.getByRole('button', { name: 'Stalled · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / graph pressure · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / handoff follow-through · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Review / awaiting support · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Review / ready for closeout · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Open handoffs · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Awaiting handoff acceptance · 1' })).toBeInTheDocument()
     expect(screen.getByText(/Assignments 2 · reassignments 1/)).toBeInTheDocument()
@@ -1299,6 +1382,40 @@ describe('Canopy page', () => {
     })
   })
 
+  it('opens the runtime review awaiting support queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Review / awaiting support · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'review_awaiting_support',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the runtime review ready for closeout queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Review / ready for closeout · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'review_ready_for_closeout',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
   it('opens the paused resumable queue from the operator shortcut', async () => {
     const user = userEvent.setup()
 
@@ -1445,6 +1562,7 @@ describe('Canopy page', () => {
     expect(screen.getByText(/Runs: 1 · pauses 0 · yields 0/)).toBeInTheDocument()
     expect(screen.getByText(/Completions: 0 · total 420s/)).toBeInTheDocument()
     expect(screen.getByText(/Active execution: 420s/)).toBeInTheDocument()
+    expect(screen.getByText('Review state: waiting on evidence or a council decision')).toBeInTheDocument()
     expect(screen.getByText(/Last start task/)).toBeInTheDocument()
     expect(screen.getByText('Assignments')).toBeInTheDocument()
     expect(screen.getByText('operator → agent-1')).toBeInTheDocument()

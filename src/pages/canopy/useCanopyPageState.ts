@@ -37,6 +37,14 @@ export function useCanopyPageState() {
     preset: 'review_handoff_follow_through',
     project: activeProject ?? undefined,
   })
+  const reviewAwaitingSupportQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'review_awaiting_support',
+    project: activeProject ?? undefined,
+  })
+  const reviewReadyForCloseoutQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'review_ready_for_closeout',
+    project: activeProject ?? undefined,
+  })
   const handoffQueueSnapshotQuery = useCanopySnapshot({
     preset: 'handoffs',
     project: activeProject ?? undefined,
@@ -256,10 +264,20 @@ export function useCanopyPageState() {
     },
     priorityFilter,
     relationshipSummaryByTaskId,
+    reviewAwaitingSupportQueueSnapshot: {
+      error: reviewAwaitingSupportQueueSnapshotQuery.error,
+      isLoading: reviewAwaitingSupportQueueSnapshotQuery.isLoading,
+      snapshot: reviewAwaitingSupportQueueSnapshotQuery.data,
+    },
     reviewHandoffFollowThroughQueueSnapshot: {
       error: reviewHandoffFollowThroughQueueSnapshotQuery.error,
       isLoading: reviewHandoffFollowThroughQueueSnapshotQuery.isLoading,
       snapshot: reviewHandoffFollowThroughQueueSnapshotQuery.data,
+    },
+    reviewReadyForCloseoutQueueSnapshot: {
+      error: reviewReadyForCloseoutQueueSnapshotQuery.error,
+      isLoading: reviewReadyForCloseoutQueueSnapshotQuery.isLoading,
+      snapshot: reviewReadyForCloseoutQueueSnapshotQuery.data,
     },
     reviewWithGraphPressureQueueSnapshot: {
       error: reviewWithGraphPressureQueueSnapshotQuery.error,

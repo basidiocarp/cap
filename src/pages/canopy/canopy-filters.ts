@@ -33,6 +33,16 @@ export const SAVED_VIEW_OPTIONS = [
     label: 'Review / handoff follow-through',
     value: 'review_handoff_follow_through',
   },
+  {
+    description: 'Review tasks still waiting on supporting evidence or a council decision',
+    label: 'Review / awaiting support',
+    value: 'review_awaiting_support',
+  },
+  {
+    description: 'Review tasks with support context in place and ready for final closeout',
+    label: 'Review / ready for closeout',
+    value: 'review_ready_for_closeout',
+  },
   { description: 'Blocked tasks and failed verification', label: 'Blocked focus', value: 'blocked' },
   { description: 'Blocked tasks with explicit dependency blockers', label: 'Dependency blocked', value: 'blocked_by_dependencies' },
   { description: 'Tasks with open handoffs', label: 'Open handoffs', value: 'handoffs' },

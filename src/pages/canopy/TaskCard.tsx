@@ -236,6 +236,22 @@ export function TaskCard({
             review waiting on handoff follow-through
           </Badge>
         ) : null}
+        {attention?.reasons.includes('review_awaiting_support') ? (
+          <Badge
+            color='yellow'
+            variant='light'
+          >
+            review awaiting support
+          </Badge>
+        ) : null}
+        {attention?.reasons.includes('review_ready_for_closeout') ? (
+          <Badge
+            color='green'
+            variant='light'
+          >
+            review ready for closeout
+          </Badge>
+        ) : null}
         {relationshipSummary &&
         (relationshipSummary.blocker_count > 0 ||
           relationshipSummary.blocking_count > 0 ||
