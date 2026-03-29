@@ -45,6 +45,8 @@ export function CanopyPage() {
     ownershipByTaskId,
     pausedResumableQueueSnapshot,
     priorityFilter,
+    reviewHandoffFollowThroughQueueSnapshot,
+    reviewWithGraphPressureQueueSnapshot,
     relationshipSummaryByTaskId,
     savedView,
     searchQuery,
@@ -84,6 +86,14 @@ export function CanopyPage() {
       <ErrorAlert
         error={dependencyBlockedQueueSnapshot.error instanceof Error ? dependencyBlockedQueueSnapshot.error : undefined}
         title='Dependency queue unavailable'
+      />
+      <ErrorAlert
+        error={reviewWithGraphPressureQueueSnapshot.error instanceof Error ? reviewWithGraphPressureQueueSnapshot.error : undefined}
+        title='Review graph pressure queue unavailable'
+      />
+      <ErrorAlert
+        error={reviewHandoffFollowThroughQueueSnapshot.error instanceof Error ? reviewHandoffFollowThroughQueueSnapshot.error : undefined}
+        title='Review handoff follow-through queue unavailable'
       />
       <ErrorAlert
         error={handoffQueueSnapshot.error instanceof Error ? handoffQueueSnapshot.error : undefined}
@@ -169,6 +179,8 @@ export function CanopyPage() {
           inProgressQueueSnapshot={inProgressQueueSnapshot}
           openQueuePreset={openQueuePreset}
           pausedResumableQueueSnapshot={pausedResumableQueueSnapshot}
+          reviewHandoffFollowThroughQueueSnapshot={reviewHandoffFollowThroughQueueSnapshot}
+          reviewWithGraphPressureQueueSnapshot={reviewWithGraphPressureQueueSnapshot}
           savedView={savedView}
           stalledQueueSnapshot={stalledQueueSnapshot}
           unacknowledgedQueueSnapshot={unacknowledgedQueueSnapshot}

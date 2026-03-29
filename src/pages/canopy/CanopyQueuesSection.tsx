@@ -22,6 +22,8 @@ export function CanopyQueuesSection({
   inProgressQueueSnapshot,
   openQueuePreset,
   pausedResumableQueueSnapshot,
+  reviewHandoffFollowThroughQueueSnapshot,
+  reviewWithGraphPressureQueueSnapshot,
   savedView,
   stalledQueueSnapshot,
   unacknowledgedQueueSnapshot,
@@ -39,6 +41,8 @@ export function CanopyQueuesSection({
   inProgressQueueSnapshot: CanopyQueueSnapshotState
   openQueuePreset: (preset: CanopySavedView) => void
   pausedResumableQueueSnapshot: CanopyQueueSnapshotState
+  reviewHandoffFollowThroughQueueSnapshot: CanopyQueueSnapshotState
+  reviewWithGraphPressureQueueSnapshot: CanopyQueueSnapshotState
   savedView: CanopySavedView
   stalledQueueSnapshot: CanopyQueueSnapshotState
   unacknowledgedQueueSnapshot: CanopyQueueSnapshotState
@@ -86,6 +90,24 @@ export function CanopyQueuesSection({
           variant={savedView === 'blocked_by_dependencies' ? 'filled' : 'light'}
         >
           Dependency blocked · {renderQueueCount(dependencyBlockedQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('review_with_graph_pressure')}
+          variant={savedView === 'review_with_graph_pressure' ? 'filled' : 'light'}
+        >
+          Review / graph pressure · {renderQueueCount(reviewWithGraphPressureQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('review_handoff_follow_through')}
+          variant={savedView === 'review_handoff_follow_through' ? 'filled' : 'light'}
+        >
+          Review / handoff follow-through · {renderQueueCount(reviewHandoffFollowThroughQueueSnapshot)}
         </Button>
       </Grid.Col>
       <Grid.Col span={{ base: 6, md: 3 }}>

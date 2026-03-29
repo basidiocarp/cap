@@ -23,6 +23,16 @@ export const SAVED_VIEW_OPTIONS = [
   { description: 'Everything in the active project', label: 'All tasks', value: 'default' },
   { description: 'Tasks Canopy already marks as needing attention', label: 'Needs attention', value: 'attention' },
   { description: 'Review-required or pending verification', label: 'Review queue', value: 'review_queue' },
+  {
+    description: 'Review tasks still carrying unresolved blockers or open follow-up pressure',
+    label: 'Review / graph pressure',
+    value: 'review_with_graph_pressure',
+  },
+  {
+    description: 'Review tasks waiting on review or verification handoff acceptance or completion',
+    label: 'Review / handoff follow-through',
+    value: 'review_handoff_follow_through',
+  },
   { description: 'Blocked tasks and failed verification', label: 'Blocked focus', value: 'blocked' },
   { description: 'Blocked tasks with explicit dependency blockers', label: 'Dependency blocked', value: 'blocked_by_dependencies' },
   { description: 'Tasks with open handoffs', label: 'Open handoffs', value: 'handoffs' },

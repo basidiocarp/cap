@@ -220,6 +220,22 @@ export function TaskCard({
             assigned and awaiting claim
           </Badge>
         ) : null}
+        {attention?.reasons.includes('review_with_graph_pressure') ? (
+          <Badge
+            color='violet'
+            variant='light'
+          >
+            review blocked by graph pressure
+          </Badge>
+        ) : null}
+        {attention?.reasons.includes('review_handoff_follow_through') ? (
+          <Badge
+            color='grape'
+            variant='light'
+          >
+            review waiting on handoff follow-through
+          </Badge>
+        ) : null}
         {relationshipSummary &&
         (relationshipSummary.blocker_count > 0 ||
           relationshipSummary.blocking_count > 0 ||

@@ -72,6 +72,12 @@ export function TaskRuntimeSummaryGrid({ detail }: { detail: CanopyTaskDetail })
             {detail.attention.reasons.includes('assigned_awaiting_claim') ? (
               <Text size='sm'>Execution state: assigned and awaiting first claim</Text>
             ) : null}
+            {detail.attention.reasons.includes('review_with_graph_pressure') ? (
+              <Text size='sm'>Review state: unresolved blockers or open follow-ups still need attention</Text>
+            ) : null}
+            {detail.attention.reasons.includes('review_handoff_follow_through') ? (
+              <Text size='sm'>Review state: waiting on review or verification handoff follow-through</Text>
+            ) : null}
             {detail.execution_summary.last_execution_action === 'claim_task' && detail.execution_summary.run_count === 0 ? (
               <Text size='sm'>Execution state: claimed and ready to start</Text>
             ) : null}

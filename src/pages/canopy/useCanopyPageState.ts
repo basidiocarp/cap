@@ -29,6 +29,14 @@ export function useCanopyPageState() {
     preset: 'blocked_by_dependencies',
     project: activeProject ?? undefined,
   })
+  const reviewWithGraphPressureQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'review_with_graph_pressure',
+    project: activeProject ?? undefined,
+  })
+  const reviewHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'review_handoff_follow_through',
+    project: activeProject ?? undefined,
+  })
   const handoffQueueSnapshotQuery = useCanopySnapshot({
     preset: 'handoffs',
     project: activeProject ?? undefined,
@@ -248,6 +256,16 @@ export function useCanopyPageState() {
     },
     priorityFilter,
     relationshipSummaryByTaskId,
+    reviewHandoffFollowThroughQueueSnapshot: {
+      error: reviewHandoffFollowThroughQueueSnapshotQuery.error,
+      isLoading: reviewHandoffFollowThroughQueueSnapshotQuery.isLoading,
+      snapshot: reviewHandoffFollowThroughQueueSnapshotQuery.data,
+    },
+    reviewWithGraphPressureQueueSnapshot: {
+      error: reviewWithGraphPressureQueueSnapshotQuery.error,
+      isLoading: reviewWithGraphPressureQueueSnapshotQuery.isLoading,
+      snapshot: reviewWithGraphPressureQueueSnapshotQuery.data,
+    },
     savedView,
     searchQuery,
     severityFilter,

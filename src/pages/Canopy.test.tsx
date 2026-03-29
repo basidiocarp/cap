@@ -341,7 +341,7 @@ const mockSnapshot: CanopySnapshot = {
       level: 'needs_attention',
       open_handoff_freshness: 'aging',
       owner_heartbeat_freshness: 'fresh',
-      reasons: ['review_required', 'aging_open_handoff'],
+      reasons: ['review_required', 'review_with_graph_pressure', 'aging_open_handoff'],
       task_id: 'task-1',
     },
   ],
@@ -986,6 +986,10 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'unacknowledged', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2'])],
   [responseKey({ preset: 'blocked', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
   [responseKey({ preset: 'blocked_by_dependencies', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'review_with_graph_pressure', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'review_with_graph_pressure', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'review_handoff_follow_through', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'review_handoff_follow_through', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'handoffs', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'unclaimed', project: '/workspace/cap' }), snapshotForTaskIds(['task-3'])],
   [responseKey({ preset: 'unclaimed', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-3'])],
@@ -1131,6 +1135,8 @@ describe('Canopy page', () => {
     expect(screen.getByRole('button', { name: 'Unclaimed · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'In progress · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Stalled · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Review / graph pressure · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Review / handoff follow-through · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Open handoffs · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Awaiting handoff acceptance · 1' })).toBeInTheDocument()
     expect(screen.getByText(/Assignments 2 · reassignments 1/)).toBeInTheDocument()
@@ -1252,6 +1258,40 @@ describe('Canopy page', () => {
     expect(useCanopySnapshotMock).toHaveBeenCalledWith({
       acknowledged: undefined,
       preset: 'stalled',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the runtime review graph pressure queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Review / graph pressure · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'review_with_graph_pressure',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the runtime review handoff follow-through queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Review / handoff follow-through · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'review_handoff_follow_through',
       priorityAtLeast: undefined,
       project: '/workspace/cap',
       severityAtLeast: undefined,
