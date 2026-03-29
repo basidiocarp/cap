@@ -68,6 +68,8 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'yield_task',
   'complete_task',
   'verify_task',
+  'record_decision',
+  'close_task',
   'reassign_task',
   'resolve_dependency',
   'reopen_blocked_task_when_unblocked',
@@ -209,8 +211,19 @@ app.post('/tasks/:taskId/actions', async (c) => {
     if (body.action === 'verify_task' && (!body.verification_state || !ALLOWED_VERIFICATION_STATES.has(body.verification_state))) {
       return c.json({ error: 'verify_task requires a valid verification_state' }, 400)
     }
-    if (body.action === 'verify_task' && body.verification_state === 'passed' && !body.closure_summary?.trim()) {
-      return c.json({ error: 'verify_task passed reviews require a closure_summary' }, 400)
+    if (body.action === 'verify_task' && body.verification_state === 'passed') {
+      return c.json({ error: 'verify_task no longer accepts passed; use close_task' }, 400)
+    }
+    if (body.action === 'record_decision') {
+      if (!body.author_agent_id?.trim()) {
+        return c.json({ error: 'record_decision requires an author_agent_id' }, 400)
+      }
+      if (!body.message_body?.trim()) {
+        return c.json({ error: 'record_decision requires a message_body' }, 400)
+      }
+    }
+    if (body.action === 'close_task' && !body.closure_summary?.trim()) {
+      return c.json({ error: 'close_task requires a closure_summary' }, 400)
     }
     if (body.action === 'create_handoff') {
       if (!body.from_agent_id?.trim() || !body.to_agent_id?.trim()) {

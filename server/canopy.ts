@@ -66,6 +66,8 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'yield_task',
   'complete_task',
   'verify_task',
+  'record_decision',
+  'close_task',
   'reassign_task',
   'resolve_dependency',
   'reopen_blocked_task_when_unblocked',
@@ -206,6 +208,9 @@ export async function applyTaskAction<T = unknown>(
   if (input.action === 'verify_task' && (!input.verificationState || !ALLOWED_VERIFICATION_STATES.has(input.verificationState))) {
     throw new Error('verify_task requires a valid verification_state')
   }
+  if (input.action === 'verify_task' && input.verificationState === 'passed') {
+    throw new Error('verify_task no longer accepts passed; use close_task')
+  }
   if (
     (input.action === 'claim_task' ||
       input.action === 'start_task' ||
@@ -217,8 +222,16 @@ export async function applyTaskAction<T = unknown>(
   ) {
     throw new Error(`${input.action} requires an acting_agent_id`)
   }
-  if (input.action === 'verify_task' && input.verificationState === 'passed' && !input.closureSummary?.trim()) {
-    throw new Error('verify_task passed reviews require a closure_summary')
+  if (input.action === 'record_decision') {
+    if (!input.authorAgentId?.trim()) {
+      throw new Error('record_decision requires an author_agent_id')
+    }
+    if (!input.messageBody?.trim()) {
+      throw new Error('record_decision requires a message_body')
+    }
+  }
+  if (input.action === 'close_task' && !input.closureSummary?.trim()) {
+    throw new Error('close_task requires a closure_summary')
   }
   if (input.action === 'create_handoff') {
     if (!input.fromAgentId?.trim() || !input.toAgentId?.trim()) {

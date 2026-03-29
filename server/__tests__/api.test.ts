@@ -457,17 +457,17 @@ describe('API Routes', () => {
 
     it('forwards verification task actions to Canopy', async () => {
       const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
-        status: 'completed',
+        status: 'review_required',
         task_id: 'task-1',
-        verification_state: 'passed',
+        verification_state: 'failed',
       })
 
       const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
         body: JSON.stringify({
           action: 'verify_task',
           changed_by: 'operator',
-          closure_summary: 'review accepted',
-          verification_state: 'passed',
+          note: 'needs another pass',
+          verification_state: 'failed',
         }),
         headers: { 'Content-Type': 'application/json' },
         method: 'POST',
@@ -483,7 +483,119 @@ describe('API Routes', () => {
         blockedReason: undefined,
         changedBy: 'operator',
         clearOwnerNote: undefined,
-        closureSummary: 'review accepted',
+        closureSummary: undefined,
+        dueAt: undefined,
+        evidenceLabel: undefined,
+        evidenceSourceKind: undefined,
+        evidenceSourceRef: undefined,
+        evidenceSummary: undefined,
+        expiresAt: undefined,
+        followUpDescription: undefined,
+        followUpTitle: undefined,
+        fromAgentId: undefined,
+        handoffSummary: undefined,
+        handoffType: undefined,
+        messageBody: undefined,
+        messageType: undefined,
+        note: 'needs another pass',
+        ownerNote: undefined,
+        priority: undefined,
+        relatedFile: undefined,
+        relatedHandoffId: undefined,
+        relatedMemoryQuery: undefined,
+        relatedSessionId: undefined,
+        relatedSymbol: undefined,
+        requestedAction: undefined,
+        severity: undefined,
+        toAgentId: undefined,
+        verificationState: 'failed',
+      })
+    })
+
+    it('forwards decision task actions to Canopy', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
+        status: 'review_required',
+        task_id: 'task-1',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'record_decision',
+          author_agent_id: 'agent-1',
+          changed_by: 'operator',
+          message_body: 'Ship the reviewed task.',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        actingAgentId: undefined,
+        action: 'record_decision',
+        assignedTo: undefined,
+        authorAgentId: 'agent-1',
+        blockedReason: undefined,
+        changedBy: 'operator',
+        clearOwnerNote: undefined,
+        closureSummary: undefined,
+        dueAt: undefined,
+        evidenceLabel: undefined,
+        evidenceSourceKind: undefined,
+        evidenceSourceRef: undefined,
+        evidenceSummary: undefined,
+        expiresAt: undefined,
+        followUpDescription: undefined,
+        followUpTitle: undefined,
+        fromAgentId: undefined,
+        handoffSummary: undefined,
+        handoffType: undefined,
+        messageBody: 'Ship the reviewed task.',
+        messageType: undefined,
+        note: undefined,
+        ownerNote: undefined,
+        priority: undefined,
+        relatedFile: undefined,
+        relatedHandoffId: undefined,
+        relatedMemoryQuery: undefined,
+        relatedSessionId: undefined,
+        relatedSymbol: undefined,
+        requestedAction: undefined,
+        severity: undefined,
+        toAgentId: undefined,
+        verificationState: undefined,
+      })
+    })
+
+    it('forwards closeout task actions to Canopy', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
+        status: 'completed',
+        task_id: 'task-1',
+        verification_state: 'passed',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'close_task',
+          changed_by: 'operator',
+          closure_summary: 'Review complete and closed out.',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        actingAgentId: undefined,
+        action: 'close_task',
+        assignedTo: undefined,
+        authorAgentId: undefined,
+        blockedReason: undefined,
+        changedBy: 'operator',
+        clearOwnerNote: undefined,
+        closureSummary: 'Review complete and closed out.',
         dueAt: undefined,
         evidenceLabel: undefined,
         evidenceSourceKind: undefined,
@@ -508,7 +620,7 @@ describe('API Routes', () => {
         requestedAction: undefined,
         severity: undefined,
         toAgentId: undefined,
-        verificationState: 'passed',
+        verificationState: undefined,
       })
     })
 
@@ -958,7 +1070,7 @@ describe('API Routes', () => {
       })
     })
 
-    it('rejects passed reviews without a closure summary', async () => {
+    it('rejects passed verification through verify_task', async () => {
       const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction')
 
       const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
@@ -975,7 +1087,7 @@ describe('API Routes', () => {
       expect(res.status).toBe(400)
       expect(taskActionSpy).not.toHaveBeenCalled()
       await expect(res.json()).resolves.toMatchObject({
-        error: 'verify_task passed reviews require a closure_summary',
+        error: 'verify_task no longer accepts passed; use close_task',
       })
     })
 

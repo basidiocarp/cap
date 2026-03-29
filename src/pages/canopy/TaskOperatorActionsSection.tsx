@@ -52,7 +52,6 @@ const SEVERITY_OPTIONS: { label: string; value: CanopyTaskSeverity }[] = [
   { label: 'Critical', value: 'critical' },
 ]
 const REVIEW_OUTCOME_OPTIONS: { label: string; value: Exclude<CanopyVerificationState, 'unknown'> }[] = [
-  { label: 'Passed', value: 'passed' },
   { label: 'Failed', value: 'failed' },
   { label: 'Pending', value: 'pending' },
 ]
@@ -68,10 +67,13 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
   const [reassignNote, setReassignNote] = useState('')
   const [executionAgentId, setExecutionAgentId] = useState<string | null>(detail.task.owner_agent_id ?? agents[0]?.agent_id ?? null)
   const [executionNote, setExecutionNote] = useState('')
-  const [reviewOutcome, setReviewOutcome] = useState<Exclude<CanopyVerificationState, 'unknown'>>(
+  const [reviewOutcome, setReviewOutcome] = useState<Extract<CanopyVerificationState, 'failed' | 'pending'>>(
     detail.task.verification_state === 'failed' ? 'failed' : 'pending'
   )
   const [reviewSummary, setReviewSummary] = useState('')
+  const [decisionAuthorAgentId, setDecisionAuthorAgentId] = useState<string | null>(detail.task.owner_agent_id ?? null)
+  const [decisionBody, setDecisionBody] = useState('')
+  const [closeoutSummary, setCloseoutSummary] = useState('')
   const [handoffNotes, setHandoffNotes] = useState<Record<string, string>>({})
   const [dependencyTaskId, setDependencyTaskId] = useState<string | null>(null)
   const [followUpTaskId, setFollowUpTaskId] = useState<string | null>(null)
@@ -93,6 +95,9 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
     setExecutionNote('')
     setReviewOutcome(detail.task.verification_state === 'failed' ? 'failed' : 'pending')
     setReviewSummary('')
+    setDecisionAuthorAgentId(detail.task.owner_agent_id ?? null)
+    setDecisionBody('')
+    setCloseoutSummary('')
     setHandoffNotes({})
     setDependencyTaskId(firstDependency)
     setFollowUpTaskId(firstFollowUp)
@@ -152,8 +157,6 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
       : handoffActionMutation.error instanceof Error
         ? handoffActionMutation.error
         : null
-  const reviewRequiresSummary = reviewOutcome === 'passed'
-
   return (
     <Stack gap='md'>
       <ErrorAlert error={mutationError} />
@@ -244,19 +247,17 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
               disabled={isPending}
               label='Verification outcome'
               onChange={(value) => {
-                if (value) setReviewOutcome(value as Exclude<CanopyVerificationState, 'unknown'>)
+                if (value) setReviewOutcome(value as Extract<CanopyVerificationState, 'failed' | 'pending'>)
               }}
               value={reviewOutcome}
             />
             <Button
-              disabled={reviewRequiresSummary && !reviewSummary.trim()}
               loading={taskActionMutation.isPending}
               onClick={() =>
                 taskActionMutation.mutate({
                   action: 'verify_task',
                   changed_by: TASK_OPERATOR_ACTOR,
-                  closure_summary: reviewOutcome === 'passed' ? reviewSummary.trim() || undefined : undefined,
-                  note: reviewOutcome !== 'passed' ? reviewSummary.trim() || undefined : undefined,
+                  note: reviewSummary.trim() || undefined,
                   taskId: detail.task.task_id,
                   verification_state: reviewOutcome,
                 })
@@ -268,14 +269,83 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
           <Textarea
             autosize
             disabled={isPending}
-            label={reviewOutcome === 'passed' ? 'Completion summary' : 'Review note'}
+            label='Review note'
             minRows={2}
             onChange={(event) => setReviewSummary(event.currentTarget.value)}
-            placeholder={
-              reviewOutcome === 'passed' ? 'Capture what was accepted or shipped' : 'Capture what still needs work before completion'
-            }
+            placeholder='Capture what still needs work before completion'
             value={reviewSummary}
           />
+        </Stack>
+      ) : null}
+
+      {allowedKinds.has('record_decision') ? (
+        <Stack gap='xs'>
+          <Group align='end'>
+            <Select
+              data={assignableAgents}
+              disabled={isPending}
+              flex={1}
+              label='Decision author'
+              onChange={(value) => setDecisionAuthorAgentId(value)}
+              placeholder='Choose an agent'
+              searchable
+              value={decisionAuthorAgentId}
+            />
+            <Button
+              disabled={!decisionAuthorAgentId || !decisionBody.trim()}
+              loading={taskActionMutation.isPending}
+              onClick={() =>
+                taskActionMutation.mutate({
+                  action: 'record_decision',
+                  author_agent_id: decisionAuthorAgentId ?? undefined,
+                  changed_by: TASK_OPERATOR_ACTOR,
+                  message_body: decisionBody.trim(),
+                  taskId: detail.task.task_id,
+                })
+              }
+            >
+              Record decision
+            </Button>
+          </Group>
+          <Textarea
+            autosize
+            disabled={isPending}
+            label='Decision body'
+            minRows={2}
+            onChange={(event) => setDecisionBody(event.currentTarget.value)}
+            placeholder='Capture the review decision that moves this task into closeout'
+            value={decisionBody}
+          />
+        </Stack>
+      ) : null}
+
+      {allowedKinds.has('close_task') ? (
+        <Stack gap='xs'>
+          <Textarea
+            autosize
+            disabled={isPending}
+            label='Closeout summary'
+            minRows={2}
+            onChange={(event) => setCloseoutSummary(event.currentTarget.value)}
+            placeholder='Capture the final closeout summary for this task'
+            value={closeoutSummary}
+          />
+          <Group justify='flex-end'>
+            <Button
+              disabled={!closeoutSummary.trim()}
+              loading={taskActionMutation.isPending}
+              onClick={() =>
+                taskActionMutation.mutate({
+                  action: 'close_task',
+                  changed_by: TASK_OPERATOR_ACTOR,
+                  closure_summary: closeoutSummary.trim(),
+                  taskId: detail.task.task_id,
+                })
+              }
+            >
+              Close task
+            </Button>
+          </Group>
         </Stack>
       ) : null}
 

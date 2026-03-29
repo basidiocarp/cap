@@ -1927,6 +1927,61 @@ describe('Canopy page', () => {
     })
   }, 15000)
 
+  it('forwards explicit review decision and closeout actions from the task detail modal', async () => {
+    const user = userEvent.setup()
+
+    currentTaskDetail = structuredClone(mockTaskDetail)
+    currentTaskDetail.allowed_actions.push(
+      {
+        action_id: 'allowed-record-decision',
+        agent_id: 'agent-1',
+        due_at: null,
+        expires_at: null,
+        handoff_id: null,
+        kind: 'record_decision',
+        level: 'needs_attention',
+        summary: 'Persist the current-cycle review decision before closeout.',
+        target_kind: 'task',
+        task_id: 'task-1',
+        title: 'Record decision for Add Cap Canopy page',
+      },
+      {
+        action_id: 'allowed-close-task',
+        agent_id: 'agent-1',
+        due_at: null,
+        expires_at: null,
+        handoff_id: null,
+        kind: 'close_task',
+        level: 'needs_attention',
+        summary: 'Finalize review closeout and mark the task complete.',
+        target_kind: 'task',
+        task_id: 'task-1',
+        title: 'Close Add Cap Canopy page',
+      }
+    )
+
+    renderWithProviders(<Canopy />, { route: '/canopy?task=task-1' })
+
+    await user.type(screen.getByLabelText('Decision body'), 'Ship the reviewed task.')
+    await user.click(screen.getByRole('button', { name: 'Record decision' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'record_decision',
+      author_agent_id: 'agent-1',
+      changed_by: 'operator',
+      message_body: 'Ship the reviewed task.',
+      taskId: 'task-1',
+    })
+
+    await user.type(screen.getByLabelText('Closeout summary'), 'Review complete and closed out.')
+    await user.click(screen.getByRole('button', { name: 'Close task' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'close_task',
+      changed_by: 'operator',
+      closure_summary: 'Review complete and closed out.',
+      taskId: 'task-1',
+    })
+  })
+
   it('shows graph lifecycle actions when the runtime allows reopen and chain close', async () => {
     const user = userEvent.setup()
 
