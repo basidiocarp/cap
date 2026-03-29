@@ -476,12 +476,12 @@ const mockTaskDetail: CanopyTaskDetail = {
       due_at: null,
       expires_at: null,
       handoff_id: null,
-      kind: 'start_task',
+      kind: 'resume_task',
       level: 'needs_attention',
-      summary: 'Start active execution on the task.',
+      summary: 'Resume active execution on the task.',
       target_kind: 'task',
       task_id: 'task-1',
-      title: 'Start Add Cap Canopy page',
+      title: 'Resume Add Cap Canopy page',
     },
     {
       action_id: 'allowed-1exec-pause',
@@ -1396,6 +1396,15 @@ describe('Canopy page', () => {
     expect(taskActionMutateMock).toHaveBeenCalledWith({
       acting_agent_id: 'agent-1',
       action: 'pause_task',
+      changed_by: 'operator',
+      note: undefined,
+      taskId: 'task-1',
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Resume task' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      acting_agent_id: 'agent-1',
+      action: 'resume_task',
       changed_by: 'operator',
       note: undefined,
       taskId: 'task-1',

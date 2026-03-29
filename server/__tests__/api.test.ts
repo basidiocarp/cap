@@ -830,7 +830,7 @@ describe('API Routes', () => {
       const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
         body: JSON.stringify({
           acting_agent_id: 'agent-1',
-          action: 'start_task',
+          action: 'resume_task',
           changed_by: 'operator',
           note: 'Resume active work',
         }),
@@ -842,7 +842,7 @@ describe('API Routes', () => {
       expect(res.status).toBe(200)
       expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
         actingAgentId: 'agent-1',
-        action: 'start_task',
+        action: 'resume_task',
         assignedTo: undefined,
         authorAgentId: undefined,
         blockedReason: undefined,

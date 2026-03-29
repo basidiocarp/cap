@@ -43,6 +43,7 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'unacknowledge_task',
   'claim_task',
   'start_task',
+  'resume_task',
   'pause_task',
   'yield_task',
   'complete_task',
@@ -177,6 +178,7 @@ app.post('/tasks/:taskId/actions', async (c) => {
     if (
       (body.action === 'claim_task' ||
         body.action === 'start_task' ||
+        body.action === 'resume_task' ||
         body.action === 'pause_task' ||
         body.action === 'yield_task' ||
         body.action === 'complete_task') &&

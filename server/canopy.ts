@@ -41,6 +41,7 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'unacknowledge_task',
   'claim_task',
   'start_task',
+  'resume_task',
   'pause_task',
   'yield_task',
   'complete_task',
@@ -188,6 +189,7 @@ export async function applyTaskAction<T = unknown>(
   if (
     (input.action === 'claim_task' ||
       input.action === 'start_task' ||
+      input.action === 'resume_task' ||
       input.action === 'pause_task' ||
       input.action === 'yield_task' ||
       input.action === 'complete_task') &&

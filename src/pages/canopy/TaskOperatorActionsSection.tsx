@@ -17,10 +17,11 @@ const EXECUTION_ACTION_LABELS = {
   claim_task: 'Claim task',
   complete_task: 'Complete task',
   pause_task: 'Pause task',
+  resume_task: 'Resume task',
   start_task: 'Start task',
   yield_task: 'Yield task',
 } as const
-const EXECUTION_ACTION_ORDER = ['claim_task', 'start_task', 'pause_task', 'yield_task', 'complete_task'] as const
+const EXECUTION_ACTION_ORDER = ['claim_task', 'start_task', 'resume_task', 'pause_task', 'yield_task', 'complete_task'] as const
 const HANDOFF_ACTION_LABELS = {
   accept_handoff: 'Accept handoff',
   cancel_handoff: 'Cancel handoff',
