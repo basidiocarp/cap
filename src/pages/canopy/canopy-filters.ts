@@ -49,6 +49,16 @@ export const SAVED_VIEW_OPTIONS = [
     value: 'review_decision_follow_through',
   },
   {
+    description: 'Review decision or closeout handoffs that should be completed soon before they turn overdue',
+    label: 'Review / decision due soon',
+    value: 'due_soon_review_decision_follow_through',
+  },
+  {
+    description: 'Review decision or closeout handoffs whose follow-through window is already overdue',
+    label: 'Review / decision overdue',
+    value: 'overdue_review_decision_follow_through',
+  },
+  {
     description: 'Review tasks still waiting on supporting evidence or a council decision',
     label: 'Review / awaiting support',
     value: 'review_awaiting_support',

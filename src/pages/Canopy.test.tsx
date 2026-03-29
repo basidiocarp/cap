@@ -1420,6 +1420,13 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   ],
   [responseKey({ preset: 'review_decision_follow_through', project: '/workspace/cap' }), snapshotForTaskIds(['task-5'])],
   [responseKey({ preset: 'review_decision_follow_through', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-5'])],
+  [responseKey({ preset: 'due_soon_review_decision_follow_through', project: '/workspace/cap' }), snapshotForTaskIds(['task-5'])],
+  [
+    responseKey({ preset: 'due_soon_review_decision_follow_through', project: '/workspace/cap', sort: 'status' }),
+    snapshotForTaskIds(['task-5']),
+  ],
+  [responseKey({ preset: 'overdue_review_decision_follow_through', project: '/workspace/cap' }), snapshotForTaskIds([])],
+  [responseKey({ preset: 'overdue_review_decision_follow_through', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds([])],
   [responseKey({ preset: 'review_awaiting_support', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_awaiting_support', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_ready_for_decision', project: '/workspace/cap' }), snapshotForTaskIds(['task-4'])],
@@ -1619,6 +1626,8 @@ describe('Canopy page', () => {
     expect(screen.getByRole('button', { name: 'Review / handoff due soon · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / handoff overdue · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / decision or closeout · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Review / decision due soon · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Review / decision overdue · 0' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / awaiting support · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / ready for decision · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / ready for closeout · 1' })).toBeInTheDocument()
@@ -1833,6 +1842,40 @@ describe('Canopy page', () => {
     expect(useCanopySnapshotMock).toHaveBeenCalledWith({
       acknowledged: undefined,
       preset: 'review_decision_follow_through',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the due soon review decision queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Review / decision due soon · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'due_soon_review_decision_follow_through',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the overdue review decision queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Review / decision overdue · 0' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'overdue_review_decision_follow_through',
       priorityAtLeast: undefined,
       project: '/workspace/cap',
       severityAtLeast: undefined,

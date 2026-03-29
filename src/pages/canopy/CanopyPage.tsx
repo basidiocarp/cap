@@ -30,6 +30,7 @@ export function CanopyPage() {
     dueSoonQueueSnapshot,
     dueSoonExecutionQueueSnapshot,
     dueSoonReviewHandoffFollowThroughQueueSnapshot,
+    dueSoonReviewDecisionFollowThroughQueueSnapshot,
     dueSoonReviewQueueSnapshot,
     executionSummaryByTaskId,
     filteredAgentAttention,
@@ -55,6 +56,7 @@ export function CanopyPage() {
     overdueExecutionUnclaimedQueueSnapshot,
     overdueReviewQueueSnapshot,
     overdueReviewHandoffFollowThroughQueueSnapshot,
+    overdueReviewDecisionFollowThroughQueueSnapshot,
     operatorActionsByTaskId,
     ownershipByTaskId,
     pausedResumableQueueSnapshot,
@@ -128,6 +130,22 @@ export function CanopyPage() {
             : undefined
         }
         title='Overdue review handoff follow-through queue unavailable'
+      />
+      <ErrorAlert
+        error={
+          dueSoonReviewDecisionFollowThroughQueueSnapshot.error instanceof Error
+            ? dueSoonReviewDecisionFollowThroughQueueSnapshot.error
+            : undefined
+        }
+        title='Due soon review decision queue unavailable'
+      />
+      <ErrorAlert
+        error={
+          overdueReviewDecisionFollowThroughQueueSnapshot.error instanceof Error
+            ? overdueReviewDecisionFollowThroughQueueSnapshot.error
+            : undefined
+        }
+        title='Overdue review decision queue unavailable'
       />
       <ErrorAlert
         error={reviewDecisionFollowThroughQueueSnapshot.error instanceof Error ? reviewDecisionFollowThroughQueueSnapshot.error : undefined}
@@ -280,6 +298,7 @@ export function CanopyPage() {
           dueSoonExecutionQueueSnapshot={dueSoonExecutionQueueSnapshot}
           dueSoonHandoffAcceptanceQueueSnapshot={dueSoonHandoffAcceptanceQueueSnapshot}
           dueSoonQueueSnapshot={dueSoonQueueSnapshot}
+          dueSoonReviewDecisionFollowThroughQueueSnapshot={dueSoonReviewDecisionFollowThroughQueueSnapshot}
           dueSoonReviewHandoffFollowThroughQueueSnapshot={dueSoonReviewHandoffFollowThroughQueueSnapshot}
           dueSoonReviewQueueSnapshot={dueSoonReviewQueueSnapshot}
           followUpChainsQueueSnapshot={followUpChainsQueueSnapshot}
@@ -291,6 +310,7 @@ export function CanopyPage() {
           overdueExecutionQueueSnapshot={overdueExecutionQueueSnapshot}
           overdueExecutionUnclaimedQueueSnapshot={overdueExecutionUnclaimedQueueSnapshot}
           overdueHandoffAcceptanceQueueSnapshot={overdueHandoffAcceptanceQueueSnapshot}
+          overdueReviewDecisionFollowThroughQueueSnapshot={overdueReviewDecisionFollowThroughQueueSnapshot}
           overdueReviewHandoffFollowThroughQueueSnapshot={overdueReviewHandoffFollowThroughQueueSnapshot}
           overdueReviewQueueSnapshot={overdueReviewQueueSnapshot}
           pausedResumableQueueSnapshot={pausedResumableQueueSnapshot}

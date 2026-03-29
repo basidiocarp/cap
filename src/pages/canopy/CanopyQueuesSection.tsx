@@ -22,6 +22,7 @@ export function CanopyQueuesSection({
   dueSoonQueueSnapshot,
   dueSoonExecutionQueueSnapshot,
   dueSoonReviewHandoffFollowThroughQueueSnapshot,
+  dueSoonReviewDecisionFollowThroughQueueSnapshot,
   dueSoonReviewQueueSnapshot,
   followUpChainsQueueSnapshot,
   handoffQueueSnapshot,
@@ -34,6 +35,7 @@ export function CanopyQueuesSection({
   overdueExecutionUnclaimedQueueSnapshot,
   overdueReviewQueueSnapshot,
   overdueReviewHandoffFollowThroughQueueSnapshot,
+  overdueReviewDecisionFollowThroughQueueSnapshot,
   pausedResumableQueueSnapshot,
   reviewDecisionFollowThroughQueueSnapshot,
   reviewAwaitingSupportQueueSnapshot,
@@ -58,6 +60,7 @@ export function CanopyQueuesSection({
   dueSoonQueueSnapshot: CanopyQueueSnapshotState
   dueSoonExecutionQueueSnapshot: CanopyQueueSnapshotState
   dueSoonReviewHandoffFollowThroughQueueSnapshot: CanopyQueueSnapshotState
+  dueSoonReviewDecisionFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   dueSoonReviewQueueSnapshot: CanopyQueueSnapshotState
   followUpChainsQueueSnapshot: CanopyQueueSnapshotState
   handoffQueueSnapshot: CanopyQueueSnapshotState
@@ -70,6 +73,7 @@ export function CanopyQueuesSection({
   overdueExecutionUnclaimedQueueSnapshot: CanopyQueueSnapshotState
   overdueReviewQueueSnapshot: CanopyQueueSnapshotState
   overdueReviewHandoffFollowThroughQueueSnapshot: CanopyQueueSnapshotState
+  overdueReviewDecisionFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   pausedResumableQueueSnapshot: CanopyQueueSnapshotState
   reviewDecisionFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   reviewAwaitingSupportQueueSnapshot: CanopyQueueSnapshotState
@@ -169,6 +173,24 @@ export function CanopyQueuesSection({
           variant={savedView === 'review_decision_follow_through' ? 'filled' : 'light'}
         >
           Review / decision or closeout · {renderQueueCount(reviewDecisionFollowThroughQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('due_soon_review_decision_follow_through')}
+          variant={savedView === 'due_soon_review_decision_follow_through' ? 'filled' : 'light'}
+        >
+          Review / decision due soon · {renderQueueCount(dueSoonReviewDecisionFollowThroughQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('overdue_review_decision_follow_through')}
+          variant={savedView === 'overdue_review_decision_follow_through' ? 'filled' : 'light'}
+        >
+          Review / decision overdue · {renderQueueCount(overdueReviewDecisionFollowThroughQueueSnapshot)}
         </Button>
       </Grid.Col>
       <Grid.Col span={{ base: 6, md: 3 }}>

@@ -49,6 +49,14 @@ export function useCanopyPageState() {
     preset: 'review_decision_follow_through',
     project: activeProject ?? undefined,
   })
+  const dueSoonReviewDecisionFollowThroughQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'due_soon_review_decision_follow_through',
+    project: activeProject ?? undefined,
+  })
+  const overdueReviewDecisionFollowThroughQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'overdue_review_decision_follow_through',
+    project: activeProject ?? undefined,
+  })
   const reviewAwaitingSupportQueueSnapshotQuery = useCanopySnapshot({
     preset: 'review_awaiting_support',
     project: activeProject ?? undefined,
@@ -311,6 +319,11 @@ export function useCanopyPageState() {
       isLoading: dueSoonQueueSnapshotQuery.isLoading,
       snapshot: dueSoonQueueSnapshotQuery.data,
     },
+    dueSoonReviewDecisionFollowThroughQueueSnapshot: {
+      error: dueSoonReviewDecisionFollowThroughQueueSnapshotQuery.error,
+      isLoading: dueSoonReviewDecisionFollowThroughQueueSnapshotQuery.isLoading,
+      snapshot: dueSoonReviewDecisionFollowThroughQueueSnapshotQuery.data,
+    },
     dueSoonReviewHandoffFollowThroughQueueSnapshot: {
       error: dueSoonReviewHandoffFollowThroughQueueSnapshotQuery.error,
       isLoading: dueSoonReviewHandoffFollowThroughQueueSnapshotQuery.isLoading,
@@ -375,6 +388,11 @@ export function useCanopyPageState() {
       error: overdueHandoffAcceptanceQueueSnapshotQuery.error,
       isLoading: overdueHandoffAcceptanceQueueSnapshotQuery.isLoading,
       snapshot: overdueHandoffAcceptanceQueueSnapshotQuery.data,
+    },
+    overdueReviewDecisionFollowThroughQueueSnapshot: {
+      error: overdueReviewDecisionFollowThroughQueueSnapshotQuery.error,
+      isLoading: overdueReviewDecisionFollowThroughQueueSnapshotQuery.isLoading,
+      snapshot: overdueReviewDecisionFollowThroughQueueSnapshotQuery.data,
     },
     overdueReviewHandoffFollowThroughQueueSnapshot: {
       error: overdueReviewHandoffFollowThroughQueueSnapshotQuery.error,
