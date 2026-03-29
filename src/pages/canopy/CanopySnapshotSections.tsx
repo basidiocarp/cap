@@ -11,9 +11,9 @@ import type {
   CanopyTaskAttention,
   CanopyTaskHeartbeatSummary,
   CanopyTaskOwnershipSummary,
+  CanopyTaskRelationshipSummary,
   CanopyTaskStatus,
 } from '../../lib/api'
-import type { CanopyTaskRelationshipCue } from './TaskCard'
 import { EmptyState } from '../../components/EmptyState'
 import { SectionCard } from '../../components/SectionCard'
 import { matchesActiveTask } from './canopy-formatters'
@@ -110,7 +110,7 @@ export function CanopyTaskBoard({
   onOpenTask,
   operatorActionsByTaskId,
   ownershipByTaskId,
-  relationshipCueByTaskId,
+  relationshipSummaryByTaskId,
   renderGroupedByStatus,
   searchQuery,
   statusFilter,
@@ -122,7 +122,7 @@ export function CanopyTaskBoard({
   onOpenTask: (taskId: string) => void
   operatorActionsByTaskId: Map<string, CanopyOperatorAction[]>
   ownershipByTaskId: Map<string, CanopyTaskOwnershipSummary>
-  relationshipCueByTaskId: Map<string, CanopyTaskRelationshipCue>
+  relationshipSummaryByTaskId: Map<string, CanopyTaskRelationshipSummary>
   renderGroupedByStatus: boolean
   searchQuery: string
   statusFilter: string
@@ -152,7 +152,7 @@ export function CanopyTaskBoard({
               key={task.task_id}
               onOpen={onOpenTask}
               ownership={ownershipByTaskId.get(task.task_id)}
-              relationshipCue={relationshipCueByTaskId.get(task.task_id)}
+              relationshipSummary={relationshipSummaryByTaskId.get(task.task_id)}
               task={task}
             />
           ))}
@@ -177,7 +177,7 @@ export function CanopyTaskBoard({
                 key={task.task_id}
                 onOpen={onOpenTask}
                 ownership={ownershipByTaskId.get(task.task_id)}
-                relationshipCue={relationshipCueByTaskId.get(task.task_id)}
+                relationshipSummary={relationshipSummaryByTaskId.get(task.task_id)}
                 task={task}
               />
             ))}

@@ -3,8 +3,27 @@ import { CANOPY_BIN } from './lib/config.ts'
 
 const run = createCliRunner(CANOPY_BIN, 'canopy')
 const ALLOWED_SORTS = new Set(['status', 'title', 'updated_at', 'created_at', 'verification', 'priority', 'severity', 'attention'])
-const ALLOWED_VIEWS = new Set(['all', 'active', 'blocked', 'review', 'handoffs', 'attention'])
-const ALLOWED_PRESETS = new Set(['default', 'attention', 'review_queue', 'blocked', 'handoffs', 'critical', 'unacknowledged'])
+const ALLOWED_VIEWS = new Set([
+  'all',
+  'active',
+  'blocked',
+  'blocked_by_dependencies',
+  'review',
+  'handoffs',
+  'follow_up_chains',
+  'attention',
+])
+const ALLOWED_PRESETS = new Set([
+  'default',
+  'attention',
+  'review_queue',
+  'blocked',
+  'blocked_by_dependencies',
+  'handoffs',
+  'follow_up_chains',
+  'critical',
+  'unacknowledged',
+])
 const ALLOWED_PRIORITIES = new Set(['low', 'medium', 'high', 'critical'])
 const ALLOWED_SEVERITIES = new Set(['none', 'low', 'medium', 'high', 'critical'])
 const ALLOWED_ATTENTION_LEVELS = new Set(['normal', 'needs_attention', 'critical'])
@@ -14,6 +33,10 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'unacknowledge_task',
   'verify_task',
   'reassign_task',
+  'resolve_dependency',
+  'reopen_blocked_task_when_unblocked',
+  'promote_follow_up',
+  'close_follow_up_chain',
   'set_task_priority',
   'set_task_severity',
   'block_task',
@@ -191,6 +214,9 @@ export async function applyTaskAction<T = unknown>(
     if (!input.relationshipRole || !ALLOWED_TASK_RELATIONSHIP_ROLES.has(input.relationshipRole)) {
       throw new Error('link_task_dependency requires a valid relationship_role')
     }
+  }
+  if ((input.action === 'resolve_dependency' || input.action === 'promote_follow_up') && !input.relatedTaskId?.trim()) {
+    throw new Error(`${input.action} requires a related_task_id`)
   }
 
   const args = ['task', 'action', '--task-id', taskId, '--action', input.action, '--changed-by', input.changedBy]

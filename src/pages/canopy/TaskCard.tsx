@@ -6,6 +6,7 @@ import type {
   CanopyTaskAttention,
   CanopyTaskHeartbeatSummary,
   CanopyTaskOwnershipSummary,
+  CanopyTaskRelationshipSummary,
 } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'
 import { timeAgo } from '../../lib/time'
@@ -20,13 +21,6 @@ import {
   statusColor,
   verificationColor,
 } from './canopy-formatters'
-
-export interface CanopyTaskRelationshipCue {
-  blockedByCount: number
-  blocksCount: number
-  followUpChildCount: number
-  followUpParentCount: number
-}
 
 export function TaskStatusBadge({ task }: { task: CanopyTask }) {
   return (
@@ -53,7 +47,7 @@ export function TaskCard({
   heartbeatSummary,
   onOpen,
   ownership,
-  relationshipCue,
+  relationshipSummary,
   task,
 }: {
   actions: CanopyOperatorAction[]
@@ -61,7 +55,7 @@ export function TaskCard({
   heartbeatSummary?: CanopyTaskHeartbeatSummary
   onOpen: (taskId: string) => void
   ownership?: CanopyTaskOwnershipSummary
-  relationshipCue?: CanopyTaskRelationshipCue
+  relationshipSummary?: CanopyTaskRelationshipSummary
   task: CanopyTask
 }) {
   return (
@@ -189,42 +183,66 @@ export function TaskCard({
             {heartbeatSummary.last_heartbeat_at ? ` · latest ${timeAgo(heartbeatSummary.last_heartbeat_at, { allowMonths: true })}` : ''}
           </Text>
         ) : null}
-        {relationshipCue &&
-        (relationshipCue.blockedByCount > 0 ||
-          relationshipCue.blocksCount > 0 ||
-          relationshipCue.followUpChildCount > 0 ||
-          relationshipCue.followUpParentCount > 0) ? (
+        {relationshipSummary &&
+        (relationshipSummary.blocker_count > 0 ||
+          relationshipSummary.blocking_count > 0 ||
+          relationshipSummary.follow_up_child_count > 0 ||
+          relationshipSummary.follow_up_parent_count > 0) ? (
           <Group gap='xs'>
-            {relationshipCue.blockedByCount > 0 ? (
+            {relationshipSummary.blocker_count > 0 ? (
               <Badge
                 color='red'
                 variant='light'
               >
-                blocked by {relationshipCue.blockedByCount}
+                blocked by {relationshipSummary.blocker_count}
               </Badge>
             ) : null}
-            {relationshipCue.blocksCount > 0 ? (
+            {relationshipSummary.active_blocker_count > 0 ? (
+              <Badge
+                color='orange'
+                variant='outline'
+              >
+                active blockers {relationshipSummary.active_blocker_count}
+              </Badge>
+            ) : null}
+            {relationshipSummary.stale_blocker_count > 0 ? (
+              <Badge
+                color='yellow'
+                variant='outline'
+              >
+                stale blockers {relationshipSummary.stale_blocker_count}
+              </Badge>
+            ) : null}
+            {relationshipSummary.blocking_count > 0 ? (
               <Badge
                 color='orange'
                 variant='light'
               >
-                blocking {relationshipCue.blocksCount}
+                blocking {relationshipSummary.blocking_count}
               </Badge>
             ) : null}
-            {relationshipCue.followUpParentCount > 0 ? (
+            {relationshipSummary.follow_up_parent_count > 0 ? (
               <Badge
                 color='grape'
                 variant='outline'
               >
-                parent {relationshipCue.followUpParentCount}
+                parent {relationshipSummary.follow_up_parent_count}
               </Badge>
             ) : null}
-            {relationshipCue.followUpChildCount > 0 ? (
+            {relationshipSummary.follow_up_child_count > 0 ? (
               <Badge
                 color='blue'
                 variant='outline'
               >
-                follow-ups {relationshipCue.followUpChildCount}
+                follow-ups {relationshipSummary.follow_up_child_count}
+              </Badge>
+            ) : null}
+            {relationshipSummary.open_follow_up_child_count > 0 ? (
+              <Badge
+                color='cyan'
+                variant='light'
+              >
+                open follow-ups {relationshipSummary.open_follow_up_child_count}
               </Badge>
             ) : null}
           </Group>

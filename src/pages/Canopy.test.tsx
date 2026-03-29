@@ -139,6 +139,32 @@ const mockSnapshot: CanopySnapshot = {
       title: 'Verify pending review',
     },
     {
+      action_id: 'action-1b',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'resolve_dependency',
+      level: 'needs_attention',
+      summary: 'Resolve or remove the blocker relationship for this task.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Resolve dependency for task-1',
+    },
+    {
+      action_id: 'action-1c',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'promote_follow_up',
+      level: 'needs_attention',
+      summary: 'Promote a follow-up task out of the current chain.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Promote follow-up on task-1',
+    },
+    {
       action_id: 'action-2',
       agent_id: 'agent-2',
       due_at: '2026-03-28T12:30:00Z',
@@ -185,6 +211,38 @@ const mockSnapshot: CanopySnapshot = {
       last_assignment_reason: 'handoff to strongest verifier',
       reassignment_count: 1,
       task_id: 'task-1',
+    },
+  ],
+  relationship_summaries: [
+    {
+      active_blocker_count: 1,
+      blocker_count: 1,
+      blocking_count: 0,
+      follow_up_child_count: 1,
+      follow_up_parent_count: 0,
+      open_follow_up_child_count: 1,
+      stale_blocker_count: 0,
+      task_id: 'task-1',
+    },
+    {
+      active_blocker_count: 0,
+      blocker_count: 0,
+      blocking_count: 1,
+      follow_up_child_count: 0,
+      follow_up_parent_count: 0,
+      open_follow_up_child_count: 0,
+      stale_blocker_count: 0,
+      task_id: 'task-2',
+    },
+    {
+      active_blocker_count: 0,
+      blocker_count: 0,
+      blocking_count: 0,
+      follow_up_child_count: 0,
+      follow_up_parent_count: 1,
+      open_follow_up_child_count: 0,
+      stale_blocker_count: 0,
+      task_id: 'task-3',
     },
   ],
   relationships: [
@@ -377,6 +435,32 @@ const mockTaskDetail: CanopyTaskDetail = {
       target_kind: 'task',
       task_id: 'task-1',
       title: 'Set priority for Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-4b',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'resolve_dependency',
+      level: 'needs_attention',
+      summary: 'Remove an existing blocker relationship from this task graph.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Resolve dependency for Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-4c',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'promote_follow_up',
+      level: 'needs_attention',
+      summary: 'Detach one follow-up task from the current chain.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Promote follow-up on Add Cap Canopy page',
     },
     {
       action_id: 'allowed-5',
@@ -693,6 +777,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       verification_state: 'unknown',
     },
   ],
+  relationship_summary: mockSnapshot.relationship_summaries[0],
   relationships: mockSnapshot.relationships.filter(
     (relationship) => relationship.source_task_id === 'task-1' || relationship.target_task_id === 'task-1'
   ),
@@ -733,6 +818,7 @@ function snapshotForTaskIds(taskIds: string[]): CanopySnapshot {
     }),
     operator_actions: mockSnapshot.operator_actions.filter((action) => (action.task_id ? allowedTaskIds.has(action.task_id) : false)),
     ownership: mockSnapshot.ownership.filter((ownership) => allowedTaskIds.has(ownership.task_id)),
+    relationship_summaries: mockSnapshot.relationship_summaries.filter((summary) => allowedTaskIds.has(summary.task_id)),
     relationships: mockSnapshot.relationships.filter(
       (relationship) => allowedTaskIds.has(relationship.source_task_id) || allowedTaskIds.has(relationship.target_task_id)
     ),
@@ -766,7 +852,9 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'unacknowledged', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
   [responseKey({ preset: 'unacknowledged', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2'])],
   [responseKey({ preset: 'blocked', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'blocked_by_dependencies', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'handoffs', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'follow_up_chains', project: '/workspace/cap' }), snapshotForTaskIds(['task-1', 'task-3'])],
   [responseKey({ preset: 'handoffs', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_queue', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_queue', project: '/workspace/cap', sort: 'updated_at' }), snapshotForTaskIds(['task-1'])],
@@ -1141,6 +1229,25 @@ describe('Canopy page', () => {
       taskId: 'task-1',
     })
 
+    await user.type(screen.getByLabelText('Graph action note'), 'Dependency landed in the runtime')
+    await user.click(screen.getByRole('button', { name: 'Resolve dependency' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'resolve_dependency',
+      changed_by: 'operator',
+      note: 'Dependency landed in the runtime',
+      related_task_id: 'task-2',
+      taskId: 'task-1',
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Promote follow-up' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'promote_follow_up',
+      changed_by: 'operator',
+      note: 'Dependency landed in the runtime',
+      related_task_id: 'task-3',
+      taskId: 'task-1',
+    })
+
     await user.click(screen.getByRole('button', { name: 'Nudge handoff' }))
     expect(handoffActionMutateMock).toHaveBeenCalledWith({
       action: 'follow_up_handoff',
@@ -1213,6 +1320,80 @@ describe('Canopy page', () => {
       changed_by: 'operator',
       follow_up_description: 'Capture the remaining operator work',
       follow_up_title: 'Track rollout cleanups',
+      taskId: 'task-1',
+    })
+  })
+
+  it('shows graph lifecycle actions when the runtime allows reopen and chain close', async () => {
+    const user = userEvent.setup()
+
+    currentTaskDetail = structuredClone(mockTaskDetail)
+    currentTaskDetail.task.status = 'blocked'
+    currentTaskDetail.task.blocked_reason = 'waiting on operator unblock'
+    currentTaskDetail.related_tasks = [
+      {
+        blocked_reason: null,
+        created_at: '2026-03-28T12:09:00Z',
+        owner_agent_id: 'agent-2',
+        priority: 'medium',
+        related_task_id: 'task-3',
+        relationship_id: 'rel-1',
+        relationship_kind: 'follow_up',
+        relationship_role: 'follow_up_child',
+        severity: 'none',
+        status: 'completed',
+        title: 'Track rollout cleanups',
+        updated_at: '2026-03-28T13:09:00Z',
+        verification_state: 'passed',
+      },
+    ]
+    currentTaskDetail.allowed_actions = currentTaskDetail.allowed_actions.filter(
+      (action) => action.kind !== 'resolve_dependency' && action.kind !== 'promote_follow_up'
+    )
+    currentTaskDetail.allowed_actions.push(
+      {
+        action_id: 'allowed-reopen',
+        agent_id: 'agent-1',
+        due_at: null,
+        expires_at: null,
+        handoff_id: null,
+        kind: 'reopen_blocked_task_when_unblocked',
+        level: 'needs_attention',
+        summary: 'Reopen a blocked task after its dependency blockers are cleared.',
+        target_kind: 'task',
+        task_id: 'task-1',
+        title: 'Reopen Add Cap Canopy page',
+      },
+      {
+        action_id: 'allowed-close-chain',
+        agent_id: 'agent-1',
+        due_at: null,
+        expires_at: null,
+        handoff_id: null,
+        kind: 'close_follow_up_chain',
+        level: 'needs_attention',
+        summary: 'Detach resolved follow-up tasks from this task chain.',
+        target_kind: 'task',
+        task_id: 'task-1',
+        title: 'Close follow-up chain for Add Cap Canopy page',
+      }
+    )
+
+    renderWithProviders(<Canopy />, { route: '/canopy?task=task-1' })
+
+    await user.click(screen.getByRole('button', { name: 'Reopen blocked task' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'reopen_blocked_task_when_unblocked',
+      changed_by: 'operator',
+      note: undefined,
+      taskId: 'task-1',
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Close follow-up chain' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'close_follow_up_chain',
+      changed_by: 'operator',
+      note: undefined,
       taskId: 'task-1',
     })
   })

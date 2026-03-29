@@ -4,8 +4,27 @@ import * as canopy from '../canopy.ts'
 
 const app = new Hono()
 const ALLOWED_SORTS = new Set(['status', 'title', 'updated_at', 'created_at', 'verification', 'priority', 'severity', 'attention'])
-const ALLOWED_VIEWS = new Set(['all', 'active', 'blocked', 'review', 'handoffs', 'attention'])
-const ALLOWED_PRESETS = new Set(['default', 'attention', 'review_queue', 'blocked', 'handoffs', 'critical', 'unacknowledged'])
+const ALLOWED_VIEWS = new Set([
+  'all',
+  'active',
+  'blocked',
+  'blocked_by_dependencies',
+  'review',
+  'handoffs',
+  'follow_up_chains',
+  'attention',
+])
+const ALLOWED_PRESETS = new Set([
+  'default',
+  'attention',
+  'review_queue',
+  'blocked',
+  'blocked_by_dependencies',
+  'handoffs',
+  'follow_up_chains',
+  'critical',
+  'unacknowledged',
+])
 const ALLOWED_PRIORITIES = new Set(['low', 'medium', 'high', 'critical'])
 const ALLOWED_SEVERITIES = new Set(['none', 'low', 'medium', 'high', 'critical'])
 const ALLOWED_ATTENTION_LEVELS = new Set(['normal', 'needs_attention', 'critical'])
@@ -16,6 +35,10 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'unacknowledge_task',
   'verify_task',
   'reassign_task',
+  'resolve_dependency',
+  'reopen_blocked_task_when_unblocked',
+  'promote_follow_up',
+  'close_follow_up_chain',
   'set_task_priority',
   'set_task_severity',
   'block_task',
@@ -183,6 +206,9 @@ app.post('/tasks/:taskId/actions', async (c) => {
       if (!body.relationship_role || !ALLOWED_TASK_RELATIONSHIP_ROLES.has(body.relationship_role)) {
         return c.json({ error: 'link_task_dependency requires a valid relationship_role' }, 400)
       }
+    }
+    if ((body.action === 'resolve_dependency' || body.action === 'promote_follow_up') && !body.related_task_id?.trim()) {
+      return c.json({ error: `${body.action} requires a related_task_id` }, 400)
     }
 
     return c.json(

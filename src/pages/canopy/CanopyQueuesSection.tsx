@@ -11,14 +11,18 @@ interface CanopyQueueSnapshotState {
 
 export function CanopyQueuesSection({
   blockedQueueSnapshot,
+  dependencyBlockedQueueSnapshot,
   criticalQueueSnapshot,
+  followUpChainsQueueSnapshot,
   handoffQueueSnapshot,
   openQueuePreset,
   savedView,
   unacknowledgedQueueSnapshot,
 }: {
   blockedQueueSnapshot: CanopyQueueSnapshotState
+  dependencyBlockedQueueSnapshot: CanopyQueueSnapshotState
   criticalQueueSnapshot: CanopyQueueSnapshotState
+  followUpChainsQueueSnapshot: CanopyQueueSnapshotState
   handoffQueueSnapshot: CanopyQueueSnapshotState
   openQueuePreset: (preset: CanopySavedView) => void
   savedView: CanopySavedView
@@ -62,10 +66,28 @@ export function CanopyQueuesSection({
       <Grid.Col span={{ base: 6, md: 3 }}>
         <Button
           fullWidth
+          onClick={() => openQueuePreset('blocked_by_dependencies')}
+          variant={savedView === 'blocked_by_dependencies' ? 'filled' : 'light'}
+        >
+          Dependency blocked · {renderQueueCount(dependencyBlockedQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
           onClick={() => openQueuePreset('handoffs')}
           variant={savedView === 'handoffs' ? 'filled' : 'light'}
         >
           Open handoffs · {renderQueueCount(handoffQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('follow_up_chains')}
+          variant={savedView === 'follow_up_chains' ? 'filled' : 'light'}
+        >
+          Follow-up chains · {renderQueueCount(followUpChainsQueueSnapshot)}
         </Button>
       </Grid.Col>
     </Grid>

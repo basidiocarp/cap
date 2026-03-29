@@ -48,6 +48,7 @@ export type {
   CanopyTaskHeartbeatSummary,
   CanopyTaskOwnershipSummary,
   CanopyTaskPriority,
+  CanopyTaskRelationshipSummary,
   CanopyTaskSeverity,
   CanopyTaskStatus,
   CanopyVerificationState,

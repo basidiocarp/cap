@@ -62,8 +62,16 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
   )
   const [reviewSummary, setReviewSummary] = useState('')
   const [handoffNotes, setHandoffNotes] = useState<Record<string, string>>({})
+  const [dependencyTaskId, setDependencyTaskId] = useState<string | null>(null)
+  const [followUpTaskId, setFollowUpTaskId] = useState<string | null>(null)
+  const [graphNote, setGraphNote] = useState('')
 
   useEffect(() => {
+    const firstDependency =
+      detail.related_tasks.find((task) => task.relationship_role === 'blocked_by' || task.relationship_role === 'blocks')
+        ?.related_task_id ?? null
+    const firstFollowUp = detail.related_tasks.find((task) => task.relationship_role === 'follow_up_child')?.related_task_id ?? null
+
     setPriority(detail.task.priority)
     setSeverity(detail.task.severity)
     setOwnerNote(detail.task.owner_note ?? '')
@@ -73,6 +81,9 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
     setReviewOutcome(detail.task.verification_state === 'failed' ? 'failed' : 'pending')
     setReviewSummary('')
     setHandoffNotes({})
+    setDependencyTaskId(firstDependency)
+    setFollowUpTaskId(firstFollowUp)
+    setGraphNote('')
   }, [agents, detail])
 
   const allowedKinds = useMemo(() => new Set(detail.allowed_actions.map((action) => action.kind)), [detail.allowed_actions])
@@ -99,6 +110,26 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
         value: agent.agent_id,
       })),
     [agents]
+  )
+  const dependencyOptions = useMemo(
+    () =>
+      detail.related_tasks
+        .filter((task) => task.relationship_role === 'blocked_by' || task.relationship_role === 'blocks')
+        .map((task) => ({
+          label: `${task.title} · ${task.relationship_role.replaceAll('_', ' ')}`,
+          value: task.related_task_id,
+        })),
+    [detail.related_tasks]
+  )
+  const followUpOptions = useMemo(
+    () =>
+      detail.related_tasks
+        .filter((task) => task.relationship_role === 'follow_up_child')
+        .map((task) => ({
+          label: `${task.title} · ${task.status}`,
+          value: task.related_task_id,
+        })),
+    [detail.related_tasks]
   )
   const isPending = taskActionMutation.isPending || handoffActionMutation.isPending
   const mutationError =
@@ -270,6 +301,118 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
             Reassign
           </Button>
         </Group>
+      ) : null}
+
+      {allowedKinds.has('resolve_dependency') ||
+      allowedKinds.has('promote_follow_up') ||
+      allowedKinds.has('reopen_blocked_task_when_unblocked') ||
+      allowedKinds.has('close_follow_up_chain') ? (
+        <Stack gap='xs'>
+          <Text fw={600}>Graph actions</Text>
+          {allowedKinds.has('resolve_dependency') ? (
+            <Group align='end'>
+              <Select
+                data={dependencyOptions}
+                disabled={isPending}
+                flex={1}
+                label='Dependency to resolve'
+                onChange={(value) => setDependencyTaskId(value)}
+                placeholder='Choose a related blocker or blocked task'
+                searchable
+                value={dependencyTaskId}
+              />
+              <Button
+                disabled={!dependencyTaskId}
+                loading={taskActionMutation.isPending}
+                onClick={() =>
+                  taskActionMutation.mutate({
+                    action: 'resolve_dependency',
+                    changed_by: TASK_OPERATOR_ACTOR,
+                    note: graphNote.trim() || undefined,
+                    related_task_id: dependencyTaskId ?? undefined,
+                    taskId: detail.task.task_id,
+                  })
+                }
+                variant='light'
+              >
+                Resolve dependency
+              </Button>
+            </Group>
+          ) : null}
+          {allowedKinds.has('promote_follow_up') ? (
+            <Group align='end'>
+              <Select
+                data={followUpOptions}
+                disabled={isPending}
+                flex={1}
+                label='Follow-up to promote'
+                onChange={(value) => setFollowUpTaskId(value)}
+                placeholder='Choose a follow-up child task'
+                searchable
+                value={followUpTaskId}
+              />
+              <Button
+                disabled={!followUpTaskId}
+                loading={taskActionMutation.isPending}
+                onClick={() =>
+                  taskActionMutation.mutate({
+                    action: 'promote_follow_up',
+                    changed_by: TASK_OPERATOR_ACTOR,
+                    note: graphNote.trim() || undefined,
+                    related_task_id: followUpTaskId ?? undefined,
+                    taskId: detail.task.task_id,
+                  })
+                }
+                variant='light'
+              >
+                Promote follow-up
+              </Button>
+            </Group>
+          ) : null}
+          {allowedKinds.has('reopen_blocked_task_when_unblocked') || allowedKinds.has('close_follow_up_chain') ? (
+            <Group gap='xs'>
+              {allowedKinds.has('reopen_blocked_task_when_unblocked') ? (
+                <Button
+                  loading={taskActionMutation.isPending}
+                  onClick={() =>
+                    taskActionMutation.mutate({
+                      action: 'reopen_blocked_task_when_unblocked',
+                      changed_by: TASK_OPERATOR_ACTOR,
+                      note: graphNote.trim() || undefined,
+                      taskId: detail.task.task_id,
+                    })
+                  }
+                  variant='outline'
+                >
+                  Reopen blocked task
+                </Button>
+              ) : null}
+              {allowedKinds.has('close_follow_up_chain') ? (
+                <Button
+                  loading={taskActionMutation.isPending}
+                  onClick={() =>
+                    taskActionMutation.mutate({
+                      action: 'close_follow_up_chain',
+                      changed_by: TASK_OPERATOR_ACTOR,
+                      note: graphNote.trim() || undefined,
+                      taskId: detail.task.task_id,
+                    })
+                  }
+                  variant='outline'
+                >
+                  Close follow-up chain
+                </Button>
+              ) : null}
+            </Group>
+          ) : null}
+          <TextInput
+            disabled={isPending}
+            label='Graph action note'
+            onChange={(event) => setGraphNote(event.currentTarget.value)}
+            placeholder='Optional note for dependency or follow-up changes'
+            value={graphNote}
+          />
+        </Stack>
       ) : null}
 
       <Group align='end'>

@@ -4,7 +4,16 @@ export type CanopyTaskStatus = 'open' | 'assigned' | 'in_progress' | 'blocked' |
 export type CanopyVerificationState = 'unknown' | 'pending' | 'passed' | 'failed'
 export type CanopyAttentionLevel = 'normal' | 'needs_attention' | 'critical'
 export type CanopyFreshness = 'fresh' | 'aging' | 'stale' | 'missing'
-export type CanopySnapshotPreset = 'default' | 'attention' | 'review_queue' | 'blocked' | 'handoffs' | 'critical' | 'unacknowledged'
+export type CanopySnapshotPreset =
+  | 'default'
+  | 'attention'
+  | 'review_queue'
+  | 'blocked'
+  | 'blocked_by_dependencies'
+  | 'handoffs'
+  | 'follow_up_chains'
+  | 'critical'
+  | 'unacknowledged'
 export type CanopyTaskPriority = 'low' | 'medium' | 'high' | 'critical'
 export type CanopyTaskSeverity = 'none' | 'low' | 'medium' | 'high' | 'critical'
 export type CanopyHandoffStatus = 'open' | 'accepted' | 'rejected' | 'expired' | 'cancelled' | 'completed'
@@ -40,8 +49,11 @@ export type CanopyTaskEventType =
   | 'follow_up_task_created'
 export type CanopyTaskAttentionReason =
   | 'blocked'
+  | 'blocked_by_active_dependency'
+  | 'blocked_by_stale_dependency'
   | 'verification_failed'
   | 'review_required'
+  | 'has_open_follow_ups'
   | 'unacknowledged'
   | 'high_priority'
   | 'critical_priority'
@@ -66,6 +78,10 @@ export type CanopyOperatorActionKind =
   | 'unacknowledge_task'
   | 'verify_task'
   | 'reassign_task'
+  | 'resolve_dependency'
+  | 'reopen_blocked_task_when_unblocked'
+  | 'promote_follow_up'
+  | 'close_follow_up_chain'
   | 'set_task_priority'
   | 'set_task_severity'
   | 'block_task'
@@ -246,6 +262,17 @@ export interface CanopyTaskAttention {
   task_id: string
 }
 
+export interface CanopyTaskRelationshipSummary {
+  active_blocker_count: number
+  blocker_count: number
+  blocking_count: number
+  follow_up_child_count: number
+  follow_up_parent_count: number
+  open_follow_up_child_count: number
+  stale_blocker_count: number
+  task_id: string
+}
+
 export interface CanopyTaskOwnershipSummary {
   assignment_count: number
   current_owner_agent_id: string | null
@@ -314,6 +341,7 @@ export interface CanopySnapshot {
   operator_actions: CanopyOperatorAction[]
   ownership: CanopyTaskOwnershipSummary[]
   relationships: CanopyTaskRelationship[]
+  relationship_summaries: CanopyTaskRelationshipSummary[]
   task_attention: CanopyTaskAttention[]
   task_heartbeat_summaries: CanopyTaskHeartbeatSummary[]
   tasks: CanopyTask[]
@@ -336,6 +364,7 @@ export interface CanopyTaskDetail {
   ownership: CanopyTaskOwnershipSummary
   related_tasks: CanopyRelatedTask[]
   relationships: CanopyTaskRelationship[]
+  relationship_summary: CanopyTaskRelationshipSummary
   task: CanopyTask
 }
 
@@ -346,6 +375,10 @@ export interface CanopyTaskActionInput {
     | 'unacknowledge_task'
     | 'verify_task'
     | 'reassign_task'
+    | 'resolve_dependency'
+    | 'reopen_blocked_task_when_unblocked'
+    | 'promote_follow_up'
+    | 'close_follow_up_chain'
     | 'set_task_priority'
     | 'set_task_severity'
     | 'block_task'

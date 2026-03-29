@@ -757,6 +757,83 @@ describe('API Routes', () => {
       })
     })
 
+    it('forwards graph task actions to Canopy', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
+        status: 'blocked',
+        task_id: 'task-1',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'resolve_dependency',
+          changed_by: 'operator',
+          note: 'dependency landed',
+          related_task_id: 'task-2',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        action: 'resolve_dependency',
+        assignedTo: undefined,
+        authorAgentId: undefined,
+        blockedReason: undefined,
+        changedBy: 'operator',
+        clearOwnerNote: undefined,
+        closureSummary: undefined,
+        dueAt: undefined,
+        evidenceLabel: undefined,
+        evidenceSourceKind: undefined,
+        evidenceSourceRef: undefined,
+        evidenceSummary: undefined,
+        expiresAt: undefined,
+        followUpDescription: undefined,
+        followUpTitle: undefined,
+        fromAgentId: undefined,
+        handoffSummary: undefined,
+        handoffType: undefined,
+        messageBody: undefined,
+        messageType: undefined,
+        note: 'dependency landed',
+        ownerNote: undefined,
+        priority: undefined,
+        relatedFile: undefined,
+        relatedHandoffId: undefined,
+        relatedMemoryQuery: undefined,
+        relatedSessionId: undefined,
+        relatedSymbol: undefined,
+        relatedTaskId: 'task-2',
+        relationshipRole: undefined,
+        requestedAction: undefined,
+        severity: undefined,
+        toAgentId: undefined,
+        verificationState: undefined,
+      })
+    })
+
+    it('rejects malformed graph task action payloads', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'promote_follow_up',
+          changed_by: 'operator',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(taskActionSpy).not.toHaveBeenCalled()
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'promote_follow_up requires a related_task_id',
+      })
+    })
+
     it('rejects unsupported Canopy task actions at the route boundary', async () => {
       const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction')
 

@@ -18,6 +18,7 @@ export function CanopyPage() {
     blockedQueueSnapshot,
     closeTask,
     criticalQueueSnapshot,
+    dependencyBlockedQueueSnapshot,
     detailQuery,
     filteredAgentAttention,
     filteredAgents,
@@ -26,6 +27,7 @@ export function CanopyPage() {
     filteredHandoffs,
     filteredTaskAttention,
     filteredTasks,
+    followUpChainsQueueSnapshot,
     groupedTasks,
     handoffQueueSnapshot,
     heartbeatSummaryByTaskId,
@@ -36,7 +38,7 @@ export function CanopyPage() {
     operatorActionsByTaskId,
     ownershipByTaskId,
     priorityFilter,
-    relationshipCueByTaskId,
+    relationshipSummaryByTaskId,
     savedView,
     searchQuery,
     severityFilter,
@@ -71,8 +73,16 @@ export function CanopyPage() {
         title='Blocked queue unavailable'
       />
       <ErrorAlert
+        error={dependencyBlockedQueueSnapshot.error instanceof Error ? dependencyBlockedQueueSnapshot.error : undefined}
+        title='Dependency queue unavailable'
+      />
+      <ErrorAlert
         error={handoffQueueSnapshot.error instanceof Error ? handoffQueueSnapshot.error : undefined}
         title='Handoff queue unavailable'
+      />
+      <ErrorAlert
+        error={followUpChainsQueueSnapshot.error instanceof Error ? followUpChainsQueueSnapshot.error : undefined}
+        title='Follow-up queue unavailable'
       />
 
       <Text
@@ -106,6 +116,8 @@ export function CanopyPage() {
         <CanopyQueuesSection
           blockedQueueSnapshot={blockedQueueSnapshot}
           criticalQueueSnapshot={criticalQueueSnapshot}
+          dependencyBlockedQueueSnapshot={dependencyBlockedQueueSnapshot}
+          followUpChainsQueueSnapshot={followUpChainsQueueSnapshot}
           handoffQueueSnapshot={handoffQueueSnapshot}
           openQueuePreset={openQueuePreset}
           savedView={savedView}
@@ -136,7 +148,7 @@ export function CanopyPage() {
         onOpenTask={openTask}
         operatorActionsByTaskId={operatorActionsByTaskId}
         ownershipByTaskId={ownershipByTaskId}
-        relationshipCueByTaskId={relationshipCueByTaskId}
+        relationshipSummaryByTaskId={relationshipSummaryByTaskId}
         renderGroupedByStatus={sortMode === 'status'}
         searchQuery={searchQuery}
         statusFilter={statusFilter}
