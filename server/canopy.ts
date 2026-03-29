@@ -19,6 +19,10 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'block_task',
   'unblock_task',
   'update_task_note',
+  'create_handoff',
+  'post_council_message',
+  'attach_evidence',
+  'create_follow_up_task',
 ])
 const ALLOWED_HANDOFF_ACTIONS = new Set([
   'accept_handoff',
@@ -29,6 +33,26 @@ const ALLOWED_HANDOFF_ACTIONS = new Set([
   'expire_handoff',
 ])
 const ALLOWED_VERIFICATION_STATES = new Set(['pending', 'passed', 'failed'])
+const ALLOWED_HANDOFF_TYPES = new Set([
+  'request_help',
+  'request_review',
+  'transfer_ownership',
+  'request_verification',
+  'record_decision',
+  'close_task',
+])
+const ALLOWED_COUNCIL_MESSAGE_TYPES = new Set(['proposal', 'objection', 'evidence', 'decision', 'handoff', 'status'])
+const ALLOWED_EVIDENCE_SOURCE_KINDS = new Set([
+  'hyphae_session',
+  'hyphae_recall',
+  'hyphae_outcome',
+  'cortina_event',
+  'mycelium_command',
+  'mycelium_explain',
+  'rhizome_impact',
+  'rhizome_export',
+  'manual_note',
+])
 
 function parseJson<T>(raw: string, label: string): T {
   try {
@@ -81,15 +105,36 @@ export async function applyTaskAction<T = unknown>(
   taskId: string,
   input: {
     action: string
+    authorAgentId?: string
     assignedTo?: string
     blockedReason?: string
     changedBy: string
     clearOwnerNote?: boolean
     closureSummary?: string
+    dueAt?: string
+    evidenceLabel?: string
+    evidenceSourceKind?: string
+    evidenceSourceRef?: string
+    evidenceSummary?: string
+    expiresAt?: string
+    followUpDescription?: string
+    followUpTitle?: string
+    fromAgentId?: string
+    handoffSummary?: string
+    handoffType?: string
+    messageBody?: string
+    messageType?: string
     note?: string
     ownerNote?: string
     priority?: string
+    relatedFile?: string
+    relatedHandoffId?: string
+    relatedMemoryQuery?: string
+    relatedSessionId?: string
+    relatedSymbol?: string
+    requestedAction?: string
     severity?: string
+    toAgentId?: string
     verificationState?: string
   }
 ): Promise<T> {
@@ -101,6 +146,39 @@ export async function applyTaskAction<T = unknown>(
   }
   if (input.action === 'verify_task' && input.verificationState === 'passed' && !input.closureSummary?.trim()) {
     throw new Error('verify_task passed reviews require a closure_summary')
+  }
+  if (input.action === 'create_handoff') {
+    if (!input.fromAgentId?.trim() || !input.toAgentId?.trim()) {
+      throw new Error('create_handoff requires from_agent_id and to_agent_id')
+    }
+    if (!input.handoffType || !ALLOWED_HANDOFF_TYPES.has(input.handoffType)) {
+      throw new Error('create_handoff requires a valid handoff_type')
+    }
+    if (!input.handoffSummary?.trim()) {
+      throw new Error('create_handoff requires a handoff_summary')
+    }
+  }
+  if (input.action === 'post_council_message') {
+    if (!input.authorAgentId?.trim()) {
+      throw new Error('post_council_message requires an author_agent_id')
+    }
+    if (!input.messageType || !ALLOWED_COUNCIL_MESSAGE_TYPES.has(input.messageType)) {
+      throw new Error('post_council_message requires a valid message_type')
+    }
+    if (!input.messageBody?.trim()) {
+      throw new Error('post_council_message requires a message_body')
+    }
+  }
+  if (input.action === 'attach_evidence') {
+    if (!input.evidenceSourceKind || !ALLOWED_EVIDENCE_SOURCE_KINDS.has(input.evidenceSourceKind)) {
+      throw new Error('attach_evidence requires a valid evidence_source_kind')
+    }
+    if (!input.evidenceSourceRef?.trim() || !input.evidenceLabel?.trim()) {
+      throw new Error('attach_evidence requires evidence_source_ref and evidence_label')
+    }
+  }
+  if (input.action === 'create_follow_up_task' && !input.followUpTitle?.trim()) {
+    throw new Error('create_follow_up_task requires a follow_up_title')
   }
 
   const args = ['task', 'action', '--task-id', taskId, '--action', input.action, '--changed-by', input.changedBy]
@@ -115,6 +193,29 @@ export async function applyTaskAction<T = unknown>(
   if (input.ownerNote) args.push('--owner-note', input.ownerNote)
   if (input.clearOwnerNote) args.push('--clear-owner-note')
   if (input.note) args.push('--note', input.note)
+  if (input.fromAgentId) args.push('--from-agent-id', input.fromAgentId)
+  if (input.toAgentId) args.push('--to-agent-id', input.toAgentId)
+  if (input.handoffType && ALLOWED_HANDOFF_TYPES.has(input.handoffType)) args.push('--handoff-type', input.handoffType)
+  if (input.handoffSummary) args.push('--handoff-summary', input.handoffSummary)
+  if (input.requestedAction) args.push('--requested-action', input.requestedAction)
+  if (input.dueAt) args.push('--due-at', input.dueAt)
+  if (input.expiresAt) args.push('--expires-at', input.expiresAt)
+  if (input.authorAgentId) args.push('--author-agent-id', input.authorAgentId)
+  if (input.messageType && ALLOWED_COUNCIL_MESSAGE_TYPES.has(input.messageType)) args.push('--message-type', input.messageType)
+  if (input.messageBody) args.push('--message-body', input.messageBody)
+  if (input.evidenceSourceKind && ALLOWED_EVIDENCE_SOURCE_KINDS.has(input.evidenceSourceKind)) {
+    args.push('--evidence-source-kind', input.evidenceSourceKind)
+  }
+  if (input.evidenceSourceRef) args.push('--evidence-source-ref', input.evidenceSourceRef)
+  if (input.evidenceLabel) args.push('--evidence-label', input.evidenceLabel)
+  if (input.evidenceSummary) args.push('--evidence-summary', input.evidenceSummary)
+  if (input.relatedHandoffId) args.push('--related-handoff-id', input.relatedHandoffId)
+  if (input.relatedSessionId) args.push('--related-session-id', input.relatedSessionId)
+  if (input.relatedMemoryQuery) args.push('--related-memory-query', input.relatedMemoryQuery)
+  if (input.relatedSymbol) args.push('--related-symbol', input.relatedSymbol)
+  if (input.relatedFile) args.push('--related-file', input.relatedFile)
+  if (input.followUpTitle) args.push('--follow-up-title', input.followUpTitle)
+  if (input.followUpDescription) args.push('--follow-up-description', input.followUpDescription)
 
   const raw = await run(args)
   return parseJson<T>(raw, 'canopy task action')

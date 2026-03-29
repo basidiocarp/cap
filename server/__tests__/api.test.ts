@@ -421,14 +421,35 @@ describe('API Routes', () => {
       expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
         action: 'block_task',
         assignedTo: undefined,
+        authorAgentId: undefined,
         blockedReason: 'waiting on review',
         changedBy: 'operator',
         clearOwnerNote: undefined,
         closureSummary: undefined,
+        dueAt: undefined,
+        evidenceLabel: undefined,
+        evidenceSourceKind: undefined,
+        evidenceSourceRef: undefined,
+        evidenceSummary: undefined,
+        expiresAt: undefined,
+        followUpDescription: undefined,
+        followUpTitle: undefined,
+        fromAgentId: undefined,
+        handoffSummary: undefined,
+        handoffType: undefined,
+        messageBody: undefined,
+        messageType: undefined,
         note: undefined,
         ownerNote: undefined,
         priority: undefined,
+        relatedFile: undefined,
+        relatedHandoffId: undefined,
+        relatedMemoryQuery: undefined,
+        relatedSessionId: undefined,
+        relatedSymbol: undefined,
+        requestedAction: undefined,
         severity: undefined,
+        toAgentId: undefined,
         verificationState: undefined,
       })
     })
@@ -456,15 +477,246 @@ describe('API Routes', () => {
       expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
         action: 'verify_task',
         assignedTo: undefined,
+        authorAgentId: undefined,
         blockedReason: undefined,
         changedBy: 'operator',
         clearOwnerNote: undefined,
         closureSummary: 'review accepted',
+        dueAt: undefined,
+        evidenceLabel: undefined,
+        evidenceSourceKind: undefined,
+        evidenceSourceRef: undefined,
+        evidenceSummary: undefined,
+        expiresAt: undefined,
+        followUpDescription: undefined,
+        followUpTitle: undefined,
+        fromAgentId: undefined,
+        handoffSummary: undefined,
+        handoffType: undefined,
+        messageBody: undefined,
+        messageType: undefined,
         note: undefined,
         ownerNote: undefined,
         priority: undefined,
+        relatedFile: undefined,
+        relatedHandoffId: undefined,
+        relatedMemoryQuery: undefined,
+        relatedSessionId: undefined,
+        relatedSymbol: undefined,
+        requestedAction: undefined,
         severity: undefined,
+        toAgentId: undefined,
         verificationState: 'passed',
+      })
+    })
+
+    it('forwards task creation actions to Canopy', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
+        status: 'review_required',
+        task_id: 'task-1',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'create_handoff',
+          changed_by: 'operator',
+          from_agent_id: 'agent-1',
+          handoff_summary: 'review the queue wiring',
+          handoff_type: 'request_review',
+          requested_action: 'confirm the read model',
+          to_agent_id: 'agent-2',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        action: 'create_handoff',
+        assignedTo: undefined,
+        authorAgentId: undefined,
+        blockedReason: undefined,
+        changedBy: 'operator',
+        clearOwnerNote: undefined,
+        closureSummary: undefined,
+        dueAt: undefined,
+        evidenceLabel: undefined,
+        evidenceSourceKind: undefined,
+        evidenceSourceRef: undefined,
+        evidenceSummary: undefined,
+        expiresAt: undefined,
+        followUpDescription: undefined,
+        followUpTitle: undefined,
+        fromAgentId: 'agent-1',
+        handoffSummary: 'review the queue wiring',
+        handoffType: 'request_review',
+        messageBody: undefined,
+        messageType: undefined,
+        note: undefined,
+        ownerNote: undefined,
+        priority: undefined,
+        relatedFile: undefined,
+        relatedHandoffId: undefined,
+        relatedMemoryQuery: undefined,
+        relatedSessionId: undefined,
+        relatedSymbol: undefined,
+        requestedAction: 'confirm the read model',
+        severity: undefined,
+        toAgentId: 'agent-2',
+        verificationState: undefined,
+      })
+    })
+
+    it('rejects malformed task creation action payloads', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'attach_evidence',
+          changed_by: 'operator',
+          evidence_label: 'Missing ref',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(taskActionSpy).not.toHaveBeenCalled()
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'attach_evidence requires a valid evidence_source_kind',
+      })
+    })
+
+    it('forwards council message task actions to Canopy', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
+        status: 'review_required',
+        task_id: 'task-1',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'post_council_message',
+          author_agent_id: 'agent-1',
+          changed_by: 'operator',
+          message_body: 'Operator initiated follow-up review.',
+          message_type: 'status',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        action: 'post_council_message',
+        assignedTo: undefined,
+        authorAgentId: 'agent-1',
+        blockedReason: undefined,
+        changedBy: 'operator',
+        clearOwnerNote: undefined,
+        closureSummary: undefined,
+        dueAt: undefined,
+        evidenceLabel: undefined,
+        evidenceSourceKind: undefined,
+        evidenceSourceRef: undefined,
+        evidenceSummary: undefined,
+        expiresAt: undefined,
+        followUpDescription: undefined,
+        followUpTitle: undefined,
+        fromAgentId: undefined,
+        handoffSummary: undefined,
+        handoffType: undefined,
+        messageBody: 'Operator initiated follow-up review.',
+        messageType: 'status',
+        note: undefined,
+        ownerNote: undefined,
+        priority: undefined,
+        relatedFile: undefined,
+        relatedHandoffId: undefined,
+        relatedMemoryQuery: undefined,
+        relatedSessionId: undefined,
+        relatedSymbol: undefined,
+        requestedAction: undefined,
+        severity: undefined,
+        toAgentId: undefined,
+        verificationState: undefined,
+      })
+    })
+
+    it('forwards follow-up task actions to Canopy', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
+        status: 'review_required',
+        task_id: 'task-1',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'create_follow_up_task',
+          changed_by: 'operator',
+          follow_up_description: 'Track the remaining rollout work.',
+          follow_up_title: 'Finish rollout',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        action: 'create_follow_up_task',
+        assignedTo: undefined,
+        authorAgentId: undefined,
+        blockedReason: undefined,
+        changedBy: 'operator',
+        clearOwnerNote: undefined,
+        closureSummary: undefined,
+        dueAt: undefined,
+        evidenceLabel: undefined,
+        evidenceSourceKind: undefined,
+        evidenceSourceRef: undefined,
+        evidenceSummary: undefined,
+        expiresAt: undefined,
+        followUpDescription: 'Track the remaining rollout work.',
+        followUpTitle: 'Finish rollout',
+        fromAgentId: undefined,
+        handoffSummary: undefined,
+        handoffType: undefined,
+        messageBody: undefined,
+        messageType: undefined,
+        note: undefined,
+        ownerNote: undefined,
+        priority: undefined,
+        relatedFile: undefined,
+        relatedHandoffId: undefined,
+        relatedMemoryQuery: undefined,
+        relatedSessionId: undefined,
+        relatedSymbol: undefined,
+        requestedAction: undefined,
+        severity: undefined,
+        toAgentId: undefined,
+        verificationState: undefined,
+      })
+    })
+
+    it('rejects unsupported Canopy task actions at the route boundary', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'not_real',
+          changed_by: 'operator',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(taskActionSpy).not.toHaveBeenCalled()
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'Unsupported Canopy task action: not_real',
       })
     })
 
@@ -531,6 +783,26 @@ describe('API Routes', () => {
         action: 'expire_handoff',
         changedBy: 'operator',
         note: undefined,
+      })
+    })
+
+    it('rejects unsupported Canopy handoff actions at the route boundary', async () => {
+      const handoffActionSpy = vi.spyOn(canopy, 'applyHandoffAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/handoffs/handoff-1/actions', {
+        body: JSON.stringify({
+          action: 'not_real',
+          changed_by: 'operator',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(handoffActionSpy).not.toHaveBeenCalled()
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'Unsupported Canopy handoff action: not_real',
       })
     })
   })

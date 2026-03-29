@@ -363,6 +363,58 @@ const mockTaskDetail: CanopyTaskDetail = {
     },
     {
       action_id: 'allowed-7',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'create_handoff',
+      level: 'needs_attention',
+      summary: 'Create a new handoff from the operator console.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Create handoff for Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-8',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'post_council_message',
+      level: 'needs_attention',
+      summary: 'Post a new council message on the task thread.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Post council message for Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-9',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'attach_evidence',
+      level: 'needs_attention',
+      summary: 'Attach supporting evidence and navigation context to the task.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Attach evidence to Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-10',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'create_follow_up_task',
+      level: 'needs_attention',
+      summary: 'Create a follow-up task in the same project from this task detail.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Create follow-up task for Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-11',
       agent_id: 'agent-2',
       due_at: '2026-03-28T12:30:00Z',
       expires_at: '2026-03-28T13:00:00Z',
@@ -375,7 +427,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       title: 'Accept handoff-1',
     },
     {
-      action_id: 'allowed-8',
+      action_id: 'allowed-12',
       agent_id: 'agent-2',
       due_at: '2026-03-28T12:30:00Z',
       expires_at: '2026-03-28T13:00:00Z',
@@ -388,7 +440,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       title: 'Reject handoff-1',
     },
     {
-      action_id: 'allowed-9',
+      action_id: 'allowed-13',
       agent_id: 'agent-2',
       due_at: '2026-03-28T12:30:00Z',
       expires_at: '2026-03-28T13:00:00Z',
@@ -401,7 +453,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       title: 'Cancel handoff-1',
     },
     {
-      action_id: 'allowed-10',
+      action_id: 'allowed-14',
       agent_id: 'agent-2',
       due_at: '2026-03-28T12:30:00Z',
       expires_at: '2026-03-28T13:00:00Z',
@@ -414,7 +466,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       title: 'Complete handoff-1',
     },
     {
-      action_id: 'allowed-11',
+      action_id: 'allowed-15',
       agent_id: 'agent-2',
       due_at: '2026-03-28T12:30:00Z',
       expires_at: '2026-03-28T13:00:00Z',
@@ -427,7 +479,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       title: 'Follow up handoff-1',
     },
     {
-      action_id: 'allowed-12',
+      action_id: 'allowed-16',
       agent_id: 'agent-2',
       due_at: '2026-03-28T12:30:00Z',
       expires_at: '2026-03-28T13:00:00Z',
@@ -929,6 +981,7 @@ describe('Canopy page', () => {
     expect(screen.getAllByText(/Operator note:/).length).toBeGreaterThan(0)
     expect(screen.getByText(/Owner heartbeat freshness:/)).toBeInTheDocument()
     expect(screen.getByText('Runtime Summary')).toBeInTheDocument()
+    expect(screen.getByText('Coordination Actions')).toBeInTheDocument()
     expect(screen.getByText('Current owner: agent-1')).toBeInTheDocument()
     expect(screen.getByText('Assignments: 2')).toBeInTheDocument()
     expect(screen.getByText(/Freshness: 1 fresh · 1 aging · 0 stale · 0 missing/)).toBeInTheDocument()
@@ -948,7 +1001,7 @@ describe('Canopy page', () => {
     expect(screen.getAllByText(/Due /).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Expires /).length).toBeGreaterThan(0)
     expect(screen.getByText('Ready for review.')).toBeInTheDocument()
-    expect(screen.getByText('Hyphae session')).toBeInTheDocument()
+    expect(screen.getAllByText('Hyphae session').length).toBeGreaterThan(0)
     expect(screen.getByRole('link', { name: 'Open session' })).toHaveAttribute('href', '/sessions?session=ses_123')
     expect(screen.getByRole('link', { name: 'Search memories' })).toHaveAttribute('href', '/memories?q=task%3Acap-canopy')
     expect(screen.getByRole('link', { name: 'Open code explorer' })).toHaveAttribute(
@@ -1003,6 +1056,63 @@ describe('Canopy page', () => {
       changed_by: 'operator',
       handoffId: 'handoff-1',
       note: undefined,
+      taskId: 'task-1',
+    })
+
+    await user.type(screen.getByLabelText('Handoff summary'), 'Review the next coordination step')
+    await user.type(screen.getByLabelText('Requested action'), 'Confirm the queue wiring')
+    await user.click(screen.getByRole('button', { name: 'Create handoff' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'create_handoff',
+      changed_by: 'operator',
+      due_at: undefined,
+      expires_at: undefined,
+      from_agent_id: 'agent-1',
+      handoff_summary: 'Review the next coordination step',
+      handoff_type: 'request_review',
+      requested_action: 'Confirm the queue wiring',
+      taskId: 'task-1',
+      to_agent_id: 'agent-2',
+    })
+
+    await user.type(screen.getByLabelText('Message body'), 'Operator initiated a follow-up review.')
+    await user.click(screen.getByRole('button', { name: 'Post message' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'post_council_message',
+      author_agent_id: 'agent-1',
+      changed_by: 'operator',
+      message_body: 'Operator initiated a follow-up review.',
+      message_type: 'status',
+      taskId: 'task-1',
+    })
+
+    await user.type(screen.getByLabelText('Source ref'), 'operator-note-1')
+    await user.type(screen.getByLabelText('Label'), 'Operator note')
+    await user.type(screen.getByLabelText('Evidence summary'), 'Linked operator guidance')
+    await user.click(screen.getByRole('button', { name: 'Attach evidence' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'attach_evidence',
+      changed_by: 'operator',
+      evidence_label: 'Operator note',
+      evidence_source_kind: 'manual_note',
+      evidence_source_ref: 'operator-note-1',
+      evidence_summary: 'Linked operator guidance',
+      related_file: undefined,
+      related_handoff_id: undefined,
+      related_memory_query: undefined,
+      related_session_id: undefined,
+      related_symbol: undefined,
+      taskId: 'task-1',
+    })
+
+    await user.type(screen.getByLabelText('Title'), 'Track rollout cleanups')
+    await user.type(screen.getByLabelText('Description'), 'Capture the remaining operator work')
+    await user.click(screen.getByRole('button', { name: 'Create follow-up' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'create_follow_up_task',
+      changed_by: 'operator',
+      follow_up_description: 'Capture the remaining operator work',
+      follow_up_title: 'Track rollout cleanups',
       taskId: 'task-1',
     })
   })

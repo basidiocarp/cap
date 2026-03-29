@@ -173,8 +173,16 @@ export function eventTitle(event: CanopyTaskEvent): string {
       return `Status changed to ${event.to_status}`
     case 'triage_updated':
       return 'Triage updated'
+    case 'handoff_created':
+      return 'Handoff created'
     case 'handoff_updated':
       return 'Handoff updated'
+    case 'council_message_posted':
+      return 'Council message posted'
+    case 'evidence_attached':
+      return 'Evidence attached'
+    case 'follow_up_task_created':
+      return 'Follow-up task created'
     default:
       return event.event_type
   }

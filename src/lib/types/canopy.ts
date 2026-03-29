@@ -26,7 +26,17 @@ export type CanopyEvidenceSourceKind =
   | 'rhizome_impact'
   | 'rhizome_export'
   | 'manual_note'
-export type CanopyTaskEventType = 'created' | 'assigned' | 'ownership_transferred' | 'status_changed' | 'triage_updated' | 'handoff_updated'
+export type CanopyTaskEventType =
+  | 'created'
+  | 'assigned'
+  | 'ownership_transferred'
+  | 'status_changed'
+  | 'triage_updated'
+  | 'handoff_created'
+  | 'handoff_updated'
+  | 'council_message_posted'
+  | 'evidence_attached'
+  | 'follow_up_task_created'
 export type CanopyTaskAttentionReason =
   | 'blocked'
   | 'verification_failed'
@@ -60,6 +70,10 @@ export type CanopyOperatorActionKind =
   | 'block_task'
   | 'unblock_task'
   | 'update_task_note'
+  | 'create_handoff'
+  | 'post_council_message'
+  | 'attach_evidence'
+  | 'create_follow_up_task'
   | 'accept_handoff'
   | 'reject_handoff'
   | 'cancel_handoff'
@@ -304,16 +318,41 @@ export interface CanopyTaskActionInput {
     | 'block_task'
     | 'unblock_task'
     | 'update_task_note'
+    | 'create_handoff'
+    | 'post_council_message'
+    | 'attach_evidence'
+    | 'create_follow_up_task'
   >
+  author_agent_id?: string
   assigned_to?: string
   blocked_reason?: string
   changed_by: string
   clear_owner_note?: boolean
   closure_summary?: string
+  due_at?: string
+  evidence_label?: string
+  evidence_source_kind?: CanopyEvidenceSourceKind
+  evidence_source_ref?: string
+  evidence_summary?: string
+  expires_at?: string
+  follow_up_description?: string
+  follow_up_title?: string
+  from_agent_id?: string
+  handoff_summary?: string
+  handoff_type?: CanopyHandoffType
+  message_body?: string
+  message_type?: CanopyCouncilMessageType
   note?: string
   owner_note?: string
   priority?: CanopyTaskPriority
+  related_file?: string
+  related_handoff_id?: string
+  related_memory_query?: string
+  related_session_id?: string
+  related_symbol?: string
+  requested_action?: string
   severity?: CanopyTaskSeverity
+  to_agent_id?: string
   verification_state?: Exclude<CanopyVerificationState, 'unknown'>
 }
 

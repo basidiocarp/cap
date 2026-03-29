@@ -5,6 +5,7 @@ import { EmptyState } from '../../components/EmptyState'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { PageLoader } from '../../components/PageLoader'
 import { TaskActivitySections } from './TaskActivitySections'
+import { TaskCoordinationActionsSection } from './TaskCoordinationActionsSection'
 import { TaskOperatorActionsSection } from './TaskOperatorActionsSection'
 import { TaskOverviewSection } from './TaskOverviewSection'
 import { TaskRuntimeSummaryGrid } from './TaskRuntimeSummaryGrid'
@@ -49,6 +50,12 @@ export function TaskDetailModal({
 
             <Divider label='Operator Actions' />
             <TaskOperatorActionsSection
+              agents={agents}
+              detail={detail}
+            />
+
+            <Divider label='Coordination Actions' />
+            <TaskCoordinationActionsSection
               agents={agents}
               detail={detail}
             />
