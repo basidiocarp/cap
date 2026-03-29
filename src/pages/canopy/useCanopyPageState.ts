@@ -37,6 +37,14 @@ export function useCanopyPageState() {
     preset: 'review_handoff_follow_through',
     project: activeProject ?? undefined,
   })
+  const dueSoonReviewHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'due_soon_review_handoff_follow_through',
+    project: activeProject ?? undefined,
+  })
+  const overdueReviewHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'overdue_review_handoff_follow_through',
+    project: activeProject ?? undefined,
+  })
   const reviewDecisionFollowThroughQueueSnapshotQuery = useCanopySnapshot({
     preset: 'review_decision_follow_through',
     project: activeProject ?? undefined,
@@ -303,6 +311,11 @@ export function useCanopyPageState() {
       isLoading: dueSoonQueueSnapshotQuery.isLoading,
       snapshot: dueSoonQueueSnapshotQuery.data,
     },
+    dueSoonReviewHandoffFollowThroughQueueSnapshot: {
+      error: dueSoonReviewHandoffFollowThroughQueueSnapshotQuery.error,
+      isLoading: dueSoonReviewHandoffFollowThroughQueueSnapshotQuery.isLoading,
+      snapshot: dueSoonReviewHandoffFollowThroughQueueSnapshotQuery.data,
+    },
     dueSoonReviewQueueSnapshot: {
       error: dueSoonReviewQueueSnapshotQuery.error,
       isLoading: dueSoonReviewQueueSnapshotQuery.isLoading,
@@ -362,6 +375,11 @@ export function useCanopyPageState() {
       error: overdueHandoffAcceptanceQueueSnapshotQuery.error,
       isLoading: overdueHandoffAcceptanceQueueSnapshotQuery.isLoading,
       snapshot: overdueHandoffAcceptanceQueueSnapshotQuery.data,
+    },
+    overdueReviewHandoffFollowThroughQueueSnapshot: {
+      error: overdueReviewHandoffFollowThroughQueueSnapshotQuery.error,
+      isLoading: overdueReviewHandoffFollowThroughQueueSnapshotQuery.isLoading,
+      snapshot: overdueReviewHandoffFollowThroughQueueSnapshotQuery.data,
     },
     overdueReviewQueueSnapshot: {
       error: overdueReviewQueueSnapshotQuery.error,

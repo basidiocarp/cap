@@ -34,6 +34,16 @@ export const SAVED_VIEW_OPTIONS = [
     value: 'review_handoff_follow_through',
   },
   {
+    description: 'Review coordination handoffs that need pickup soon before they turn overdue',
+    label: 'Review / handoff due soon',
+    value: 'due_soon_review_handoff_follow_through',
+  },
+  {
+    description: 'Review coordination handoffs that are already overdue and need operator follow-through',
+    label: 'Review / handoff overdue',
+    value: 'overdue_review_handoff_follow_through',
+  },
+  {
     description: 'Review tasks waiting on a decision-recording or closeout handoff to resolve',
     label: 'Review / decision or closeout',
     value: 'review_decision_follow_through',

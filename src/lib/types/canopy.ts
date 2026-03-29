@@ -8,6 +8,8 @@ export type CanopySnapshotPreset =
   | 'default'
   | 'attention'
   | 'review_queue'
+  | 'due_soon_review_handoff_follow_through'
+  | 'overdue_review_handoff_follow_through'
   | 'review_with_graph_pressure'
   | 'review_handoff_follow_through'
   | 'review_decision_follow_through'

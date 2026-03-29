@@ -21,6 +21,7 @@ export function CanopyQueuesSection({
   dueSoonHandoffAcceptanceQueueSnapshot,
   dueSoonQueueSnapshot,
   dueSoonExecutionQueueSnapshot,
+  dueSoonReviewHandoffFollowThroughQueueSnapshot,
   dueSoonReviewQueueSnapshot,
   followUpChainsQueueSnapshot,
   handoffQueueSnapshot,
@@ -32,6 +33,7 @@ export function CanopyQueuesSection({
   overdueExecutionOwnedQueueSnapshot,
   overdueExecutionUnclaimedQueueSnapshot,
   overdueReviewQueueSnapshot,
+  overdueReviewHandoffFollowThroughQueueSnapshot,
   pausedResumableQueueSnapshot,
   reviewDecisionFollowThroughQueueSnapshot,
   reviewAwaitingSupportQueueSnapshot,
@@ -55,6 +57,7 @@ export function CanopyQueuesSection({
   dueSoonHandoffAcceptanceQueueSnapshot: CanopyQueueSnapshotState
   dueSoonQueueSnapshot: CanopyQueueSnapshotState
   dueSoonExecutionQueueSnapshot: CanopyQueueSnapshotState
+  dueSoonReviewHandoffFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   dueSoonReviewQueueSnapshot: CanopyQueueSnapshotState
   followUpChainsQueueSnapshot: CanopyQueueSnapshotState
   handoffQueueSnapshot: CanopyQueueSnapshotState
@@ -66,6 +69,7 @@ export function CanopyQueuesSection({
   overdueExecutionOwnedQueueSnapshot: CanopyQueueSnapshotState
   overdueExecutionUnclaimedQueueSnapshot: CanopyQueueSnapshotState
   overdueReviewQueueSnapshot: CanopyQueueSnapshotState
+  overdueReviewHandoffFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   pausedResumableQueueSnapshot: CanopyQueueSnapshotState
   reviewDecisionFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   reviewAwaitingSupportQueueSnapshot: CanopyQueueSnapshotState
@@ -138,6 +142,24 @@ export function CanopyQueuesSection({
           variant={savedView === 'review_handoff_follow_through' ? 'filled' : 'light'}
         >
           Review / handoff follow-through · {renderQueueCount(reviewHandoffFollowThroughQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('due_soon_review_handoff_follow_through')}
+          variant={savedView === 'due_soon_review_handoff_follow_through' ? 'filled' : 'light'}
+        >
+          Review / handoff due soon · {renderQueueCount(dueSoonReviewHandoffFollowThroughQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('overdue_review_handoff_follow_through')}
+          variant={savedView === 'overdue_review_handoff_follow_through' ? 'filled' : 'light'}
+        >
+          Review / handoff overdue · {renderQueueCount(overdueReviewHandoffFollowThroughQueueSnapshot)}
         </Button>
       </Grid.Col>
       <Grid.Col span={{ base: 6, md: 3 }}>
