@@ -18,6 +18,8 @@ export function CanopyQueuesSection({
   dependencyBlockedQueueSnapshot,
   criticalQueueSnapshot,
   dueSoonQueueSnapshot,
+  dueSoonExecutionQueueSnapshot,
+  dueSoonReviewQueueSnapshot,
   followUpChainsQueueSnapshot,
   handoffQueueSnapshot,
   inProgressQueueSnapshot,
@@ -44,6 +46,8 @@ export function CanopyQueuesSection({
   dependencyBlockedQueueSnapshot: CanopyQueueSnapshotState
   criticalQueueSnapshot: CanopyQueueSnapshotState
   dueSoonQueueSnapshot: CanopyQueueSnapshotState
+  dueSoonExecutionQueueSnapshot: CanopyQueueSnapshotState
+  dueSoonReviewQueueSnapshot: CanopyQueueSnapshotState
   followUpChainsQueueSnapshot: CanopyQueueSnapshotState
   handoffQueueSnapshot: CanopyQueueSnapshotState
   inProgressQueueSnapshot: CanopyQueueSnapshotState
@@ -221,6 +225,24 @@ export function CanopyQueuesSection({
           variant={savedView === 'due_soon' ? 'filled' : 'light'}
         >
           Due soon · {renderQueueCount(dueSoonQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('due_soon_execution')}
+          variant={savedView === 'due_soon_execution' ? 'filled' : 'light'}
+        >
+          Due soon / execution · {renderQueueCount(dueSoonExecutionQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('due_soon_review')}
+          variant={savedView === 'due_soon_review' ? 'filled' : 'light'}
+        >
+          Due soon / review · {renderQueueCount(dueSoonReviewQueueSnapshot)}
         </Button>
       </Grid.Col>
       <Grid.Col span={{ base: 6, md: 3 }}>

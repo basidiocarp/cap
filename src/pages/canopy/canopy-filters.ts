@@ -72,6 +72,16 @@ export const SAVED_VIEW_OPTIONS = [
   { description: 'Owned work with stale or missing execution signals', label: 'Stalled', value: 'stalled' },
   { description: 'Assigned tasks paused mid-execution and ready to resume', label: 'Paused / resumable', value: 'paused_resumable' },
   { description: 'Tasks with execution or review deadlines approaching within the next day', label: 'Due soon', value: 'due_soon' },
+  {
+    description: 'Tasks with execution deadlines approaching within the next day',
+    label: 'Due soon / execution',
+    value: 'due_soon_execution',
+  },
+  {
+    description: 'Review-required tasks with review deadlines approaching within the next day',
+    label: 'Due soon / review',
+    value: 'due_soon_review',
+  },
   { description: 'Tasks whose execution deadline has already passed', label: 'Overdue execution', value: 'overdue_execution' },
   { description: 'Review-required tasks whose review deadline has already passed', label: 'Overdue review', value: 'overdue_review' },
   {

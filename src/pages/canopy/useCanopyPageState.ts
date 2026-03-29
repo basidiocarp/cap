@@ -85,6 +85,14 @@ export function useCanopyPageState() {
     preset: 'due_soon',
     project: activeProject ?? undefined,
   })
+  const dueSoonExecutionQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'due_soon_execution',
+    project: activeProject ?? undefined,
+  })
+  const dueSoonReviewQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'due_soon_review',
+    project: activeProject ?? undefined,
+  })
   const overdueExecutionQueueSnapshotQuery = useCanopySnapshot({
     preset: 'overdue_execution',
     project: activeProject ?? undefined,
@@ -251,10 +259,20 @@ export function useCanopyPageState() {
       snapshot: dependencyBlockedQueueSnapshotQuery.data,
     },
     detailQuery,
+    dueSoonExecutionQueueSnapshot: {
+      error: dueSoonExecutionQueueSnapshotQuery.error,
+      isLoading: dueSoonExecutionQueueSnapshotQuery.isLoading,
+      snapshot: dueSoonExecutionQueueSnapshotQuery.data,
+    },
     dueSoonQueueSnapshot: {
       error: dueSoonQueueSnapshotQuery.error,
       isLoading: dueSoonQueueSnapshotQuery.isLoading,
       snapshot: dueSoonQueueSnapshotQuery.data,
+    },
+    dueSoonReviewQueueSnapshot: {
+      error: dueSoonReviewQueueSnapshotQuery.error,
+      isLoading: dueSoonReviewQueueSnapshotQuery.isLoading,
+      snapshot: dueSoonReviewQueueSnapshotQuery.data,
     },
     executionSummaryByTaskId,
     filteredAgentAttention,

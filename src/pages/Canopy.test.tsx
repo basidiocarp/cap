@@ -1360,6 +1360,10 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'paused_resumable', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds([])],
   [responseKey({ preset: 'due_soon', project: '/workspace/cap' }), snapshotForTaskIds(['task-1', 'task-4'])],
   [responseKey({ preset: 'due_soon', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1', 'task-4'])],
+  [responseKey({ preset: 'due_soon_execution', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'due_soon_execution', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'due_soon_review', project: '/workspace/cap' }), snapshotForTaskIds(['task-4'])],
+  [responseKey({ preset: 'due_soon_review', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-4'])],
   [responseKey({ preset: 'overdue_execution', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
   [responseKey({ preset: 'overdue_execution', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2'])],
   [responseKey({ preset: 'overdue_review', project: '/workspace/cap' }), snapshotForTaskIds(['task-5'])],
@@ -1497,6 +1501,8 @@ describe('Canopy page', () => {
     expect(screen.getByRole('button', { name: 'In progress · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Stalled · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Due soon · 2' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Due soon / execution · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Due soon / review · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Overdue execution · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Overdue review · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / graph pressure · 1' })).toBeInTheDocument()
@@ -1779,6 +1785,40 @@ describe('Canopy page', () => {
     expect(useCanopySnapshotMock).toHaveBeenCalledWith({
       acknowledged: undefined,
       preset: 'due_soon',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the due soon execution queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Due soon / execution · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'due_soon_execution',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the due soon review queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Due soon / review · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'due_soon_review',
       priorityAtLeast: undefined,
       project: '/workspace/cap',
       severityAtLeast: undefined,

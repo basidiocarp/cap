@@ -26,6 +26,8 @@ export function CanopyPage() {
     dependencyBlockedQueueSnapshot,
     detailQuery,
     dueSoonQueueSnapshot,
+    dueSoonExecutionQueueSnapshot,
+    dueSoonReviewQueueSnapshot,
     executionSummaryByTaskId,
     filteredAgentAttention,
     filteredAgents,
@@ -152,6 +154,14 @@ export function CanopyPage() {
         title='Due soon queue unavailable'
       />
       <ErrorAlert
+        error={dueSoonExecutionQueueSnapshot.error instanceof Error ? dueSoonExecutionQueueSnapshot.error : undefined}
+        title='Due soon execution queue unavailable'
+      />
+      <ErrorAlert
+        error={dueSoonReviewQueueSnapshot.error instanceof Error ? dueSoonReviewQueueSnapshot.error : undefined}
+        title='Due soon review queue unavailable'
+      />
+      <ErrorAlert
         error={overdueExecutionQueueSnapshot.error instanceof Error ? overdueExecutionQueueSnapshot.error : undefined}
         title='Overdue execution queue unavailable'
       />
@@ -210,7 +220,9 @@ export function CanopyPage() {
           claimedNotStartedQueueSnapshot={claimedNotStartedQueueSnapshot}
           criticalQueueSnapshot={criticalQueueSnapshot}
           dependencyBlockedQueueSnapshot={dependencyBlockedQueueSnapshot}
+          dueSoonExecutionQueueSnapshot={dueSoonExecutionQueueSnapshot}
           dueSoonQueueSnapshot={dueSoonQueueSnapshot}
+          dueSoonReviewQueueSnapshot={dueSoonReviewQueueSnapshot}
           followUpChainsQueueSnapshot={followUpChainsQueueSnapshot}
           handoffQueueSnapshot={handoffQueueSnapshot}
           inProgressQueueSnapshot={inProgressQueueSnapshot}

@@ -25,6 +25,8 @@ export type CanopySnapshotPreset =
   | 'stalled'
   | 'paused_resumable'
   | 'due_soon'
+  | 'due_soon_execution'
+  | 'due_soon_review'
   | 'overdue_execution'
   | 'overdue_review'
   | 'awaiting_handoff_acceptance'
