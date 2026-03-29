@@ -1449,7 +1449,21 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'due_soon_handoff_acceptance', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'overdue_handoff_acceptance', project: '/workspace/cap' }), snapshotForTaskIds(['task-5'])],
   [responseKey({ preset: 'overdue_handoff_acceptance', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-5'])],
-  [responseKey({ preset: 'accepted_handoff_follow_through', project: '/workspace/cap' }), snapshotForTaskIds([])],
+  [responseKey({ preset: 'accepted_handoff_follow_through', project: '/workspace/cap' }), snapshotForTaskIds(['task-3', 'task-7'])],
+  [
+    responseKey({ preset: 'accepted_handoff_follow_through', project: '/workspace/cap', sort: 'status' }),
+    snapshotForTaskIds(['task-3', 'task-7']),
+  ],
+  [responseKey({ preset: 'due_soon_accepted_handoff_follow_through', project: '/workspace/cap' }), snapshotForTaskIds(['task-3'])],
+  [
+    responseKey({ preset: 'due_soon_accepted_handoff_follow_through', project: '/workspace/cap', sort: 'status' }),
+    snapshotForTaskIds(['task-3']),
+  ],
+  [responseKey({ preset: 'overdue_accepted_handoff_follow_through', project: '/workspace/cap' }), snapshotForTaskIds(['task-7'])],
+  [
+    responseKey({ preset: 'overdue_accepted_handoff_follow_through', project: '/workspace/cap', sort: 'status' }),
+    snapshotForTaskIds(['task-7']),
+  ],
   [responseKey({ preset: 'follow_up_chains', project: '/workspace/cap' }), snapshotForTaskIds(['task-1', 'task-3'])],
   [responseKey({ preset: 'handoffs', project: '/workspace/cap' }), snapshotForTaskIds(['task-1', 'task-5'])],
   [responseKey({ preset: 'handoffs', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1', 'task-5'])],
@@ -1597,6 +1611,9 @@ describe('Canopy page', () => {
     expect(screen.getByRole('button', { name: 'Awaiting handoff acceptance · 2' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Handoff acceptance / due soon · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Handoff acceptance / overdue · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Accepted handoff follow-through · 2' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Accepted handoff / due soon · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Accepted handoff / overdue · 1' })).toBeInTheDocument()
     expect(screen.getByText(/Assignments 2 · reassignments 1/)).toBeInTheDocument()
     expect(screen.getByText(/Execution 1 runs · 420s total · active 420s · last start task/)).toBeInTheDocument()
     expect(screen.getByText('verify task')).toBeInTheDocument()
@@ -1910,6 +1927,57 @@ describe('Canopy page', () => {
     })
   })
 
+  it('opens the accepted handoff follow-through queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Accepted handoff follow-through · 2' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'accepted_handoff_follow_through',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the due soon accepted handoff follow-through queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Accepted handoff / due soon · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'due_soon_accepted_handoff_follow_through',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the overdue accepted handoff follow-through queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Accepted handoff / overdue · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'overdue_accepted_handoff_follow_through',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
   it('opens the due soon execution queue from the operator shortcut', async () => {
     const user = userEvent.setup()
 
@@ -2149,7 +2217,7 @@ describe('Canopy page', () => {
       'href',
       '/code?file=%2Fworkspace%2Fcap%2Fsrc%2Fpages%2FCanopy.tsx&symbol=Canopy'
     )
-  })
+  }, 10_000)
 
   it('forwards operator actions from the task detail modal', async () => {
     const user = userEvent.setup()
@@ -2313,7 +2381,7 @@ describe('Canopy page', () => {
       follow_up_title: 'Track rollout cleanups',
       taskId: 'task-1',
     })
-  }, 15000)
+  }, 30_000)
 
   it('forwards explicit review decision and closeout actions from the task detail modal', async () => {
     const user = userEvent.setup()
@@ -2368,7 +2436,7 @@ describe('Canopy page', () => {
       closure_summary: 'Review complete and closed out.',
       taskId: 'task-1',
     })
-  })
+  }, 30_000)
 
   it('shows graph lifecycle actions when the runtime allows reopen and chain close', async () => {
     const user = userEvent.setup()

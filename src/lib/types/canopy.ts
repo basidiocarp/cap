@@ -35,6 +35,8 @@ export type CanopySnapshotPreset =
   | 'due_soon_handoff_acceptance'
   | 'overdue_handoff_acceptance'
   | 'accepted_handoff_follow_through'
+  | 'due_soon_accepted_handoff_follow_through'
+  | 'overdue_accepted_handoff_follow_through'
   | 'critical'
   | 'unacknowledged'
 export type CanopyTaskPriority = 'low' | 'medium' | 'high' | 'critical'

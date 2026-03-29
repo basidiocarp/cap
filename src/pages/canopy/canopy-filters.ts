@@ -114,6 +114,16 @@ export const SAVED_VIEW_OPTIONS = [
     label: 'Accepted handoff follow-through',
     value: 'accepted_handoff_follow_through',
   },
+  {
+    description: 'Accepted ownership handoffs whose follow-through window is approaching and should be picked up soon',
+    label: 'Accepted handoff / due soon',
+    value: 'due_soon_accepted_handoff_follow_through',
+  },
+  {
+    description: 'Accepted ownership handoffs whose follow-through window is already overdue',
+    label: 'Accepted handoff / overdue',
+    value: 'overdue_accepted_handoff_follow_through',
+  },
   { description: 'Critical tasks from the runtime attention model', label: 'Critical queue', value: 'critical' },
   { description: 'Attention tasks that have not been acknowledged yet', label: 'Unacknowledged', value: 'unacknowledged' },
 ] as const

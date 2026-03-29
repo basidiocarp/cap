@@ -16,6 +16,7 @@ export function CanopyQueuesSection({
   blockedQueueSnapshot,
   claimedNotStartedQueueSnapshot,
   dependencyBlockedQueueSnapshot,
+  dueSoonAcceptedHandoffFollowThroughQueueSnapshot,
   criticalQueueSnapshot,
   dueSoonHandoffAcceptanceQueueSnapshot,
   dueSoonQueueSnapshot,
@@ -25,6 +26,7 @@ export function CanopyQueuesSection({
   handoffQueueSnapshot,
   inProgressQueueSnapshot,
   openQueuePreset,
+  overdueAcceptedHandoffFollowThroughQueueSnapshot,
   overdueHandoffAcceptanceQueueSnapshot,
   overdueExecutionQueueSnapshot,
   overdueExecutionOwnedQueueSnapshot,
@@ -48,6 +50,7 @@ export function CanopyQueuesSection({
   blockedQueueSnapshot: CanopyQueueSnapshotState
   claimedNotStartedQueueSnapshot: CanopyQueueSnapshotState
   dependencyBlockedQueueSnapshot: CanopyQueueSnapshotState
+  dueSoonAcceptedHandoffFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   criticalQueueSnapshot: CanopyQueueSnapshotState
   dueSoonHandoffAcceptanceQueueSnapshot: CanopyQueueSnapshotState
   dueSoonQueueSnapshot: CanopyQueueSnapshotState
@@ -57,6 +60,7 @@ export function CanopyQueuesSection({
   handoffQueueSnapshot: CanopyQueueSnapshotState
   inProgressQueueSnapshot: CanopyQueueSnapshotState
   openQueuePreset: (preset: CanopySavedView) => void
+  overdueAcceptedHandoffFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   overdueHandoffAcceptanceQueueSnapshot: CanopyQueueSnapshotState
   overdueExecutionQueueSnapshot: CanopyQueueSnapshotState
   overdueExecutionOwnedQueueSnapshot: CanopyQueueSnapshotState
@@ -332,6 +336,24 @@ export function CanopyQueuesSection({
           variant={savedView === 'accepted_handoff_follow_through' ? 'filled' : 'light'}
         >
           Accepted handoff follow-through · {renderQueueCount(acceptedHandoffFollowThroughQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('due_soon_accepted_handoff_follow_through')}
+          variant={savedView === 'due_soon_accepted_handoff_follow_through' ? 'filled' : 'light'}
+        >
+          Accepted handoff / due soon · {renderQueueCount(dueSoonAcceptedHandoffFollowThroughQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('overdue_accepted_handoff_follow_through')}
+          variant={savedView === 'overdue_accepted_handoff_follow_through' ? 'filled' : 'light'}
+        >
+          Accepted handoff / overdue · {renderQueueCount(overdueAcceptedHandoffFollowThroughQueueSnapshot)}
         </Button>
       </Grid.Col>
       <Grid.Col span={{ base: 6, md: 3 }}>

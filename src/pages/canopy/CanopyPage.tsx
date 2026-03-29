@@ -25,6 +25,7 @@ export function CanopyPage() {
     deadlineSummaryByTaskId,
     dependencyBlockedQueueSnapshot,
     detailQuery,
+    dueSoonAcceptedHandoffFollowThroughQueueSnapshot,
     dueSoonHandoffAcceptanceQueueSnapshot,
     dueSoonQueueSnapshot,
     dueSoonExecutionQueueSnapshot,
@@ -46,6 +47,7 @@ export function CanopyPage() {
     openQueuePreset,
     openSavedView,
     openTask,
+    overdueAcceptedHandoffFollowThroughQueueSnapshot,
     overdueHandoffAcceptanceQueueSnapshot,
     overdueExecutionQueueSnapshot,
     overdueExecutionOwnedQueueSnapshot,
@@ -200,6 +202,22 @@ export function CanopyPage() {
         title='Accepted handoff follow-through queue unavailable'
       />
       <ErrorAlert
+        error={
+          dueSoonAcceptedHandoffFollowThroughQueueSnapshot.error instanceof Error
+            ? dueSoonAcceptedHandoffFollowThroughQueueSnapshot.error
+            : undefined
+        }
+        title='Due soon accepted handoff follow-through queue unavailable'
+      />
+      <ErrorAlert
+        error={
+          overdueAcceptedHandoffFollowThroughQueueSnapshot.error instanceof Error
+            ? overdueAcceptedHandoffFollowThroughQueueSnapshot.error
+            : undefined
+        }
+        title='Overdue accepted handoff follow-through queue unavailable'
+      />
+      <ErrorAlert
         error={followUpChainsQueueSnapshot.error instanceof Error ? followUpChainsQueueSnapshot.error : undefined}
         title='Follow-up queue unavailable'
       />
@@ -240,6 +258,7 @@ export function CanopyPage() {
           claimedNotStartedQueueSnapshot={claimedNotStartedQueueSnapshot}
           criticalQueueSnapshot={criticalQueueSnapshot}
           dependencyBlockedQueueSnapshot={dependencyBlockedQueueSnapshot}
+          dueSoonAcceptedHandoffFollowThroughQueueSnapshot={dueSoonAcceptedHandoffFollowThroughQueueSnapshot}
           dueSoonExecutionQueueSnapshot={dueSoonExecutionQueueSnapshot}
           dueSoonHandoffAcceptanceQueueSnapshot={dueSoonHandoffAcceptanceQueueSnapshot}
           dueSoonQueueSnapshot={dueSoonQueueSnapshot}
@@ -248,6 +267,7 @@ export function CanopyPage() {
           handoffQueueSnapshot={handoffQueueSnapshot}
           inProgressQueueSnapshot={inProgressQueueSnapshot}
           openQueuePreset={openQueuePreset}
+          overdueAcceptedHandoffFollowThroughQueueSnapshot={overdueAcceptedHandoffFollowThroughQueueSnapshot}
           overdueExecutionOwnedQueueSnapshot={overdueExecutionOwnedQueueSnapshot}
           overdueExecutionQueueSnapshot={overdueExecutionQueueSnapshot}
           overdueExecutionUnclaimedQueueSnapshot={overdueExecutionUnclaimedQueueSnapshot}

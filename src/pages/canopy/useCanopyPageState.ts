@@ -125,6 +125,14 @@ export function useCanopyPageState() {
     preset: 'accepted_handoff_follow_through',
     project: activeProject ?? undefined,
   })
+  const dueSoonAcceptedHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'due_soon_accepted_handoff_follow_through',
+    project: activeProject ?? undefined,
+  })
+  const overdueAcceptedHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'overdue_accepted_handoff_follow_through',
+    project: activeProject ?? undefined,
+  })
   const followUpChainsQueueSnapshotQuery = useCanopySnapshot({
     preset: 'follow_up_chains',
     project: activeProject ?? undefined,
@@ -275,6 +283,11 @@ export function useCanopyPageState() {
       snapshot: dependencyBlockedQueueSnapshotQuery.data,
     },
     detailQuery,
+    dueSoonAcceptedHandoffFollowThroughQueueSnapshot: {
+      error: dueSoonAcceptedHandoffFollowThroughQueueSnapshotQuery.error,
+      isLoading: dueSoonAcceptedHandoffFollowThroughQueueSnapshotQuery.isLoading,
+      snapshot: dueSoonAcceptedHandoffFollowThroughQueueSnapshotQuery.data,
+    },
     dueSoonExecutionQueueSnapshot: {
       error: dueSoonExecutionQueueSnapshotQuery.error,
       isLoading: dueSoonExecutionQueueSnapshotQuery.isLoading,
@@ -325,6 +338,11 @@ export function useCanopyPageState() {
     openSavedView: openPreset,
     openTask: (taskId: string) => updateSearchParams({ task: taskId }, { replace: false }),
     operatorActionsByTaskId,
+    overdueAcceptedHandoffFollowThroughQueueSnapshot: {
+      error: overdueAcceptedHandoffFollowThroughQueueSnapshotQuery.error,
+      isLoading: overdueAcceptedHandoffFollowThroughQueueSnapshotQuery.isLoading,
+      snapshot: overdueAcceptedHandoffFollowThroughQueueSnapshotQuery.data,
+    },
     overdueExecutionOwnedQueueSnapshot: {
       error: overdueExecutionOwnedQueueSnapshotQuery.error,
       isLoading: overdueExecutionOwnedQueueSnapshotQuery.isLoading,
