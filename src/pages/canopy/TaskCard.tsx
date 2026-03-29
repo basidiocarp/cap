@@ -252,6 +252,14 @@ export function TaskCard({
             review awaiting support
           </Badge>
         ) : null}
+        {attention?.reasons.includes('review_ready_for_decision') ? (
+          <Badge
+            color='cyan'
+            variant='light'
+          >
+            review ready for decision
+          </Badge>
+        ) : null}
         {attention?.reasons.includes('review_ready_for_closeout') ? (
           <Badge
             color='green'

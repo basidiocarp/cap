@@ -47,6 +47,7 @@ export function CanopyPage() {
     priorityFilter,
     reviewDecisionFollowThroughQueueSnapshot,
     reviewAwaitingSupportQueueSnapshot,
+    reviewReadyForDecisionQueueSnapshot,
     reviewReadyForCloseoutQueueSnapshot,
     reviewHandoffFollowThroughQueueSnapshot,
     reviewWithGraphPressureQueueSnapshot,
@@ -105,6 +106,10 @@ export function CanopyPage() {
       <ErrorAlert
         error={reviewAwaitingSupportQueueSnapshot.error instanceof Error ? reviewAwaitingSupportQueueSnapshot.error : undefined}
         title='Review awaiting support queue unavailable'
+      />
+      <ErrorAlert
+        error={reviewReadyForDecisionQueueSnapshot.error instanceof Error ? reviewReadyForDecisionQueueSnapshot.error : undefined}
+        title='Review ready for decision queue unavailable'
       />
       <ErrorAlert
         error={reviewReadyForCloseoutQueueSnapshot.error instanceof Error ? reviewReadyForCloseoutQueueSnapshot.error : undefined}
@@ -198,6 +203,7 @@ export function CanopyPage() {
           reviewDecisionFollowThroughQueueSnapshot={reviewDecisionFollowThroughQueueSnapshot}
           reviewHandoffFollowThroughQueueSnapshot={reviewHandoffFollowThroughQueueSnapshot}
           reviewReadyForCloseoutQueueSnapshot={reviewReadyForCloseoutQueueSnapshot}
+          reviewReadyForDecisionQueueSnapshot={reviewReadyForDecisionQueueSnapshot}
           reviewWithGraphPressureQueueSnapshot={reviewWithGraphPressureQueueSnapshot}
           savedView={savedView}
           stalledQueueSnapshot={stalledQueueSnapshot}

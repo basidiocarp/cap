@@ -44,7 +44,12 @@ export const SAVED_VIEW_OPTIONS = [
     value: 'review_awaiting_support',
   },
   {
-    description: 'Review tasks with support context in place and ready for final closeout',
+    description: 'Review tasks with support context in place and ready for an operator review decision',
+    label: 'Review / ready for decision',
+    value: 'review_ready_for_decision',
+  },
+  {
+    description: 'Review tasks with explicit decision context in place and ready for final closeout',
     label: 'Review / ready for closeout',
     value: 'review_ready_for_closeout',
   },

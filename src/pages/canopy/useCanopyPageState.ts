@@ -45,6 +45,10 @@ export function useCanopyPageState() {
     preset: 'review_awaiting_support',
     project: activeProject ?? undefined,
   })
+  const reviewReadyForDecisionQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'review_ready_for_decision',
+    project: activeProject ?? undefined,
+  })
   const reviewReadyForCloseoutQueueSnapshotQuery = useCanopySnapshot({
     preset: 'review_ready_for_closeout',
     project: activeProject ?? undefined,
@@ -287,6 +291,11 @@ export function useCanopyPageState() {
       error: reviewReadyForCloseoutQueueSnapshotQuery.error,
       isLoading: reviewReadyForCloseoutQueueSnapshotQuery.isLoading,
       snapshot: reviewReadyForCloseoutQueueSnapshotQuery.data,
+    },
+    reviewReadyForDecisionQueueSnapshot: {
+      error: reviewReadyForDecisionQueueSnapshotQuery.error,
+      isLoading: reviewReadyForDecisionQueueSnapshotQuery.isLoading,
+      snapshot: reviewReadyForDecisionQueueSnapshotQuery.data,
     },
     reviewWithGraphPressureQueueSnapshot: {
       error: reviewWithGraphPressureQueueSnapshotQuery.error,

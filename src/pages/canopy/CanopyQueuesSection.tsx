@@ -24,6 +24,7 @@ export function CanopyQueuesSection({
   pausedResumableQueueSnapshot,
   reviewDecisionFollowThroughQueueSnapshot,
   reviewAwaitingSupportQueueSnapshot,
+  reviewReadyForDecisionQueueSnapshot,
   reviewReadyForCloseoutQueueSnapshot,
   reviewHandoffFollowThroughQueueSnapshot,
   reviewWithGraphPressureQueueSnapshot,
@@ -46,6 +47,7 @@ export function CanopyQueuesSection({
   pausedResumableQueueSnapshot: CanopyQueueSnapshotState
   reviewDecisionFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   reviewAwaitingSupportQueueSnapshot: CanopyQueueSnapshotState
+  reviewReadyForDecisionQueueSnapshot: CanopyQueueSnapshotState
   reviewReadyForCloseoutQueueSnapshot: CanopyQueueSnapshotState
   reviewHandoffFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   reviewWithGraphPressureQueueSnapshot: CanopyQueueSnapshotState
@@ -132,6 +134,15 @@ export function CanopyQueuesSection({
           variant={savedView === 'review_awaiting_support' ? 'filled' : 'light'}
         >
           Review / awaiting support · {renderQueueCount(reviewAwaitingSupportQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('review_ready_for_decision')}
+          variant={savedView === 'review_ready_for_decision' ? 'filled' : 'light'}
+        >
+          Review / ready for decision · {renderQueueCount(reviewReadyForDecisionQueueSnapshot)}
         </Button>
       </Grid.Col>
       <Grid.Col span={{ base: 6, md: 3 }}>
