@@ -66,6 +66,18 @@ export type CanopySortMode = (typeof SORT_OPTIONS)[number]['value']
 export type CanopyPriorityFilter = (typeof PRIORITY_FILTER_OPTIONS)[number]['value']
 export type CanopySeverityFilter = (typeof SEVERITY_FILTER_OPTIONS)[number]['value']
 export type CanopyAcknowledgedFilter = (typeof ACK_FILTER_OPTIONS)[number]['value']
+export type CanopyStatusFilter = 'all' | CanopyTaskStatus
+
+export interface CanopySearchParamUpdates {
+  ack?: CanopyAcknowledgedFilter | null
+  preset?: CanopySavedView | null
+  priority?: CanopyPriorityFilter | null
+  q?: string | null
+  severity?: CanopySeverityFilter | null
+  sort?: CanopySortMode | null
+  status?: CanopyStatusFilter | null
+  task?: string | null
+}
 
 const SAVED_VIEW_VALUES = new Set<CanopySavedView>(SAVED_VIEW_OPTIONS.map((option) => option.value))
 const SORT_VALUES = new Set<CanopySortMode>(SORT_OPTIONS.map((option) => option.value))
@@ -82,7 +94,7 @@ export interface CanopyViewState {
   selectedTaskId: string
   severityFilter: CanopySeverityFilter
   sortMode: CanopySortMode
-  statusFilter: string
+  statusFilter: CanopyStatusFilter
 }
 
 export function resolveCanopyViewState(searchParams: URLSearchParams): CanopyViewState {
@@ -97,7 +109,8 @@ export function resolveCanopyViewState(searchParams: URLSearchParams): CanopyVie
   const viewParam = searchParams.get('view')
 
   const sortMode: CanopySortMode = sortParam && SORT_VALUES.has(sortParam as CanopySortMode) ? (sortParam as CanopySortMode) : 'status'
-  const statusFilter = statusParam && STATUS_FILTER_VALUES.has(statusParam) ? statusParam : 'all'
+  const statusFilter: CanopyStatusFilter =
+    statusParam && STATUS_FILTER_VALUES.has(statusParam) ? (statusParam as CanopyStatusFilter) : 'all'
   const legacyPreset = viewParam && SAVED_VIEW_VALUES.has(viewParam as CanopySavedView) ? (viewParam as CanopySavedView) : undefined
   const savedView: CanopySavedView =
     presetParam && SAVED_VIEW_VALUES.has(presetParam as CanopySavedView) ? (presetParam as CanopySavedView) : (legacyPreset ?? 'default')
@@ -122,7 +135,11 @@ export function resolveCanopyViewState(searchParams: URLSearchParams): CanopyVie
   }
 }
 
-export function filterCanopyTasks(snapshot: CanopySnapshot | undefined, searchQuery: string, statusFilter: string): CanopyTask[] {
+export function filterCanopyTasks(
+  snapshot: CanopySnapshot | undefined,
+  searchQuery: string,
+  statusFilter: CanopyStatusFilter
+): CanopyTask[] {
   if (!snapshot) return []
   const normalizedQuery = searchQuery.trim().toLowerCase()
 
@@ -157,7 +174,7 @@ export function groupOperatorActionsByTask(actions: CanopyOperatorAction[] | und
   return grouped
 }
 
-export function groupTasksByStatus(tasks: CanopyTask[]) {
+export function groupTasksByStatus(tasks: CanopyTask[]): Array<{ status: CanopyTaskStatus; tasks: CanopyTask[] }> {
   return STATUS_ORDER.map((status) => ({
     status,
     tasks: tasks.filter((task) => task.status === status),

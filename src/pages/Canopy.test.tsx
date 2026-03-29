@@ -11,6 +11,7 @@ let mockProject: ProjectInfo | null = {
   recent: ['/workspace/cap'],
 }
 let mockTaskDetailError: Error | null = null
+let mockSnapshotErrors: Partial<Record<string, Error>> = {}
 
 const mockSnapshot: CanopySnapshot = {
   agent_attention: [
@@ -459,6 +460,7 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'blocked', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
   [responseKey({ preset: 'handoffs', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'handoffs', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'review_queue', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_queue', project: '/workspace/cap', sort: 'updated_at' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'critical', project: '/workspace/cap', sort: 'attention' }), snapshotForTaskIds(['task-2'])],
   [
@@ -509,14 +511,15 @@ const useCanopySnapshotMock = vi.fn(
   }) => {
     const key = responseKey(options)
     const data = SNAPSHOT_RESPONSES.get(key)
+    const error = mockSnapshotErrors[key] ?? null
 
-    if (!data) {
+    if (!data && !error) {
       throw new Error(`Unhandled Canopy snapshot test query: ${key}`)
     }
 
     return {
       data,
-      error: null,
+      error,
       isLoading: false,
     }
   }
@@ -547,6 +550,7 @@ describe('Canopy page', () => {
   beforeEach(() => {
     mockProject = { active: '/workspace/cap', recent: ['/workspace/cap'] }
     mockTaskDetailError = null
+    mockSnapshotErrors = {}
     useCanopySnapshotMock.mockClear()
   })
 
@@ -607,6 +611,27 @@ describe('Canopy page', () => {
     })
   })
 
+  it('resets ad hoc filters when opening a saved view', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, {
+      route: '/canopy?priority=critical&severity=critical&ack=true&status=blocked&q=adapter&sort=updated_at',
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Review queue' }))
+
+    expect(screen.getByText('Add Cap Canopy page')).toBeInTheDocument()
+    expect(screen.queryByText('Fix lifecycle adapter')).not.toBeInTheDocument()
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'review_queue',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: 'status',
+    })
+  })
+
   it('opens the runtime unacknowledged queue from the operator shortcut', async () => {
     const user = userEvent.setup()
 
@@ -645,6 +670,15 @@ describe('Canopy page', () => {
       severityAtLeast: undefined,
       sort: undefined,
     })
+  })
+
+  it('shows queue fetch failures instead of silently rendering zero counts', () => {
+    mockSnapshotErrors[responseKey({ preset: 'critical', project: '/workspace/cap' })] = new Error('critical queue failed')
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    expect(screen.getByText('critical queue failed')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Critical · error' })).toBeInTheDocument()
   })
 
   it('supports runtime triage filters', () => {
