@@ -10,6 +10,7 @@ const ALLOWED_PRIORITIES = new Set(['low', 'medium', 'high', 'critical'])
 const ALLOWED_SEVERITIES = new Set(['none', 'low', 'medium', 'high', 'critical'])
 const ALLOWED_ATTENTION_LEVELS = new Set(['normal', 'needs_attention', 'critical'])
 const ALLOWED_ACKNOWLEDGED = new Set(['true', 'false'])
+const ALLOWED_VERIFICATION_STATES = new Set(['pending', 'passed', 'failed'])
 
 app.get('/snapshot', async (c) => {
   try {
@@ -54,14 +55,22 @@ app.post('/tasks/:taskId/actions', async (c) => {
       blocked_reason?: string
       changed_by?: string
       clear_owner_note?: boolean
+      closure_summary?: string
       note?: string
       owner_note?: string
       priority?: string
       severity?: string
+      verification_state?: string
     }
 
     if (!body.action || !body.changed_by) {
       return c.json({ error: 'Canopy task action requires action and changed_by' }, 400)
+    }
+    if (body.action === 'verify_task' && (!body.verification_state || !ALLOWED_VERIFICATION_STATES.has(body.verification_state))) {
+      return c.json({ error: 'verify_task requires a valid verification_state' }, 400)
+    }
+    if (body.action === 'verify_task' && body.verification_state === 'passed' && !body.closure_summary?.trim()) {
+      return c.json({ error: 'verify_task passed reviews require a closure_summary' }, 400)
     }
 
     return c.json(
@@ -71,10 +80,13 @@ app.post('/tasks/:taskId/actions', async (c) => {
         blockedReason: body.blocked_reason,
         changedBy: body.changed_by,
         clearOwnerNote: body.clear_owner_note,
+        closureSummary: body.closure_summary,
         note: body.note,
         ownerNote: body.owner_note,
         priority: body.priority,
         severity: body.severity,
+        verificationState:
+          body.verification_state && ALLOWED_VERIFICATION_STATES.has(body.verification_state) ? body.verification_state : undefined,
       })
     )
   } catch (err) {

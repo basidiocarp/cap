@@ -1,7 +1,13 @@
 import { Button, Group, Select, Stack, Text, Textarea, TextInput } from '@mantine/core'
 import { useEffect, useMemo, useState } from 'react'
 
-import type { CanopyAgentRegistration, CanopyTaskDetail, CanopyTaskPriority, CanopyTaskSeverity } from '../../lib/api'
+import type {
+  CanopyAgentRegistration,
+  CanopyTaskDetail,
+  CanopyTaskPriority,
+  CanopyTaskSeverity,
+  CanopyVerificationState,
+} from '../../lib/api'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { useCanopyHandoffAction, useCanopyTaskAction } from '../../lib/queries'
 
@@ -19,6 +25,11 @@ const SEVERITY_OPTIONS: { label: string; value: CanopyTaskSeverity }[] = [
   { label: 'High', value: 'high' },
   { label: 'Critical', value: 'critical' },
 ]
+const REVIEW_OUTCOME_OPTIONS: { label: string; value: Exclude<CanopyVerificationState, 'unknown'> }[] = [
+  { label: 'Passed', value: 'passed' },
+  { label: 'Failed', value: 'failed' },
+  { label: 'Pending', value: 'pending' },
+]
 
 export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyTaskDetail; agents: CanopyAgentRegistration[] }) {
   const taskActionMutation = useCanopyTaskAction()
@@ -29,6 +40,10 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
   const [blockedReason, setBlockedReason] = useState(detail.task.blocked_reason ?? '')
   const [assignedTo, setAssignedTo] = useState<string | null>(detail.task.owner_agent_id ?? agents[0]?.agent_id ?? null)
   const [reassignNote, setReassignNote] = useState('')
+  const [reviewOutcome, setReviewOutcome] = useState<Exclude<CanopyVerificationState, 'unknown'>>(
+    detail.task.verification_state === 'failed' ? 'failed' : 'pending'
+  )
+  const [reviewSummary, setReviewSummary] = useState('')
   const [handoffNotes, setHandoffNotes] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -38,6 +53,8 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
     setBlockedReason(detail.task.blocked_reason ?? '')
     setAssignedTo(detail.task.owner_agent_id ?? agents[0]?.agent_id ?? null)
     setReassignNote('')
+    setReviewOutcome(detail.task.verification_state === 'failed' ? 'failed' : 'pending')
+    setReviewSummary('')
     setHandoffNotes({})
   }, [agents, detail])
 
@@ -58,6 +75,7 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
       : handoffActionMutation.error instanceof Error
         ? handoffActionMutation.error
         : null
+  const reviewRequiresSummary = reviewOutcome === 'passed'
 
   return (
     <Stack gap='md'>
@@ -139,6 +157,49 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
             Block task
           </Button>
         </Group>
+      ) : null}
+
+      {allowedKinds.has('verify_task') ? (
+        <Stack gap='xs'>
+          <Group align='end'>
+            <Select
+              data={REVIEW_OUTCOME_OPTIONS}
+              disabled={isPending}
+              label='Verification outcome'
+              onChange={(value) => {
+                if (value) setReviewOutcome(value as Exclude<CanopyVerificationState, 'unknown'>)
+              }}
+              value={reviewOutcome}
+            />
+            <Button
+              disabled={reviewRequiresSummary && !reviewSummary.trim()}
+              loading={taskActionMutation.isPending}
+              onClick={() =>
+                taskActionMutation.mutate({
+                  action: 'verify_task',
+                  changed_by: TASK_OPERATOR_ACTOR,
+                  closure_summary: reviewOutcome === 'passed' ? reviewSummary.trim() || undefined : undefined,
+                  note: reviewOutcome !== 'passed' ? reviewSummary.trim() || undefined : undefined,
+                  taskId: detail.task.task_id,
+                  verification_state: reviewOutcome,
+                })
+              }
+            >
+              Record review
+            </Button>
+          </Group>
+          <Textarea
+            autosize
+            disabled={isPending}
+            label={reviewOutcome === 'passed' ? 'Completion summary' : 'Review note'}
+            minRows={2}
+            onChange={(event) => setReviewSummary(event.currentTarget.value)}
+            placeholder={
+              reviewOutcome === 'passed' ? 'Capture what was accepted or shipped' : 'Capture what still needs work before completion'
+            }
+            value={reviewSummary}
+          />
+        </Stack>
       ) : null}
 
       {allowedKinds.has('reassign_task') ? (

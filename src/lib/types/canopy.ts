@@ -294,10 +294,12 @@ export interface CanopyTaskActionInput {
   blocked_reason?: string
   changed_by: string
   clear_owner_note?: boolean
+  closure_summary?: string
   note?: string
   owner_note?: string
   priority?: CanopyTaskPriority
   severity?: CanopyTaskSeverity
+  verification_state?: Exclude<CanopyVerificationState, 'unknown'>
 }
 
 export interface CanopyHandoffActionInput {

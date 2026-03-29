@@ -12,6 +12,7 @@ const ALLOWED_ACKNOWLEDGED = new Set(['true', 'false'])
 const ALLOWED_TASK_ACTIONS = new Set([
   'acknowledge_task',
   'unacknowledge_task',
+  'verify_task',
   'reassign_task',
   'set_task_priority',
   'set_task_severity',
@@ -20,6 +21,7 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'update_task_note',
 ])
 const ALLOWED_HANDOFF_ACTIONS = new Set(['follow_up_handoff', 'expire_handoff'])
+const ALLOWED_VERIFICATION_STATES = new Set(['pending', 'passed', 'failed'])
 
 function parseJson<T>(raw: string, label: string): T {
   try {
@@ -76,21 +78,33 @@ export async function applyTaskAction<T = unknown>(
     blockedReason?: string
     changedBy: string
     clearOwnerNote?: boolean
+    closureSummary?: string
     note?: string
     ownerNote?: string
     priority?: string
     severity?: string
+    verificationState?: string
   }
 ): Promise<T> {
   if (!ALLOWED_TASK_ACTIONS.has(input.action)) {
     throw new Error(`Unsupported Canopy task action: ${input.action}`)
+  }
+  if (input.action === 'verify_task' && (!input.verificationState || !ALLOWED_VERIFICATION_STATES.has(input.verificationState))) {
+    throw new Error('verify_task requires a valid verification_state')
+  }
+  if (input.action === 'verify_task' && input.verificationState === 'passed' && !input.closureSummary?.trim()) {
+    throw new Error('verify_task passed reviews require a closure_summary')
   }
 
   const args = ['task', 'action', '--task-id', taskId, '--action', input.action, '--changed-by', input.changedBy]
   if (input.assignedTo) args.push('--assigned-to', input.assignedTo)
   if (input.priority && ALLOWED_PRIORITIES.has(input.priority)) args.push('--priority', input.priority)
   if (input.severity && ALLOWED_SEVERITIES.has(input.severity)) args.push('--severity', input.severity)
+  if (input.verificationState && ALLOWED_VERIFICATION_STATES.has(input.verificationState)) {
+    args.push('--verification-state', input.verificationState)
+  }
   if (input.blockedReason) args.push('--blocked-reason', input.blockedReason)
+  if (input.closureSummary) args.push('--closure-summary', input.closureSummary)
   if (input.ownerNote) args.push('--owner-note', input.ownerNote)
   if (input.clearOwnerNote) args.push('--clear-owner-note')
   if (input.note) args.push('--note', input.note)

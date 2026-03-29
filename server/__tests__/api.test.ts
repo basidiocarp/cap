@@ -424,10 +424,89 @@ describe('API Routes', () => {
         blockedReason: 'waiting on review',
         changedBy: 'operator',
         clearOwnerNote: undefined,
+        closureSummary: undefined,
         note: undefined,
         ownerNote: undefined,
         priority: undefined,
         severity: undefined,
+        verificationState: undefined,
+      })
+    })
+
+    it('forwards verification task actions to Canopy', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
+        status: 'completed',
+        task_id: 'task-1',
+        verification_state: 'passed',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'verify_task',
+          changed_by: 'operator',
+          closure_summary: 'review accepted',
+          verification_state: 'passed',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        action: 'verify_task',
+        assignedTo: undefined,
+        blockedReason: undefined,
+        changedBy: 'operator',
+        clearOwnerNote: undefined,
+        closureSummary: 'review accepted',
+        note: undefined,
+        ownerNote: undefined,
+        priority: undefined,
+        severity: undefined,
+        verificationState: 'passed',
+      })
+    })
+
+    it('rejects invalid verification state for verify task actions', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'verify_task',
+          changed_by: 'operator',
+          verification_state: 'unknown',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(taskActionSpy).not.toHaveBeenCalled()
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'verify_task requires a valid verification_state',
+      })
+    })
+
+    it('rejects passed reviews without a closure summary', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'verify_task',
+          changed_by: 'operator',
+          verification_state: 'passed',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(taskActionSpy).not.toHaveBeenCalled()
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'verify_task passed reviews require a closure_summary',
       })
     })
 

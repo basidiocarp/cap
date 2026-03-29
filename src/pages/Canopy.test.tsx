@@ -302,6 +302,19 @@ const mockTaskDetail: CanopyTaskDetail = {
       due_at: null,
       expires_at: null,
       handoff_id: null,
+      kind: 'verify_task',
+      level: 'needs_attention',
+      summary: 'Record verification outcome and operator review status.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Review Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-3',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
       kind: 'reassign_task',
       level: 'needs_attention',
       summary: 'Transfer task ownership to another agent.',
@@ -310,7 +323,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       title: 'Reassign Add Cap Canopy page',
     },
     {
-      action_id: 'allowed-3',
+      action_id: 'allowed-4',
       agent_id: 'agent-1',
       due_at: null,
       expires_at: null,
@@ -323,7 +336,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       title: 'Set priority for Add Cap Canopy page',
     },
     {
-      action_id: 'allowed-4',
+      action_id: 'allowed-5',
       agent_id: 'agent-1',
       due_at: null,
       expires_at: null,
@@ -336,7 +349,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       title: 'Set severity for Add Cap Canopy page',
     },
     {
-      action_id: 'allowed-5',
+      action_id: 'allowed-6',
       agent_id: 'agent-1',
       due_at: null,
       expires_at: null,
@@ -349,7 +362,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       title: 'Update note for Add Cap Canopy page',
     },
     {
-      action_id: 'allowed-6',
+      action_id: 'allowed-7',
       agent_id: 'agent-2',
       due_at: '2026-03-28T12:30:00Z',
       expires_at: '2026-03-28T13:00:00Z',
@@ -362,7 +375,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       title: 'Follow up handoff-1',
     },
     {
-      action_id: 'allowed-7',
+      action_id: 'allowed-8',
       agent_id: 'agent-2',
       due_at: '2026-03-28T12:30:00Z',
       expires_at: '2026-03-28T13:00:00Z',
@@ -893,6 +906,17 @@ describe('Canopy page', () => {
     const user = userEvent.setup()
 
     renderWithProviders(<Canopy />, { route: '/canopy?task=task-1' })
+
+    await user.type(screen.getByLabelText('Review note'), 'Needs another pass')
+    await user.click(screen.getByRole('button', { name: 'Record review' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'verify_task',
+      changed_by: 'operator',
+      closure_summary: undefined,
+      note: 'Needs another pass',
+      taskId: 'task-1',
+      verification_state: 'pending',
+    })
 
     await user.click(screen.getByRole('button', { name: 'Unacknowledge' }))
     expect(taskActionMutateMock).toHaveBeenCalledWith({
