@@ -97,12 +97,28 @@ export function useCanopyPageState() {
     preset: 'overdue_execution',
     project: activeProject ?? undefined,
   })
+  const overdueExecutionOwnedQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'overdue_execution_owned',
+    project: activeProject ?? undefined,
+  })
+  const overdueExecutionUnclaimedQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'overdue_execution_unclaimed',
+    project: activeProject ?? undefined,
+  })
   const overdueReviewQueueSnapshotQuery = useCanopySnapshot({
     preset: 'overdue_review',
     project: activeProject ?? undefined,
   })
   const awaitingHandoffAcceptanceQueueSnapshotQuery = useCanopySnapshot({
     preset: 'awaiting_handoff_acceptance',
+    project: activeProject ?? undefined,
+  })
+  const dueSoonHandoffAcceptanceQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'due_soon_handoff_acceptance',
+    project: activeProject ?? undefined,
+  })
+  const overdueHandoffAcceptanceQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'overdue_handoff_acceptance',
     project: activeProject ?? undefined,
   })
   const acceptedHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
@@ -264,6 +280,11 @@ export function useCanopyPageState() {
       isLoading: dueSoonExecutionQueueSnapshotQuery.isLoading,
       snapshot: dueSoonExecutionQueueSnapshotQuery.data,
     },
+    dueSoonHandoffAcceptanceQueueSnapshot: {
+      error: dueSoonHandoffAcceptanceQueueSnapshotQuery.error,
+      isLoading: dueSoonHandoffAcceptanceQueueSnapshotQuery.isLoading,
+      snapshot: dueSoonHandoffAcceptanceQueueSnapshotQuery.data,
+    },
     dueSoonQueueSnapshot: {
       error: dueSoonQueueSnapshotQuery.error,
       isLoading: dueSoonQueueSnapshotQuery.isLoading,
@@ -304,10 +325,25 @@ export function useCanopyPageState() {
     openSavedView: openPreset,
     openTask: (taskId: string) => updateSearchParams({ task: taskId }, { replace: false }),
     operatorActionsByTaskId,
+    overdueExecutionOwnedQueueSnapshot: {
+      error: overdueExecutionOwnedQueueSnapshotQuery.error,
+      isLoading: overdueExecutionOwnedQueueSnapshotQuery.isLoading,
+      snapshot: overdueExecutionOwnedQueueSnapshotQuery.data,
+    },
     overdueExecutionQueueSnapshot: {
       error: overdueExecutionQueueSnapshotQuery.error,
       isLoading: overdueExecutionQueueSnapshotQuery.isLoading,
       snapshot: overdueExecutionQueueSnapshotQuery.data,
+    },
+    overdueExecutionUnclaimedQueueSnapshot: {
+      error: overdueExecutionUnclaimedQueueSnapshotQuery.error,
+      isLoading: overdueExecutionUnclaimedQueueSnapshotQuery.isLoading,
+      snapshot: overdueExecutionUnclaimedQueueSnapshotQuery.data,
+    },
+    overdueHandoffAcceptanceQueueSnapshot: {
+      error: overdueHandoffAcceptanceQueueSnapshotQuery.error,
+      isLoading: overdueHandoffAcceptanceQueueSnapshotQuery.isLoading,
+      snapshot: overdueHandoffAcceptanceQueueSnapshotQuery.data,
     },
     overdueReviewQueueSnapshot: {
       error: overdueReviewQueueSnapshotQuery.error,

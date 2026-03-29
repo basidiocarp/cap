@@ -83,11 +83,31 @@ export const SAVED_VIEW_OPTIONS = [
     value: 'due_soon_review',
   },
   { description: 'Tasks whose execution deadline has already passed', label: 'Overdue execution', value: 'overdue_execution' },
+  {
+    description: 'Execution-overdue tasks that already have an owner and need recovery follow-through',
+    label: 'Overdue execution / owned',
+    value: 'overdue_execution_owned',
+  },
+  {
+    description: 'Execution-overdue tasks that still need an owner or fresh claim before work can resume',
+    label: 'Overdue execution / unclaimed',
+    value: 'overdue_execution_unclaimed',
+  },
   { description: 'Review-required tasks whose review deadline has already passed', label: 'Overdue review', value: 'overdue_review' },
   {
     description: 'Tasks waiting for the target agent to accept an open handoff',
     label: 'Awaiting handoff acceptance',
     value: 'awaiting_handoff_acceptance',
+  },
+  {
+    description: 'Tasks with an open handoff acceptance window that is approaching and needs prompt uptake',
+    label: 'Handoff acceptance / due soon',
+    value: 'due_soon_handoff_acceptance',
+  },
+  {
+    description: 'Tasks with an open handoff acceptance window that is already overdue but not yet expired',
+    label: 'Handoff acceptance / overdue',
+    value: 'overdue_handoff_acceptance',
   },
   {
     description: 'Tasks with an accepted ownership handoff that have not resumed execution yet',

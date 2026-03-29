@@ -17,6 +17,7 @@ export function CanopyQueuesSection({
   claimedNotStartedQueueSnapshot,
   dependencyBlockedQueueSnapshot,
   criticalQueueSnapshot,
+  dueSoonHandoffAcceptanceQueueSnapshot,
   dueSoonQueueSnapshot,
   dueSoonExecutionQueueSnapshot,
   dueSoonReviewQueueSnapshot,
@@ -24,7 +25,10 @@ export function CanopyQueuesSection({
   handoffQueueSnapshot,
   inProgressQueueSnapshot,
   openQueuePreset,
+  overdueHandoffAcceptanceQueueSnapshot,
   overdueExecutionQueueSnapshot,
+  overdueExecutionOwnedQueueSnapshot,
+  overdueExecutionUnclaimedQueueSnapshot,
   overdueReviewQueueSnapshot,
   pausedResumableQueueSnapshot,
   reviewDecisionFollowThroughQueueSnapshot,
@@ -45,6 +49,7 @@ export function CanopyQueuesSection({
   claimedNotStartedQueueSnapshot: CanopyQueueSnapshotState
   dependencyBlockedQueueSnapshot: CanopyQueueSnapshotState
   criticalQueueSnapshot: CanopyQueueSnapshotState
+  dueSoonHandoffAcceptanceQueueSnapshot: CanopyQueueSnapshotState
   dueSoonQueueSnapshot: CanopyQueueSnapshotState
   dueSoonExecutionQueueSnapshot: CanopyQueueSnapshotState
   dueSoonReviewQueueSnapshot: CanopyQueueSnapshotState
@@ -52,7 +57,10 @@ export function CanopyQueuesSection({
   handoffQueueSnapshot: CanopyQueueSnapshotState
   inProgressQueueSnapshot: CanopyQueueSnapshotState
   openQueuePreset: (preset: CanopySavedView) => void
+  overdueHandoffAcceptanceQueueSnapshot: CanopyQueueSnapshotState
   overdueExecutionQueueSnapshot: CanopyQueueSnapshotState
+  overdueExecutionOwnedQueueSnapshot: CanopyQueueSnapshotState
+  overdueExecutionUnclaimedQueueSnapshot: CanopyQueueSnapshotState
   overdueReviewQueueSnapshot: CanopyQueueSnapshotState
   pausedResumableQueueSnapshot: CanopyQueueSnapshotState
   reviewDecisionFollowThroughQueueSnapshot: CanopyQueueSnapshotState
@@ -257,6 +265,24 @@ export function CanopyQueuesSection({
       <Grid.Col span={{ base: 6, md: 3 }}>
         <Button
           fullWidth
+          onClick={() => openQueuePreset('overdue_execution_owned')}
+          variant={savedView === 'overdue_execution_owned' ? 'filled' : 'light'}
+        >
+          Overdue execution / owned · {renderQueueCount(overdueExecutionOwnedQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('overdue_execution_unclaimed')}
+          variant={savedView === 'overdue_execution_unclaimed' ? 'filled' : 'light'}
+        >
+          Overdue execution / unclaimed · {renderQueueCount(overdueExecutionUnclaimedQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
           onClick={() => openQueuePreset('overdue_review')}
           variant={savedView === 'overdue_review' ? 'filled' : 'light'}
         >
@@ -279,6 +305,24 @@ export function CanopyQueuesSection({
           variant={savedView === 'awaiting_handoff_acceptance' ? 'filled' : 'light'}
         >
           Awaiting handoff acceptance · {renderQueueCount(awaitingHandoffAcceptanceQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('due_soon_handoff_acceptance')}
+          variant={savedView === 'due_soon_handoff_acceptance' ? 'filled' : 'light'}
+        >
+          Handoff acceptance / due soon · {renderQueueCount(dueSoonHandoffAcceptanceQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('overdue_handoff_acceptance')}
+          variant={savedView === 'overdue_handoff_acceptance' ? 'filled' : 'light'}
+        >
+          Handoff acceptance / overdue · {renderQueueCount(overdueHandoffAcceptanceQueueSnapshot)}
         </Button>
       </Grid.Col>
       <Grid.Col span={{ base: 6, md: 3 }}>

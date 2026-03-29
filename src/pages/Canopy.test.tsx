@@ -112,6 +112,18 @@ const mockSnapshot: CanopySnapshot = {
       task_id: 'task-2',
     },
     {
+      active_deadline_at: '2026-03-27T11:00:00Z',
+      active_deadline_kind: 'execution',
+      active_deadline_state: 'overdue',
+      due_at: '2026-03-27T11:00:00Z',
+      due_in_seconds: null,
+      execution_state: 'overdue',
+      overdue_by_seconds: 90900,
+      review_due_at: null,
+      review_state: 'none',
+      task_id: 'task-7',
+    },
+    {
       active_deadline_at: null,
       active_deadline_kind: null,
       active_deadline_state: 'none',
@@ -292,6 +304,21 @@ const mockSnapshot: CanopySnapshot = {
       total_execution_seconds: 0,
       yield_count: 0,
     },
+    {
+      active_execution_seconds: 0,
+      claim_count: 0,
+      claimed_at: null,
+      completion_count: 0,
+      last_execution_action: null,
+      last_execution_agent_id: null,
+      last_execution_at: null,
+      pause_count: 0,
+      run_count: 0,
+      started_at: null,
+      task_id: 'task-7',
+      total_execution_seconds: 0,
+      yield_count: 0,
+    },
   ],
   handoff_attention: [
     {
@@ -300,6 +327,13 @@ const mockSnapshot: CanopySnapshot = {
       level: 'needs_attention',
       reasons: ['aging_open_handoff'],
       task_id: 'task-1',
+    },
+    {
+      freshness: 'stale',
+      handoff_id: 'handoff-5',
+      level: 'critical',
+      reasons: ['stale_open_handoff'],
+      task_id: 'task-5',
     },
   ],
   handoffs: [
@@ -320,8 +354,8 @@ const mockSnapshot: CanopySnapshot = {
     },
     {
       created_at: '2026-03-28T12:24:00Z',
-      due_at: null,
-      expires_at: null,
+      due_at: '2026-03-28T10:30:00Z',
+      expires_at: '2026-03-28T13:30:00Z',
       from_agent_id: 'agent-1',
       handoff_id: 'handoff-5',
       handoff_type: 'record_decision',
@@ -567,10 +601,10 @@ const mockSnapshot: CanopySnapshot = {
     {
       acknowledged: true,
       freshness: 'fresh',
-      level: 'needs_attention',
-      open_handoff_freshness: null,
+      level: 'critical',
+      open_handoff_freshness: 'stale',
       owner_heartbeat_freshness: null,
-      reasons: ['review_required', 'overdue_review', 'review_decision_follow_through'],
+      reasons: ['review_required', 'overdue_review', 'review_decision_follow_through', 'awaiting_handoff_acceptance', 'stale_open_handoff'],
       task_id: 'task-5',
     },
     {
@@ -581,6 +615,15 @@ const mockSnapshot: CanopySnapshot = {
       owner_heartbeat_freshness: null,
       reasons: ['review_required', 'review_ready_for_closeout'],
       task_id: 'task-6',
+    },
+    {
+      acknowledged: false,
+      freshness: 'aging',
+      level: 'needs_attention',
+      open_handoff_freshness: null,
+      owner_heartbeat_freshness: null,
+      reasons: ['overdue_execution', 'unacknowledged'],
+      task_id: 'task-7',
     },
   ],
   task_heartbeat_summaries: [
@@ -753,6 +796,31 @@ const mockSnapshot: CanopySnapshot = {
       title: 'Close review after decision is recorded',
       updated_at: '2026-03-28T12:28:00Z',
       verification_state: 'pending',
+      verified_at: null,
+      verified_by: null,
+    },
+    {
+      acknowledged_at: null,
+      acknowledged_by: null,
+      blocked_reason: null,
+      closed_at: null,
+      closed_by: null,
+      closure_summary: null,
+      created_at: '2026-03-27T11:00:00Z',
+      description: 'Pick up the overdue unclaimed execution work.',
+      due_at: '2026-03-27T11:00:00Z',
+      owner_agent_id: null,
+      owner_note: null,
+      priority: 'high',
+      project_root: '/workspace/cap',
+      requested_by: 'operator',
+      review_due_at: null,
+      severity: 'medium',
+      status: 'open',
+      task_id: 'task-7',
+      title: 'Recover overdue unclaimed execution',
+      updated_at: '2026-03-27T11:00:00Z',
+      verification_state: 'unknown',
       verified_at: null,
       verified_by: null,
     },
@@ -1364,15 +1432,27 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'due_soon_execution', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'due_soon_review', project: '/workspace/cap' }), snapshotForTaskIds(['task-4'])],
   [responseKey({ preset: 'due_soon_review', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-4'])],
-  [responseKey({ preset: 'overdue_execution', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
-  [responseKey({ preset: 'overdue_execution', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'overdue_execution', project: '/workspace/cap' }), snapshotForTaskIds(['task-2', 'task-7'])],
+  [responseKey({ preset: 'overdue_execution', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2', 'task-7'])],
+  [responseKey({ preset: 'overdue_execution_owned', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'overdue_execution_owned', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'overdue_execution_unclaimed', project: '/workspace/cap' }), snapshotForTaskIds(['task-7'])],
+  [responseKey({ preset: 'overdue_execution_unclaimed', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-7'])],
   [responseKey({ preset: 'overdue_review', project: '/workspace/cap' }), snapshotForTaskIds(['task-5'])],
   [responseKey({ preset: 'overdue_review', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-5'])],
-  [responseKey({ preset: 'awaiting_handoff_acceptance', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
-  [responseKey({ preset: 'awaiting_handoff_acceptance', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'awaiting_handoff_acceptance', project: '/workspace/cap' }), snapshotForTaskIds(['task-1', 'task-5'])],
+  [
+    responseKey({ preset: 'awaiting_handoff_acceptance', project: '/workspace/cap', sort: 'status' }),
+    snapshotForTaskIds(['task-1', 'task-5']),
+  ],
+  [responseKey({ preset: 'due_soon_handoff_acceptance', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'due_soon_handoff_acceptance', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'overdue_handoff_acceptance', project: '/workspace/cap' }), snapshotForTaskIds(['task-5'])],
+  [responseKey({ preset: 'overdue_handoff_acceptance', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-5'])],
   [responseKey({ preset: 'accepted_handoff_follow_through', project: '/workspace/cap' }), snapshotForTaskIds([])],
   [responseKey({ preset: 'follow_up_chains', project: '/workspace/cap' }), snapshotForTaskIds(['task-1', 'task-3'])],
-  [responseKey({ preset: 'handoffs', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'handoffs', project: '/workspace/cap' }), snapshotForTaskIds(['task-1', 'task-5'])],
+  [responseKey({ preset: 'handoffs', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1', 'task-5'])],
   [responseKey({ preset: 'review_queue', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_queue', project: '/workspace/cap', sort: 'updated_at' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'critical', project: '/workspace/cap', sort: 'attention' }), snapshotForTaskIds(['task-2'])],
@@ -1503,7 +1583,9 @@ describe('Canopy page', () => {
     expect(screen.getByRole('button', { name: 'Due soon · 2' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Due soon / execution · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Due soon / review · 1' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Overdue execution · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Overdue execution · 2' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Overdue execution / owned · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Overdue execution / unclaimed · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Overdue review · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / graph pressure · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / handoff follow-through · 1' })).toBeInTheDocument()
@@ -1511,8 +1593,10 @@ describe('Canopy page', () => {
     expect(screen.getByRole('button', { name: 'Review / awaiting support · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / ready for decision · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / ready for closeout · 1' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Open handoffs · 1' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Awaiting handoff acceptance · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Open handoffs · 2' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Awaiting handoff acceptance · 2' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Handoff acceptance / due soon · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Handoff acceptance / overdue · 1' })).toBeInTheDocument()
     expect(screen.getByText(/Assignments 2 · reassignments 1/)).toBeInTheDocument()
     expect(screen.getByText(/Execution 1 runs · 420s total · active 420s · last start task/)).toBeInTheDocument()
     expect(screen.getByText('verify task')).toBeInTheDocument()
@@ -1606,7 +1690,7 @@ describe('Canopy page', () => {
 
     renderWithProviders(<Canopy />, { route: '/canopy?priority=critical&status=blocked&q=adapter' })
 
-    await user.click(screen.getByRole('button', { name: 'Open handoffs · 1' }))
+    await user.click(screen.getByRole('button', { name: 'Open handoffs · 2' }))
 
     expect(screen.getByText('Add Cap Canopy page')).toBeInTheDocument()
     expect(screen.queryByText('Fix lifecycle adapter')).not.toBeInTheDocument()
@@ -1792,6 +1876,40 @@ describe('Canopy page', () => {
     })
   })
 
+  it('opens the due soon handoff acceptance queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Handoff acceptance / due soon · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'due_soon_handoff_acceptance',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the overdue handoff acceptance queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Handoff acceptance / overdue · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'overdue_handoff_acceptance',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
   it('opens the due soon execution queue from the operator shortcut', async () => {
     const user = userEvent.setup()
 
@@ -1831,11 +1949,45 @@ describe('Canopy page', () => {
 
     renderWithProviders(<Canopy />, { route: '/canopy' })
 
-    await user.click(screen.getByRole('button', { name: 'Overdue execution · 1' }))
+    await user.click(screen.getByRole('button', { name: 'Overdue execution · 2' }))
 
     expect(useCanopySnapshotMock).toHaveBeenCalledWith({
       acknowledged: undefined,
       preset: 'overdue_execution',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the overdue execution owned queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Overdue execution / owned · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'overdue_execution_owned',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the overdue execution unclaimed queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Overdue execution / unclaimed · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'overdue_execution_unclaimed',
       priorityAtLeast: undefined,
       project: '/workspace/cap',
       severityAtLeast: undefined,

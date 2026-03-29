@@ -25,6 +25,7 @@ export function CanopyPage() {
     deadlineSummaryByTaskId,
     dependencyBlockedQueueSnapshot,
     detailQuery,
+    dueSoonHandoffAcceptanceQueueSnapshot,
     dueSoonQueueSnapshot,
     dueSoonExecutionQueueSnapshot,
     dueSoonReviewQueueSnapshot,
@@ -45,7 +46,10 @@ export function CanopyPage() {
     openQueuePreset,
     openSavedView,
     openTask,
+    overdueHandoffAcceptanceQueueSnapshot,
     overdueExecutionQueueSnapshot,
+    overdueExecutionOwnedQueueSnapshot,
+    overdueExecutionUnclaimedQueueSnapshot,
     overdueReviewQueueSnapshot,
     operatorActionsByTaskId,
     ownershipByTaskId,
@@ -166,12 +170,28 @@ export function CanopyPage() {
         title='Overdue execution queue unavailable'
       />
       <ErrorAlert
+        error={overdueExecutionOwnedQueueSnapshot.error instanceof Error ? overdueExecutionOwnedQueueSnapshot.error : undefined}
+        title='Overdue execution owned queue unavailable'
+      />
+      <ErrorAlert
+        error={overdueExecutionUnclaimedQueueSnapshot.error instanceof Error ? overdueExecutionUnclaimedQueueSnapshot.error : undefined}
+        title='Overdue execution unclaimed queue unavailable'
+      />
+      <ErrorAlert
         error={overdueReviewQueueSnapshot.error instanceof Error ? overdueReviewQueueSnapshot.error : undefined}
         title='Overdue review queue unavailable'
       />
       <ErrorAlert
         error={awaitingHandoffAcceptanceQueueSnapshot.error instanceof Error ? awaitingHandoffAcceptanceQueueSnapshot.error : undefined}
         title='Awaiting handoff acceptance queue unavailable'
+      />
+      <ErrorAlert
+        error={dueSoonHandoffAcceptanceQueueSnapshot.error instanceof Error ? dueSoonHandoffAcceptanceQueueSnapshot.error : undefined}
+        title='Due soon handoff acceptance queue unavailable'
+      />
+      <ErrorAlert
+        error={overdueHandoffAcceptanceQueueSnapshot.error instanceof Error ? overdueHandoffAcceptanceQueueSnapshot.error : undefined}
+        title='Overdue handoff acceptance queue unavailable'
       />
       <ErrorAlert
         error={
@@ -221,13 +241,17 @@ export function CanopyPage() {
           criticalQueueSnapshot={criticalQueueSnapshot}
           dependencyBlockedQueueSnapshot={dependencyBlockedQueueSnapshot}
           dueSoonExecutionQueueSnapshot={dueSoonExecutionQueueSnapshot}
+          dueSoonHandoffAcceptanceQueueSnapshot={dueSoonHandoffAcceptanceQueueSnapshot}
           dueSoonQueueSnapshot={dueSoonQueueSnapshot}
           dueSoonReviewQueueSnapshot={dueSoonReviewQueueSnapshot}
           followUpChainsQueueSnapshot={followUpChainsQueueSnapshot}
           handoffQueueSnapshot={handoffQueueSnapshot}
           inProgressQueueSnapshot={inProgressQueueSnapshot}
           openQueuePreset={openQueuePreset}
+          overdueExecutionOwnedQueueSnapshot={overdueExecutionOwnedQueueSnapshot}
           overdueExecutionQueueSnapshot={overdueExecutionQueueSnapshot}
+          overdueExecutionUnclaimedQueueSnapshot={overdueExecutionUnclaimedQueueSnapshot}
+          overdueHandoffAcceptanceQueueSnapshot={overdueHandoffAcceptanceQueueSnapshot}
           overdueReviewQueueSnapshot={overdueReviewQueueSnapshot}
           pausedResumableQueueSnapshot={pausedResumableQueueSnapshot}
           reviewAwaitingSupportQueueSnapshot={reviewAwaitingSupportQueueSnapshot}
