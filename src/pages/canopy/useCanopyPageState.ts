@@ -37,6 +37,10 @@ export function useCanopyPageState() {
     preset: 'unclaimed',
     project: activeProject ?? undefined,
   })
+  const claimedNotStartedQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'claimed_not_started',
+    project: activeProject ?? undefined,
+  })
   const inProgressQueueSnapshotQuery = useCanopySnapshot({
     preset: 'in_progress',
     project: activeProject ?? undefined,
@@ -179,6 +183,11 @@ export function useCanopyPageState() {
       error: blockedQueueSnapshotQuery.error,
       isLoading: blockedQueueSnapshotQuery.isLoading,
       snapshot: blockedQueueSnapshotQuery.data,
+    },
+    claimedNotStartedQueueSnapshot: {
+      error: claimedNotStartedQueueSnapshotQuery.error,
+      isLoading: claimedNotStartedQueueSnapshotQuery.isLoading,
+      snapshot: claimedNotStartedQueueSnapshotQuery.data,
     },
     closeTask: () => updateSearchParams({ task: null }, { replace: false }),
     criticalQueueSnapshot: {

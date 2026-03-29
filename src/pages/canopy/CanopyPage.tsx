@@ -18,6 +18,7 @@ export function CanopyPage() {
     availableAgents,
     awaitingHandoffAcceptanceQueueSnapshot,
     blockedQueueSnapshot,
+    claimedNotStartedQueueSnapshot,
     closeTask,
     criticalQueueSnapshot,
     dependencyBlockedQueueSnapshot,
@@ -92,6 +93,10 @@ export function CanopyPage() {
         title='Unclaimed queue unavailable'
       />
       <ErrorAlert
+        error={claimedNotStartedQueueSnapshot.error instanceof Error ? claimedNotStartedQueueSnapshot.error : undefined}
+        title='Claimed not started queue unavailable'
+      />
+      <ErrorAlert
         error={inProgressQueueSnapshot.error instanceof Error ? inProgressQueueSnapshot.error : undefined}
         title='In progress queue unavailable'
       />
@@ -150,6 +155,7 @@ export function CanopyPage() {
           acceptedHandoffFollowThroughQueueSnapshot={acceptedHandoffFollowThroughQueueSnapshot}
           awaitingHandoffAcceptanceQueueSnapshot={awaitingHandoffAcceptanceQueueSnapshot}
           blockedQueueSnapshot={blockedQueueSnapshot}
+          claimedNotStartedQueueSnapshot={claimedNotStartedQueueSnapshot}
           criticalQueueSnapshot={criticalQueueSnapshot}
           dependencyBlockedQueueSnapshot={dependencyBlockedQueueSnapshot}
           followUpChainsQueueSnapshot={followUpChainsQueueSnapshot}

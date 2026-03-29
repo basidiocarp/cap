@@ -28,6 +28,11 @@ export const SAVED_VIEW_OPTIONS = [
   { description: 'Tasks with open handoffs', label: 'Open handoffs', value: 'handoffs' },
   { description: 'Tasks participating in follow-up chains', label: 'Follow-up chains', value: 'follow_up_chains' },
   { description: 'Open tasks with no current owner', label: 'Unclaimed', value: 'unclaimed' },
+  {
+    description: 'Claimed work that has an owner but has not started execution yet',
+    label: 'Claimed / not started',
+    value: 'claimed_not_started',
+  },
   { description: 'Tasks actively being worked right now', label: 'In progress', value: 'in_progress' },
   { description: 'Owned work with stale or missing execution signals', label: 'Stalled', value: 'stalled' },
   { description: 'Assigned tasks paused mid-execution and ready to resume', label: 'Paused / resumable', value: 'paused_resumable' },

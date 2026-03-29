@@ -204,6 +204,14 @@ export function TaskCard({
             paused and ready to resume
           </Badge>
         ) : null}
+        {attention?.reasons.includes('claimed_not_started') ? (
+          <Badge
+            color='cyan'
+            variant='light'
+          >
+            claimed and ready to start
+          </Badge>
+        ) : null}
         {relationshipSummary &&
         (relationshipSummary.blocker_count > 0 ||
           relationshipSummary.blocking_count > 0 ||

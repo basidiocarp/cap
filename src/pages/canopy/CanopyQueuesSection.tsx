@@ -13,6 +13,7 @@ export function CanopyQueuesSection({
   acceptedHandoffFollowThroughQueueSnapshot,
   awaitingHandoffAcceptanceQueueSnapshot,
   blockedQueueSnapshot,
+  claimedNotStartedQueueSnapshot,
   dependencyBlockedQueueSnapshot,
   criticalQueueSnapshot,
   followUpChainsQueueSnapshot,
@@ -28,6 +29,7 @@ export function CanopyQueuesSection({
   acceptedHandoffFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   awaitingHandoffAcceptanceQueueSnapshot: CanopyQueueSnapshotState
   blockedQueueSnapshot: CanopyQueueSnapshotState
+  claimedNotStartedQueueSnapshot: CanopyQueueSnapshotState
   dependencyBlockedQueueSnapshot: CanopyQueueSnapshotState
   criticalQueueSnapshot: CanopyQueueSnapshotState
   followUpChainsQueueSnapshot: CanopyQueueSnapshotState
@@ -91,6 +93,15 @@ export function CanopyQueuesSection({
           variant={savedView === 'unclaimed' ? 'filled' : 'light'}
         >
           Unclaimed · {renderQueueCount(unclaimedQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('claimed_not_started')}
+          variant={savedView === 'claimed_not_started' ? 'filled' : 'light'}
+        >
+          Claimed / not started · {renderQueueCount(claimedNotStartedQueueSnapshot)}
         </Button>
       </Grid.Col>
       <Grid.Col span={{ base: 6, md: 3 }}>
