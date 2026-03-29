@@ -33,6 +33,22 @@ export function useCanopyPageState() {
     preset: 'handoffs',
     project: activeProject ?? undefined,
   })
+  const unclaimedQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'unclaimed',
+    project: activeProject ?? undefined,
+  })
+  const inProgressQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'in_progress',
+    project: activeProject ?? undefined,
+  })
+  const stalledQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'stalled',
+    project: activeProject ?? undefined,
+  })
+  const awaitingHandoffAcceptanceQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'awaiting_handoff_acceptance',
+    project: activeProject ?? undefined,
+  })
   const followUpChainsQueueSnapshotQuery = useCanopySnapshot({
     preset: 'follow_up_chains',
     project: activeProject ?? undefined,
@@ -64,6 +80,10 @@ export function useCanopyPageState() {
   const relationshipSummaryByTaskId = useMemo(
     () => new Map(snapshot?.relationship_summaries.map((summary) => [summary.task_id, summary]) ?? []),
     [snapshot?.relationship_summaries]
+  )
+  const executionSummaryByTaskId = useMemo(
+    () => new Map(snapshot?.execution_summaries.map((summary) => [summary.task_id, summary]) ?? []),
+    [snapshot?.execution_summaries]
   )
   const operatorActionsByTaskId = useMemo(() => groupOperatorActionsByTask(snapshot?.operator_actions), [snapshot?.operator_actions])
   const filteredTasks = useMemo(() => filterCanopyTasks(snapshot, searchQuery, statusFilter), [searchQuery, snapshot, statusFilter])
@@ -137,6 +157,11 @@ export function useCanopyPageState() {
     acknowledgedFilter,
     activeProject,
     availableAgents,
+    awaitingHandoffAcceptanceQueueSnapshot: {
+      error: awaitingHandoffAcceptanceQueueSnapshotQuery.error,
+      isLoading: awaitingHandoffAcceptanceQueueSnapshotQuery.isLoading,
+      snapshot: awaitingHandoffAcceptanceQueueSnapshotQuery.data,
+    },
     blockedQueueSnapshot: {
       error: blockedQueueSnapshotQuery.error,
       isLoading: blockedQueueSnapshotQuery.isLoading,
@@ -154,6 +179,7 @@ export function useCanopyPageState() {
       snapshot: dependencyBlockedQueueSnapshotQuery.data,
     },
     detailQuery,
+    executionSummaryByTaskId,
     filteredAgentAttention,
     filteredAgents,
     filteredEvidence,
@@ -173,6 +199,11 @@ export function useCanopyPageState() {
       snapshot: handoffQueueSnapshotQuery.data,
     },
     heartbeatSummaryByTaskId,
+    inProgressQueueSnapshot: {
+      error: inProgressQueueSnapshotQuery.error,
+      isLoading: inProgressQueueSnapshotQuery.isLoading,
+      snapshot: inProgressQueueSnapshotQuery.data,
+    },
     modalOpen,
     openQueuePreset: openPreset,
     openSavedView: openPreset,
@@ -186,12 +217,22 @@ export function useCanopyPageState() {
     severityFilter,
     snapshotQuery,
     sortMode,
+    stalledQueueSnapshot: {
+      error: stalledQueueSnapshotQuery.error,
+      isLoading: stalledQueueSnapshotQuery.isLoading,
+      snapshot: stalledQueueSnapshotQuery.data,
+    },
     statusFilter,
     taskAttentionById,
     unacknowledgedQueueSnapshot: {
       error: unacknowledgedQueueSnapshotQuery.error,
       isLoading: unacknowledgedQueueSnapshotQuery.isLoading,
       snapshot: unacknowledgedQueueSnapshotQuery.data,
+    },
+    unclaimedQueueSnapshot: {
+      error: unclaimedQueueSnapshotQuery.error,
+      isLoading: unclaimedQueueSnapshotQuery.isLoading,
+      snapshot: unclaimedQueueSnapshotQuery.data,
     },
     updateSearchParams,
   }

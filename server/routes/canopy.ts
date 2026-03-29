@@ -12,6 +12,10 @@ const ALLOWED_VIEWS = new Set([
   'review',
   'handoffs',
   'follow_up_chains',
+  'unclaimed',
+  'in_progress',
+  'stalled',
+  'awaiting_handoff_acceptance',
   'attention',
 ])
 const ALLOWED_PRESETS = new Set([
@@ -22,6 +26,10 @@ const ALLOWED_PRESETS = new Set([
   'blocked_by_dependencies',
   'handoffs',
   'follow_up_chains',
+  'unclaimed',
+  'in_progress',
+  'stalled',
+  'awaiting_handoff_acceptance',
   'critical',
   'unacknowledged',
 ])
@@ -33,6 +41,11 @@ const ALLOWED_VERIFICATION_STATES = new Set(['pending', 'passed', 'failed'])
 const ALLOWED_TASK_ACTIONS = new Set([
   'acknowledge_task',
   'unacknowledge_task',
+  'claim_task',
+  'start_task',
+  'pause_task',
+  'yield_task',
+  'complete_task',
   'verify_task',
   'reassign_task',
   'resolve_dependency',
@@ -119,6 +132,7 @@ app.post('/tasks/:taskId/actions', async (c) => {
   try {
     const body = (await c.req.json().catch(() => ({}))) as {
       action?: string
+      acting_agent_id?: string
       author_agent_id?: string
       assigned_to?: string
       blocked_reason?: string
@@ -159,6 +173,16 @@ app.post('/tasks/:taskId/actions', async (c) => {
     }
     if (!ALLOWED_TASK_ACTIONS.has(body.action)) {
       return c.json({ error: `Unsupported Canopy task action: ${body.action}` }, 400)
+    }
+    if (
+      (body.action === 'claim_task' ||
+        body.action === 'start_task' ||
+        body.action === 'pause_task' ||
+        body.action === 'yield_task' ||
+        body.action === 'complete_task') &&
+      !body.acting_agent_id?.trim()
+    ) {
+      return c.json({ error: `${body.action} requires an acting_agent_id` }, 400)
     }
     if (body.action === 'verify_task' && (!body.verification_state || !ALLOWED_VERIFICATION_STATES.has(body.verification_state))) {
       return c.json({ error: 'verify_task requires a valid verification_state' }, 400)
@@ -213,6 +237,7 @@ app.post('/tasks/:taskId/actions', async (c) => {
 
     return c.json(
       await canopy.applyTaskAction(c.req.param('taskId'), {
+        actingAgentId: body.acting_agent_id,
         action: body.action,
         assignedTo: body.assigned_to,
         authorAgentId: body.author_agent_id,
@@ -261,6 +286,7 @@ app.post('/handoffs/:handoffId/actions', async (c) => {
   try {
     const body = (await c.req.json().catch(() => ({}))) as {
       action?: string
+      acting_agent_id?: string
       changed_by?: string
       note?: string
     }
@@ -271,9 +297,13 @@ app.post('/handoffs/:handoffId/actions', async (c) => {
     if (!ALLOWED_HANDOFF_ACTIONS.has(body.action)) {
       return c.json({ error: `Unsupported Canopy handoff action: ${body.action}` }, 400)
     }
+    if ((body.action === 'accept_handoff' || body.action === 'reject_handoff') && !body.acting_agent_id?.trim()) {
+      return c.json({ error: `${body.action} requires an acting_agent_id` }, 400)
+    }
 
     return c.json(
       await canopy.applyHandoffAction(c.req.param('handoffId'), {
+        actingAgentId: body.acting_agent_id,
         action: body.action,
         changedBy: body.changed_by,
         note: body.note,

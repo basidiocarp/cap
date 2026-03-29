@@ -419,6 +419,7 @@ describe('API Routes', () => {
 
       expect(res.status).toBe(200)
       expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        actingAgentId: undefined,
         action: 'block_task',
         assignedTo: undefined,
         authorAgentId: undefined,
@@ -475,6 +476,7 @@ describe('API Routes', () => {
 
       expect(res.status).toBe(200)
       expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        actingAgentId: undefined,
         action: 'verify_task',
         assignedTo: undefined,
         authorAgentId: undefined,
@@ -533,6 +535,7 @@ describe('API Routes', () => {
 
       expect(res.status).toBe(200)
       expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        actingAgentId: undefined,
         action: 'create_handoff',
         assignedTo: undefined,
         authorAgentId: undefined,
@@ -610,6 +613,7 @@ describe('API Routes', () => {
 
       expect(res.status).toBe(200)
       expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        actingAgentId: undefined,
         action: 'post_council_message',
         assignedTo: undefined,
         authorAgentId: 'agent-1',
@@ -665,6 +669,7 @@ describe('API Routes', () => {
 
       expect(res.status).toBe(200)
       expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        actingAgentId: undefined,
         action: 'create_follow_up_task',
         assignedTo: undefined,
         authorAgentId: undefined,
@@ -720,6 +725,7 @@ describe('API Routes', () => {
 
       expect(res.status).toBe(200)
       expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        actingAgentId: undefined,
         action: 'link_task_dependency',
         assignedTo: undefined,
         authorAgentId: undefined,
@@ -777,6 +783,7 @@ describe('API Routes', () => {
 
       expect(res.status).toBe(200)
       expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        actingAgentId: undefined,
         action: 'resolve_dependency',
         assignedTo: undefined,
         authorAgentId: undefined,
@@ -811,6 +818,82 @@ describe('API Routes', () => {
         severity: undefined,
         toAgentId: undefined,
         verificationState: undefined,
+      })
+    })
+
+    it('forwards execution task actions with acting agent identity to Canopy', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
+        status: 'in_progress',
+        task_id: 'task-1',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          acting_agent_id: 'agent-1',
+          action: 'start_task',
+          changed_by: 'operator',
+          note: 'Resume active work',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        actingAgentId: 'agent-1',
+        action: 'start_task',
+        assignedTo: undefined,
+        authorAgentId: undefined,
+        blockedReason: undefined,
+        changedBy: 'operator',
+        clearOwnerNote: undefined,
+        closureSummary: undefined,
+        dueAt: undefined,
+        evidenceLabel: undefined,
+        evidenceSourceKind: undefined,
+        evidenceSourceRef: undefined,
+        evidenceSummary: undefined,
+        expiresAt: undefined,
+        followUpDescription: undefined,
+        followUpTitle: undefined,
+        fromAgentId: undefined,
+        handoffSummary: undefined,
+        handoffType: undefined,
+        messageBody: undefined,
+        messageType: undefined,
+        note: 'Resume active work',
+        ownerNote: undefined,
+        priority: undefined,
+        relatedFile: undefined,
+        relatedHandoffId: undefined,
+        relatedMemoryQuery: undefined,
+        relatedSessionId: undefined,
+        relatedSymbol: undefined,
+        requestedAction: undefined,
+        severity: undefined,
+        toAgentId: undefined,
+        verificationState: undefined,
+      })
+    })
+
+    it('rejects execution task actions without an acting agent id', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'claim_task',
+          changed_by: 'operator',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(taskActionSpy).not.toHaveBeenCalled()
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'claim_task requires an acting_agent_id',
       })
     })
 
@@ -914,9 +997,30 @@ describe('API Routes', () => {
 
       expect(res.status).toBe(200)
       expect(handoffActionSpy).toHaveBeenCalledWith('handoff-1', {
+        actingAgentId: undefined,
         action: 'expire_handoff',
         changedBy: 'operator',
         note: undefined,
+      })
+    })
+
+    it('rejects accept handoff mutations without an acting agent id', async () => {
+      const handoffActionSpy = vi.spyOn(canopy, 'applyHandoffAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/handoffs/handoff-1/actions', {
+        body: JSON.stringify({
+          action: 'accept_handoff',
+          changed_by: 'operator',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(handoffActionSpy).not.toHaveBeenCalled()
+      await expect(res.json()).resolves.toMatchObject({
+        error: 'accept_handoff requires an acting_agent_id',
       })
     })
 
@@ -1056,6 +1160,7 @@ describe('API Routes', () => {
 
       const req = new Request('http://localhost:3001/api/canopy/handoffs/handoff-1/actions', {
         body: JSON.stringify({
+          acting_agent_id: 'agent-2',
           action: 'accept_handoff',
           changed_by: 'operator',
           note: 'Taking ownership through the operator surface',
@@ -1067,6 +1172,7 @@ describe('API Routes', () => {
 
       expect(res.status).toBe(200)
       expect(handoffSpy).toHaveBeenCalledWith('handoff-1', {
+        actingAgentId: 'agent-2',
         action: 'accept_handoff',
         changedBy: 'operator',
         note: 'Taking ownership through the operator surface',

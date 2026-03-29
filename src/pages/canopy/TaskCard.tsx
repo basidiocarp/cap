@@ -4,6 +4,7 @@ import type {
   CanopyOperatorAction,
   CanopyTask,
   CanopyTaskAttention,
+  CanopyTaskExecutionSummary,
   CanopyTaskHeartbeatSummary,
   CanopyTaskOwnershipSummary,
   CanopyTaskRelationshipSummary,
@@ -44,6 +45,7 @@ export function TaskStatusBadge({ task }: { task: CanopyTask }) {
 export function TaskCard({
   actions,
   attention,
+  executionSummary,
   heartbeatSummary,
   onOpen,
   ownership,
@@ -52,6 +54,7 @@ export function TaskCard({
 }: {
   actions: CanopyOperatorAction[]
   attention?: CanopyTaskAttention
+  executionSummary?: CanopyTaskExecutionSummary
   heartbeatSummary?: CanopyTaskHeartbeatSummary
   onOpen: (taskId: string) => void
   ownership?: CanopyTaskOwnershipSummary
@@ -181,6 +184,16 @@ export function TaskCard({
           >
             Heartbeats {heartbeatSummary.heartbeat_count} · agents {heartbeatSummary.related_agent_count}
             {heartbeatSummary.last_heartbeat_at ? ` · latest ${timeAgo(heartbeatSummary.last_heartbeat_at, { allowMonths: true })}` : ''}
+          </Text>
+        ) : null}
+        {executionSummary ? (
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Execution {executionSummary.run_count} runs · {executionSummary.total_execution_seconds}s total
+            {executionSummary.active_execution_seconds > 0 ? ` · active ${executionSummary.active_execution_seconds}s` : ''}
+            {executionSummary.last_execution_action ? ` · last ${executionSummary.last_execution_action.replaceAll('_', ' ')}` : ''}
           </Text>
         ) : null}
         {relationshipSummary &&

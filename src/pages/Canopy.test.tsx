@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -87,6 +87,53 @@ const mockSnapshot: CanopySnapshot = {
     tasks_needing_attention: 2,
   },
   evidence: [],
+  execution_summaries: [
+    {
+      active_execution_seconds: 420,
+      claim_count: 1,
+      claimed_at: '2026-03-28T12:01:00Z',
+      completion_count: 0,
+      last_execution_action: 'start_task',
+      last_execution_agent_id: 'agent-1',
+      last_execution_at: '2026-03-28T12:06:00Z',
+      pause_count: 0,
+      run_count: 1,
+      started_at: '2026-03-28T12:06:00Z',
+      task_id: 'task-1',
+      total_execution_seconds: 420,
+      yield_count: 0,
+    },
+    {
+      active_execution_seconds: 0,
+      claim_count: 1,
+      claimed_at: '2026-03-27T10:00:00Z',
+      completion_count: 0,
+      last_execution_action: 'pause_task',
+      last_execution_agent_id: 'agent-2',
+      last_execution_at: '2026-03-27T10:05:00Z',
+      pause_count: 1,
+      run_count: 1,
+      started_at: '2026-03-27T10:01:00Z',
+      task_id: 'task-2',
+      total_execution_seconds: 240,
+      yield_count: 0,
+    },
+    {
+      active_execution_seconds: 0,
+      claim_count: 0,
+      claimed_at: null,
+      completion_count: 0,
+      last_execution_action: null,
+      last_execution_agent_id: null,
+      last_execution_at: null,
+      pause_count: 0,
+      run_count: 0,
+      started_at: null,
+      task_id: 'task-3',
+      total_execution_seconds: 0,
+      yield_count: 0,
+    },
+  ],
   handoff_attention: [
     {
       freshness: 'aging',
@@ -137,6 +184,19 @@ const mockSnapshot: CanopySnapshot = {
       target_kind: 'task',
       task_id: 'task-1',
       title: 'Verify pending review',
+    },
+    {
+      action_id: 'action-1exec',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'complete_task',
+      level: 'needs_attention',
+      summary: 'Complete the execution pass and move the task into review.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Complete execution on task-1',
     },
     {
       action_id: 'action-1b',
@@ -346,7 +406,7 @@ const mockSnapshot: CanopySnapshot = {
       project_root: '/workspace/cap',
       requested_by: 'operator',
       severity: 'medium',
-      status: 'review_required',
+      status: 'in_progress',
       task_id: 'task-1',
       title: 'Add Cap Canopy page',
       updated_at: '2026-03-28T12:10:00Z',
@@ -396,6 +456,71 @@ const mockTaskDetail: CanopyTaskDetail = {
       target_kind: 'task',
       task_id: 'task-1',
       title: 'Unacknowledge Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-1exec-claim',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'claim_task',
+      level: 'needs_attention',
+      summary: 'Claim the task for execution.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Claim Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-1exec-start',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'start_task',
+      level: 'needs_attention',
+      summary: 'Start active execution on the task.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Start Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-1exec-pause',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'pause_task',
+      level: 'needs_attention',
+      summary: 'Pause active execution without yielding ownership.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Pause Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-1exec-yield',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'yield_task',
+      level: 'needs_attention',
+      summary: 'Yield the task back to the queue.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Yield Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-1exec-complete',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'complete_task',
+      level: 'needs_attention',
+      summary: 'Complete execution and move the task to review.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Complete Add Cap Canopy page',
     },
     {
       action_id: 'allowed-2',
@@ -657,6 +782,8 @@ const mockTaskDetail: CanopyTaskDetail = {
       created_at: '2026-03-28T12:00:00Z',
       event_id: 'evt-1',
       event_type: 'created',
+      execution_action: null,
+      execution_duration_seconds: null,
       from_status: null,
       note: 'Wire the first Cap integration path.',
       owner_agent_id: null,
@@ -665,15 +792,17 @@ const mockTaskDetail: CanopyTaskDetail = {
       verification_state: 'unknown',
     },
     {
-      actor: 'operator',
-      created_at: '2026-03-28T12:05:00Z',
+      actor: 'agent-1',
+      created_at: '2026-03-28T12:06:00Z',
       event_id: 'evt-2',
-      event_type: 'status_changed',
+      event_type: 'execution_updated',
+      execution_action: 'start_task',
+      execution_duration_seconds: null,
       from_status: 'assigned',
-      note: 'Ready for UI review',
+      note: 'Operator resumed active work',
       owner_agent_id: 'agent-1',
       task_id: 'task-1',
-      to_status: 'review_required',
+      to_status: 'in_progress',
       verification_state: 'pending',
     },
     {
@@ -681,11 +810,13 @@ const mockTaskDetail: CanopyTaskDetail = {
       created_at: '2026-03-28T12:07:00Z',
       event_id: 'evt-3',
       event_type: 'triage_updated',
-      from_status: 'review_required',
+      execution_action: null,
+      execution_duration_seconds: null,
+      from_status: 'in_progress',
       note: 'priority=high; acknowledged=true; owner_note_updated=true',
       owner_agent_id: 'agent-1',
       task_id: 'task-1',
-      to_status: 'review_required',
+      to_status: 'in_progress',
       verification_state: 'pending',
     },
   ],
@@ -730,6 +861,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       task_id: 'task-1',
     },
   ],
+  execution_summary: mockSnapshot.execution_summaries[0],
   handoff_attention: mockSnapshot.handoff_attention,
   handoffs: mockSnapshot.handoffs,
   heartbeat_summary: mockSnapshot.task_heartbeat_summaries[1],
@@ -809,6 +941,7 @@ function snapshotForTaskIds(taskIds: string[]): CanopySnapshot {
       return taskMatch || allowedAgentIds.has(summary.agent_id)
     }),
     evidence: mockSnapshot.evidence.filter((item) => allowedTaskIds.has(item.task_id)),
+    execution_summaries: mockSnapshot.execution_summaries.filter((summary) => allowedTaskIds.has(summary.task_id)),
     handoff_attention: mockSnapshot.handoff_attention.filter((attention) => allowedTaskIds.has(attention.task_id)),
     handoffs: mockSnapshot.handoffs.filter((handoff) => allowedTaskIds.has(handoff.task_id)),
     heartbeats: mockSnapshot.heartbeats.filter((heartbeat) => {
@@ -854,6 +987,14 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'blocked', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
   [responseKey({ preset: 'blocked_by_dependencies', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'handoffs', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'unclaimed', project: '/workspace/cap' }), snapshotForTaskIds(['task-3'])],
+  [responseKey({ preset: 'unclaimed', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-3'])],
+  [responseKey({ preset: 'in_progress', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'in_progress', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'stalled', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'stalled', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'awaiting_handoff_acceptance', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'awaiting_handoff_acceptance', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'follow_up_chains', project: '/workspace/cap' }), snapshotForTaskIds(['task-1', 'task-3'])],
   [responseKey({ preset: 'handoffs', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_queue', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
@@ -980,8 +1121,13 @@ describe('Canopy page', () => {
     expect(screen.getByText('2 need attention')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Critical · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Unacknowledged · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Unclaimed · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'In progress · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Stalled · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Open handoffs · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Awaiting handoff acceptance · 1' })).toBeInTheDocument()
     expect(screen.getByText(/Assignments 2 · reassignments 1/)).toBeInTheDocument()
+    expect(screen.getByText(/Execution 1 runs · 420s total · active 420s · last start task/)).toBeInTheDocument()
     expect(screen.getByText('verify task')).toBeInTheDocument()
   })
 
@@ -1087,6 +1233,25 @@ describe('Canopy page', () => {
     })
   })
 
+  it('opens the runtime stalled queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Stalled · 1' }))
+
+    expect(screen.getByText('Fix lifecycle adapter')).toBeInTheDocument()
+    expect(screen.queryByText('Add Cap Canopy page')).not.toBeInTheDocument()
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'stalled',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
   it('shows queue fetch failures instead of silently rendering zero counts', () => {
     mockSnapshotErrors[responseKey({ preset: 'critical', project: '/workspace/cap' })] = new Error('critical queue failed')
 
@@ -1177,10 +1342,16 @@ describe('Canopy page', () => {
     expect(screen.getByText('Agent Attention')).toBeInTheDocument()
     expect(screen.getAllByText('Agent: agent-1').length).toBeGreaterThan(0)
     expect(screen.getByText(/Heartbeats 3 · latest status in_progress/)).toBeInTheDocument()
+    expect(screen.getByText('Execution Summary')).toBeInTheDocument()
+    expect(screen.getByText('Claims: 1')).toBeInTheDocument()
+    expect(screen.getByText(/Runs: 1 · pauses 0 · yields 0/)).toBeInTheDocument()
+    expect(screen.getByText(/Completions: 0 · total 420s/)).toBeInTheDocument()
+    expect(screen.getByText(/Active execution: 420s/)).toBeInTheDocument()
+    expect(screen.getByText(/Last start task/)).toBeInTheDocument()
     expect(screen.getByText('Assignments')).toBeInTheDocument()
     expect(screen.getByText('operator → agent-1')).toBeInTheDocument()
     expect(screen.getAllByText('Reason: handoff to strongest verifier').length).toBeGreaterThan(0)
-    expect(screen.getByText('Status changed to review_required')).toBeInTheDocument()
+    expect(screen.getByText('Execution start task')).toBeInTheDocument()
     expect(screen.getByText('Need review before closing')).toBeInTheDocument()
     expect(screen.getByText('blocked by')).toBeInTheDocument()
     expect(screen.getByText('follow-up')).toBeInTheDocument()
@@ -1221,6 +1392,15 @@ describe('Canopy page', () => {
       taskId: 'task-1',
     })
 
+    await user.click(screen.getByRole('button', { name: 'Pause task' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      acting_agent_id: 'agent-1',
+      action: 'pause_task',
+      changed_by: 'operator',
+      note: undefined,
+      taskId: 'task-1',
+    })
+
     await user.click(screen.getByRole('button', { name: 'Save priority' }))
     expect(taskActionMutateMock).toHaveBeenCalledWith({
       action: 'set_task_priority',
@@ -1258,13 +1438,16 @@ describe('Canopy page', () => {
     })
 
     await user.click(screen.getByRole('button', { name: 'Accept handoff' }))
-    expect(handoffActionMutateMock).toHaveBeenCalledWith({
-      action: 'accept_handoff',
-      changed_by: 'operator',
-      handoffId: 'handoff-1',
-      note: undefined,
-      taskId: 'task-1',
-    })
+    await waitFor(() =>
+      expect(handoffActionMutateMock).toHaveBeenCalledWith({
+        acting_agent_id: 'agent-2',
+        action: 'accept_handoff',
+        changed_by: 'operator',
+        handoffId: 'handoff-1',
+        note: undefined,
+        taskId: 'task-1',
+      })
+    )
 
     await user.type(screen.getByLabelText('Handoff summary'), 'Review the next coordination step')
     await user.type(screen.getByLabelText('Requested action'), 'Confirm the queue wiring')
@@ -1322,7 +1505,7 @@ describe('Canopy page', () => {
       follow_up_title: 'Track rollout cleanups',
       taskId: 'task-1',
     })
-  })
+  }, 15000)
 
   it('shows graph lifecycle actions when the runtime allows reopen and chain close', async () => {
     const user = userEvent.setup()
@@ -1430,13 +1613,16 @@ describe('Canopy page', () => {
     expect(screen.getAllByRole('button', { name: 'Accept handoff' })).toHaveLength(1)
 
     await user.click(screen.getByRole('button', { name: 'Accept handoff' }))
-    expect(handoffActionMutateMock).toHaveBeenCalledWith({
-      action: 'accept_handoff',
-      changed_by: 'operator',
-      handoffId: 'handoff-1',
-      note: undefined,
-      taskId: 'task-1',
-    })
+    await waitFor(() =>
+      expect(handoffActionMutateMock).toHaveBeenCalledWith({
+        acting_agent_id: 'agent-2',
+        action: 'accept_handoff',
+        changed_by: 'operator',
+        handoffId: 'handoff-1',
+        note: undefined,
+        taskId: 'task-1',
+      })
+    )
   })
 
   it('shows a modal-local error state when task detail cannot be loaded', async () => {

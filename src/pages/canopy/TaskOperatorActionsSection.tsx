@@ -13,6 +13,14 @@ import { ErrorAlert } from '../../components/ErrorAlert'
 import { useCanopyHandoffAction, useCanopyTaskAction } from '../../lib/queries'
 
 const TASK_OPERATOR_ACTOR = 'operator'
+const EXECUTION_ACTION_LABELS = {
+  claim_task: 'Claim task',
+  complete_task: 'Complete task',
+  pause_task: 'Pause task',
+  start_task: 'Start task',
+  yield_task: 'Yield task',
+} as const
+const EXECUTION_ACTION_ORDER = ['claim_task', 'start_task', 'pause_task', 'yield_task', 'complete_task'] as const
 const HANDOFF_ACTION_LABELS = {
   accept_handoff: 'Accept handoff',
   cancel_handoff: 'Cancel handoff',
@@ -57,6 +65,8 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
   const [blockedReason, setBlockedReason] = useState(detail.task.blocked_reason ?? '')
   const [assignedTo, setAssignedTo] = useState<string | null>(detail.task.owner_agent_id ?? agents[0]?.agent_id ?? null)
   const [reassignNote, setReassignNote] = useState('')
+  const [executionAgentId, setExecutionAgentId] = useState<string | null>(detail.task.owner_agent_id ?? agents[0]?.agent_id ?? null)
+  const [executionNote, setExecutionNote] = useState('')
   const [reviewOutcome, setReviewOutcome] = useState<Exclude<CanopyVerificationState, 'unknown'>>(
     detail.task.verification_state === 'failed' ? 'failed' : 'pending'
   )
@@ -78,6 +88,8 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
     setBlockedReason(detail.task.blocked_reason ?? '')
     setAssignedTo(detail.task.owner_agent_id ?? agents[0]?.agent_id ?? null)
     setReassignNote('')
+    setExecutionAgentId(detail.task.owner_agent_id ?? agents[0]?.agent_id ?? null)
+    setExecutionNote('')
     setReviewOutcome(detail.task.verification_state === 'failed' ? 'failed' : 'pending')
     setReviewSummary('')
     setHandoffNotes({})
@@ -111,6 +123,7 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
       })),
     [agents]
   )
+  const executionActionKinds = useMemo(() => EXECUTION_ACTION_ORDER.filter((action) => allowedKinds.has(action)), [allowedKinds])
   const dependencyOptions = useMemo(
     () =>
       detail.related_tasks
@@ -301,6 +314,50 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
             Reassign
           </Button>
         </Group>
+      ) : null}
+
+      {executionActionKinds.length > 0 ? (
+        <Stack gap='xs'>
+          <Text fw={600}>Execution controls</Text>
+          <Group align='end'>
+            <Select
+              data={assignableAgents}
+              disabled={isPending}
+              flex={1}
+              label='Execution agent'
+              onChange={(value) => setExecutionAgentId(value)}
+              placeholder='Choose an agent'
+              searchable
+              value={executionAgentId}
+            />
+            {executionActionKinds.map((action) => (
+              <Button
+                disabled={!executionAgentId}
+                key={action}
+                loading={taskActionMutation.isPending}
+                onClick={() =>
+                  taskActionMutation.mutate({
+                    acting_agent_id: executionAgentId ?? undefined,
+                    action,
+                    changed_by: TASK_OPERATOR_ACTOR,
+                    note: executionNote.trim() || undefined,
+                    taskId: detail.task.task_id,
+                  })
+                }
+                variant={action === 'complete_task' ? 'filled' : 'light'}
+              >
+                {EXECUTION_ACTION_LABELS[action]}
+              </Button>
+            ))}
+          </Group>
+          <TextInput
+            disabled={isPending}
+            label='Execution note'
+            onChange={(event) => setExecutionNote(event.currentTarget.value)}
+            placeholder='Optional note for execution transitions'
+            value={executionNote}
+          />
+        </Stack>
       ) : null}
 
       {allowedKinds.has('resolve_dependency') ||
@@ -548,6 +605,7 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
                     loading={handoffActionMutation.isPending}
                     onClick={() =>
                       handoffActionMutation.mutate({
+                        acting_agent_id: action === 'accept_handoff' || action === 'reject_handoff' ? handoff.to_agent_id : undefined,
                         action,
                         changed_by: TASK_OPERATOR_ACTOR,
                         handoffId: handoff.handoff_id,

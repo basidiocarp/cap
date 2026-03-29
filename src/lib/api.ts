@@ -45,6 +45,7 @@ export type {
   CanopyTaskDetail,
   CanopyTaskEvent,
   CanopyTaskEventType,
+  CanopyTaskExecutionSummary,
   CanopyTaskHeartbeatSummary,
   CanopyTaskOwnershipSummary,
   CanopyTaskPriority,

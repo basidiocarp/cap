@@ -11,6 +11,10 @@ const ALLOWED_VIEWS = new Set([
   'review',
   'handoffs',
   'follow_up_chains',
+  'unclaimed',
+  'in_progress',
+  'stalled',
+  'awaiting_handoff_acceptance',
   'attention',
 ])
 const ALLOWED_PRESETS = new Set([
@@ -21,6 +25,10 @@ const ALLOWED_PRESETS = new Set([
   'blocked_by_dependencies',
   'handoffs',
   'follow_up_chains',
+  'unclaimed',
+  'in_progress',
+  'stalled',
+  'awaiting_handoff_acceptance',
   'critical',
   'unacknowledged',
 ])
@@ -31,6 +39,11 @@ const ALLOWED_ACKNOWLEDGED = new Set(['true', 'false'])
 const ALLOWED_TASK_ACTIONS = new Set([
   'acknowledge_task',
   'unacknowledge_task',
+  'claim_task',
+  'start_task',
+  'pause_task',
+  'yield_task',
+  'complete_task',
   'verify_task',
   'reassign_task',
   'resolve_dependency',
@@ -130,6 +143,7 @@ export async function applyTaskAction<T = unknown>(
   taskId: string,
   input: {
     action: string
+    actingAgentId?: string
     authorAgentId?: string
     assignedTo?: string
     blockedReason?: string
@@ -170,6 +184,16 @@ export async function applyTaskAction<T = unknown>(
   }
   if (input.action === 'verify_task' && (!input.verificationState || !ALLOWED_VERIFICATION_STATES.has(input.verificationState))) {
     throw new Error('verify_task requires a valid verification_state')
+  }
+  if (
+    (input.action === 'claim_task' ||
+      input.action === 'start_task' ||
+      input.action === 'pause_task' ||
+      input.action === 'yield_task' ||
+      input.action === 'complete_task') &&
+    !input.actingAgentId?.trim()
+  ) {
+    throw new Error(`${input.action} requires an acting_agent_id`)
   }
   if (input.action === 'verify_task' && input.verificationState === 'passed' && !input.closureSummary?.trim()) {
     throw new Error('verify_task passed reviews require a closure_summary')
@@ -220,6 +244,7 @@ export async function applyTaskAction<T = unknown>(
   }
 
   const args = ['task', 'action', '--task-id', taskId, '--action', input.action, '--changed-by', input.changedBy]
+  if (input.actingAgentId) args.push('--acting-agent-id', input.actingAgentId)
   if (input.assignedTo) args.push('--assigned-to', input.assignedTo)
   if (input.priority && ALLOWED_PRIORITIES.has(input.priority)) args.push('--priority', input.priority)
   if (input.severity && ALLOWED_SEVERITIES.has(input.severity)) args.push('--severity', input.severity)
@@ -267,6 +292,7 @@ export async function applyHandoffAction<T = unknown>(
   handoffId: string,
   input: {
     action: string
+    actingAgentId?: string
     changedBy: string
     note?: string
   }
@@ -274,8 +300,12 @@ export async function applyHandoffAction<T = unknown>(
   if (!ALLOWED_HANDOFF_ACTIONS.has(input.action)) {
     throw new Error(`Unsupported Canopy handoff action: ${input.action}`)
   }
+  if ((input.action === 'accept_handoff' || input.action === 'reject_handoff') && !input.actingAgentId?.trim()) {
+    throw new Error(`${input.action} requires an acting_agent_id`)
+  }
 
   const args = ['handoff', 'action', '--handoff-id', handoffId, '--action', input.action, '--changed-by', input.changedBy]
+  if (input.actingAgentId) args.push('--acting-agent-id', input.actingAgentId)
   if (input.note) args.push('--note', input.note)
 
   const raw = await run(args)

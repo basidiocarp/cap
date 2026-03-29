@@ -12,6 +12,10 @@ export type CanopySnapshotPreset =
   | 'blocked_by_dependencies'
   | 'handoffs'
   | 'follow_up_chains'
+  | 'unclaimed'
+  | 'in_progress'
+  | 'stalled'
+  | 'awaiting_handoff_acceptance'
   | 'critical'
   | 'unacknowledged'
 export type CanopyTaskPriority = 'low' | 'medium' | 'high' | 'critical'
@@ -40,6 +44,7 @@ export type CanopyTaskEventType =
   | 'assigned'
   | 'ownership_transferred'
   | 'status_changed'
+  | 'execution_updated'
   | 'triage_updated'
   | 'relationship_updated'
   | 'handoff_created'
@@ -47,6 +52,7 @@ export type CanopyTaskEventType =
   | 'council_message_posted'
   | 'evidence_attached'
   | 'follow_up_task_created'
+export type CanopyExecutionActionKind = 'claim_task' | 'start_task' | 'pause_task' | 'yield_task' | 'complete_task'
 export type CanopyTaskAttentionReason =
   | 'blocked'
   | 'blocked_by_active_dependency'
@@ -66,6 +72,7 @@ export type CanopyTaskAttentionReason =
   | 'missing_owner_heartbeat'
   | 'aging_open_handoff'
   | 'stale_open_handoff'
+  | 'awaiting_handoff_acceptance'
 export type CanopyHandoffAttentionReason = 'aging_open_handoff' | 'stale_open_handoff'
 export type CanopyAgentAttentionReason =
   | 'aging_heartbeat'
@@ -76,6 +83,11 @@ export type CanopyAgentAttentionReason =
 export type CanopyOperatorActionKind =
   | 'acknowledge_task'
   | 'unacknowledge_task'
+  | 'claim_task'
+  | 'start_task'
+  | 'pause_task'
+  | 'yield_task'
+  | 'complete_task'
   | 'verify_task'
   | 'reassign_task'
   | 'resolve_dependency'
@@ -163,12 +175,30 @@ export interface CanopyTaskEvent {
   created_at: string
   event_id: string
   event_type: CanopyTaskEventType
+  execution_action: CanopyExecutionActionKind | null
+  execution_duration_seconds: number | null
   from_status: CanopyTaskStatus | null
   note: string | null
   owner_agent_id: string | null
   task_id: string
   to_status: CanopyTaskStatus
   verification_state: CanopyVerificationState | null
+}
+
+export interface CanopyTaskExecutionSummary {
+  active_execution_seconds: number
+  claim_count: number
+  claimed_at: string | null
+  completion_count: number
+  last_execution_action: CanopyExecutionActionKind | null
+  last_execution_agent_id: string | null
+  last_execution_at: string | null
+  pause_count: number
+  run_count: number
+  started_at: string | null
+  task_id: string
+  total_execution_seconds: number
+  yield_count: number
 }
 
 export interface CanopyTaskRelationship {
@@ -335,6 +365,7 @@ export interface CanopySnapshot {
   agents: CanopyAgentRegistration[]
   attention: CanopySnapshotAttentionSummary
   evidence: CanopyEvidenceRef[]
+  execution_summaries: CanopyTaskExecutionSummary[]
   heartbeats: CanopyAgentHeartbeatEvent[]
   handoff_attention: CanopyHandoffAttention[]
   handoffs: CanopyHandoff[]
@@ -354,6 +385,7 @@ export interface CanopyTaskDetail {
   assignments: CanopyTaskAssignment[]
   attention: CanopyTaskAttention
   evidence: CanopyEvidenceRef[]
+  execution_summary: CanopyTaskExecutionSummary
   events: CanopyTaskEvent[]
   heartbeat_summary: CanopyTaskHeartbeatSummary
   heartbeats: CanopyAgentHeartbeatEvent[]
@@ -373,6 +405,11 @@ export interface CanopyTaskActionInput {
     CanopyOperatorActionKind,
     | 'acknowledge_task'
     | 'unacknowledge_task'
+    | 'claim_task'
+    | 'start_task'
+    | 'pause_task'
+    | 'yield_task'
+    | 'complete_task'
     | 'verify_task'
     | 'reassign_task'
     | 'resolve_dependency'
@@ -390,6 +427,7 @@ export interface CanopyTaskActionInput {
     | 'create_follow_up_task'
     | 'link_task_dependency'
   >
+  acting_agent_id?: string
   author_agent_id?: string
   assigned_to?: string
   blocked_reason?: string
@@ -430,6 +468,7 @@ export interface CanopyHandoffActionInput {
     CanopyOperatorActionKind,
     'accept_handoff' | 'reject_handoff' | 'cancel_handoff' | 'complete_handoff' | 'follow_up_handoff' | 'expire_handoff'
   >
+  acting_agent_id?: string
   changed_by: string
   note?: string
 }

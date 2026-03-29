@@ -9,6 +9,7 @@ import type {
   CanopyOperatorAction,
   CanopyTask,
   CanopyTaskAttention,
+  CanopyTaskExecutionSummary,
   CanopyTaskHeartbeatSummary,
   CanopyTaskOwnershipSummary,
   CanopyTaskRelationshipSummary,
@@ -104,6 +105,7 @@ export function CanopySnapshotBadges({
 }
 
 export function CanopyTaskBoard({
+  executionSummaryByTaskId,
   filteredTasks,
   groupedTasks,
   heartbeatSummaryByTaskId,
@@ -116,6 +118,7 @@ export function CanopyTaskBoard({
   statusFilter,
   taskAttentionById,
 }: {
+  executionSummaryByTaskId: Map<string, CanopyTaskExecutionSummary>
   filteredTasks: CanopyTask[]
   groupedTasks: Array<{ status: CanopyTaskStatus; tasks: CanopyTask[] }>
   heartbeatSummaryByTaskId: Map<string, CanopyTaskHeartbeatSummary>
@@ -148,6 +151,7 @@ export function CanopyTaskBoard({
             <TaskCard
               actions={operatorActionsByTaskId.get(task.task_id) ?? []}
               attention={taskAttentionById.get(task.task_id)}
+              executionSummary={executionSummaryByTaskId.get(task.task_id)}
               heartbeatSummary={heartbeatSummaryByTaskId.get(task.task_id)}
               key={task.task_id}
               onOpen={onOpenTask}
@@ -173,6 +177,7 @@ export function CanopyTaskBoard({
               <TaskCard
                 actions={operatorActionsByTaskId.get(task.task_id) ?? []}
                 attention={taskAttentionById.get(task.task_id)}
+                executionSummary={executionSummaryByTaskId.get(task.task_id)}
                 heartbeatSummary={heartbeatSummaryByTaskId.get(task.task_id)}
                 key={task.task_id}
                 onOpen={onOpenTask}

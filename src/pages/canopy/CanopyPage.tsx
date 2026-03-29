@@ -15,11 +15,13 @@ export function CanopyPage() {
     acknowledgedFilter,
     activeProject,
     availableAgents,
+    awaitingHandoffAcceptanceQueueSnapshot,
     blockedQueueSnapshot,
     closeTask,
     criticalQueueSnapshot,
     dependencyBlockedQueueSnapshot,
     detailQuery,
+    executionSummaryByTaskId,
     filteredAgentAttention,
     filteredAgents,
     filteredEvidence,
@@ -31,6 +33,7 @@ export function CanopyPage() {
     groupedTasks,
     handoffQueueSnapshot,
     heartbeatSummaryByTaskId,
+    inProgressQueueSnapshot,
     modalOpen,
     openQueuePreset,
     openSavedView,
@@ -44,9 +47,11 @@ export function CanopyPage() {
     severityFilter,
     snapshotQuery,
     sortMode,
+    stalledQueueSnapshot,
     statusFilter,
     taskAttentionById,
     unacknowledgedQueueSnapshot,
+    unclaimedQueueSnapshot,
     updateSearchParams,
   } = useCanopyPageState()
 
@@ -79,6 +84,22 @@ export function CanopyPage() {
       <ErrorAlert
         error={handoffQueueSnapshot.error instanceof Error ? handoffQueueSnapshot.error : undefined}
         title='Handoff queue unavailable'
+      />
+      <ErrorAlert
+        error={unclaimedQueueSnapshot.error instanceof Error ? unclaimedQueueSnapshot.error : undefined}
+        title='Unclaimed queue unavailable'
+      />
+      <ErrorAlert
+        error={inProgressQueueSnapshot.error instanceof Error ? inProgressQueueSnapshot.error : undefined}
+        title='In progress queue unavailable'
+      />
+      <ErrorAlert
+        error={stalledQueueSnapshot.error instanceof Error ? stalledQueueSnapshot.error : undefined}
+        title='Stalled queue unavailable'
+      />
+      <ErrorAlert
+        error={awaitingHandoffAcceptanceQueueSnapshot.error instanceof Error ? awaitingHandoffAcceptanceQueueSnapshot.error : undefined}
+        title='Awaiting handoff acceptance queue unavailable'
       />
       <ErrorAlert
         error={followUpChainsQueueSnapshot.error instanceof Error ? followUpChainsQueueSnapshot.error : undefined}
@@ -114,14 +135,18 @@ export function CanopyPage() {
 
       <SectionCard title='Operator queues'>
         <CanopyQueuesSection
+          awaitingHandoffAcceptanceQueueSnapshot={awaitingHandoffAcceptanceQueueSnapshot}
           blockedQueueSnapshot={blockedQueueSnapshot}
           criticalQueueSnapshot={criticalQueueSnapshot}
           dependencyBlockedQueueSnapshot={dependencyBlockedQueueSnapshot}
           followUpChainsQueueSnapshot={followUpChainsQueueSnapshot}
           handoffQueueSnapshot={handoffQueueSnapshot}
+          inProgressQueueSnapshot={inProgressQueueSnapshot}
           openQueuePreset={openQueuePreset}
           savedView={savedView}
+          stalledQueueSnapshot={stalledQueueSnapshot}
           unacknowledgedQueueSnapshot={unacknowledgedQueueSnapshot}
+          unclaimedQueueSnapshot={unclaimedQueueSnapshot}
         />
       </SectionCard>
 
@@ -142,6 +167,7 @@ export function CanopyPage() {
       </SectionCard>
 
       <CanopyTaskBoard
+        executionSummaryByTaskId={executionSummaryByTaskId}
         filteredTasks={filteredTasks}
         groupedTasks={groupedTasks}
         heartbeatSummaryByTaskId={heartbeatSummaryByTaskId}

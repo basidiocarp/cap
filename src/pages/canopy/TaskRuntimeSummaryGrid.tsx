@@ -56,6 +56,42 @@ export function TaskRuntimeSummaryGrid({ detail }: { detail: CanopyTaskDetail })
         </SectionCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 4 }}>
+        <SectionCard title='Execution Summary'>
+          <Stack gap={4}>
+            <Text size='sm'>Claims: {detail.execution_summary.claim_count}</Text>
+            <Text size='sm'>
+              Runs: {detail.execution_summary.run_count} · pauses {detail.execution_summary.pause_count} · yields{' '}
+              {detail.execution_summary.yield_count}
+            </Text>
+            <Text size='sm'>
+              Completions: {detail.execution_summary.completion_count} · total {detail.execution_summary.total_execution_seconds}s
+            </Text>
+            {detail.execution_summary.active_execution_seconds > 0 ? (
+              <Text size='sm'>Active execution: {detail.execution_summary.active_execution_seconds}s</Text>
+            ) : null}
+            {detail.execution_summary.last_execution_action ? (
+              <Text
+                c='dimmed'
+                size='sm'
+              >
+                Last {detail.execution_summary.last_execution_action.replaceAll('_', ' ')}
+                {detail.execution_summary.last_execution_at
+                  ? ` ${timeAgo(detail.execution_summary.last_execution_at, { allowMonths: true })}`
+                  : ''}
+                {detail.execution_summary.last_execution_agent_id ? ` by ${detail.execution_summary.last_execution_agent_id}` : ''}
+              </Text>
+            ) : (
+              <Text
+                c='dimmed'
+                size='sm'
+              >
+                No execution events recorded yet.
+              </Text>
+            )}
+          </Stack>
+        </SectionCard>
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, md: 4 }}>
         <SectionCard title='Operator Actions'>
           {detail.operator_actions.length > 0 ? (
             <Stack gap='xs'>

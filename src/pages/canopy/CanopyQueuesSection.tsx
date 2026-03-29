@@ -10,23 +10,31 @@ interface CanopyQueueSnapshotState {
 }
 
 export function CanopyQueuesSection({
+  awaitingHandoffAcceptanceQueueSnapshot,
   blockedQueueSnapshot,
   dependencyBlockedQueueSnapshot,
   criticalQueueSnapshot,
   followUpChainsQueueSnapshot,
   handoffQueueSnapshot,
+  inProgressQueueSnapshot,
   openQueuePreset,
   savedView,
+  stalledQueueSnapshot,
   unacknowledgedQueueSnapshot,
+  unclaimedQueueSnapshot,
 }: {
+  awaitingHandoffAcceptanceQueueSnapshot: CanopyQueueSnapshotState
   blockedQueueSnapshot: CanopyQueueSnapshotState
   dependencyBlockedQueueSnapshot: CanopyQueueSnapshotState
   criticalQueueSnapshot: CanopyQueueSnapshotState
   followUpChainsQueueSnapshot: CanopyQueueSnapshotState
   handoffQueueSnapshot: CanopyQueueSnapshotState
+  inProgressQueueSnapshot: CanopyQueueSnapshotState
   openQueuePreset: (preset: CanopySavedView) => void
   savedView: CanopySavedView
+  stalledQueueSnapshot: CanopyQueueSnapshotState
   unacknowledgedQueueSnapshot: CanopyQueueSnapshotState
+  unclaimedQueueSnapshot: CanopyQueueSnapshotState
 }) {
   const renderQueueCount = (state: CanopyQueueSnapshotState) => {
     if (state.error) return 'error'
@@ -75,10 +83,46 @@ export function CanopyQueuesSection({
       <Grid.Col span={{ base: 6, md: 3 }}>
         <Button
           fullWidth
+          onClick={() => openQueuePreset('unclaimed')}
+          variant={savedView === 'unclaimed' ? 'filled' : 'light'}
+        >
+          Unclaimed · {renderQueueCount(unclaimedQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('in_progress')}
+          variant={savedView === 'in_progress' ? 'filled' : 'light'}
+        >
+          In progress · {renderQueueCount(inProgressQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('stalled')}
+          variant={savedView === 'stalled' ? 'filled' : 'light'}
+        >
+          Stalled · {renderQueueCount(stalledQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
           onClick={() => openQueuePreset('handoffs')}
           variant={savedView === 'handoffs' ? 'filled' : 'light'}
         >
           Open handoffs · {renderQueueCount(handoffQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('awaiting_handoff_acceptance')}
+          variant={savedView === 'awaiting_handoff_acceptance' ? 'filled' : 'light'}
+        >
+          Awaiting handoff acceptance · {renderQueueCount(awaitingHandoffAcceptanceQueueSnapshot)}
         </Button>
       </Grid.Col>
       <Grid.Col span={{ base: 6, md: 3 }}>

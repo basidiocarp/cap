@@ -171,6 +171,8 @@ export function eventTitle(event: CanopyTaskEvent): string {
       return 'Ownership transferred'
     case 'status_changed':
       return `Status changed to ${event.to_status}`
+    case 'execution_updated':
+      return event.execution_action ? `Execution ${event.execution_action.replaceAll('_', ' ')}` : 'Execution updated'
     case 'triage_updated':
       return 'Triage updated'
     case 'relationship_updated':

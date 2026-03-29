@@ -27,6 +27,14 @@ export const SAVED_VIEW_OPTIONS = [
   { description: 'Blocked tasks with explicit dependency blockers', label: 'Dependency blocked', value: 'blocked_by_dependencies' },
   { description: 'Tasks with open handoffs', label: 'Open handoffs', value: 'handoffs' },
   { description: 'Tasks participating in follow-up chains', label: 'Follow-up chains', value: 'follow_up_chains' },
+  { description: 'Open tasks with no current owner', label: 'Unclaimed', value: 'unclaimed' },
+  { description: 'Tasks actively being worked right now', label: 'In progress', value: 'in_progress' },
+  { description: 'Owned work with stale or missing execution signals', label: 'Stalled', value: 'stalled' },
+  {
+    description: 'Tasks waiting for the target agent to accept an open handoff',
+    label: 'Awaiting handoff acceptance',
+    value: 'awaiting_handoff_acceptance',
+  },
   { description: 'Critical tasks from the runtime attention model', label: 'Critical queue', value: 'critical' },
   { description: 'Attention tasks that have not been acknowledged yet', label: 'Unacknowledged', value: 'unacknowledged' },
 ] as const
