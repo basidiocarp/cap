@@ -78,6 +78,9 @@ export function TaskRuntimeSummaryGrid({ detail }: { detail: CanopyTaskDetail })
             {detail.attention.reasons.includes('review_handoff_follow_through') ? (
               <Text size='sm'>Review state: waiting on review or verification handoff follow-through</Text>
             ) : null}
+            {detail.attention.reasons.includes('review_decision_follow_through') ? (
+              <Text size='sm'>Review state: waiting on a decision-recording or closeout handoff to resolve</Text>
+            ) : null}
             {detail.attention.reasons.includes('review_awaiting_support') ? (
               <Text size='sm'>Review state: waiting on evidence or a council decision</Text>
             ) : null}

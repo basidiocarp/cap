@@ -236,6 +236,14 @@ export function TaskCard({
             review waiting on handoff follow-through
           </Badge>
         ) : null}
+        {attention?.reasons.includes('review_decision_follow_through') ? (
+          <Badge
+            color='pink'
+            variant='light'
+          >
+            review waiting on decision or closeout follow-through
+          </Badge>
+        ) : null}
         {attention?.reasons.includes('review_awaiting_support') ? (
           <Badge
             color='yellow'

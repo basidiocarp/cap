@@ -37,6 +37,10 @@ export function useCanopyPageState() {
     preset: 'review_handoff_follow_through',
     project: activeProject ?? undefined,
   })
+  const reviewDecisionFollowThroughQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'review_decision_follow_through',
+    project: activeProject ?? undefined,
+  })
   const reviewAwaitingSupportQueueSnapshotQuery = useCanopySnapshot({
     preset: 'review_awaiting_support',
     project: activeProject ?? undefined,
@@ -268,6 +272,11 @@ export function useCanopyPageState() {
       error: reviewAwaitingSupportQueueSnapshotQuery.error,
       isLoading: reviewAwaitingSupportQueueSnapshotQuery.isLoading,
       snapshot: reviewAwaitingSupportQueueSnapshotQuery.data,
+    },
+    reviewDecisionFollowThroughQueueSnapshot: {
+      error: reviewDecisionFollowThroughQueueSnapshotQuery.error,
+      isLoading: reviewDecisionFollowThroughQueueSnapshotQuery.isLoading,
+      snapshot: reviewDecisionFollowThroughQueueSnapshotQuery.data,
     },
     reviewHandoffFollowThroughQueueSnapshot: {
       error: reviewHandoffFollowThroughQueueSnapshotQuery.error,

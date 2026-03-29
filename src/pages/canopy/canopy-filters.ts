@@ -34,6 +34,11 @@ export const SAVED_VIEW_OPTIONS = [
     value: 'review_handoff_follow_through',
   },
   {
+    description: 'Review tasks waiting on a decision-recording or closeout handoff to resolve',
+    label: 'Review / decision or closeout',
+    value: 'review_decision_follow_through',
+  },
+  {
     description: 'Review tasks still waiting on supporting evidence or a council decision',
     label: 'Review / awaiting support',
     value: 'review_awaiting_support',

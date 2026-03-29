@@ -45,6 +45,7 @@ export function CanopyPage() {
     ownershipByTaskId,
     pausedResumableQueueSnapshot,
     priorityFilter,
+    reviewDecisionFollowThroughQueueSnapshot,
     reviewAwaitingSupportQueueSnapshot,
     reviewReadyForCloseoutQueueSnapshot,
     reviewHandoffFollowThroughQueueSnapshot,
@@ -96,6 +97,10 @@ export function CanopyPage() {
       <ErrorAlert
         error={reviewHandoffFollowThroughQueueSnapshot.error instanceof Error ? reviewHandoffFollowThroughQueueSnapshot.error : undefined}
         title='Review handoff follow-through queue unavailable'
+      />
+      <ErrorAlert
+        error={reviewDecisionFollowThroughQueueSnapshot.error instanceof Error ? reviewDecisionFollowThroughQueueSnapshot.error : undefined}
+        title='Review decision or closeout queue unavailable'
       />
       <ErrorAlert
         error={reviewAwaitingSupportQueueSnapshot.error instanceof Error ? reviewAwaitingSupportQueueSnapshot.error : undefined}
@@ -190,6 +195,7 @@ export function CanopyPage() {
           openQueuePreset={openQueuePreset}
           pausedResumableQueueSnapshot={pausedResumableQueueSnapshot}
           reviewAwaitingSupportQueueSnapshot={reviewAwaitingSupportQueueSnapshot}
+          reviewDecisionFollowThroughQueueSnapshot={reviewDecisionFollowThroughQueueSnapshot}
           reviewHandoffFollowThroughQueueSnapshot={reviewHandoffFollowThroughQueueSnapshot}
           reviewReadyForCloseoutQueueSnapshot={reviewReadyForCloseoutQueueSnapshot}
           reviewWithGraphPressureQueueSnapshot={reviewWithGraphPressureQueueSnapshot}

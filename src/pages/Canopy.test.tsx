@@ -100,6 +100,19 @@ const mockSnapshot: CanopySnapshot = {
       summary: 'Support context is already attached for closeout.',
       task_id: 'task-4',
     },
+    {
+      evidence_id: 'evidence-5',
+      label: 'Decision packet',
+      related_file: null,
+      related_handoff_id: 'handoff-5',
+      related_memory_query: null,
+      related_session_id: null,
+      related_symbol: null,
+      source_kind: 'manual_note',
+      source_ref: 'decision-packet-1',
+      summary: 'Decision context is ready once the closeout handoff lands.',
+      task_id: 'task-5',
+    },
   ],
   execution_summaries: [
     {
@@ -162,6 +175,21 @@ const mockSnapshot: CanopySnapshot = {
       total_execution_seconds: 0,
       yield_count: 0,
     },
+    {
+      active_execution_seconds: 0,
+      claim_count: 0,
+      claimed_at: null,
+      completion_count: 0,
+      last_execution_action: null,
+      last_execution_agent_id: null,
+      last_execution_at: null,
+      pause_count: 0,
+      run_count: 0,
+      started_at: null,
+      task_id: 'task-5',
+      total_execution_seconds: 0,
+      yield_count: 0,
+    },
   ],
   handoff_attention: [
     {
@@ -187,6 +215,21 @@ const mockSnapshot: CanopySnapshot = {
       task_id: 'task-1',
       to_agent_id: 'agent-2',
       updated_at: '2026-03-28T12:08:00Z',
+    },
+    {
+      created_at: '2026-03-28T12:24:00Z',
+      due_at: null,
+      expires_at: null,
+      from_agent_id: 'agent-1',
+      handoff_id: 'handoff-5',
+      handoff_type: 'record_decision',
+      requested_action: 'Record the final decision before closeout',
+      resolved_at: null,
+      status: 'open',
+      summary: 'Need the final decision before closing',
+      task_id: 'task-5',
+      to_agent_id: 'agent-2',
+      updated_at: '2026-03-28T12:24:00Z',
     },
   ],
   heartbeats: [
@@ -343,6 +386,16 @@ const mockSnapshot: CanopySnapshot = {
       stale_blocker_count: 0,
       task_id: 'task-4',
     },
+    {
+      active_blocker_count: 0,
+      blocker_count: 0,
+      blocking_count: 0,
+      follow_up_child_count: 0,
+      follow_up_parent_count: 0,
+      open_follow_up_child_count: 0,
+      stale_blocker_count: 0,
+      task_id: 'task-5',
+    },
   ],
   relationships: [
     {
@@ -397,6 +450,15 @@ const mockSnapshot: CanopySnapshot = {
       owner_heartbeat_freshness: null,
       reasons: ['review_required', 'review_ready_for_closeout'],
       task_id: 'task-4',
+    },
+    {
+      acknowledged: true,
+      freshness: 'fresh',
+      level: 'needs_attention',
+      open_handoff_freshness: null,
+      owner_heartbeat_freshness: null,
+      reasons: ['review_required', 'review_decision_follow_through'],
+      task_id: 'task-5',
     },
   ],
   task_heartbeat_summaries: [
@@ -510,6 +572,29 @@ const mockSnapshot: CanopySnapshot = {
       task_id: 'task-4',
       title: 'Close review after support arrives',
       updated_at: '2026-03-28T12:22:00Z',
+      verification_state: 'pending',
+      verified_at: null,
+      verified_by: null,
+    },
+    {
+      acknowledged_at: '2026-03-28T12:25:00Z',
+      acknowledged_by: 'operator',
+      blocked_reason: null,
+      closed_at: null,
+      closed_by: null,
+      closure_summary: null,
+      created_at: '2026-03-28T12:24:00Z',
+      description: 'Close the review after the final decision or closeout handoff lands.',
+      owner_agent_id: null,
+      owner_note: 'Decision handoff is still open.',
+      priority: 'high',
+      project_root: '/workspace/cap',
+      requested_by: 'operator',
+      severity: 'medium',
+      status: 'review_required',
+      task_id: 'task-5',
+      title: 'Close review after decision lands',
+      updated_at: '2026-03-28T12:25:00Z',
       verification_state: 'pending',
       verified_at: null,
       verified_by: null,
@@ -1067,6 +1152,8 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'review_with_graph_pressure', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_handoff_follow_through', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_handoff_follow_through', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'review_decision_follow_through', project: '/workspace/cap' }), snapshotForTaskIds(['task-5'])],
+  [responseKey({ preset: 'review_decision_follow_through', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-5'])],
   [responseKey({ preset: 'review_awaiting_support', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_awaiting_support', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_ready_for_closeout', project: '/workspace/cap' }), snapshotForTaskIds(['task-4'])],
@@ -1218,6 +1305,7 @@ describe('Canopy page', () => {
     expect(screen.getByRole('button', { name: 'Stalled · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / graph pressure · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / handoff follow-through · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Review / decision or closeout · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / awaiting support · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / ready for closeout · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Open handoffs · 1' })).toBeInTheDocument()
@@ -1375,6 +1463,23 @@ describe('Canopy page', () => {
     expect(useCanopySnapshotMock).toHaveBeenCalledWith({
       acknowledged: undefined,
       preset: 'review_handoff_follow_through',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the runtime review decision or closeout queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Review / decision or closeout · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'review_decision_follow_through',
       priorityAtLeast: undefined,
       project: '/workspace/cap',
       severityAtLeast: undefined,
