@@ -993,6 +993,8 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'in_progress', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'stalled', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
   [responseKey({ preset: 'stalled', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'paused_resumable', project: '/workspace/cap' }), snapshotForTaskIds([])],
+  [responseKey({ preset: 'paused_resumable', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds([])],
   [responseKey({ preset: 'awaiting_handoff_acceptance', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'awaiting_handoff_acceptance', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'accepted_handoff_follow_through', project: '/workspace/cap' }), snapshotForTaskIds([])],
@@ -1246,6 +1248,23 @@ describe('Canopy page', () => {
     expect(useCanopySnapshotMock).toHaveBeenCalledWith({
       acknowledged: undefined,
       preset: 'stalled',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the paused resumable queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Paused / resumable · 0' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'paused_resumable',
       priorityAtLeast: undefined,
       project: '/workspace/cap',
       severityAtLeast: undefined,

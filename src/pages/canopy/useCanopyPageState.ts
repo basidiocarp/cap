@@ -45,6 +45,10 @@ export function useCanopyPageState() {
     preset: 'stalled',
     project: activeProject ?? undefined,
   })
+  const pausedResumableQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'paused_resumable',
+    project: activeProject ?? undefined,
+  })
   const awaitingHandoffAcceptanceQueueSnapshotQuery = useCanopySnapshot({
     preset: 'awaiting_handoff_acceptance',
     project: activeProject ?? undefined,
@@ -219,6 +223,11 @@ export function useCanopyPageState() {
     openTask: (taskId: string) => updateSearchParams({ task: taskId }, { replace: false }),
     operatorActionsByTaskId,
     ownershipByTaskId,
+    pausedResumableQueueSnapshot: {
+      error: pausedResumableQueueSnapshotQuery.error,
+      isLoading: pausedResumableQueueSnapshotQuery.isLoading,
+      snapshot: pausedResumableQueueSnapshotQuery.data,
+    },
     priorityFilter,
     relationshipSummaryByTaskId,
     savedView,

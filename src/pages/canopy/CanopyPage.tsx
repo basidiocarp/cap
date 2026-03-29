@@ -41,6 +41,7 @@ export function CanopyPage() {
     openTask,
     operatorActionsByTaskId,
     ownershipByTaskId,
+    pausedResumableQueueSnapshot,
     priorityFilter,
     relationshipSummaryByTaskId,
     savedView,
@@ -99,6 +100,10 @@ export function CanopyPage() {
         title='Stalled queue unavailable'
       />
       <ErrorAlert
+        error={pausedResumableQueueSnapshot.error instanceof Error ? pausedResumableQueueSnapshot.error : undefined}
+        title='Paused resumable queue unavailable'
+      />
+      <ErrorAlert
         error={awaitingHandoffAcceptanceQueueSnapshot.error instanceof Error ? awaitingHandoffAcceptanceQueueSnapshot.error : undefined}
         title='Awaiting handoff acceptance queue unavailable'
       />
@@ -151,6 +156,7 @@ export function CanopyPage() {
           handoffQueueSnapshot={handoffQueueSnapshot}
           inProgressQueueSnapshot={inProgressQueueSnapshot}
           openQueuePreset={openQueuePreset}
+          pausedResumableQueueSnapshot={pausedResumableQueueSnapshot}
           savedView={savedView}
           stalledQueueSnapshot={stalledQueueSnapshot}
           unacknowledgedQueueSnapshot={unacknowledgedQueueSnapshot}

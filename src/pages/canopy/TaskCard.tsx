@@ -196,6 +196,14 @@ export function TaskCard({
             {executionSummary.last_execution_action ? ` · last ${executionSummary.last_execution_action.replaceAll('_', ' ')}` : ''}
           </Text>
         ) : null}
+        {attention?.reasons.includes('paused_resumable') ? (
+          <Badge
+            color='blue'
+            variant='light'
+          >
+            paused and ready to resume
+          </Badge>
+        ) : null}
         {relationshipSummary &&
         (relationshipSummary.blocker_count > 0 ||
           relationshipSummary.blocking_count > 0 ||

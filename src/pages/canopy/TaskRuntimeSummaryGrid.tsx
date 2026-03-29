@@ -69,6 +69,9 @@ export function TaskRuntimeSummaryGrid({ detail }: { detail: CanopyTaskDetail })
             {detail.execution_summary.active_execution_seconds > 0 ? (
               <Text size='sm'>Active execution: {detail.execution_summary.active_execution_seconds}s</Text>
             ) : null}
+            {detail.execution_summary.last_execution_action === 'pause_task' ? (
+              <Text size='sm'>Execution state: paused and resumable</Text>
+            ) : null}
             {detail.execution_summary.last_execution_action ? (
               <Text
                 c='dimmed'

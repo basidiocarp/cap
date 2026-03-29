@@ -19,6 +19,7 @@ export function CanopyQueuesSection({
   handoffQueueSnapshot,
   inProgressQueueSnapshot,
   openQueuePreset,
+  pausedResumableQueueSnapshot,
   savedView,
   stalledQueueSnapshot,
   unacknowledgedQueueSnapshot,
@@ -33,6 +34,7 @@ export function CanopyQueuesSection({
   handoffQueueSnapshot: CanopyQueueSnapshotState
   inProgressQueueSnapshot: CanopyQueueSnapshotState
   openQueuePreset: (preset: CanopySavedView) => void
+  pausedResumableQueueSnapshot: CanopyQueueSnapshotState
   savedView: CanopySavedView
   stalledQueueSnapshot: CanopyQueueSnapshotState
   unacknowledgedQueueSnapshot: CanopyQueueSnapshotState
@@ -107,6 +109,15 @@ export function CanopyQueuesSection({
           variant={savedView === 'stalled' ? 'filled' : 'light'}
         >
           Stalled · {renderQueueCount(stalledQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('paused_resumable')}
+          variant={savedView === 'paused_resumable' ? 'filled' : 'light'}
+        >
+          Paused / resumable · {renderQueueCount(pausedResumableQueueSnapshot)}
         </Button>
       </Grid.Col>
       <Grid.Col span={{ base: 6, md: 3 }}>

@@ -30,6 +30,7 @@ export const SAVED_VIEW_OPTIONS = [
   { description: 'Open tasks with no current owner', label: 'Unclaimed', value: 'unclaimed' },
   { description: 'Tasks actively being worked right now', label: 'In progress', value: 'in_progress' },
   { description: 'Owned work with stale or missing execution signals', label: 'Stalled', value: 'stalled' },
+  { description: 'Assigned tasks paused mid-execution and ready to resume', label: 'Paused / resumable', value: 'paused_resumable' },
   {
     description: 'Tasks waiting for the target agent to accept an open handoff',
     label: 'Awaiting handoff acceptance',
