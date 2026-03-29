@@ -187,6 +187,26 @@ const mockSnapshot: CanopySnapshot = {
       task_id: 'task-1',
     },
   ],
+  relationships: [
+    {
+      created_at: '2026-03-28T12:09:00Z',
+      created_by: 'operator',
+      kind: 'follow_up',
+      relationship_id: 'rel-1',
+      source_task_id: 'task-1',
+      target_task_id: 'task-3',
+      updated_at: '2026-03-28T12:09:00Z',
+    },
+    {
+      created_at: '2026-03-28T12:10:00Z',
+      created_by: 'operator',
+      kind: 'blocks',
+      relationship_id: 'rel-2',
+      source_task_id: 'task-2',
+      target_task_id: 'task-1',
+      updated_at: '2026-03-28T12:10:00Z',
+    },
+  ],
   task_attention: [
     {
       acknowledged: false,
@@ -275,6 +295,29 @@ const mockSnapshot: CanopySnapshot = {
       verification_state: 'pending',
       verified_at: '2026-03-28T12:05:00Z',
       verified_by: 'operator',
+    },
+    {
+      acknowledged_at: null,
+      acknowledged_by: null,
+      blocked_reason: null,
+      closed_at: null,
+      closed_by: null,
+      closure_summary: null,
+      created_at: '2026-03-28T12:09:00Z',
+      description: 'Track the remaining operator cleanup work.',
+      owner_agent_id: null,
+      owner_note: null,
+      priority: 'medium',
+      project_root: '/workspace/cap',
+      requested_by: 'operator',
+      severity: 'none',
+      status: 'open',
+      task_id: 'task-3',
+      title: 'Track rollout cleanups',
+      updated_at: '2026-03-28T12:09:00Z',
+      verification_state: 'unknown',
+      verified_at: null,
+      verified_by: null,
     },
   ],
 }
@@ -412,6 +455,19 @@ const mockTaskDetail: CanopyTaskDetail = {
       target_kind: 'task',
       task_id: 'task-1',
       title: 'Create follow-up task for Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-10b',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'link_task_dependency',
+      level: 'needs_attention',
+      summary: 'Link this task to another task as blocking or blocked-by.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Link dependency for Add Cap Canopy page',
     },
     {
       action_id: 'allowed-11',
@@ -605,6 +661,41 @@ const mockTaskDetail: CanopyTaskDetail = {
   ],
   operator_actions: mockSnapshot.operator_actions.filter((action) => action.task_id === 'task-1'),
   ownership: mockSnapshot.ownership[1],
+  related_tasks: [
+    {
+      blocked_reason: 'waiting on host repair',
+      created_at: '2026-03-27T10:00:00Z',
+      owner_agent_id: 'agent-2',
+      priority: 'critical',
+      related_task_id: 'task-2',
+      relationship_id: 'rel-2',
+      relationship_kind: 'blocks',
+      relationship_role: 'blocked_by',
+      severity: 'critical',
+      status: 'blocked',
+      title: 'Fix lifecycle adapter',
+      updated_at: '2026-03-27T10:00:00Z',
+      verification_state: 'failed',
+    },
+    {
+      blocked_reason: null,
+      created_at: '2026-03-28T12:09:00Z',
+      owner_agent_id: null,
+      priority: 'medium',
+      related_task_id: 'task-3',
+      relationship_id: 'rel-1',
+      relationship_kind: 'follow_up',
+      relationship_role: 'follow_up_child',
+      severity: 'none',
+      status: 'open',
+      title: 'Track rollout cleanups',
+      updated_at: '2026-03-28T12:09:00Z',
+      verification_state: 'unknown',
+    },
+  ],
+  relationships: mockSnapshot.relationships.filter(
+    (relationship) => relationship.source_task_id === 'task-1' || relationship.target_task_id === 'task-1'
+  ),
   task: mockSnapshot.tasks[1],
 }
 
@@ -642,6 +733,9 @@ function snapshotForTaskIds(taskIds: string[]): CanopySnapshot {
     }),
     operator_actions: mockSnapshot.operator_actions.filter((action) => (action.task_id ? allowedTaskIds.has(action.task_id) : false)),
     ownership: mockSnapshot.ownership.filter((ownership) => allowedTaskIds.has(ownership.task_id)),
+    relationships: mockSnapshot.relationships.filter(
+      (relationship) => allowedTaskIds.has(relationship.source_task_id) || allowedTaskIds.has(relationship.target_task_id)
+    ),
     task_attention: mockSnapshot.task_attention.filter((attention) => allowedTaskIds.has(attention.task_id)),
     task_heartbeat_summaries: mockSnapshot.task_heartbeat_summaries.filter((summary) => allowedTaskIds.has(summary.task_id)),
     tasks: orderedTasks,
@@ -979,6 +1073,8 @@ describe('Canopy page', () => {
     expect(screen.getAllByText('severity medium').length).toBeGreaterThan(0)
     expect(screen.getAllByText('acknowledged').length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Operator note:/).length).toBeGreaterThan(0)
+    expect(screen.getByText('blocked by 1')).toBeInTheDocument()
+    expect(screen.getByText('follow-ups 1')).toBeInTheDocument()
     expect(screen.getByText(/Owner heartbeat freshness:/)).toBeInTheDocument()
     expect(screen.getByText('Runtime Summary')).toBeInTheDocument()
     expect(screen.getByText('Coordination Actions')).toBeInTheDocument()
@@ -998,6 +1094,10 @@ describe('Canopy page', () => {
     expect(screen.getAllByText('Reason: handoff to strongest verifier').length).toBeGreaterThan(0)
     expect(screen.getByText('Status changed to review_required')).toBeInTheDocument()
     expect(screen.getByText('Need review before closing')).toBeInTheDocument()
+    expect(screen.getByText('blocked by')).toBeInTheDocument()
+    expect(screen.getByText('follow-up')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Fix lifecycle adapter' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Track rollout cleanups' })).toBeInTheDocument()
     expect(screen.getAllByText(/Due /).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Expires /).length).toBeGreaterThan(0)
     expect(screen.getByText('Ready for review.')).toBeInTheDocument()

@@ -21,6 +21,13 @@ import {
   verificationColor,
 } from './canopy-formatters'
 
+export interface CanopyTaskRelationshipCue {
+  blockedByCount: number
+  blocksCount: number
+  followUpChildCount: number
+  followUpParentCount: number
+}
+
 export function TaskStatusBadge({ task }: { task: CanopyTask }) {
   return (
     <Group gap='xs'>
@@ -46,6 +53,7 @@ export function TaskCard({
   heartbeatSummary,
   onOpen,
   ownership,
+  relationshipCue,
   task,
 }: {
   actions: CanopyOperatorAction[]
@@ -53,6 +61,7 @@ export function TaskCard({
   heartbeatSummary?: CanopyTaskHeartbeatSummary
   onOpen: (taskId: string) => void
   ownership?: CanopyTaskOwnershipSummary
+  relationshipCue?: CanopyTaskRelationshipCue
   task: CanopyTask
 }) {
   return (
@@ -179,6 +188,46 @@ export function TaskCard({
             Heartbeats {heartbeatSummary.heartbeat_count} · agents {heartbeatSummary.related_agent_count}
             {heartbeatSummary.last_heartbeat_at ? ` · latest ${timeAgo(heartbeatSummary.last_heartbeat_at, { allowMonths: true })}` : ''}
           </Text>
+        ) : null}
+        {relationshipCue &&
+        (relationshipCue.blockedByCount > 0 ||
+          relationshipCue.blocksCount > 0 ||
+          relationshipCue.followUpChildCount > 0 ||
+          relationshipCue.followUpParentCount > 0) ? (
+          <Group gap='xs'>
+            {relationshipCue.blockedByCount > 0 ? (
+              <Badge
+                color='red'
+                variant='light'
+              >
+                blocked by {relationshipCue.blockedByCount}
+              </Badge>
+            ) : null}
+            {relationshipCue.blocksCount > 0 ? (
+              <Badge
+                color='orange'
+                variant='light'
+              >
+                blocking {relationshipCue.blocksCount}
+              </Badge>
+            ) : null}
+            {relationshipCue.followUpParentCount > 0 ? (
+              <Badge
+                color='grape'
+                variant='outline'
+              >
+                parent {relationshipCue.followUpParentCount}
+              </Badge>
+            ) : null}
+            {relationshipCue.followUpChildCount > 0 ? (
+              <Badge
+                color='blue'
+                variant='outline'
+              >
+                follow-ups {relationshipCue.followUpChildCount}
+              </Badge>
+            ) : null}
+          </Group>
         ) : null}
         {actions.length > 0 ? (
           <Group gap='xs'>

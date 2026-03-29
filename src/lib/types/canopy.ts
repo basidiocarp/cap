@@ -32,6 +32,7 @@ export type CanopyTaskEventType =
   | 'ownership_transferred'
   | 'status_changed'
   | 'triage_updated'
+  | 'relationship_updated'
   | 'handoff_created'
   | 'handoff_updated'
   | 'council_message_posted'
@@ -74,6 +75,7 @@ export type CanopyOperatorActionKind =
   | 'post_council_message'
   | 'attach_evidence'
   | 'create_follow_up_task'
+  | 'link_task_dependency'
   | 'accept_handoff'
   | 'reject_handoff'
   | 'cancel_handoff'
@@ -81,6 +83,8 @@ export type CanopyOperatorActionKind =
   | 'follow_up_handoff'
   | 'expire_handoff'
 export type CanopyOperatorActionTargetKind = 'task' | 'handoff'
+export type CanopyTaskRelationshipKind = 'follow_up' | 'blocks'
+export type CanopyTaskRelationshipRole = 'follow_up_parent' | 'follow_up_child' | 'blocks' | 'blocked_by'
 
 export interface CanopyAgentRegistration {
   agent_id: string
@@ -149,6 +153,32 @@ export interface CanopyTaskEvent {
   task_id: string
   to_status: CanopyTaskStatus
   verification_state: CanopyVerificationState | null
+}
+
+export interface CanopyTaskRelationship {
+  created_at: string
+  created_by: string
+  kind: CanopyTaskRelationshipKind
+  relationship_id: string
+  source_task_id: string
+  target_task_id: string
+  updated_at: string
+}
+
+export interface CanopyRelatedTask {
+  blocked_reason: string | null
+  created_at: string
+  owner_agent_id: string | null
+  priority: CanopyTaskPriority
+  related_task_id: string
+  relationship_id: string
+  relationship_kind: CanopyTaskRelationshipKind
+  relationship_role: CanopyTaskRelationshipRole
+  severity: CanopyTaskSeverity
+  status: CanopyTaskStatus
+  title: string
+  updated_at: string
+  verification_state: CanopyVerificationState
 }
 
 export interface CanopyHandoff {
@@ -283,6 +313,7 @@ export interface CanopySnapshot {
   handoffs: CanopyHandoff[]
   operator_actions: CanopyOperatorAction[]
   ownership: CanopyTaskOwnershipSummary[]
+  relationships: CanopyTaskRelationship[]
   task_attention: CanopyTaskAttention[]
   task_heartbeat_summaries: CanopyTaskHeartbeatSummary[]
   tasks: CanopyTask[]
@@ -303,6 +334,8 @@ export interface CanopyTaskDetail {
   messages: CanopyCouncilMessage[]
   operator_actions: CanopyOperatorAction[]
   ownership: CanopyTaskOwnershipSummary
+  related_tasks: CanopyRelatedTask[]
+  relationships: CanopyTaskRelationship[]
   task: CanopyTask
 }
 
@@ -322,6 +355,7 @@ export interface CanopyTaskActionInput {
     | 'post_council_message'
     | 'attach_evidence'
     | 'create_follow_up_task'
+    | 'link_task_dependency'
   >
   author_agent_id?: string
   assigned_to?: string
@@ -345,11 +379,13 @@ export interface CanopyTaskActionInput {
   note?: string
   owner_note?: string
   priority?: CanopyTaskPriority
+  related_task_id?: string
   related_file?: string
   related_handoff_id?: string
   related_memory_query?: string
   related_session_id?: string
   related_symbol?: string
+  relationship_role?: Extract<CanopyTaskRelationshipRole, 'blocks' | 'blocked_by'>
   requested_action?: string
   severity?: CanopyTaskSeverity
   to_agent_id?: string

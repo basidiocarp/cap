@@ -25,7 +25,9 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'post_council_message',
   'attach_evidence',
   'create_follow_up_task',
+  'link_task_dependency',
 ])
+const ALLOWED_TASK_RELATIONSHIP_ROLES = new Set(['blocks', 'blocked_by'])
 const ALLOWED_HANDOFF_ACTIONS = new Set([
   'accept_handoff',
   'reject_handoff',
@@ -116,11 +118,13 @@ app.post('/tasks/:taskId/actions', async (c) => {
       note?: string
       owner_note?: string
       priority?: string
+      related_task_id?: string
       related_file?: string
       related_handoff_id?: string
       related_memory_query?: string
       related_session_id?: string
       related_symbol?: string
+      relationship_role?: string
       requested_action?: string
       severity?: string
       to_agent_id?: string
@@ -172,6 +176,14 @@ app.post('/tasks/:taskId/actions', async (c) => {
     if (body.action === 'create_follow_up_task' && !body.follow_up_title?.trim()) {
       return c.json({ error: 'create_follow_up_task requires a follow_up_title' }, 400)
     }
+    if (body.action === 'link_task_dependency') {
+      if (!body.related_task_id?.trim()) {
+        return c.json({ error: 'link_task_dependency requires a related_task_id' }, 400)
+      }
+      if (!body.relationship_role || !ALLOWED_TASK_RELATIONSHIP_ROLES.has(body.relationship_role)) {
+        return c.json({ error: 'link_task_dependency requires a valid relationship_role' }, 400)
+      }
+    }
 
     return c.json(
       await canopy.applyTaskAction(c.req.param('taskId'), {
@@ -204,6 +216,9 @@ app.post('/tasks/:taskId/actions', async (c) => {
         relatedMemoryQuery: body.related_memory_query,
         relatedSessionId: body.related_session_id,
         relatedSymbol: body.related_symbol,
+        relatedTaskId: body.related_task_id,
+        relationshipRole:
+          body.relationship_role && ALLOWED_TASK_RELATIONSHIP_ROLES.has(body.relationship_role) ? body.relationship_role : undefined,
         requestedAction: body.requested_action,
         severity: body.severity,
         toAgentId: body.to_agent_id,

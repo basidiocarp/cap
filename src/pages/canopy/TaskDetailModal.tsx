@@ -8,6 +8,7 @@ import { TaskActivitySections } from './TaskActivitySections'
 import { TaskCoordinationActionsSection } from './TaskCoordinationActionsSection'
 import { TaskOperatorActionsSection } from './TaskOperatorActionsSection'
 import { TaskOverviewSection } from './TaskOverviewSection'
+import { TaskRelatedTasksSection } from './TaskRelatedTasksSection'
 import { TaskRuntimeSummaryGrid } from './TaskRuntimeSummaryGrid'
 import { useTaskDetailMaps } from './task-detail-maps'
 
@@ -17,12 +18,14 @@ export function TaskDetailModal({
   error,
   opened,
   onClose,
+  onOpenTask,
 }: {
   agents: CanopyAgentRegistration[]
   detail: CanopyTaskDetail | undefined
   error: Error | null
   opened: boolean
   onClose: () => void
+  onOpenTask: (taskId: string) => void
 }) {
   const { agentHeartbeatSummaryById, handoffAttentionById } = useTaskDetailMaps(detail)
 
@@ -62,6 +65,16 @@ export function TaskDetailModal({
 
             <Divider label='Runtime Summary' />
             <TaskRuntimeSummaryGrid detail={detail} />
+
+            {detail.related_tasks.length > 0 ? (
+              <>
+                <Divider label='Related Tasks' />
+                <TaskRelatedTasksSection
+                  onOpenTask={onOpenTask}
+                  relatedTasks={detail.related_tasks}
+                />
+              </>
+            ) : null}
 
             <TaskActivitySections
               agentHeartbeatSummaryById={agentHeartbeatSummaryById}

@@ -23,7 +23,9 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'post_council_message',
   'attach_evidence',
   'create_follow_up_task',
+  'link_task_dependency',
 ])
+const ALLOWED_TASK_RELATIONSHIP_ROLES = new Set(['blocks', 'blocked_by'])
 const ALLOWED_HANDOFF_ACTIONS = new Set([
   'accept_handoff',
   'reject_handoff',
@@ -127,11 +129,13 @@ export async function applyTaskAction<T = unknown>(
     note?: string
     ownerNote?: string
     priority?: string
+    relatedTaskId?: string
     relatedFile?: string
     relatedHandoffId?: string
     relatedMemoryQuery?: string
     relatedSessionId?: string
     relatedSymbol?: string
+    relationshipRole?: string
     requestedAction?: string
     severity?: string
     toAgentId?: string
@@ -180,6 +184,14 @@ export async function applyTaskAction<T = unknown>(
   if (input.action === 'create_follow_up_task' && !input.followUpTitle?.trim()) {
     throw new Error('create_follow_up_task requires a follow_up_title')
   }
+  if (input.action === 'link_task_dependency') {
+    if (!input.relatedTaskId?.trim()) {
+      throw new Error('link_task_dependency requires a related_task_id')
+    }
+    if (!input.relationshipRole || !ALLOWED_TASK_RELATIONSHIP_ROLES.has(input.relationshipRole)) {
+      throw new Error('link_task_dependency requires a valid relationship_role')
+    }
+  }
 
   const args = ['task', 'action', '--task-id', taskId, '--action', input.action, '--changed-by', input.changedBy]
   if (input.assignedTo) args.push('--assigned-to', input.assignedTo)
@@ -213,6 +225,10 @@ export async function applyTaskAction<T = unknown>(
   if (input.relatedSessionId) args.push('--related-session-id', input.relatedSessionId)
   if (input.relatedMemoryQuery) args.push('--related-memory-query', input.relatedMemoryQuery)
   if (input.relatedSymbol) args.push('--related-symbol', input.relatedSymbol)
+  if (input.relatedTaskId) args.push('--related-task-id', input.relatedTaskId)
+  if (input.relationshipRole && ALLOWED_TASK_RELATIONSHIP_ROLES.has(input.relationshipRole)) {
+    args.push('--relationship-role', input.relationshipRole)
+  }
   if (input.relatedFile) args.push('--related-file', input.relatedFile)
   if (input.followUpTitle) args.push('--follow-up-title', input.followUpTitle)
   if (input.followUpDescription) args.push('--follow-up-description', input.followUpDescription)

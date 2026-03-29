@@ -53,6 +53,35 @@ export function useCanopyPageState() {
     () => new Map(snapshot?.task_heartbeat_summaries.map((summary) => [summary.task_id, summary]) ?? []),
     [snapshot?.task_heartbeat_summaries]
   )
+  const relationshipCueByTaskId = useMemo(() => {
+    const cues = new Map<string, { blockedByCount: number; blocksCount: number; followUpChildCount: number; followUpParentCount: number }>()
+    for (const relationship of snapshot?.relationships ?? []) {
+      const sourceCue = cues.get(relationship.source_task_id) ?? {
+        blockedByCount: 0,
+        blocksCount: 0,
+        followUpChildCount: 0,
+        followUpParentCount: 0,
+      }
+      const targetCue = cues.get(relationship.target_task_id) ?? {
+        blockedByCount: 0,
+        blocksCount: 0,
+        followUpChildCount: 0,
+        followUpParentCount: 0,
+      }
+
+      if (relationship.kind === 'follow_up') {
+        sourceCue.followUpChildCount += 1
+        targetCue.followUpParentCount += 1
+      } else if (relationship.kind === 'blocks') {
+        sourceCue.blocksCount += 1
+        targetCue.blockedByCount += 1
+      }
+
+      cues.set(relationship.source_task_id, sourceCue)
+      cues.set(relationship.target_task_id, targetCue)
+    }
+    return cues
+  }, [snapshot?.relationships])
   const operatorActionsByTaskId = useMemo(() => groupOperatorActionsByTask(snapshot?.operator_actions), [snapshot?.operator_actions])
   const filteredTasks = useMemo(() => filterCanopyTasks(snapshot, searchQuery, statusFilter), [searchQuery, snapshot, statusFilter])
   const filteredTaskIds = useMemo(() => new Set(filteredTasks.map((task) => task.task_id)), [filteredTasks])
@@ -158,6 +187,7 @@ export function useCanopyPageState() {
     operatorActionsByTaskId,
     ownershipByTaskId,
     priorityFilter,
+    relationshipCueByTaskId,
     savedView,
     searchQuery,
     severityFilter,

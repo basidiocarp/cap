@@ -36,6 +36,7 @@ export function CanopyPage() {
     operatorActionsByTaskId,
     ownershipByTaskId,
     priorityFilter,
+    relationshipCueByTaskId,
     savedView,
     searchQuery,
     severityFilter,
@@ -135,6 +136,7 @@ export function CanopyPage() {
         onOpenTask={openTask}
         operatorActionsByTaskId={operatorActionsByTaskId}
         ownershipByTaskId={ownershipByTaskId}
+        relationshipCueByTaskId={relationshipCueByTaskId}
         renderGroupedByStatus={sortMode === 'status'}
         searchQuery={searchQuery}
         statusFilter={statusFilter}
@@ -146,6 +148,7 @@ export function CanopyPage() {
         detail={detailQuery.data}
         error={detailQuery.error}
         onClose={closeTask}
+        onOpenTask={openTask}
         opened={modalOpen}
       />
     </Stack>
