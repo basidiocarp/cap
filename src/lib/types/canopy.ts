@@ -26,7 +26,7 @@ export type CanopyEvidenceSourceKind =
   | 'rhizome_impact'
   | 'rhizome_export'
   | 'manual_note'
-export type CanopyTaskEventType = 'created' | 'assigned' | 'ownership_transferred' | 'status_changed' | 'triage_updated'
+export type CanopyTaskEventType = 'created' | 'assigned' | 'ownership_transferred' | 'status_changed' | 'triage_updated' | 'handoff_updated'
 export type CanopyTaskAttentionReason =
   | 'blocked'
   | 'verification_failed'
@@ -60,6 +60,10 @@ export type CanopyOperatorActionKind =
   | 'block_task'
   | 'unblock_task'
   | 'update_task_note'
+  | 'accept_handoff'
+  | 'reject_handoff'
+  | 'cancel_handoff'
+  | 'complete_handoff'
   | 'follow_up_handoff'
   | 'expire_handoff'
 export type CanopyOperatorActionTargetKind = 'task' | 'handoff'
@@ -289,7 +293,18 @@ export interface CanopyTaskDetail {
 }
 
 export interface CanopyTaskActionInput {
-  action: CanopyOperatorActionKind
+  action: Extract<
+    CanopyOperatorActionKind,
+    | 'acknowledge_task'
+    | 'unacknowledge_task'
+    | 'verify_task'
+    | 'reassign_task'
+    | 'set_task_priority'
+    | 'set_task_severity'
+    | 'block_task'
+    | 'unblock_task'
+    | 'update_task_note'
+  >
   assigned_to?: string
   blocked_reason?: string
   changed_by: string
@@ -303,7 +318,10 @@ export interface CanopyTaskActionInput {
 }
 
 export interface CanopyHandoffActionInput {
-  action: Extract<CanopyOperatorActionKind, 'follow_up_handoff' | 'expire_handoff'>
+  action: Extract<
+    CanopyOperatorActionKind,
+    'accept_handoff' | 'reject_handoff' | 'cancel_handoff' | 'complete_handoff' | 'follow_up_handoff' | 'expire_handoff'
+  >
   changed_by: string
   note?: string
 }

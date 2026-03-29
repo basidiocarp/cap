@@ -20,7 +20,14 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'unblock_task',
   'update_task_note',
 ])
-const ALLOWED_HANDOFF_ACTIONS = new Set(['follow_up_handoff', 'expire_handoff'])
+const ALLOWED_HANDOFF_ACTIONS = new Set([
+  'accept_handoff',
+  'reject_handoff',
+  'cancel_handoff',
+  'complete_handoff',
+  'follow_up_handoff',
+  'expire_handoff',
+])
 const ALLOWED_VERIFICATION_STATES = new Set(['pending', 'passed', 'failed'])
 
 function parseJson<T>(raw: string, label: string): T {

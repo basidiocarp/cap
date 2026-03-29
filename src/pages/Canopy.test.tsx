@@ -367,6 +367,58 @@ const mockTaskDetail: CanopyTaskDetail = {
       due_at: '2026-03-28T12:30:00Z',
       expires_at: '2026-03-28T13:00:00Z',
       handoff_id: 'handoff-1',
+      kind: 'accept_handoff',
+      level: 'needs_attention',
+      summary: 'Accept the open handoff and record ownership or review uptake.',
+      target_kind: 'handoff',
+      task_id: 'task-1',
+      title: 'Accept handoff-1',
+    },
+    {
+      action_id: 'allowed-8',
+      agent_id: 'agent-2',
+      due_at: '2026-03-28T12:30:00Z',
+      expires_at: '2026-03-28T13:00:00Z',
+      handoff_id: 'handoff-1',
+      kind: 'reject_handoff',
+      level: 'needs_attention',
+      summary: 'Reject the open handoff without completing the requested action.',
+      target_kind: 'handoff',
+      task_id: 'task-1',
+      title: 'Reject handoff-1',
+    },
+    {
+      action_id: 'allowed-9',
+      agent_id: 'agent-2',
+      due_at: '2026-03-28T12:30:00Z',
+      expires_at: '2026-03-28T13:00:00Z',
+      handoff_id: 'handoff-1',
+      kind: 'cancel_handoff',
+      level: 'needs_attention',
+      summary: 'Cancel the open handoff when the request is no longer needed.',
+      target_kind: 'handoff',
+      task_id: 'task-1',
+      title: 'Cancel handoff-1',
+    },
+    {
+      action_id: 'allowed-10',
+      agent_id: 'agent-2',
+      due_at: '2026-03-28T12:30:00Z',
+      expires_at: '2026-03-28T13:00:00Z',
+      handoff_id: 'handoff-1',
+      kind: 'complete_handoff',
+      level: 'needs_attention',
+      summary: 'Mark the open handoff as completed once the requested work lands.',
+      target_kind: 'handoff',
+      task_id: 'task-1',
+      title: 'Complete handoff-1',
+    },
+    {
+      action_id: 'allowed-11',
+      agent_id: 'agent-2',
+      due_at: '2026-03-28T12:30:00Z',
+      expires_at: '2026-03-28T13:00:00Z',
+      handoff_id: 'handoff-1',
       kind: 'follow_up_handoff',
       level: 'needs_attention',
       summary: 'Need review before closing',
@@ -375,7 +427,7 @@ const mockTaskDetail: CanopyTaskDetail = {
       title: 'Follow up handoff-1',
     },
     {
-      action_id: 'allowed-8',
+      action_id: 'allowed-12',
       agent_id: 'agent-2',
       due_at: '2026-03-28T12:30:00Z',
       expires_at: '2026-03-28T13:00:00Z',
@@ -503,6 +555,8 @@ const mockTaskDetail: CanopyTaskDetail = {
   ownership: mockSnapshot.ownership[1],
   task: mockSnapshot.tasks[1],
 }
+
+let currentTaskDetail: CanopyTaskDetail = structuredClone(mockTaskDetail)
 
 function snapshotForTaskIds(taskIds: string[]): CanopySnapshot {
   const allowedTaskIds = new Set(taskIds)
@@ -658,7 +712,7 @@ vi.mock('../lib/queries', () => ({
   }) => useCanopySnapshotMock(options),
   useCanopyTaskAction: () => useCanopyTaskActionMock(),
   useCanopyTaskDetail: (taskId: string) => ({
-    data: taskId && !mockTaskDetailError ? mockTaskDetail : undefined,
+    data: taskId && !mockTaskDetailError ? currentTaskDetail : undefined,
     error: mockTaskDetailError,
     isLoading: false,
   }),
@@ -673,6 +727,7 @@ describe('Canopy page', () => {
     mockProject = { active: '/workspace/cap', recent: ['/workspace/cap'] }
     mockTaskDetailError = null
     mockSnapshotErrors = {}
+    currentTaskDetail = structuredClone(mockTaskDetail)
     useCanopySnapshotMock.mockClear()
     useCanopyTaskActionMock.mockClear()
     useCanopyHandoffActionMock.mockClear()
@@ -936,6 +991,56 @@ describe('Canopy page', () => {
     await user.click(screen.getByRole('button', { name: 'Nudge handoff' }))
     expect(handoffActionMutateMock).toHaveBeenCalledWith({
       action: 'follow_up_handoff',
+      changed_by: 'operator',
+      handoffId: 'handoff-1',
+      note: undefined,
+      taskId: 'task-1',
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Accept handoff' }))
+    expect(handoffActionMutateMock).toHaveBeenCalledWith({
+      action: 'accept_handoff',
+      changed_by: 'operator',
+      handoffId: 'handoff-1',
+      note: undefined,
+      taskId: 'task-1',
+    })
+  })
+
+  it('scopes handoff action controls to the runtime-allowed handoff ids', async () => {
+    const user = userEvent.setup()
+
+    currentTaskDetail = structuredClone(mockTaskDetail)
+    currentTaskDetail.handoffs = [
+      ...currentTaskDetail.handoffs,
+      {
+        created_at: '2026-03-28T12:12:00Z',
+        due_at: '2026-03-28T12:50:00Z',
+        expires_at: '2026-03-28T13:10:00Z',
+        from_agent_id: 'agent-1',
+        handoff_id: 'handoff-2',
+        handoff_type: 'request_help',
+        requested_action: 'Check the deployment path',
+        resolved_at: null,
+        status: 'open',
+        summary: 'Need deployment help',
+        task_id: 'task-1',
+        to_agent_id: 'agent-2',
+        updated_at: '2026-03-28T12:12:00Z',
+      },
+    ]
+    currentTaskDetail.allowed_actions = currentTaskDetail.allowed_actions.filter(
+      (action) => action.target_kind !== 'handoff' || action.handoff_id === 'handoff-1'
+    )
+
+    renderWithProviders(<Canopy />, { route: '/canopy?task=task-1' })
+
+    expect(screen.getByText('Need deployment help to agent-2')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Accept handoff' })).toHaveLength(1)
+
+    await user.click(screen.getByRole('button', { name: 'Accept handoff' }))
+    expect(handoffActionMutateMock).toHaveBeenCalledWith({
+      action: 'accept_handoff',
       changed_by: 'operator',
       handoffId: 'handoff-1',
       note: undefined,

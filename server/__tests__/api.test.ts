@@ -640,4 +640,31 @@ describe('API Routes', () => {
       expect(res.status).toBe(200)
     })
   })
+
+  describe('POST /api/canopy/handoffs/:handoffId/actions', () => {
+    it('forwards Canopy handoff resolution actions', async () => {
+      const handoffSpy = vi.spyOn(canopy, 'applyHandoffAction').mockResolvedValue({
+        handoff_id: 'handoff-1',
+        status: 'accepted',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/handoffs/handoff-1/actions', {
+        body: JSON.stringify({
+          action: 'accept_handoff',
+          changed_by: 'operator',
+          note: 'Taking ownership through the operator surface',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(handoffSpy).toHaveBeenCalledWith('handoff-1', {
+        action: 'accept_handoff',
+        changedBy: 'operator',
+        note: 'Taking ownership through the operator surface',
+      })
+    })
+  })
 })

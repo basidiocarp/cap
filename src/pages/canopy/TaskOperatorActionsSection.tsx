@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import type {
   CanopyAgentRegistration,
+  CanopyHandoffActionInput,
   CanopyTaskDetail,
   CanopyTaskPriority,
   CanopyTaskSeverity,
@@ -12,6 +13,22 @@ import { ErrorAlert } from '../../components/ErrorAlert'
 import { useCanopyHandoffAction, useCanopyTaskAction } from '../../lib/queries'
 
 const TASK_OPERATOR_ACTOR = 'operator'
+const HANDOFF_ACTION_LABELS = {
+  accept_handoff: 'Accept handoff',
+  cancel_handoff: 'Cancel handoff',
+  complete_handoff: 'Complete handoff',
+  expire_handoff: 'Expire handoff',
+  follow_up_handoff: 'Nudge handoff',
+  reject_handoff: 'Reject handoff',
+} as const
+const HANDOFF_ACTION_ORDER = [
+  'accept_handoff',
+  'reject_handoff',
+  'complete_handoff',
+  'cancel_handoff',
+  'follow_up_handoff',
+  'expire_handoff',
+] as const
 const PRIORITY_OPTIONS: { label: string; value: CanopyTaskPriority }[] = [
   { label: 'Low', value: 'low' },
   { label: 'Medium', value: 'medium' },
@@ -60,6 +77,21 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
 
   const allowedKinds = useMemo(() => new Set(detail.allowed_actions.map((action) => action.kind)), [detail.allowed_actions])
   const openHandoffs = detail.handoffs.filter((handoff) => handoff.status === 'open')
+  const handoffActionsById = useMemo(
+    () =>
+      new Map(
+        openHandoffs.map((handoff) => [
+          handoff.handoff_id,
+          HANDOFF_ACTION_ORDER.filter((action): action is CanopyHandoffActionInput['action'] =>
+            detail.allowed_actions.some(
+              (allowedAction) =>
+                allowedAction.target_kind === 'handoff' && allowedAction.handoff_id === handoff.handoff_id && allowedAction.kind === action
+            )
+          ),
+        ])
+      ),
+    [detail.allowed_actions, openHandoffs]
+  )
   const assignableAgents = useMemo(
     () =>
       agents.map((agent) => ({
@@ -366,41 +398,25 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
                   placeholder='Optional note for handoff follow-up'
                   value={handoffNotes[handoff.handoff_id] ?? ''}
                 />
-                {allowedKinds.has('follow_up_handoff') ? (
+                {(handoffActionsById.get(handoff.handoff_id) ?? []).map((action) => (
                   <Button
+                    color={action === 'expire_handoff' ? 'red' : undefined}
+                    key={`${handoff.handoff_id}-${action}`}
                     loading={handoffActionMutation.isPending}
                     onClick={() =>
                       handoffActionMutation.mutate({
-                        action: 'follow_up_handoff',
+                        action,
                         changed_by: TASK_OPERATOR_ACTOR,
                         handoffId: handoff.handoff_id,
                         note: handoffNotes[handoff.handoff_id]?.trim() || undefined,
                         taskId: detail.task.task_id,
                       })
                     }
-                    variant='light'
+                    variant={action === 'expire_handoff' ? 'outline' : 'light'}
                   >
-                    Nudge handoff
+                    {HANDOFF_ACTION_LABELS[action]}
                   </Button>
-                ) : null}
-                {allowedKinds.has('expire_handoff') ? (
-                  <Button
-                    color='red'
-                    loading={handoffActionMutation.isPending}
-                    onClick={() =>
-                      handoffActionMutation.mutate({
-                        action: 'expire_handoff',
-                        changed_by: TASK_OPERATOR_ACTOR,
-                        handoffId: handoff.handoff_id,
-                        note: handoffNotes[handoff.handoff_id]?.trim() || undefined,
-                        taskId: detail.task.task_id,
-                      })
-                    }
-                    variant='outline'
-                  >
-                    Expire handoff
-                  </Button>
-                ) : null}
+                ))}
               </Group>
             </Stack>
           ))}
