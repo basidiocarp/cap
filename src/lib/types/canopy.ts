@@ -16,6 +16,7 @@ export type CanopySnapshotPreset =
   | 'in_progress'
   | 'stalled'
   | 'awaiting_handoff_acceptance'
+  | 'accepted_handoff_follow_through'
   | 'critical'
   | 'unacknowledged'
 export type CanopyTaskPriority = 'low' | 'medium' | 'high' | 'critical'
@@ -73,6 +74,7 @@ export type CanopyTaskAttentionReason =
   | 'aging_open_handoff'
   | 'stale_open_handoff'
   | 'awaiting_handoff_acceptance'
+  | 'accepted_handoff_pending_execution'
 export type CanopyHandoffAttentionReason = 'aging_open_handoff' | 'stale_open_handoff'
 export type CanopyAgentAttentionReason =
   | 'aging_heartbeat'

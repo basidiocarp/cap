@@ -995,6 +995,7 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'stalled', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2'])],
   [responseKey({ preset: 'awaiting_handoff_acceptance', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'awaiting_handoff_acceptance', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
+  [responseKey({ preset: 'accepted_handoff_follow_through', project: '/workspace/cap' }), snapshotForTaskIds([])],
   [responseKey({ preset: 'follow_up_chains', project: '/workspace/cap' }), snapshotForTaskIds(['task-1', 'task-3'])],
   [responseKey({ preset: 'handoffs', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'review_queue', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],

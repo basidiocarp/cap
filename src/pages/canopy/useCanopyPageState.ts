@@ -49,6 +49,10 @@ export function useCanopyPageState() {
     preset: 'awaiting_handoff_acceptance',
     project: activeProject ?? undefined,
   })
+  const acceptedHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'accepted_handoff_follow_through',
+    project: activeProject ?? undefined,
+  })
   const followUpChainsQueueSnapshotQuery = useCanopySnapshot({
     preset: 'follow_up_chains',
     project: activeProject ?? undefined,
@@ -154,6 +158,11 @@ export function useCanopyPageState() {
     })
 
   return {
+    acceptedHandoffFollowThroughQueueSnapshot: {
+      error: acceptedHandoffFollowThroughQueueSnapshotQuery.error,
+      isLoading: acceptedHandoffFollowThroughQueueSnapshotQuery.isLoading,
+      snapshot: acceptedHandoffFollowThroughQueueSnapshotQuery.data,
+    },
     acknowledgedFilter,
     activeProject,
     availableAgents,

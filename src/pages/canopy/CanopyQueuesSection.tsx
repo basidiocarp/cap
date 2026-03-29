@@ -10,6 +10,7 @@ interface CanopyQueueSnapshotState {
 }
 
 export function CanopyQueuesSection({
+  acceptedHandoffFollowThroughQueueSnapshot,
   awaitingHandoffAcceptanceQueueSnapshot,
   blockedQueueSnapshot,
   dependencyBlockedQueueSnapshot,
@@ -23,6 +24,7 @@ export function CanopyQueuesSection({
   unacknowledgedQueueSnapshot,
   unclaimedQueueSnapshot,
 }: {
+  acceptedHandoffFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   awaitingHandoffAcceptanceQueueSnapshot: CanopyQueueSnapshotState
   blockedQueueSnapshot: CanopyQueueSnapshotState
   dependencyBlockedQueueSnapshot: CanopyQueueSnapshotState
@@ -123,6 +125,15 @@ export function CanopyQueuesSection({
           variant={savedView === 'awaiting_handoff_acceptance' ? 'filled' : 'light'}
         >
           Awaiting handoff acceptance · {renderQueueCount(awaitingHandoffAcceptanceQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('accepted_handoff_follow_through')}
+          variant={savedView === 'accepted_handoff_follow_through' ? 'filled' : 'light'}
+        >
+          Accepted handoff follow-through · {renderQueueCount(acceptedHandoffFollowThroughQueueSnapshot)}
         </Button>
       </Grid.Col>
       <Grid.Col span={{ base: 6, md: 3 }}>

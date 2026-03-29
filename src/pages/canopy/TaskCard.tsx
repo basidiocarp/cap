@@ -260,6 +260,14 @@ export function TaskCard({
             ) : null}
           </Group>
         ) : null}
+        {attention?.reasons.includes('accepted_handoff_pending_execution') ? (
+          <Badge
+            color='cyan'
+            variant='light'
+          >
+            accepted handoff awaiting execution
+          </Badge>
+        ) : null}
         {actions.length > 0 ? (
           <Group gap='xs'>
             {actions.slice(0, 2).map((action) => (

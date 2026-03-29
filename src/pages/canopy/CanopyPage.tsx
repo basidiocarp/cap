@@ -13,6 +13,7 @@ import { useCanopyPageState } from './useCanopyPageState'
 export function CanopyPage() {
   const {
     acknowledgedFilter,
+    acceptedHandoffFollowThroughQueueSnapshot,
     activeProject,
     availableAgents,
     awaitingHandoffAcceptanceQueueSnapshot,
@@ -102,6 +103,12 @@ export function CanopyPage() {
         title='Awaiting handoff acceptance queue unavailable'
       />
       <ErrorAlert
+        error={
+          acceptedHandoffFollowThroughQueueSnapshot.error instanceof Error ? acceptedHandoffFollowThroughQueueSnapshot.error : undefined
+        }
+        title='Accepted handoff follow-through queue unavailable'
+      />
+      <ErrorAlert
         error={followUpChainsQueueSnapshot.error instanceof Error ? followUpChainsQueueSnapshot.error : undefined}
         title='Follow-up queue unavailable'
       />
@@ -135,6 +142,7 @@ export function CanopyPage() {
 
       <SectionCard title='Operator queues'>
         <CanopyQueuesSection
+          acceptedHandoffFollowThroughQueueSnapshot={acceptedHandoffFollowThroughQueueSnapshot}
           awaitingHandoffAcceptanceQueueSnapshot={awaitingHandoffAcceptanceQueueSnapshot}
           blockedQueueSnapshot={blockedQueueSnapshot}
           criticalQueueSnapshot={criticalQueueSnapshot}

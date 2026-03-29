@@ -15,6 +15,7 @@ const ALLOWED_VIEWS = new Set([
   'in_progress',
   'stalled',
   'awaiting_handoff_acceptance',
+  'accepted_handoff_follow_through',
   'attention',
 ])
 const ALLOWED_PRESETS = new Set([
@@ -29,6 +30,7 @@ const ALLOWED_PRESETS = new Set([
   'in_progress',
   'stalled',
   'awaiting_handoff_acceptance',
+  'accepted_handoff_follow_through',
   'critical',
   'unacknowledged',
 ])

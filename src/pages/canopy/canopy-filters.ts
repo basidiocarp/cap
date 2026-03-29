@@ -35,6 +35,11 @@ export const SAVED_VIEW_OPTIONS = [
     label: 'Awaiting handoff acceptance',
     value: 'awaiting_handoff_acceptance',
   },
+  {
+    description: 'Tasks with an accepted ownership handoff that have not resumed execution yet',
+    label: 'Accepted handoff follow-through',
+    value: 'accepted_handoff_follow_through',
+  },
   { description: 'Critical tasks from the runtime attention model', label: 'Critical queue', value: 'critical' },
   { description: 'Attention tasks that have not been acknowledged yet', label: 'Unacknowledged', value: 'unacknowledged' },
 ] as const
