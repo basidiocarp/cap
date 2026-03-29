@@ -9,6 +9,7 @@ export type {
 } from './api/stipe'
 export type {
   AgentRuntimeStatus,
+  AggregateTelemetry,
   Annotation,
   CallSite,
   CanopyAgentAttention,
