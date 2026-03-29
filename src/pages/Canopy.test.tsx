@@ -989,6 +989,8 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'handoffs', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'unclaimed', project: '/workspace/cap' }), snapshotForTaskIds(['task-3'])],
   [responseKey({ preset: 'unclaimed', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-3'])],
+  [responseKey({ preset: 'assigned_awaiting_claim', project: '/workspace/cap' }), snapshotForTaskIds([])],
+  [responseKey({ preset: 'assigned_awaiting_claim', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds([])],
   [responseKey({ preset: 'claimed_not_started', project: '/workspace/cap' }), snapshotForTaskIds([])],
   [responseKey({ preset: 'claimed_not_started', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds([])],
   [responseKey({ preset: 'in_progress', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
@@ -1284,6 +1286,23 @@ describe('Canopy page', () => {
     expect(useCanopySnapshotMock).toHaveBeenCalledWith({
       acknowledged: undefined,
       preset: 'claimed_not_started',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the assigned awaiting claim queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Assigned / awaiting claim · 0' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'assigned_awaiting_claim',
       priorityAtLeast: undefined,
       project: '/workspace/cap',
       severityAtLeast: undefined,

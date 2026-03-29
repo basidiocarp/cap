@@ -15,6 +15,7 @@ export function CanopyPage() {
     acknowledgedFilter,
     acceptedHandoffFollowThroughQueueSnapshot,
     activeProject,
+    assignedAwaitingClaimQueueSnapshot,
     availableAgents,
     awaitingHandoffAcceptanceQueueSnapshot,
     blockedQueueSnapshot,
@@ -93,6 +94,10 @@ export function CanopyPage() {
         title='Unclaimed queue unavailable'
       />
       <ErrorAlert
+        error={assignedAwaitingClaimQueueSnapshot.error instanceof Error ? assignedAwaitingClaimQueueSnapshot.error : undefined}
+        title='Assigned awaiting claim queue unavailable'
+      />
+      <ErrorAlert
         error={claimedNotStartedQueueSnapshot.error instanceof Error ? claimedNotStartedQueueSnapshot.error : undefined}
         title='Claimed not started queue unavailable'
       />
@@ -153,6 +158,7 @@ export function CanopyPage() {
       <SectionCard title='Operator queues'>
         <CanopyQueuesSection
           acceptedHandoffFollowThroughQueueSnapshot={acceptedHandoffFollowThroughQueueSnapshot}
+          assignedAwaitingClaimQueueSnapshot={assignedAwaitingClaimQueueSnapshot}
           awaitingHandoffAcceptanceQueueSnapshot={awaitingHandoffAcceptanceQueueSnapshot}
           blockedQueueSnapshot={blockedQueueSnapshot}
           claimedNotStartedQueueSnapshot={claimedNotStartedQueueSnapshot}

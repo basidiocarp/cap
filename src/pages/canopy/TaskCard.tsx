@@ -212,6 +212,14 @@ export function TaskCard({
             claimed and ready to start
           </Badge>
         ) : null}
+        {attention?.reasons.includes('assigned_awaiting_claim') ? (
+          <Badge
+            color='indigo'
+            variant='light'
+          >
+            assigned and awaiting claim
+          </Badge>
+        ) : null}
         {relationshipSummary &&
         (relationshipSummary.blocker_count > 0 ||
           relationshipSummary.blocking_count > 0 ||

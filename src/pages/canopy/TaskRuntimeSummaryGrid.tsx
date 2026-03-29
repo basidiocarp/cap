@@ -69,6 +69,9 @@ export function TaskRuntimeSummaryGrid({ detail }: { detail: CanopyTaskDetail })
             {detail.execution_summary.active_execution_seconds > 0 ? (
               <Text size='sm'>Active execution: {detail.execution_summary.active_execution_seconds}s</Text>
             ) : null}
+            {detail.attention.reasons.includes('assigned_awaiting_claim') ? (
+              <Text size='sm'>Execution state: assigned and awaiting first claim</Text>
+            ) : null}
             {detail.execution_summary.last_execution_action === 'claim_task' && detail.execution_summary.run_count === 0 ? (
               <Text size='sm'>Execution state: claimed and ready to start</Text>
             ) : null}

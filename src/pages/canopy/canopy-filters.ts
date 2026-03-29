@@ -29,6 +29,11 @@ export const SAVED_VIEW_OPTIONS = [
   { description: 'Tasks participating in follow-up chains', label: 'Follow-up chains', value: 'follow_up_chains' },
   { description: 'Open tasks with no current owner', label: 'Unclaimed', value: 'unclaimed' },
   {
+    description: 'Operator-assigned work where the current owner has not claimed the task yet',
+    label: 'Assigned / awaiting claim',
+    value: 'assigned_awaiting_claim',
+  },
+  {
     description: 'Claimed work that has an owner but has not started execution yet',
     label: 'Claimed / not started',
     value: 'claimed_not_started',

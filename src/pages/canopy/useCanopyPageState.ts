@@ -37,6 +37,10 @@ export function useCanopyPageState() {
     preset: 'unclaimed',
     project: activeProject ?? undefined,
   })
+  const assignedAwaitingClaimQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'assigned_awaiting_claim',
+    project: activeProject ?? undefined,
+  })
   const claimedNotStartedQueueSnapshotQuery = useCanopySnapshot({
     preset: 'claimed_not_started',
     project: activeProject ?? undefined,
@@ -173,6 +177,11 @@ export function useCanopyPageState() {
     },
     acknowledgedFilter,
     activeProject,
+    assignedAwaitingClaimQueueSnapshot: {
+      error: assignedAwaitingClaimQueueSnapshotQuery.error,
+      isLoading: assignedAwaitingClaimQueueSnapshotQuery.isLoading,
+      snapshot: assignedAwaitingClaimQueueSnapshotQuery.data,
+    },
     availableAgents,
     awaitingHandoffAcceptanceQueueSnapshot: {
       error: awaitingHandoffAcceptanceQueueSnapshotQuery.error,
