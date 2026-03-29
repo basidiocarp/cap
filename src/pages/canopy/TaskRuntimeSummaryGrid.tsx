@@ -4,7 +4,7 @@ import type { CanopyTaskDetail } from '../../lib/api'
 import { EmptyState } from '../../components/EmptyState'
 import { SectionCard } from '../../components/SectionCard'
 import { timeAgo } from '../../lib/time'
-import { attentionColor, operatorActionLabel } from './canopy-formatters'
+import { attentionColor, deadlineStateColor, operatorActionLabel } from './canopy-formatters'
 
 export function TaskRuntimeSummaryGrid({ detail }: { detail: CanopyTaskDetail }) {
   return (
@@ -115,6 +115,48 @@ export function TaskRuntimeSummaryGrid({ detail }: { detail: CanopyTaskDetail })
                 No execution events recorded yet.
               </Text>
             )}
+          </Stack>
+        </SectionCard>
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, md: 4 }}>
+        <SectionCard title='Deadlines'>
+          <Stack gap={4}>
+            <Group gap='xs'>
+              <Badge
+                color={deadlineStateColor(detail.deadline_summary.execution_state)}
+                size='xs'
+                variant='light'
+              >
+                Execution {detail.deadline_summary.execution_state.replaceAll('_', ' ')}
+              </Badge>
+              <Badge
+                color={deadlineStateColor(detail.deadline_summary.review_state)}
+                size='xs'
+                variant='light'
+              >
+                Review {detail.deadline_summary.review_state.replaceAll('_', ' ')}
+              </Badge>
+            </Group>
+            <Text size='sm'>Execution due: {detail.deadline_summary.due_at ?? 'none'}</Text>
+            <Text size='sm'>Review due: {detail.deadline_summary.review_due_at ?? 'none'}</Text>
+            {detail.deadline_summary.active_deadline_kind ? (
+              <Text size='sm'>
+                Active deadline: {detail.deadline_summary.active_deadline_kind} · {detail.deadline_summary.active_deadline_at ?? 'n/a'}
+              </Text>
+            ) : (
+              <Text
+                c='dimmed'
+                size='sm'
+              >
+                No active deadline on this task.
+              </Text>
+            )}
+            {detail.deadline_summary.due_in_seconds !== null ? (
+              <Text size='sm'>Due in: {detail.deadline_summary.due_in_seconds}s</Text>
+            ) : null}
+            {detail.deadline_summary.overdue_by_seconds !== null ? (
+              <Text size='sm'>Overdue by: {detail.deadline_summary.overdue_by_seconds}s</Text>
+            ) : null}
           </Stack>
         </SectionCard>
       </Grid.Col>

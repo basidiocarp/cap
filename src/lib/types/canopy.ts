@@ -24,6 +24,9 @@ export type CanopySnapshotPreset =
   | 'in_progress'
   | 'stalled'
   | 'paused_resumable'
+  | 'due_soon'
+  | 'overdue_execution'
+  | 'overdue_review'
   | 'awaiting_handoff_acceptance'
   | 'accepted_handoff_follow_through'
   | 'critical'
@@ -56,6 +59,7 @@ export type CanopyTaskEventType =
   | 'status_changed'
   | 'execution_updated'
   | 'triage_updated'
+  | 'deadline_updated'
   | 'relationship_updated'
   | 'handoff_created'
   | 'handoff_updated'
@@ -67,6 +71,10 @@ export type CanopyTaskAttentionReason =
   | 'blocked'
   | 'blocked_by_active_dependency'
   | 'blocked_by_stale_dependency'
+  | 'due_soon_execution'
+  | 'overdue_execution'
+  | 'due_soon_review'
+  | 'overdue_review'
   | 'verification_failed'
   | 'review_required'
   | 'review_with_graph_pressure'
@@ -122,6 +130,10 @@ export type CanopyOperatorActionKind =
   | 'block_task'
   | 'unblock_task'
   | 'update_task_note'
+  | 'set_task_due_at'
+  | 'clear_task_due_at'
+  | 'set_review_due_at'
+  | 'clear_review_due_at'
   | 'create_handoff'
   | 'post_council_message'
   | 'attach_evidence'
@@ -136,6 +148,8 @@ export type CanopyOperatorActionKind =
 export type CanopyOperatorActionTargetKind = 'task' | 'handoff'
 export type CanopyTaskRelationshipKind = 'follow_up' | 'blocks'
 export type CanopyTaskRelationshipRole = 'follow_up_parent' | 'follow_up_child' | 'blocks' | 'blocked_by'
+export type CanopyDeadlineState = 'none' | 'scheduled' | 'due_soon' | 'overdue'
+export type CanopyTaskDeadlineKind = 'execution' | 'review'
 
 export interface CanopyAgentRegistration {
   agent_id: string
@@ -187,6 +201,8 @@ export interface CanopyTask {
   status: CanopyTaskStatus
   task_id: string
   title: string
+  due_at: string | null
+  review_due_at: string | null
   updated_at: string
   verification_state: CanopyVerificationState
   verified_at: string | null
@@ -315,6 +331,19 @@ export interface CanopyTaskAttention {
   task_id: string
 }
 
+export interface CanopyTaskDeadlineSummary {
+  active_deadline_at: string | null
+  active_deadline_kind: CanopyTaskDeadlineKind | null
+  active_deadline_state: CanopyDeadlineState
+  due_at: string | null
+  due_in_seconds: number | null
+  execution_state: CanopyDeadlineState
+  overdue_by_seconds: number | null
+  review_due_at: string | null
+  review_state: CanopyDeadlineState
+  task_id: string
+}
+
 export interface CanopyTaskRelationshipSummary {
   active_blocker_count: number
   blocker_count: number
@@ -387,6 +416,7 @@ export interface CanopySnapshot {
   agent_heartbeat_summaries: CanopyAgentHeartbeatSummary[]
   agents: CanopyAgentRegistration[]
   attention: CanopySnapshotAttentionSummary
+  deadline_summaries: CanopyTaskDeadlineSummary[]
   evidence: CanopyEvidenceRef[]
   execution_summaries: CanopyTaskExecutionSummary[]
   heartbeats: CanopyAgentHeartbeatEvent[]
@@ -407,6 +437,7 @@ export interface CanopyTaskDetail {
   agent_heartbeat_summaries: CanopyAgentHeartbeatSummary[]
   assignments: CanopyTaskAssignment[]
   attention: CanopyTaskAttention
+  deadline_summary: CanopyTaskDeadlineSummary
   evidence: CanopyEvidenceRef[]
   execution_summary: CanopyTaskExecutionSummary
   events: CanopyTaskEvent[]
@@ -447,6 +478,10 @@ export interface CanopyTaskActionInput {
     | 'block_task'
     | 'unblock_task'
     | 'update_task_note'
+    | 'set_task_due_at'
+    | 'clear_task_due_at'
+    | 'set_review_due_at'
+    | 'clear_review_due_at'
     | 'create_handoff'
     | 'post_council_message'
     | 'attach_evidence'
@@ -461,6 +496,7 @@ export interface CanopyTaskActionInput {
   clear_owner_note?: boolean
   closure_summary?: string
   due_at?: string
+  review_due_at?: string
   evidence_label?: string
   evidence_source_kind?: CanopyEvidenceSourceKind
   evidence_source_ref?: string

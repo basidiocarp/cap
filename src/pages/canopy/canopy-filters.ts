@@ -71,6 +71,9 @@ export const SAVED_VIEW_OPTIONS = [
   { description: 'Tasks actively being worked right now', label: 'In progress', value: 'in_progress' },
   { description: 'Owned work with stale or missing execution signals', label: 'Stalled', value: 'stalled' },
   { description: 'Assigned tasks paused mid-execution and ready to resume', label: 'Paused / resumable', value: 'paused_resumable' },
+  { description: 'Tasks with execution or review deadlines approaching within the next day', label: 'Due soon', value: 'due_soon' },
+  { description: 'Tasks whose execution deadline has already passed', label: 'Overdue execution', value: 'overdue_execution' },
+  { description: 'Review-required tasks whose review deadline has already passed', label: 'Overdue review', value: 'overdue_review' },
   {
     description: 'Tasks waiting for the target agent to accept an open handoff',
     label: 'Awaiting handoff acceptance',

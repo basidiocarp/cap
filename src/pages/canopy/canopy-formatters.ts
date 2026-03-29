@@ -1,6 +1,7 @@
 import type {
   CanopyAgentHeartbeatEvent,
   CanopyAttentionLevel,
+  CanopyDeadlineState,
   CanopyFreshness,
   CanopyOperatorAction,
   CanopyTask,
@@ -53,6 +54,19 @@ export function joinedReasons(reasons: string[]): string {
 
 export function operatorActionLabel(kind: CanopyOperatorAction['kind']): string {
   return kind.replaceAll('_', ' ')
+}
+
+export function deadlineStateColor(state: CanopyDeadlineState): string {
+  switch (state) {
+    case 'overdue':
+      return 'red'
+    case 'due_soon':
+      return 'yellow'
+    case 'scheduled':
+      return 'blue'
+    default:
+      return 'gray'
+  }
 }
 
 export function priorityColor(priority: CanopyTaskPriority): string {
@@ -175,6 +189,8 @@ export function eventTitle(event: CanopyTaskEvent): string {
       return event.execution_action ? `Execution ${event.execution_action.replaceAll('_', ' ')}` : 'Execution updated'
     case 'triage_updated':
       return 'Triage updated'
+    case 'deadline_updated':
+      return 'Deadline updated'
     case 'relationship_updated':
       return 'Relationship updated'
     case 'handoff_created':

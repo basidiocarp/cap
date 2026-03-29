@@ -23,6 +23,9 @@ const ALLOWED_VIEWS = new Set([
   'in_progress',
   'stalled',
   'paused_resumable',
+  'due_soon',
+  'overdue_execution',
+  'overdue_review',
   'awaiting_handoff_acceptance',
   'accepted_handoff_follow_through',
   'attention',
@@ -47,6 +50,9 @@ const ALLOWED_PRESETS = new Set([
   'in_progress',
   'stalled',
   'paused_resumable',
+  'due_soon',
+  'overdue_execution',
+  'overdue_review',
   'awaiting_handoff_acceptance',
   'accepted_handoff_follow_through',
   'critical',
@@ -78,6 +84,10 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'block_task',
   'unblock_task',
   'update_task_note',
+  'set_task_due_at',
+  'clear_task_due_at',
+  'set_review_due_at',
+  'clear_review_due_at',
   'create_handoff',
   'post_council_message',
   'attach_evidence',
@@ -174,6 +184,7 @@ export async function applyTaskAction<T = unknown>(
     clearOwnerNote?: boolean
     closureSummary?: string
     dueAt?: string
+    reviewDueAt?: string
     evidenceLabel?: string
     evidenceSourceKind?: string
     evidenceSourceRef?: string
@@ -232,6 +243,12 @@ export async function applyTaskAction<T = unknown>(
   }
   if (input.action === 'close_task' && !input.closureSummary?.trim()) {
     throw new Error('close_task requires a closure_summary')
+  }
+  if (input.action === 'set_task_due_at' && !input.dueAt?.trim()) {
+    throw new Error('set_task_due_at requires a due_at')
+  }
+  if (input.action === 'set_review_due_at' && !input.reviewDueAt?.trim()) {
+    throw new Error('set_review_due_at requires a review_due_at')
   }
   if (input.action === 'create_handoff') {
     if (!input.fromAgentId?.trim() || !input.toAgentId?.trim()) {
@@ -297,6 +314,7 @@ export async function applyTaskAction<T = unknown>(
   if (input.handoffSummary) args.push('--handoff-summary', input.handoffSummary)
   if (input.requestedAction) args.push('--requested-action', input.requestedAction)
   if (input.dueAt) args.push('--due-at', input.dueAt)
+  if (input.reviewDueAt) args.push('--review-due-at', input.reviewDueAt)
   if (input.expiresAt) args.push('--expires-at', input.expiresAt)
   if (input.authorAgentId) args.push('--author-agent-id', input.authorAgentId)
   if (input.messageType && ALLOWED_COUNCIL_MESSAGE_TYPES.has(input.messageType)) args.push('--message-type', input.messageType)

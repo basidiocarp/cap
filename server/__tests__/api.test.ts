@@ -449,6 +449,7 @@ describe('API Routes', () => {
         relatedSessionId: undefined,
         relatedSymbol: undefined,
         requestedAction: undefined,
+        reviewDueAt: undefined,
         severity: undefined,
         toAgentId: undefined,
         verificationState: undefined,
@@ -506,6 +507,7 @@ describe('API Routes', () => {
         relatedSessionId: undefined,
         relatedSymbol: undefined,
         requestedAction: undefined,
+        reviewDueAt: undefined,
         severity: undefined,
         toAgentId: undefined,
         verificationState: 'failed',
@@ -562,6 +564,7 @@ describe('API Routes', () => {
         relatedSessionId: undefined,
         relatedSymbol: undefined,
         requestedAction: undefined,
+        reviewDueAt: undefined,
         severity: undefined,
         toAgentId: undefined,
         verificationState: undefined,
@@ -624,6 +627,90 @@ describe('API Routes', () => {
       })
     })
 
+    it('forwards deadline task actions to Canopy', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
+        status: 'in_progress',
+        task_id: 'task-1',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'set_task_due_at',
+          changed_by: 'operator',
+          due_at: '2026-03-29T18:00:00Z',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        actingAgentId: undefined,
+        action: 'set_task_due_at',
+        assignedTo: undefined,
+        authorAgentId: undefined,
+        blockedReason: undefined,
+        changedBy: 'operator',
+        clearOwnerNote: undefined,
+        closureSummary: undefined,
+        dueAt: '2026-03-29T18:00:00Z',
+        evidenceLabel: undefined,
+        evidenceSourceKind: undefined,
+        evidenceSourceRef: undefined,
+        evidenceSummary: undefined,
+        expiresAt: undefined,
+        followUpDescription: undefined,
+        followUpTitle: undefined,
+        fromAgentId: undefined,
+        handoffSummary: undefined,
+        handoffType: undefined,
+        messageBody: undefined,
+        messageType: undefined,
+        note: undefined,
+        ownerNote: undefined,
+        priority: undefined,
+        relatedFile: undefined,
+        relatedHandoffId: undefined,
+        relatedMemoryQuery: undefined,
+        relatedSessionId: undefined,
+        relatedSymbol: undefined,
+        requestedAction: undefined,
+        reviewDueAt: undefined,
+        severity: undefined,
+        toAgentId: undefined,
+        verificationState: undefined,
+      })
+    })
+
+    it('rejects missing deadline payload fields for deadline task actions', async () => {
+      const executionReq = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'set_task_due_at',
+          changed_by: 'operator',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const executionRes = await app.fetch(executionReq)
+
+      expect(executionRes.status).toBe(400)
+      await expect(executionRes.json()).resolves.toEqual({ error: 'set_task_due_at requires a due_at' })
+
+      const reviewReq = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'set_review_due_at',
+          changed_by: 'operator',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const reviewRes = await app.fetch(reviewReq)
+
+      expect(reviewRes.status).toBe(400)
+      await expect(reviewRes.json()).resolves.toEqual({ error: 'set_review_due_at requires a review_due_at' })
+    })
+
     it('forwards task creation actions to Canopy', async () => {
       const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
         status: 'review_required',
@@ -677,6 +764,7 @@ describe('API Routes', () => {
         relatedSessionId: undefined,
         relatedSymbol: undefined,
         requestedAction: 'confirm the read model',
+        reviewDueAt: undefined,
         severity: undefined,
         toAgentId: 'agent-2',
         verificationState: undefined,
@@ -755,6 +843,7 @@ describe('API Routes', () => {
         relatedSessionId: undefined,
         relatedSymbol: undefined,
         requestedAction: undefined,
+        reviewDueAt: undefined,
         severity: undefined,
         toAgentId: undefined,
         verificationState: undefined,
@@ -811,6 +900,7 @@ describe('API Routes', () => {
         relatedSessionId: undefined,
         relatedSymbol: undefined,
         requestedAction: undefined,
+        reviewDueAt: undefined,
         severity: undefined,
         toAgentId: undefined,
         verificationState: undefined,
@@ -869,6 +959,7 @@ describe('API Routes', () => {
         relatedTaskId: 'task-2',
         relationshipRole: 'blocked_by',
         requestedAction: undefined,
+        reviewDueAt: undefined,
         severity: undefined,
         toAgentId: undefined,
         verificationState: undefined,
@@ -927,6 +1018,7 @@ describe('API Routes', () => {
         relatedTaskId: 'task-2',
         relationshipRole: undefined,
         requestedAction: undefined,
+        reviewDueAt: undefined,
         severity: undefined,
         toAgentId: undefined,
         verificationState: undefined,
@@ -983,6 +1075,7 @@ describe('API Routes', () => {
         relatedSessionId: undefined,
         relatedSymbol: undefined,
         requestedAction: undefined,
+        reviewDueAt: undefined,
         severity: undefined,
         toAgentId: undefined,
         verificationState: undefined,

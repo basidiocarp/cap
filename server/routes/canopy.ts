@@ -24,6 +24,9 @@ const ALLOWED_VIEWS = new Set([
   'in_progress',
   'stalled',
   'paused_resumable',
+  'due_soon',
+  'overdue_execution',
+  'overdue_review',
   'awaiting_handoff_acceptance',
   'accepted_handoff_follow_through',
   'attention',
@@ -48,6 +51,9 @@ const ALLOWED_PRESETS = new Set([
   'in_progress',
   'stalled',
   'paused_resumable',
+  'due_soon',
+  'overdue_execution',
+  'overdue_review',
   'awaiting_handoff_acceptance',
   'accepted_handoff_follow_through',
   'critical',
@@ -80,6 +86,10 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'block_task',
   'unblock_task',
   'update_task_note',
+  'set_task_due_at',
+  'clear_task_due_at',
+  'set_review_due_at',
+  'clear_review_due_at',
   'create_handoff',
   'post_council_message',
   'attach_evidence',
@@ -163,6 +173,7 @@ app.post('/tasks/:taskId/actions', async (c) => {
       clear_owner_note?: boolean
       closure_summary?: string
       due_at?: string
+      review_due_at?: string
       evidence_label?: string
       evidence_source_kind?: string
       evidence_source_ref?: string
@@ -224,6 +235,12 @@ app.post('/tasks/:taskId/actions', async (c) => {
     }
     if (body.action === 'close_task' && !body.closure_summary?.trim()) {
       return c.json({ error: 'close_task requires a closure_summary' }, 400)
+    }
+    if (body.action === 'set_task_due_at' && !body.due_at?.trim()) {
+      return c.json({ error: 'set_task_due_at requires a due_at' }, 400)
+    }
+    if (body.action === 'set_review_due_at' && !body.review_due_at?.trim()) {
+      return c.json({ error: 'set_review_due_at requires a review_due_at' }, 400)
     }
     if (body.action === 'create_handoff') {
       if (!body.from_agent_id?.trim() || !body.to_agent_id?.trim()) {
@@ -306,6 +323,7 @@ app.post('/tasks/:taskId/actions', async (c) => {
         relationshipRole:
           body.relationship_role && ALLOWED_TASK_RELATIONSHIP_ROLES.has(body.relationship_role) ? body.relationship_role : undefined,
         requestedAction: body.requested_action,
+        reviewDueAt: body.review_due_at,
         severity: body.severity,
         toAgentId: body.to_agent_id,
         verificationState:

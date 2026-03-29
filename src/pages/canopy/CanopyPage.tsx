@@ -22,8 +22,10 @@ export function CanopyPage() {
     claimedNotStartedQueueSnapshot,
     closeTask,
     criticalQueueSnapshot,
+    deadlineSummaryByTaskId,
     dependencyBlockedQueueSnapshot,
     detailQuery,
+    dueSoonQueueSnapshot,
     executionSummaryByTaskId,
     filteredAgentAttention,
     filteredAgents,
@@ -41,6 +43,8 @@ export function CanopyPage() {
     openQueuePreset,
     openSavedView,
     openTask,
+    overdueExecutionQueueSnapshot,
+    overdueReviewQueueSnapshot,
     operatorActionsByTaskId,
     ownershipByTaskId,
     pausedResumableQueueSnapshot,
@@ -144,6 +148,18 @@ export function CanopyPage() {
         title='Paused resumable queue unavailable'
       />
       <ErrorAlert
+        error={dueSoonQueueSnapshot.error instanceof Error ? dueSoonQueueSnapshot.error : undefined}
+        title='Due soon queue unavailable'
+      />
+      <ErrorAlert
+        error={overdueExecutionQueueSnapshot.error instanceof Error ? overdueExecutionQueueSnapshot.error : undefined}
+        title='Overdue execution queue unavailable'
+      />
+      <ErrorAlert
+        error={overdueReviewQueueSnapshot.error instanceof Error ? overdueReviewQueueSnapshot.error : undefined}
+        title='Overdue review queue unavailable'
+      />
+      <ErrorAlert
         error={awaitingHandoffAcceptanceQueueSnapshot.error instanceof Error ? awaitingHandoffAcceptanceQueueSnapshot.error : undefined}
         title='Awaiting handoff acceptance queue unavailable'
       />
@@ -194,10 +210,13 @@ export function CanopyPage() {
           claimedNotStartedQueueSnapshot={claimedNotStartedQueueSnapshot}
           criticalQueueSnapshot={criticalQueueSnapshot}
           dependencyBlockedQueueSnapshot={dependencyBlockedQueueSnapshot}
+          dueSoonQueueSnapshot={dueSoonQueueSnapshot}
           followUpChainsQueueSnapshot={followUpChainsQueueSnapshot}
           handoffQueueSnapshot={handoffQueueSnapshot}
           inProgressQueueSnapshot={inProgressQueueSnapshot}
           openQueuePreset={openQueuePreset}
+          overdueExecutionQueueSnapshot={overdueExecutionQueueSnapshot}
+          overdueReviewQueueSnapshot={overdueReviewQueueSnapshot}
           pausedResumableQueueSnapshot={pausedResumableQueueSnapshot}
           reviewAwaitingSupportQueueSnapshot={reviewAwaitingSupportQueueSnapshot}
           reviewDecisionFollowThroughQueueSnapshot={reviewDecisionFollowThroughQueueSnapshot}
@@ -229,6 +248,7 @@ export function CanopyPage() {
       </SectionCard>
 
       <CanopyTaskBoard
+        deadlineSummaryByTaskId={deadlineSummaryByTaskId}
         executionSummaryByTaskId={executionSummaryByTaskId}
         filteredTasks={filteredTasks}
         groupedTasks={groupedTasks}

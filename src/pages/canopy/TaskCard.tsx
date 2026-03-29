@@ -4,6 +4,7 @@ import type {
   CanopyOperatorAction,
   CanopyTask,
   CanopyTaskAttention,
+  CanopyTaskDeadlineSummary,
   CanopyTaskExecutionSummary,
   CanopyTaskHeartbeatSummary,
   CanopyTaskOwnershipSummary,
@@ -14,6 +15,7 @@ import { timeAgo } from '../../lib/time'
 import {
   attentionColor,
   attentionSummaryLabel,
+  deadlineStateColor,
   freshnessColor,
   joinedReasons,
   operatorActionLabel,
@@ -47,6 +49,7 @@ export function TaskCard({
   attention,
   executionSummary,
   heartbeatSummary,
+  deadlineSummary,
   onOpen,
   ownership,
   relationshipSummary,
@@ -56,6 +59,7 @@ export function TaskCard({
   attention?: CanopyTaskAttention
   executionSummary?: CanopyTaskExecutionSummary
   heartbeatSummary?: CanopyTaskHeartbeatSummary
+  deadlineSummary?: CanopyTaskDeadlineSummary
   onOpen: (taskId: string) => void
   ownership?: CanopyTaskOwnershipSummary
   relationshipSummary?: CanopyTaskRelationshipSummary
@@ -144,6 +148,22 @@ export function TaskCard({
             Closure: {task.closure_summary}
           </Text>
         ) : null}
+        {deadlineSummary?.active_deadline_at ? (
+          <Group gap='xs'>
+            <Badge
+              color={deadlineStateColor(deadlineSummary.active_deadline_state)}
+              variant='light'
+            >
+              {deadlineSummary.active_deadline_state.replaceAll('_', ' ')}
+            </Badge>
+            <Text
+              c='dimmed'
+              size='sm'
+            >
+              {deadlineSummary.active_deadline_kind === 'review' ? 'Review due' : 'Execution due'} {deadlineSummary.active_deadline_at}
+            </Text>
+          </Group>
+        ) : null}
         {attention?.reasons.length ? (
           <Text
             c='dimmed'
@@ -218,6 +238,38 @@ export function TaskCard({
             variant='light'
           >
             assigned and awaiting claim
+          </Badge>
+        ) : null}
+        {attention?.reasons.includes('due_soon_execution') ? (
+          <Badge
+            color='yellow'
+            variant='light'
+          >
+            execution due soon
+          </Badge>
+        ) : null}
+        {attention?.reasons.includes('overdue_execution') ? (
+          <Badge
+            color='red'
+            variant='light'
+          >
+            execution overdue
+          </Badge>
+        ) : null}
+        {attention?.reasons.includes('due_soon_review') ? (
+          <Badge
+            color='yellow'
+            variant='light'
+          >
+            review due soon
+          </Badge>
+        ) : null}
+        {attention?.reasons.includes('overdue_review') ? (
+          <Badge
+            color='red'
+            variant='light'
+          >
+            review overdue
           </Badge>
         ) : null}
         {attention?.reasons.includes('review_with_graph_pressure') ? (

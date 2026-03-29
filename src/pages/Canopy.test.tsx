@@ -86,6 +86,80 @@ const mockSnapshot: CanopySnapshot = {
     stale_handoffs: 0,
     tasks_needing_attention: 2,
   },
+  deadline_summaries: [
+    {
+      active_deadline_at: '2026-03-28T12:45:00Z',
+      active_deadline_kind: 'execution',
+      active_deadline_state: 'due_soon',
+      due_at: '2026-03-28T12:45:00Z',
+      due_in_seconds: 900,
+      execution_state: 'due_soon',
+      overdue_by_seconds: null,
+      review_due_at: null,
+      review_state: 'none',
+      task_id: 'task-1',
+    },
+    {
+      active_deadline_at: '2026-03-27T09:00:00Z',
+      active_deadline_kind: 'execution',
+      active_deadline_state: 'overdue',
+      due_at: '2026-03-27T09:00:00Z',
+      due_in_seconds: null,
+      execution_state: 'overdue',
+      overdue_by_seconds: 98100,
+      review_due_at: null,
+      review_state: 'none',
+      task_id: 'task-2',
+    },
+    {
+      active_deadline_at: null,
+      active_deadline_kind: null,
+      active_deadline_state: 'none',
+      due_at: null,
+      due_in_seconds: null,
+      execution_state: 'none',
+      overdue_by_seconds: null,
+      review_due_at: null,
+      review_state: 'none',
+      task_id: 'task-3',
+    },
+    {
+      active_deadline_at: '2026-03-28T18:00:00Z',
+      active_deadline_kind: 'review',
+      active_deadline_state: 'due_soon',
+      due_at: null,
+      due_in_seconds: 22500,
+      execution_state: 'none',
+      overdue_by_seconds: null,
+      review_due_at: '2026-03-28T18:00:00Z',
+      review_state: 'due_soon',
+      task_id: 'task-4',
+    },
+    {
+      active_deadline_at: '2026-03-28T10:00:00Z',
+      active_deadline_kind: 'review',
+      active_deadline_state: 'overdue',
+      due_at: null,
+      due_in_seconds: null,
+      execution_state: 'none',
+      overdue_by_seconds: 19800,
+      review_due_at: '2026-03-28T10:00:00Z',
+      review_state: 'overdue',
+      task_id: 'task-5',
+    },
+    {
+      active_deadline_at: null,
+      active_deadline_kind: null,
+      active_deadline_state: 'none',
+      due_at: null,
+      due_in_seconds: null,
+      execution_state: 'none',
+      overdue_by_seconds: null,
+      review_due_at: null,
+      review_state: 'none',
+      task_id: 'task-6',
+    },
+  ],
   evidence: [
     {
       evidence_id: 'evidence-4',
@@ -462,7 +536,7 @@ const mockSnapshot: CanopySnapshot = {
       level: 'critical',
       open_handoff_freshness: null,
       owner_heartbeat_freshness: 'stale',
-      reasons: ['blocked', 'verification_failed', 'critical_severity', 'stale_owner_heartbeat', 'unacknowledged'],
+      reasons: ['blocked', 'verification_failed', 'critical_severity', 'overdue_execution', 'stale_owner_heartbeat', 'unacknowledged'],
       task_id: 'task-2',
     },
     {
@@ -473,6 +547,7 @@ const mockSnapshot: CanopySnapshot = {
       owner_heartbeat_freshness: 'fresh',
       reasons: [
         'review_required',
+        'due_soon_execution',
         'review_with_graph_pressure',
         'review_handoff_follow_through',
         'review_awaiting_support',
@@ -486,7 +561,7 @@ const mockSnapshot: CanopySnapshot = {
       level: 'needs_attention',
       open_handoff_freshness: null,
       owner_heartbeat_freshness: null,
-      reasons: ['review_required', 'review_ready_for_decision'],
+      reasons: ['review_required', 'due_soon_review', 'review_ready_for_decision'],
       task_id: 'task-4',
     },
     {
@@ -495,7 +570,7 @@ const mockSnapshot: CanopySnapshot = {
       level: 'needs_attention',
       open_handoff_freshness: null,
       owner_heartbeat_freshness: null,
-      reasons: ['review_required', 'review_decision_follow_through'],
+      reasons: ['review_required', 'overdue_review', 'review_decision_follow_through'],
       task_id: 'task-5',
     },
     {
@@ -540,11 +615,13 @@ const mockSnapshot: CanopySnapshot = {
       closure_summary: null,
       created_at: '2026-03-27T10:00:00Z',
       description: 'Repair a broken adapter',
+      due_at: '2026-03-27T09:00:00Z',
       owner_agent_id: 'agent-2',
       owner_note: 'Waiting on a host-level fix before retrying.',
       priority: 'critical',
       project_root: '/workspace/cap',
       requested_by: 'operator',
+      review_due_at: null,
       severity: 'critical',
       status: 'blocked',
       task_id: 'task-2',
@@ -563,11 +640,13 @@ const mockSnapshot: CanopySnapshot = {
       closure_summary: null,
       created_at: '2026-03-28T11:55:00Z',
       description: 'Wire the first Cap integration path.',
+      due_at: '2026-03-28T12:45:00Z',
       owner_agent_id: 'agent-1',
       owner_note: 'Close after UI review.',
       priority: 'high',
       project_root: '/workspace/cap',
       requested_by: 'operator',
+      review_due_at: null,
       severity: 'medium',
       status: 'in_progress',
       task_id: 'task-1',
@@ -586,11 +665,13 @@ const mockSnapshot: CanopySnapshot = {
       closure_summary: null,
       created_at: '2026-03-28T12:09:00Z',
       description: 'Track the remaining operator cleanup work.',
+      due_at: null,
       owner_agent_id: null,
       owner_note: null,
       priority: 'medium',
       project_root: '/workspace/cap',
       requested_by: 'operator',
+      review_due_at: null,
       severity: 'none',
       status: 'open',
       task_id: 'task-3',
@@ -609,11 +690,13 @@ const mockSnapshot: CanopySnapshot = {
       closure_summary: null,
       created_at: '2026-03-28T12:20:00Z',
       description: 'Close the review once support context is confirmed.',
+      due_at: null,
       owner_agent_id: null,
       owner_note: 'Support context is already attached.',
       priority: 'medium',
       project_root: '/workspace/cap',
       requested_by: 'operator',
+      review_due_at: '2026-03-28T18:00:00Z',
       severity: 'low',
       status: 'review_required',
       task_id: 'task-4',
@@ -632,11 +715,13 @@ const mockSnapshot: CanopySnapshot = {
       closure_summary: null,
       created_at: '2026-03-28T12:24:00Z',
       description: 'Close the review after the final decision or closeout handoff lands.',
+      due_at: null,
       owner_agent_id: null,
       owner_note: 'Decision handoff is still open.',
       priority: 'high',
       project_root: '/workspace/cap',
       requested_by: 'operator',
+      review_due_at: '2026-03-28T10:00:00Z',
       severity: 'medium',
       status: 'review_required',
       task_id: 'task-5',
@@ -655,11 +740,13 @@ const mockSnapshot: CanopySnapshot = {
       closure_summary: null,
       created_at: '2026-03-28T12:27:00Z',
       description: 'Close the review after the decision is already recorded.',
+      due_at: null,
       owner_agent_id: null,
       owner_note: 'Decision context is already attached.',
       priority: 'medium',
       project_root: '/workspace/cap',
       requested_by: 'operator',
+      review_due_at: null,
       severity: 'low',
       status: 'review_required',
       task_id: 'task-6',
@@ -846,6 +933,32 @@ const mockTaskDetail: CanopyTaskDetail = {
       title: 'Update note for Add Cap Canopy page',
     },
     {
+      action_id: 'allowed-6a',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'set_task_due_at',
+      level: 'needs_attention',
+      summary: 'Adjust the execution due date for this task.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Set execution due for Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-6b',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'clear_task_due_at',
+      level: 'needs_attention',
+      summary: 'Clear the execution due date for this task.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Clear execution due for Add Cap Canopy page',
+    },
+    {
       action_id: 'allowed-7',
       agent_id: 'agent-1',
       due_at: null,
@@ -1008,6 +1121,7 @@ const mockTaskDetail: CanopyTaskDetail = {
     },
   ],
   attention: mockSnapshot.task_attention[1],
+  deadline_summary: mockSnapshot.deadline_summaries[0],
   events: [
     {
       actor: 'operator',
@@ -1172,6 +1286,7 @@ function snapshotForTaskIds(taskIds: string[]): CanopySnapshot {
       const taskMatch = summary.current_task_id ? allowedTaskIds.has(summary.current_task_id) : false
       return taskMatch || allowedAgentIds.has(summary.agent_id)
     }),
+    deadline_summaries: mockSnapshot.deadline_summaries.filter((summary) => allowedTaskIds.has(summary.task_id)),
     evidence: mockSnapshot.evidence.filter((item) => allowedTaskIds.has(item.task_id)),
     execution_summaries: mockSnapshot.execution_summaries.filter((summary) => allowedTaskIds.has(summary.task_id)),
     handoff_attention: mockSnapshot.handoff_attention.filter((attention) => allowedTaskIds.has(attention.task_id)),
@@ -1243,6 +1358,12 @@ const SNAPSHOT_RESPONSES = new Map<string, CanopySnapshot>([
   [responseKey({ preset: 'stalled', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2'])],
   [responseKey({ preset: 'paused_resumable', project: '/workspace/cap' }), snapshotForTaskIds([])],
   [responseKey({ preset: 'paused_resumable', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds([])],
+  [responseKey({ preset: 'due_soon', project: '/workspace/cap' }), snapshotForTaskIds(['task-1', 'task-4'])],
+  [responseKey({ preset: 'due_soon', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1', 'task-4'])],
+  [responseKey({ preset: 'overdue_execution', project: '/workspace/cap' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'overdue_execution', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-2'])],
+  [responseKey({ preset: 'overdue_review', project: '/workspace/cap' }), snapshotForTaskIds(['task-5'])],
+  [responseKey({ preset: 'overdue_review', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-5'])],
   [responseKey({ preset: 'awaiting_handoff_acceptance', project: '/workspace/cap' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'awaiting_handoff_acceptance', project: '/workspace/cap', sort: 'status' }), snapshotForTaskIds(['task-1'])],
   [responseKey({ preset: 'accepted_handoff_follow_through', project: '/workspace/cap' }), snapshotForTaskIds([])],
@@ -1375,6 +1496,9 @@ describe('Canopy page', () => {
     expect(screen.getByRole('button', { name: 'Unclaimed · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'In progress · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Stalled · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Due soon · 2' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Overdue execution · 1' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Overdue review · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / graph pressure · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / handoff follow-through · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Review / decision or closeout · 1' })).toBeInTheDocument()
@@ -1645,6 +1769,57 @@ describe('Canopy page', () => {
     })
   })
 
+  it('opens the due soon queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Due soon · 2' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'due_soon',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the overdue execution queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Overdue execution · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'overdue_execution',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
+  it('opens the overdue review queue from the operator shortcut', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy' })
+
+    await user.click(screen.getByRole('button', { name: 'Overdue review · 1' }))
+
+    expect(useCanopySnapshotMock).toHaveBeenCalledWith({
+      acknowledged: undefined,
+      preset: 'overdue_review',
+      priorityAtLeast: undefined,
+      project: '/workspace/cap',
+      severityAtLeast: undefined,
+      sort: undefined,
+    })
+  })
+
   it('opens the assigned awaiting claim queue from the operator shortcut', async () => {
     const user = userEvent.setup()
 
@@ -1753,11 +1928,15 @@ describe('Canopy page', () => {
     expect(screen.getAllByText('Agent: agent-1').length).toBeGreaterThan(0)
     expect(screen.getByText(/Heartbeats 3 · latest status in_progress/)).toBeInTheDocument()
     expect(screen.getByText('Execution Summary')).toBeInTheDocument()
+    expect(screen.getAllByText('Deadlines').length).toBeGreaterThan(0)
     expect(screen.getByText('Claims: 1')).toBeInTheDocument()
     expect(screen.getByText(/Runs: 1 · pauses 0 · yields 0/)).toBeInTheDocument()
     expect(screen.getByText(/Completions: 0 · total 420s/)).toBeInTheDocument()
     expect(screen.getByText(/Active execution: 420s/)).toBeInTheDocument()
     expect(screen.getByText('Review state: waiting on evidence or a council decision')).toBeInTheDocument()
+    expect(screen.getByText('Execution due: 2026-03-28T12:45:00Z')).toBeInTheDocument()
+    expect(screen.getByText('Review due: none')).toBeInTheDocument()
+    expect(screen.getByText(/Active deadline: execution · 2026-03-28T12:45:00Z/)).toBeInTheDocument()
     expect(screen.getByText(/Last start task/)).toBeInTheDocument()
     expect(screen.getByText('Assignments')).toBeInTheDocument()
     expect(screen.getByText('operator → agent-1')).toBeInTheDocument()
@@ -1826,6 +2005,23 @@ describe('Canopy page', () => {
       action: 'set_task_priority',
       changed_by: 'operator',
       priority: 'high',
+      taskId: 'task-1',
+    })
+
+    await user.clear(screen.getByLabelText('Execution due at'))
+    await user.type(screen.getByLabelText('Execution due at'), '2026-03-29T18:00:00Z')
+    await user.click(screen.getByRole('button', { name: 'Set execution due' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'set_task_due_at',
+      changed_by: 'operator',
+      due_at: '2026-03-29T18:00:00Z',
+      taskId: 'task-1',
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Clear execution due' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'clear_task_due_at',
+      changed_by: 'operator',
       taskId: 'task-1',
     })
 

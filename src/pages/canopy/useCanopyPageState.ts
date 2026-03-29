@@ -81,6 +81,18 @@ export function useCanopyPageState() {
     preset: 'paused_resumable',
     project: activeProject ?? undefined,
   })
+  const dueSoonQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'due_soon',
+    project: activeProject ?? undefined,
+  })
+  const overdueExecutionQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'overdue_execution',
+    project: activeProject ?? undefined,
+  })
+  const overdueReviewQueueSnapshotQuery = useCanopySnapshot({
+    preset: 'overdue_review',
+    project: activeProject ?? undefined,
+  })
   const awaitingHandoffAcceptanceQueueSnapshotQuery = useCanopySnapshot({
     preset: 'awaiting_handoff_acceptance',
     project: activeProject ?? undefined,
@@ -124,6 +136,10 @@ export function useCanopyPageState() {
   const executionSummaryByTaskId = useMemo(
     () => new Map(snapshot?.execution_summaries.map((summary) => [summary.task_id, summary]) ?? []),
     [snapshot?.execution_summaries]
+  )
+  const deadlineSummaryByTaskId = useMemo(
+    () => new Map(snapshot?.deadline_summaries.map((summary) => [summary.task_id, summary]) ?? []),
+    [snapshot?.deadline_summaries]
   )
   const operatorActionsByTaskId = useMemo(() => groupOperatorActionsByTask(snapshot?.operator_actions), [snapshot?.operator_actions])
   const filteredTasks = useMemo(() => filterCanopyTasks(snapshot, searchQuery, statusFilter), [searchQuery, snapshot, statusFilter])
@@ -228,12 +244,18 @@ export function useCanopyPageState() {
       isLoading: criticalQueueSnapshotQuery.isLoading,
       snapshot: criticalQueueSnapshotQuery.data,
     },
+    deadlineSummaryByTaskId,
     dependencyBlockedQueueSnapshot: {
       error: dependencyBlockedQueueSnapshotQuery.error,
       isLoading: dependencyBlockedQueueSnapshotQuery.isLoading,
       snapshot: dependencyBlockedQueueSnapshotQuery.data,
     },
     detailQuery,
+    dueSoonQueueSnapshot: {
+      error: dueSoonQueueSnapshotQuery.error,
+      isLoading: dueSoonQueueSnapshotQuery.isLoading,
+      snapshot: dueSoonQueueSnapshotQuery.data,
+    },
     executionSummaryByTaskId,
     filteredAgentAttention,
     filteredAgents,
@@ -264,6 +286,16 @@ export function useCanopyPageState() {
     openSavedView: openPreset,
     openTask: (taskId: string) => updateSearchParams({ task: taskId }, { replace: false }),
     operatorActionsByTaskId,
+    overdueExecutionQueueSnapshot: {
+      error: overdueExecutionQueueSnapshotQuery.error,
+      isLoading: overdueExecutionQueueSnapshotQuery.isLoading,
+      snapshot: overdueExecutionQueueSnapshotQuery.data,
+    },
+    overdueReviewQueueSnapshot: {
+      error: overdueReviewQueueSnapshotQuery.error,
+      isLoading: overdueReviewQueueSnapshotQuery.isLoading,
+      snapshot: overdueReviewQueueSnapshotQuery.data,
+    },
     ownershipByTaskId,
     pausedResumableQueueSnapshot: {
       error: pausedResumableQueueSnapshotQuery.error,

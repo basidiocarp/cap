@@ -17,10 +17,13 @@ export function CanopyQueuesSection({
   claimedNotStartedQueueSnapshot,
   dependencyBlockedQueueSnapshot,
   criticalQueueSnapshot,
+  dueSoonQueueSnapshot,
   followUpChainsQueueSnapshot,
   handoffQueueSnapshot,
   inProgressQueueSnapshot,
   openQueuePreset,
+  overdueExecutionQueueSnapshot,
+  overdueReviewQueueSnapshot,
   pausedResumableQueueSnapshot,
   reviewDecisionFollowThroughQueueSnapshot,
   reviewAwaitingSupportQueueSnapshot,
@@ -40,10 +43,13 @@ export function CanopyQueuesSection({
   claimedNotStartedQueueSnapshot: CanopyQueueSnapshotState
   dependencyBlockedQueueSnapshot: CanopyQueueSnapshotState
   criticalQueueSnapshot: CanopyQueueSnapshotState
+  dueSoonQueueSnapshot: CanopyQueueSnapshotState
   followUpChainsQueueSnapshot: CanopyQueueSnapshotState
   handoffQueueSnapshot: CanopyQueueSnapshotState
   inProgressQueueSnapshot: CanopyQueueSnapshotState
   openQueuePreset: (preset: CanopySavedView) => void
+  overdueExecutionQueueSnapshot: CanopyQueueSnapshotState
+  overdueReviewQueueSnapshot: CanopyQueueSnapshotState
   pausedResumableQueueSnapshot: CanopyQueueSnapshotState
   reviewDecisionFollowThroughQueueSnapshot: CanopyQueueSnapshotState
   reviewAwaitingSupportQueueSnapshot: CanopyQueueSnapshotState
@@ -206,6 +212,33 @@ export function CanopyQueuesSection({
           variant={savedView === 'paused_resumable' ? 'filled' : 'light'}
         >
           Paused / resumable · {renderQueueCount(pausedResumableQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('due_soon')}
+          variant={savedView === 'due_soon' ? 'filled' : 'light'}
+        >
+          Due soon · {renderQueueCount(dueSoonQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('overdue_execution')}
+          variant={savedView === 'overdue_execution' ? 'filled' : 'light'}
+        >
+          Overdue execution · {renderQueueCount(overdueExecutionQueueSnapshot)}
+        </Button>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <Button
+          fullWidth
+          onClick={() => openQueuePreset('overdue_review')}
+          variant={savedView === 'overdue_review' ? 'filled' : 'light'}
+        >
+          Overdue review · {renderQueueCount(overdueReviewQueueSnapshot)}
         </Button>
       </Grid.Col>
       <Grid.Col span={{ base: 6, md: 3 }}>
