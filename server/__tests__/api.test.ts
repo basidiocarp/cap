@@ -399,6 +399,61 @@ describe('API Routes', () => {
         task: { task_id: 'task-1', title: 'test task' },
       })
     })
+
+    it('forwards task action mutations to Canopy', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
+        status: 'blocked',
+        task_id: 'task-1',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'block_task',
+          blocked_reason: 'waiting on review',
+          changed_by: 'operator',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        action: 'block_task',
+        assignedTo: undefined,
+        blockedReason: 'waiting on review',
+        changedBy: 'operator',
+        clearOwnerNote: undefined,
+        note: undefined,
+        ownerNote: undefined,
+        priority: undefined,
+        severity: undefined,
+      })
+    })
+
+    it('forwards handoff action mutations to Canopy', async () => {
+      const handoffActionSpy = vi.spyOn(canopy, 'applyHandoffAction').mockResolvedValue({
+        handoff_id: 'handoff-1',
+        status: 'expired',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/handoffs/handoff-1/actions', {
+        body: JSON.stringify({
+          action: 'expire_handoff',
+          changed_by: 'operator',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(handoffActionSpy).toHaveBeenCalledWith('handoff-1', {
+        action: 'expire_handoff',
+        changedBy: 'operator',
+        note: undefined,
+      })
+    })
   })
 
   describe('POST /api/rhizome edit workflows', () => {

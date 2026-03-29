@@ -9,6 +9,17 @@ const ALLOWED_PRIORITIES = new Set(['low', 'medium', 'high', 'critical'])
 const ALLOWED_SEVERITIES = new Set(['none', 'low', 'medium', 'high', 'critical'])
 const ALLOWED_ATTENTION_LEVELS = new Set(['normal', 'needs_attention', 'critical'])
 const ALLOWED_ACKNOWLEDGED = new Set(['true', 'false'])
+const ALLOWED_TASK_ACTIONS = new Set([
+  'acknowledge_task',
+  'unacknowledge_task',
+  'reassign_task',
+  'set_task_priority',
+  'set_task_severity',
+  'block_task',
+  'unblock_task',
+  'update_task_note',
+])
+const ALLOWED_HANDOFF_ACTIONS = new Set(['follow_up_handoff', 'expire_handoff'])
 
 function parseJson<T>(raw: string, label: string): T {
   try {
@@ -55,4 +66,54 @@ export async function getSnapshot<T = unknown>(options?: {
 export async function getTaskDetail<T = unknown>(taskId: string): Promise<T> {
   const raw = await run(['api', 'task', '--task-id', taskId])
   return parseJson<T>(raw, 'canopy api task')
+}
+
+export async function applyTaskAction<T = unknown>(
+  taskId: string,
+  input: {
+    action: string
+    assignedTo?: string
+    blockedReason?: string
+    changedBy: string
+    clearOwnerNote?: boolean
+    note?: string
+    ownerNote?: string
+    priority?: string
+    severity?: string
+  }
+): Promise<T> {
+  if (!ALLOWED_TASK_ACTIONS.has(input.action)) {
+    throw new Error(`Unsupported Canopy task action: ${input.action}`)
+  }
+
+  const args = ['task', 'action', '--task-id', taskId, '--action', input.action, '--changed-by', input.changedBy]
+  if (input.assignedTo) args.push('--assigned-to', input.assignedTo)
+  if (input.priority && ALLOWED_PRIORITIES.has(input.priority)) args.push('--priority', input.priority)
+  if (input.severity && ALLOWED_SEVERITIES.has(input.severity)) args.push('--severity', input.severity)
+  if (input.blockedReason) args.push('--blocked-reason', input.blockedReason)
+  if (input.ownerNote) args.push('--owner-note', input.ownerNote)
+  if (input.clearOwnerNote) args.push('--clear-owner-note')
+  if (input.note) args.push('--note', input.note)
+
+  const raw = await run(args)
+  return parseJson<T>(raw, 'canopy task action')
+}
+
+export async function applyHandoffAction<T = unknown>(
+  handoffId: string,
+  input: {
+    action: string
+    changedBy: string
+    note?: string
+  }
+): Promise<T> {
+  if (!ALLOWED_HANDOFF_ACTIONS.has(input.action)) {
+    throw new Error(`Unsupported Canopy handoff action: ${input.action}`)
+  }
+
+  const args = ['handoff', 'action', '--handoff-id', handoffId, '--action', input.action, '--changed-by', input.changedBy]
+  if (input.note) args.push('--note', input.note)
+
+  const raw = await run(args)
+  return parseJson<T>(raw, 'canopy handoff action')
 }

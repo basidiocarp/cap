@@ -77,6 +77,8 @@ const mockSnapshot: CanopySnapshot = {
     },
   ],
   attention: {
+    actionable_handoffs: 1,
+    actionable_tasks: 2,
     agents_needing_attention: 1,
     critical_tasks: 1,
     handoffs_needing_attention: 1,
@@ -280,6 +282,99 @@ const mockSnapshot: CanopySnapshot = {
 const mockTaskDetail: CanopyTaskDetail = {
   agent_attention: [mockSnapshot.agent_attention[1]],
   agent_heartbeat_summaries: [mockSnapshot.agent_heartbeat_summaries[1]],
+  allowed_actions: [
+    {
+      action_id: 'allowed-1',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'unacknowledge_task',
+      level: 'needs_attention',
+      summary: 'Update operator acknowledgment for this task.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Unacknowledge Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-2',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'reassign_task',
+      level: 'needs_attention',
+      summary: 'Transfer task ownership to another agent.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Reassign Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-3',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'set_task_priority',
+      level: 'needs_attention',
+      summary: 'Adjust task priority for the operator queue.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Set priority for Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-4',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'set_task_severity',
+      level: 'needs_attention',
+      summary: 'Adjust task severity for triage and reporting.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Set severity for Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-5',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'update_task_note',
+      level: 'needs_attention',
+      summary: 'Add or clear operator context on the task.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Update note for Add Cap Canopy page',
+    },
+    {
+      action_id: 'allowed-6',
+      agent_id: 'agent-2',
+      due_at: '2026-03-28T12:30:00Z',
+      expires_at: '2026-03-28T13:00:00Z',
+      handoff_id: 'handoff-1',
+      kind: 'follow_up_handoff',
+      level: 'needs_attention',
+      summary: 'Need review before closing',
+      target_kind: 'handoff',
+      task_id: 'task-1',
+      title: 'Follow up handoff-1',
+    },
+    {
+      action_id: 'allowed-7',
+      agent_id: 'agent-2',
+      due_at: '2026-03-28T12:30:00Z',
+      expires_at: '2026-03-28T13:00:00Z',
+      handoff_id: 'handoff-1',
+      kind: 'expire_handoff',
+      level: 'needs_attention',
+      summary: 'Resolve the open handoff as expired.',
+      target_kind: 'handoff',
+      task_id: 'task-1',
+      title: 'Expire handoff-1',
+    },
+  ],
   assignments: [
     {
       assigned_at: '2026-03-28T12:01:00Z',
@@ -524,8 +619,21 @@ const useCanopySnapshotMock = vi.fn(
     }
   }
 )
+const taskActionMutateMock = vi.fn()
+const handoffActionMutateMock = vi.fn()
+const useCanopyTaskActionMock = vi.fn(() => ({
+  error: null,
+  isPending: false,
+  mutate: taskActionMutateMock,
+}))
+const useCanopyHandoffActionMock = vi.fn(() => ({
+  error: null,
+  isPending: false,
+  mutate: handoffActionMutateMock,
+}))
 
 vi.mock('../lib/queries', () => ({
+  useCanopyHandoffAction: () => useCanopyHandoffActionMock(),
   useCanopySnapshot: (options?: {
     acknowledged?: string
     preset?: string
@@ -535,6 +643,7 @@ vi.mock('../lib/queries', () => ({
     sort?: string
     view?: string
   }) => useCanopySnapshotMock(options),
+  useCanopyTaskAction: () => useCanopyTaskActionMock(),
   useCanopyTaskDetail: (taskId: string) => ({
     data: taskId && !mockTaskDetailError ? mockTaskDetail : undefined,
     error: mockTaskDetailError,
@@ -552,6 +661,10 @@ describe('Canopy page', () => {
     mockTaskDetailError = null
     mockSnapshotErrors = {}
     useCanopySnapshotMock.mockClear()
+    useCanopyTaskActionMock.mockClear()
+    useCanopyHandoffActionMock.mockClear()
+    taskActionMutateMock.mockClear()
+    handoffActionMutateMock.mockClear()
   })
 
   it('renders a project-scoped operator board from the Canopy snapshot', () => {
@@ -774,6 +887,36 @@ describe('Canopy page', () => {
       'href',
       '/code?file=%2Fworkspace%2Fcap%2Fsrc%2Fpages%2FCanopy.tsx&symbol=Canopy'
     )
+  })
+
+  it('forwards operator actions from the task detail modal', async () => {
+    const user = userEvent.setup()
+
+    renderWithProviders(<Canopy />, { route: '/canopy?task=task-1' })
+
+    await user.click(screen.getByRole('button', { name: 'Unacknowledge' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'unacknowledge_task',
+      changed_by: 'operator',
+      taskId: 'task-1',
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Save priority' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'set_task_priority',
+      changed_by: 'operator',
+      priority: 'high',
+      taskId: 'task-1',
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Nudge handoff' }))
+    expect(handoffActionMutateMock).toHaveBeenCalledWith({
+      action: 'follow_up_handoff',
+      changed_by: 'operator',
+      handoffId: 'handoff-1',
+      note: undefined,
+      taskId: 'task-1',
+    })
   })
 
   it('shows a modal-local error state when task detail cannot be loaded', async () => {

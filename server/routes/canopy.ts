@@ -46,4 +46,64 @@ app.get('/tasks/:taskId', async (c) => {
   }
 })
 
+app.post('/tasks/:taskId/actions', async (c) => {
+  try {
+    const body = (await c.req.json().catch(() => ({}))) as {
+      action?: string
+      assigned_to?: string
+      blocked_reason?: string
+      changed_by?: string
+      clear_owner_note?: boolean
+      note?: string
+      owner_note?: string
+      priority?: string
+      severity?: string
+    }
+
+    if (!body.action || !body.changed_by) {
+      return c.json({ error: 'Canopy task action requires action and changed_by' }, 400)
+    }
+
+    return c.json(
+      await canopy.applyTaskAction(c.req.param('taskId'), {
+        action: body.action,
+        assignedTo: body.assigned_to,
+        blockedReason: body.blocked_reason,
+        changedBy: body.changed_by,
+        clearOwnerNote: body.clear_owner_note,
+        note: body.note,
+        ownerNote: body.owner_note,
+        priority: body.priority,
+        severity: body.severity,
+      })
+    )
+  } catch (err) {
+    return c.json({ error: err instanceof Error ? err.message : 'Failed to apply Canopy task action' }, 500)
+  }
+})
+
+app.post('/handoffs/:handoffId/actions', async (c) => {
+  try {
+    const body = (await c.req.json().catch(() => ({}))) as {
+      action?: string
+      changed_by?: string
+      note?: string
+    }
+
+    if (!body.action || !body.changed_by) {
+      return c.json({ error: 'Canopy handoff action requires action and changed_by' }, 400)
+    }
+
+    return c.json(
+      await canopy.applyHandoffAction(c.req.param('handoffId'), {
+        action: body.action,
+        changedBy: body.changed_by,
+        note: body.note,
+      })
+    )
+  } catch (err) {
+    return c.json({ error: err instanceof Error ? err.message : 'Failed to apply Canopy handoff action' }, 500)
+  }
+})
+
 export default app

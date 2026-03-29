@@ -1,7 +1,17 @@
-import type { CanopySnapshot, CanopySnapshotPreset, CanopyTaskDetail, CanopyTaskPriority, CanopyTaskSeverity } from '../types'
-import { get } from './http'
+import type {
+  CanopyHandoffActionInput,
+  CanopySnapshot,
+  CanopySnapshotPreset,
+  CanopyTaskActionInput,
+  CanopyTaskDetail,
+  CanopyTaskPriority,
+  CanopyTaskSeverity,
+} from '../types'
+import { get, post } from './http'
 
 export const canopyApi = {
+  handoffAction: (handoffId: string, body: CanopyHandoffActionInput) =>
+    post(`/canopy/handoffs/${encodeURIComponent(handoffId)}/actions`, body),
   snapshot: (options?: {
     acknowledged?: string
     attentionAtLeast?: string
@@ -23,4 +33,5 @@ export const canopyApi = {
       view: options?.view ?? '',
     }),
   task: (taskId: string) => get<CanopyTaskDetail>(`/canopy/tasks/${encodeURIComponent(taskId)}`),
+  taskAction: (taskId: string, body: CanopyTaskActionInput) => post(`/canopy/tasks/${encodeURIComponent(taskId)}/actions`, body),
 }

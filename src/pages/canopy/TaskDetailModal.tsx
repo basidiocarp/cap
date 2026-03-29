@@ -1,20 +1,23 @@
 import { Divider, Modal, ScrollArea, Stack } from '@mantine/core'
 
-import type { CanopyTaskDetail } from '../../lib/api'
+import type { CanopyAgentRegistration, CanopyTaskDetail } from '../../lib/api'
 import { EmptyState } from '../../components/EmptyState'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { PageLoader } from '../../components/PageLoader'
 import { TaskActivitySections } from './TaskActivitySections'
+import { TaskOperatorActionsSection } from './TaskOperatorActionsSection'
 import { TaskOverviewSection } from './TaskOverviewSection'
 import { TaskRuntimeSummaryGrid } from './TaskRuntimeSummaryGrid'
 import { useTaskDetailMaps } from './task-detail-maps'
 
 export function TaskDetailModal({
+  agents,
   detail,
   error,
   opened,
   onClose,
 }: {
+  agents: CanopyAgentRegistration[]
   detail: CanopyTaskDetail | undefined
   error: Error | null
   opened: boolean
@@ -43,6 +46,12 @@ export function TaskDetailModal({
         <ScrollArea.Autosize mah={560}>
           <Stack gap='md'>
             <TaskOverviewSection detail={detail} />
+
+            <Divider label='Operator Actions' />
+            <TaskOperatorActionsSection
+              agents={agents}
+              detail={detail}
+            />
 
             <Divider label='Runtime Summary' />
             <TaskRuntimeSummaryGrid detail={detail} />

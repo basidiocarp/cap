@@ -50,7 +50,18 @@ export type CanopyAgentAttentionReason =
   | 'missing_heartbeat'
   | 'blocked_status'
   | 'review_required_status'
-export type CanopyOperatorActionKind = 'acknowledge_task' | 'verify_task' | 'reassign_task' | 'follow_up_handoff' | 'expire_handoff'
+export type CanopyOperatorActionKind =
+  | 'acknowledge_task'
+  | 'unacknowledge_task'
+  | 'verify_task'
+  | 'reassign_task'
+  | 'set_task_priority'
+  | 'set_task_severity'
+  | 'block_task'
+  | 'unblock_task'
+  | 'update_task_note'
+  | 'follow_up_handoff'
+  | 'expire_handoff'
 export type CanopyOperatorActionTargetKind = 'task' | 'handoff'
 
 export interface CanopyAgentRegistration {
@@ -233,6 +244,8 @@ export interface CanopyOperatorAction {
 }
 
 export interface CanopySnapshotAttentionSummary {
+  actionable_handoffs: number
+  actionable_tasks: number
   agents_needing_attention: number
   critical_tasks: number
   handoffs_needing_attention: number
@@ -258,6 +271,7 @@ export interface CanopySnapshot {
 }
 
 export interface CanopyTaskDetail {
+  allowed_actions: CanopyOperatorAction[]
   agent_attention: CanopyAgentAttention[]
   agent_heartbeat_summaries: CanopyAgentHeartbeatSummary[]
   assignments: CanopyTaskAssignment[]
@@ -272,4 +286,22 @@ export interface CanopyTaskDetail {
   operator_actions: CanopyOperatorAction[]
   ownership: CanopyTaskOwnershipSummary
   task: CanopyTask
+}
+
+export interface CanopyTaskActionInput {
+  action: CanopyOperatorActionKind
+  assigned_to?: string
+  blocked_reason?: string
+  changed_by: string
+  clear_owner_note?: boolean
+  note?: string
+  owner_note?: string
+  priority?: CanopyTaskPriority
+  severity?: CanopyTaskSeverity
+}
+
+export interface CanopyHandoffActionInput {
+  action: Extract<CanopyOperatorActionKind, 'follow_up_handoff' | 'expire_handoff'>
+  changed_by: string
+  note?: string
 }

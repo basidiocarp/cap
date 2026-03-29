@@ -39,6 +39,7 @@ export function useCanopyPageState() {
   })
   const detailQuery = useCanopyTaskDetail(selectedTaskId)
   const snapshot = snapshotQuery.data
+  const availableAgents = snapshot?.agents ?? []
 
   const taskAttentionById = useMemo(
     () => new Map(snapshot?.task_attention.map((attention) => [attention.task_id, attention]) ?? []),
@@ -123,6 +124,7 @@ export function useCanopyPageState() {
   return {
     acknowledgedFilter,
     activeProject,
+    availableAgents,
     blockedQueueSnapshot: {
       error: blockedQueueSnapshotQuery.error,
       isLoading: blockedQueueSnapshotQuery.isLoading,

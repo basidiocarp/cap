@@ -14,6 +14,7 @@ export function CanopyPage() {
   const {
     acknowledgedFilter,
     activeProject,
+    availableAgents,
     blockedQueueSnapshot,
     closeTask,
     criticalQueueSnapshot,
@@ -141,6 +142,7 @@ export function CanopyPage() {
       />
 
       <TaskDetailModal
+        agents={availableAgents}
         detail={detailQuery.data}
         error={detailQuery.error}
         onClose={closeTask}
