@@ -181,6 +181,10 @@ export function useCanopyPageState() {
     () => new Map(snapshot?.relationship_summaries.map((summary) => [summary.task_id, summary]) ?? []),
     [snapshot?.relationship_summaries]
   )
+  const slaSummaryByTaskId = useMemo(
+    () => new Map(snapshot?.task_sla_summaries.map((summary) => [summary.task_id, summary]) ?? []),
+    [snapshot?.task_sla_summaries]
+  )
   const executionSummaryByTaskId = useMemo(
     () => new Map(snapshot?.execution_summaries.map((summary) => [summary.task_id, summary]) ?? []),
     [snapshot?.execution_summaries]
@@ -445,7 +449,9 @@ export function useCanopyPageState() {
     savedView,
     searchQuery,
     severityFilter,
+    slaSummaryByTaskId,
     snapshotQuery,
+    snapshotSlaSummary: snapshot?.sla_summary,
     sortMode,
     stalledQueueSnapshot: {
       error: stalledQueueSnapshotQuery.error,

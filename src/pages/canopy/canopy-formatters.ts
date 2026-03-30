@@ -1,9 +1,11 @@
 import type {
   CanopyAgentHeartbeatEvent,
   CanopyAttentionLevel,
+  CanopyBreachSeverity,
   CanopyDeadlineState,
   CanopyFreshness,
   CanopyOperatorAction,
+  CanopySnapshotPreset,
   CanopyTask,
   CanopyTaskDetail,
   CanopyTaskEvent,
@@ -67,6 +69,60 @@ export function deadlineStateColor(state: CanopyDeadlineState): string {
     default:
       return 'gray'
   }
+}
+
+export function breachSeverityColor(severity: CanopyBreachSeverity): string {
+  switch (severity) {
+    case 'critical':
+      return 'red'
+    case 'high':
+      return 'orange'
+    case 'medium':
+      return 'yellow'
+    case 'low':
+      return 'blue'
+    default:
+      return 'gray'
+  }
+}
+
+export function queueLabel(preset: CanopySnapshotPreset): string {
+  switch (preset) {
+    case 'due_soon_review_handoff_follow_through':
+      return 'review handoff due soon'
+    case 'overdue_review_handoff_follow_through':
+      return 'review handoff overdue'
+    case 'due_soon_review_decision_follow_through':
+      return 'review decision due soon'
+    case 'overdue_review_decision_follow_through':
+      return 'review decision overdue'
+    case 'due_soon_accepted_handoff_follow_through':
+      return 'accepted handoff due soon'
+    case 'overdue_accepted_handoff_follow_through':
+      return 'accepted handoff overdue'
+    case 'due_soon_handoff_acceptance':
+      return 'handoff acceptance due soon'
+    case 'overdue_handoff_acceptance':
+      return 'handoff acceptance overdue'
+    case 'overdue_execution_owned':
+      return 'owned execution overdue'
+    case 'overdue_execution_unclaimed':
+      return 'unclaimed execution overdue'
+    case 'due_soon_execution':
+      return 'execution due soon'
+    case 'overdue_review':
+      return 'review overdue'
+    case 'due_soon_review':
+      return 'review due soon'
+    default:
+      return formatLabel(preset)
+  }
+}
+
+export function formatSlaAge(seconds: number | null | undefined): string | null {
+  if (!seconds || seconds <= 0) return null
+  if (seconds < 3600) return `${Math.max(1, Math.floor(seconds / 60))}m`
+  return `${Math.max(1, Math.floor(seconds / 3600))}h`
 }
 
 export function priorityColor(priority: CanopyTaskPriority): string {

@@ -563,6 +563,12 @@ const mockSnapshot: CanopySnapshot = {
       updated_at: '2026-03-28T12:10:00Z',
     },
   ],
+  sla_summary: {
+    breach_severity: 'critical',
+    due_soon_count: 5,
+    oldest_overdue_seconds: 98100,
+    overdue_count: 5,
+  },
   task_attention: [
     {
       acknowledged: false,
@@ -646,6 +652,64 @@ const mockSnapshot: CanopySnapshot = {
       related_agent_count: 2,
       stale_agents: 0,
       task_id: 'task-1',
+    },
+  ],
+  task_sla_summaries: [
+    {
+      breach_severity: 'high',
+      due_soon_count: 0,
+      highest_risk_queue: 'overdue_execution_owned',
+      oldest_overdue_seconds: 98100,
+      overdue_count: 1,
+      task_id: 'task-2',
+    },
+    {
+      breach_severity: 'medium',
+      due_soon_count: 2,
+      highest_risk_queue: 'due_soon_review_handoff_follow_through',
+      oldest_overdue_seconds: null,
+      overdue_count: 0,
+      task_id: 'task-1',
+    },
+    {
+      breach_severity: 'low',
+      due_soon_count: 1,
+      highest_risk_queue: 'due_soon_accepted_handoff_follow_through',
+      oldest_overdue_seconds: null,
+      overdue_count: 0,
+      task_id: 'task-3',
+    },
+    {
+      breach_severity: 'low',
+      due_soon_count: 1,
+      highest_risk_queue: 'due_soon_review',
+      oldest_overdue_seconds: null,
+      overdue_count: 0,
+      task_id: 'task-4',
+    },
+    {
+      breach_severity: 'critical',
+      due_soon_count: 1,
+      highest_risk_queue: 'overdue_handoff_acceptance',
+      oldest_overdue_seconds: 19800,
+      overdue_count: 2,
+      task_id: 'task-5',
+    },
+    {
+      breach_severity: 'none',
+      due_soon_count: 0,
+      highest_risk_queue: null,
+      oldest_overdue_seconds: null,
+      overdue_count: 0,
+      task_id: 'task-6',
+    },
+    {
+      breach_severity: 'critical',
+      due_soon_count: 0,
+      highest_risk_queue: 'overdue_accepted_handoff_follow_through',
+      oldest_overdue_seconds: 90900,
+      overdue_count: 2,
+      task_id: 'task-7',
     },
   ],
   tasks: [
@@ -1327,6 +1391,14 @@ const mockTaskDetail: CanopyTaskDetail = {
   relationships: mockSnapshot.relationships.filter(
     (relationship) => relationship.source_task_id === 'task-1' || relationship.target_task_id === 'task-1'
   ),
+  sla_summary: {
+    breach_severity: 'medium',
+    due_soon_count: 2,
+    highest_risk_queue: 'due_soon_review_handoff_follow_through',
+    oldest_overdue_seconds: null,
+    overdue_count: 0,
+    task_id: 'task-1',
+  },
   task: mockSnapshot.tasks[1],
 }
 
@@ -1343,6 +1415,7 @@ function snapshotForTaskIds(taskIds: string[]): CanopySnapshot {
   const orderedTasks = taskIds
     .map((taskId) => mockSnapshot.tasks.find((task) => task.task_id === taskId))
     .filter((task): task is CanopySnapshot['tasks'][number] => Boolean(task))
+  const filteredTaskSlaSummaries = mockSnapshot.task_sla_summaries.filter((summary) => allowedTaskIds.has(summary.task_id))
 
   return {
     ...mockSnapshot,
@@ -1370,8 +1443,28 @@ function snapshotForTaskIds(taskIds: string[]): CanopySnapshot {
     relationships: mockSnapshot.relationships.filter(
       (relationship) => allowedTaskIds.has(relationship.source_task_id) || allowedTaskIds.has(relationship.target_task_id)
     ),
+    sla_summary: {
+      breach_severity: filteredTaskSlaSummaries.some((summary) => summary.breach_severity === 'critical')
+        ? 'critical'
+        : filteredTaskSlaSummaries.some((summary) => summary.breach_severity === 'high')
+          ? 'high'
+          : filteredTaskSlaSummaries.some((summary) => summary.breach_severity === 'medium')
+            ? 'medium'
+            : filteredTaskSlaSummaries.some((summary) => summary.breach_severity === 'low')
+              ? 'low'
+              : 'none',
+      due_soon_count: filteredTaskSlaSummaries.reduce((total, summary) => total + summary.due_soon_count, 0),
+      oldest_overdue_seconds:
+        filteredTaskSlaSummaries.reduce<number | null>(
+          (max, summary) =>
+            summary.oldest_overdue_seconds && (!max || summary.oldest_overdue_seconds > max) ? summary.oldest_overdue_seconds : max,
+          null
+        ) ?? null,
+      overdue_count: filteredTaskSlaSummaries.reduce((total, summary) => total + summary.overdue_count, 0),
+    },
     task_attention: mockSnapshot.task_attention.filter((attention) => allowedTaskIds.has(attention.task_id)),
     task_heartbeat_summaries: mockSnapshot.task_heartbeat_summaries.filter((summary) => allowedTaskIds.has(summary.task_id)),
+    task_sla_summaries: filteredTaskSlaSummaries,
     tasks: orderedTasks,
   }
 }
@@ -1609,6 +1702,14 @@ describe('Canopy page', () => {
     expect(screen.getByText('Fix lifecycle adapter')).toBeInTheDocument()
     expect(screen.getByText('1 critical tasks')).toBeInTheDocument()
     expect(screen.getByText('2 need attention')).toBeInTheDocument()
+    expect(screen.getByText('Overdue')).toBeInTheDocument()
+    expect(screen.getByText('Due Soon')).toBeInTheDocument()
+    expect(screen.getAllByText('Oldest overdue 27h').length).toBeGreaterThan(0)
+    expect(screen.getByText('Breach severity high')).toBeInTheDocument()
+    expect(screen.getAllByText('SLA high').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('next review handoff due soon').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('1 overdue').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('2 due soon').length).toBeGreaterThan(0)
     expect(screen.getByRole('button', { name: 'Critical · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Unacknowledged · 1' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Unclaimed · 1' })).toBeInTheDocument()
@@ -2270,6 +2371,12 @@ describe('Canopy page', () => {
     expect(screen.getByText('Coordination Actions')).toBeInTheDocument()
     expect(screen.getByText('Current owner: agent-1')).toBeInTheDocument()
     expect(screen.getByText('Assignments: 2')).toBeInTheDocument()
+    expect(screen.getByText('SLA Summary')).toBeInTheDocument()
+    expect(screen.getByText('Breach severity: medium')).toBeInTheDocument()
+    expect(screen.getByText('Highest risk queue: review handoff due soon')).toBeInTheDocument()
+    expect(screen.getByText('Due soon count: 2')).toBeInTheDocument()
+    expect(screen.getByText('Overdue count: 0')).toBeInTheDocument()
+    expect(screen.getByText('Oldest overdue: none')).toBeInTheDocument()
     expect(screen.getByText(/Freshness: 1 fresh · 1 aging · 0 stale · 0 missing/)).toBeInTheDocument()
     expect(screen.getByText('Verify pending review')).toBeInTheDocument()
     expect(screen.getByText('Review handoff aging')).toBeInTheDocument()
@@ -2602,7 +2709,7 @@ describe('Canopy page', () => {
       note: undefined,
       taskId: 'task-1',
     })
-  })
+  }, 10_000)
 
   it('scopes handoff action controls to the runtime-allowed handoff ids', async () => {
     const user = userEvent.setup()

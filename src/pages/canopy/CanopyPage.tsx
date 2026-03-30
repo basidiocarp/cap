@@ -70,7 +70,9 @@ export function CanopyPage() {
     relationshipSummaryByTaskId,
     savedView,
     searchQuery,
+    slaSummaryByTaskId,
     severityFilter,
+    snapshotSlaSummary,
     snapshotQuery,
     sortMode,
     stalledQueueSnapshot,
@@ -332,6 +334,7 @@ export function CanopyPage() {
         filteredHandoffs={filteredHandoffs}
         filteredTaskAttention={filteredTaskAttention}
         filteredTasks={filteredTasks}
+        snapshotSlaSummary={snapshotSlaSummary}
       />
 
       <SectionCard title='Operator Snapshot'>
@@ -340,6 +343,7 @@ export function CanopyPage() {
           filteredEvidence={filteredEvidence}
           filteredHandoffAttention={filteredHandoffAttention}
           filteredTaskAttention={filteredTaskAttention}
+          snapshotSlaSummary={snapshotSlaSummary}
         />
       </SectionCard>
 
@@ -355,6 +359,7 @@ export function CanopyPage() {
         relationshipSummaryByTaskId={relationshipSummaryByTaskId}
         renderGroupedByStatus={sortMode === 'status'}
         searchQuery={searchQuery}
+        slaSummaryByTaskId={slaSummaryByTaskId}
         statusFilter={statusFilter}
         taskAttentionById={taskAttentionById}
       />

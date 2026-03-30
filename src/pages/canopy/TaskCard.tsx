@@ -9,17 +9,21 @@ import type {
   CanopyTaskHeartbeatSummary,
   CanopyTaskOwnershipSummary,
   CanopyTaskRelationshipSummary,
+  CanopyTaskSlaSummary,
 } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'
 import { timeAgo } from '../../lib/time'
 import {
   attentionColor,
   attentionSummaryLabel,
+  breachSeverityColor,
   deadlineStateColor,
+  formatSlaAge,
   freshnessColor,
   joinedReasons,
   operatorActionLabel,
   priorityColor,
+  queueLabel,
   severityColor,
   statusColor,
   verificationColor,
@@ -53,6 +57,7 @@ export function TaskCard({
   onOpen,
   ownership,
   relationshipSummary,
+  slaSummary,
   task,
 }: {
   actions: CanopyOperatorAction[]
@@ -63,6 +68,7 @@ export function TaskCard({
   onOpen: (taskId: string) => void
   ownership?: CanopyTaskOwnershipSummary
   relationshipSummary?: CanopyTaskRelationshipSummary
+  slaSummary?: CanopyTaskSlaSummary
   task: CanopyTask
 }) {
   return (
@@ -163,6 +169,48 @@ export function TaskCard({
               {deadlineSummary.active_deadline_kind === 'review' ? 'Review due' : 'Execution due'} {deadlineSummary.active_deadline_at}
             </Text>
           </Group>
+        ) : null}
+        {slaSummary && slaSummary.breach_severity !== 'none' ? (
+          <Group gap='xs'>
+            <Badge
+              color={breachSeverityColor(slaSummary.breach_severity)}
+              variant='light'
+            >
+              SLA {slaSummary.breach_severity}
+            </Badge>
+            {slaSummary.highest_risk_queue ? (
+              <Badge
+                color={breachSeverityColor(slaSummary.breach_severity)}
+                variant='outline'
+              >
+                next {queueLabel(slaSummary.highest_risk_queue)}
+              </Badge>
+            ) : null}
+            {slaSummary.overdue_count > 0 ? (
+              <Badge
+                color='red'
+                variant='outline'
+              >
+                {slaSummary.overdue_count} overdue
+              </Badge>
+            ) : null}
+            {slaSummary.due_soon_count > 0 ? (
+              <Badge
+                color='yellow'
+                variant='outline'
+              >
+                {slaSummary.due_soon_count} due soon
+              </Badge>
+            ) : null}
+          </Group>
+        ) : null}
+        {slaSummary?.oldest_overdue_seconds ? (
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Oldest overdue {formatSlaAge(slaSummary.oldest_overdue_seconds)}
+          </Text>
         ) : null}
         {attention?.reasons.length ? (
           <Text

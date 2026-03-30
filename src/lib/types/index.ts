@@ -7,6 +7,7 @@ export type {
   CanopyAgentRegistration,
   CanopyAgentStatus,
   CanopyAttentionLevel,
+  CanopyBreachSeverity,
   CanopyCouncilMessage,
   CanopyCouncilMessageType,
   CanopyDeadlineState,
@@ -25,6 +26,7 @@ export type {
   CanopySnapshot,
   CanopySnapshotAttentionSummary,
   CanopySnapshotPreset,
+  CanopySnapshotSlaSummary,
   CanopyTask,
   CanopyTaskActionInput,
   CanopyTaskAssignment,
@@ -41,6 +43,7 @@ export type {
   CanopyTaskPriority,
   CanopyTaskRelationshipSummary,
   CanopyTaskSeverity,
+  CanopyTaskSlaSummary,
   CanopyTaskStatus,
   CanopyVerificationState,
 } from './canopy'

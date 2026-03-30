@@ -7,6 +7,7 @@ import type {
   CanopyHandoff,
   CanopyHandoffAttention,
   CanopyOperatorAction,
+  CanopySnapshotSlaSummary,
   CanopyTask,
   CanopyTaskAttention,
   CanopyTaskDeadlineSummary,
@@ -14,21 +15,24 @@ import type {
   CanopyTaskHeartbeatSummary,
   CanopyTaskOwnershipSummary,
   CanopyTaskRelationshipSummary,
+  CanopyTaskSlaSummary,
   CanopyTaskStatus,
 } from '../../lib/api'
 import { EmptyState } from '../../components/EmptyState'
 import { SectionCard } from '../../components/SectionCard'
-import { matchesActiveTask } from './canopy-formatters'
+import { breachSeverityColor, formatSlaAge, matchesActiveTask } from './canopy-formatters'
 import { TaskCard } from './TaskCard'
 
 export function CanopySummaryMetrics({
   filteredAgents,
   filteredHandoffs,
+  snapshotSlaSummary,
   filteredTaskAttention,
   filteredTasks,
 }: {
   filteredAgents: CanopyAgentRegistration[]
   filteredHandoffs: CanopyHandoff[]
+  snapshotSlaSummary?: CanopySnapshotSlaSummary
   filteredTaskAttention: CanopyTaskAttention[]
   filteredTasks: CanopyTask[]
 }) {
@@ -54,6 +58,30 @@ export function CanopySummaryMetrics({
           <Text size='xl'>{filteredHandoffs.filter((handoff) => handoff.status === 'open').length}</Text>
         </SectionCard>
       </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <SectionCard title='Overdue'>
+          <Text size='xl'>{snapshotSlaSummary?.overdue_count ?? 0}</Text>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            {snapshotSlaSummary?.oldest_overdue_seconds
+              ? `Oldest overdue ${formatSlaAge(snapshotSlaSummary.oldest_overdue_seconds)}`
+              : 'No overdue SLA pressure'}
+          </Text>
+        </SectionCard>
+      </Grid.Col>
+      <Grid.Col span={{ base: 6, md: 3 }}>
+        <SectionCard title='Due Soon'>
+          <Text size='xl'>{snapshotSlaSummary?.due_soon_count ?? 0}</Text>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            {snapshotSlaSummary ? `Breach severity ${snapshotSlaSummary.breach_severity}` : 'No SLA summary'}
+          </Text>
+        </SectionCard>
+      </Grid.Col>
     </Grid>
   )
 }
@@ -62,11 +90,13 @@ export function CanopySnapshotBadges({
   filteredAgentAttention,
   filteredEvidence,
   filteredHandoffAttention,
+  snapshotSlaSummary,
   filteredTaskAttention,
 }: {
   filteredAgentAttention: CanopyAgentAttention[]
   filteredEvidence: CanopyEvidenceRef[]
   filteredHandoffAttention: CanopyHandoffAttention[]
+  snapshotSlaSummary?: CanopySnapshotSlaSummary
   filteredTaskAttention: CanopyTaskAttention[]
 }) {
   return (
@@ -101,6 +131,22 @@ export function CanopySnapshotBadges({
       >
         {filteredEvidence.length} evidence refs
       </Badge>
+      {snapshotSlaSummary ? (
+        <Badge
+          color={breachSeverityColor(snapshotSlaSummary.breach_severity)}
+          variant='light'
+        >
+          SLA {snapshotSlaSummary.breach_severity}
+        </Badge>
+      ) : null}
+      {snapshotSlaSummary?.oldest_overdue_seconds ? (
+        <Badge
+          color='red'
+          variant='outline'
+        >
+          oldest overdue {formatSlaAge(snapshotSlaSummary.oldest_overdue_seconds)}
+        </Badge>
+      ) : null}
     </Group>
   )
 }
@@ -111,6 +157,7 @@ export function CanopyTaskBoard({
   groupedTasks,
   heartbeatSummaryByTaskId,
   deadlineSummaryByTaskId,
+  slaSummaryByTaskId,
   onOpenTask,
   operatorActionsByTaskId,
   ownershipByTaskId,
@@ -125,6 +172,7 @@ export function CanopyTaskBoard({
   groupedTasks: Array<{ status: CanopyTaskStatus; tasks: CanopyTask[] }>
   heartbeatSummaryByTaskId: Map<string, CanopyTaskHeartbeatSummary>
   deadlineSummaryByTaskId: Map<string, CanopyTaskDeadlineSummary>
+  slaSummaryByTaskId: Map<string, CanopyTaskSlaSummary>
   onOpenTask: (taskId: string) => void
   operatorActionsByTaskId: Map<string, CanopyOperatorAction[]>
   ownershipByTaskId: Map<string, CanopyTaskOwnershipSummary>
@@ -161,6 +209,7 @@ export function CanopyTaskBoard({
               onOpen={onOpenTask}
               ownership={ownershipByTaskId.get(task.task_id)}
               relationshipSummary={relationshipSummaryByTaskId.get(task.task_id)}
+              slaSummary={slaSummaryByTaskId.get(task.task_id)}
               task={task}
             />
           ))}
@@ -188,6 +237,7 @@ export function CanopyTaskBoard({
                 onOpen={onOpenTask}
                 ownership={ownershipByTaskId.get(task.task_id)}
                 relationshipSummary={relationshipSummaryByTaskId.get(task.task_id)}
+                slaSummary={slaSummaryByTaskId.get(task.task_id)}
                 task={task}
               />
             ))}

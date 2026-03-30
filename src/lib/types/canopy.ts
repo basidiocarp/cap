@@ -162,6 +162,7 @@ export type CanopyTaskRelationshipKind = 'follow_up' | 'blocks'
 export type CanopyTaskRelationshipRole = 'follow_up_parent' | 'follow_up_child' | 'blocks' | 'blocked_by'
 export type CanopyDeadlineState = 'none' | 'scheduled' | 'due_soon' | 'overdue'
 export type CanopyTaskDeadlineKind = 'execution' | 'review'
+export type CanopyBreachSeverity = 'none' | 'low' | 'medium' | 'high' | 'critical'
 
 export interface CanopyAgentRegistration {
   agent_id: string
@@ -356,6 +357,15 @@ export interface CanopyTaskDeadlineSummary {
   task_id: string
 }
 
+export interface CanopyTaskSlaSummary {
+  breach_severity: CanopyBreachSeverity
+  due_soon_count: number
+  highest_risk_queue: CanopySnapshotPreset | null
+  oldest_overdue_seconds: number | null
+  overdue_count: number
+  task_id: string
+}
+
 export interface CanopyTaskRelationshipSummary {
   active_blocker_count: number
   blocker_count: number
@@ -423,11 +433,19 @@ export interface CanopySnapshotAttentionSummary {
   tasks_needing_attention: number
 }
 
+export interface CanopySnapshotSlaSummary {
+  breach_severity: CanopyBreachSeverity
+  due_soon_count: number
+  oldest_overdue_seconds: number | null
+  overdue_count: number
+}
+
 export interface CanopySnapshot {
   agent_attention: CanopyAgentAttention[]
   agent_heartbeat_summaries: CanopyAgentHeartbeatSummary[]
   agents: CanopyAgentRegistration[]
   attention: CanopySnapshotAttentionSummary
+  sla_summary: CanopySnapshotSlaSummary
   deadline_summaries: CanopyTaskDeadlineSummary[]
   evidence: CanopyEvidenceRef[]
   execution_summaries: CanopyTaskExecutionSummary[]
@@ -439,6 +457,7 @@ export interface CanopySnapshot {
   relationships: CanopyTaskRelationship[]
   relationship_summaries: CanopyTaskRelationshipSummary[]
   task_attention: CanopyTaskAttention[]
+  task_sla_summaries: CanopyTaskSlaSummary[]
   task_heartbeat_summaries: CanopyTaskHeartbeatSummary[]
   tasks: CanopyTask[]
 }
@@ -463,6 +482,7 @@ export interface CanopyTaskDetail {
   related_tasks: CanopyRelatedTask[]
   relationships: CanopyTaskRelationship[]
   relationship_summary: CanopyTaskRelationshipSummary
+  sla_summary: CanopyTaskSlaSummary
   task: CanopyTask
 }
 

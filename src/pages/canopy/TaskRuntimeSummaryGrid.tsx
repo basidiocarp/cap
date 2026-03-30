@@ -4,7 +4,7 @@ import type { CanopyTaskDetail } from '../../lib/api'
 import { EmptyState } from '../../components/EmptyState'
 import { SectionCard } from '../../components/SectionCard'
 import { timeAgo } from '../../lib/time'
-import { attentionColor, deadlineStateColor, operatorActionLabel } from './canopy-formatters'
+import { attentionColor, breachSeverityColor, deadlineStateColor, formatSlaAge, operatorActionLabel, queueLabel } from './canopy-formatters'
 
 export function TaskRuntimeSummaryGrid({ detail }: { detail: CanopyTaskDetail }) {
   return (
@@ -157,6 +157,39 @@ export function TaskRuntimeSummaryGrid({ detail }: { detail: CanopyTaskDetail })
             {detail.deadline_summary.overdue_by_seconds !== null ? (
               <Text size='sm'>Overdue by: {detail.deadline_summary.overdue_by_seconds}s</Text>
             ) : null}
+          </Stack>
+        </SectionCard>
+      </Grid.Col>
+      <Grid.Col span={{ base: 12, md: 4 }}>
+        <SectionCard title='SLA Summary'>
+          <Stack gap={4}>
+            <Group gap='xs'>
+              <Badge
+                color={breachSeverityColor(detail.sla_summary.breach_severity)}
+                size='xs'
+                variant='light'
+              >
+                {detail.sla_summary.breach_severity}
+              </Badge>
+              {detail.sla_summary.highest_risk_queue ? (
+                <Badge
+                  color={breachSeverityColor(detail.sla_summary.breach_severity)}
+                  size='xs'
+                  variant='outline'
+                >
+                  {queueLabel(detail.sla_summary.highest_risk_queue)}
+                </Badge>
+              ) : null}
+            </Group>
+            <Text size='sm'>Breach severity: {detail.sla_summary.breach_severity}</Text>
+            <Text size='sm'>
+              Highest risk queue: {detail.sla_summary.highest_risk_queue ? queueLabel(detail.sla_summary.highest_risk_queue) : 'none'}
+            </Text>
+            <Text size='sm'>Due soon count: {detail.sla_summary.due_soon_count}</Text>
+            <Text size='sm'>Overdue count: {detail.sla_summary.overdue_count}</Text>
+            <Text size='sm'>
+              Oldest overdue: {detail.sla_summary.oldest_overdue_seconds ? formatSlaAge(detail.sla_summary.oldest_overdue_seconds) : 'none'}
+            </Text>
           </Stack>
         </SectionCard>
       </Grid.Col>
