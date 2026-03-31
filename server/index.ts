@@ -3,7 +3,6 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
-import { closeDb } from './db.ts'
 import { CAP_API_KEY, CAP_HOST, CORS_ORIGIN } from './lib/config.ts'
 import { registry } from './lib/rhizome-registry.ts'
 import { logger } from './logger.ts'
@@ -104,7 +103,6 @@ if (!process.env.VITEST) {
 function shutdown() {
   logger.info('Shutting down')
   registry.destroyAll()
-  closeDb()
   process.exit(0)
 }
 

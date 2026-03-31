@@ -1,6 +1,9 @@
 export interface SessionRecord {
   id: string
   project: string
+  project_root?: string | null
+  runtime_session_id?: string | null
+  worktree_id?: string | null
   scope?: string | null
   task: string | null
   started_at: string

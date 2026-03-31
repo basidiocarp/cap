@@ -3,7 +3,7 @@ import type { Hono } from 'hono'
 import { activateMode, loadModes } from '../../lib/modes.ts'
 import { logger } from '../../logger.ts'
 import { getHyphaeSettings, getMyceliumSettings, getRhizomeSettings } from './config.ts'
-import { buildStipeArgs, parseStipeAction, runStipe, runStipeJson } from './shared.ts'
+import { buildStipeArgs, parseStipeAction, runStipe, runStipeDoctorReport, runStipeInitPlan } from './shared.ts'
 
 export function registerReadRoutes(app: Hono) {
   app.get('/', async (c) => {
@@ -70,7 +70,7 @@ export function registerReadRoutes(app: Hono) {
 
   app.get('/stipe/repair-plan', async (c) => {
     try {
-      const [doctor, initPlan] = await Promise.all([runStipeJson(['doctor']), runStipeJson(['init', '--dry-run'])])
+      const [doctor, initPlan] = await Promise.all([runStipeDoctorReport(), runStipeInitPlan()])
 
       return c.json({
         doctor,

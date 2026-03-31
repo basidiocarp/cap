@@ -2,6 +2,7 @@ import { createCliRunner } from './lib/cli.ts'
 import { CANOPY_BIN } from './lib/config.ts'
 
 const run = createCliRunner(CANOPY_BIN, 'canopy')
+const CANOPY_API_SCHEMA_VERSION = '1.0'
 const ALLOWED_SORTS = new Set(['status', 'title', 'updated_at', 'created_at', 'verification', 'priority', 'severity', 'attention'])
 const ALLOWED_VIEWS = new Set([
   'all',
@@ -148,6 +149,51 @@ const ALLOWED_EVIDENCE_SOURCE_KINDS = new Set([
   'rhizome_export',
   'manual_note',
 ])
+const EVIDENCE_REF_SCHEMA_VERSION = '1.0'
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : null
+}
+
+function validateEvidenceRefs(payload: unknown, label: string): void {
+  const record = asRecord(payload)
+  const evidence = record?.evidence
+  if (!Array.isArray(evidence)) {
+    throw new Error(`Invalid JSON from ${label}`)
+  }
+
+  for (const item of evidence) {
+    const evidenceRecord = asRecord(item)
+    if (
+      !evidenceRecord ||
+      evidenceRecord.schema_version !== EVIDENCE_REF_SCHEMA_VERSION ||
+      typeof evidenceRecord.evidence_id !== 'string'
+    ) {
+      throw new Error(`Invalid evidence payload from ${label}`)
+    }
+  }
+}
+
+function validateCanopySnapshot(payload: unknown): void {
+  const record = asRecord(payload)
+  if (record?.schema_version !== CANOPY_API_SCHEMA_VERSION || !Array.isArray(record.tasks) || !Array.isArray(record.evidence)) {
+    throw new Error('Invalid payload from canopy api snapshot')
+  }
+  validateEvidenceRefs(payload, 'canopy api snapshot')
+}
+
+function validateCanopyTaskDetail(payload: unknown): void {
+  const record = asRecord(payload)
+  if (
+    record?.schema_version !== CANOPY_API_SCHEMA_VERSION ||
+    !asRecord(record.task) ||
+    !Array.isArray(record.allowed_actions) ||
+    !Array.isArray(record.evidence)
+  ) {
+    throw new Error('Invalid payload from canopy api task')
+  }
+  validateEvidenceRefs(payload, 'canopy api task')
+}
 
 function parseJson<T>(raw: string, label: string): T {
   try {
@@ -188,12 +234,16 @@ export async function getSnapshot<T = unknown>(options?: {
   if (acknowledged) args.push('--acknowledged', acknowledged)
 
   const raw = await run(args)
-  return parseJson<T>(raw, 'canopy api snapshot')
+  const parsed = parseJson<T>(raw, 'canopy api snapshot')
+  validateCanopySnapshot(parsed)
+  return parsed
 }
 
 export async function getTaskDetail<T = unknown>(taskId: string): Promise<T> {
   const raw = await run(['api', 'task', '--task-id', taskId])
-  return parseJson<T>(raw, 'canopy api task')
+  const parsed = parseJson<T>(raw, 'canopy api task')
+  validateCanopyTaskDetail(parsed)
+  return parsed
 }
 
 export async function applyTaskAction<T = unknown>(

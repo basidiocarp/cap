@@ -24,6 +24,7 @@ export interface StipeDoctorCheck {
 }
 
 export interface StipeDoctorReport {
+  schema_version?: '1.0'
   checks: StipeDoctorCheck[]
   healthy: boolean
   repair_actions: StipeRepairAction[]
@@ -37,6 +38,7 @@ export interface StipeInitStep {
 }
 
 export interface StipeInitPlan {
+  schema_version?: '1.0'
   detected_clients: string[]
   dry_run: boolean
   repair_actions: StipeRepairAction[]

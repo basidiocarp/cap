@@ -1,79 +1,37 @@
-import type { CommandAggregateRow, CommandHistory, CommandHistoryEntry } from './types.ts'
-import { logger } from '../logger.ts'
-import { getMyceliumDb } from './db.ts'
+import type { CommandHistory, CommandHistoryEntry } from './types.ts'
+import { getGainHistory } from './gain.ts'
 
-export function getCommandAggregates(limit = 10): CommandAggregateRow[] {
-  const db = getMyceliumDb()
-  if (!db) return []
-
-  try {
-    return db
-      .prepare(
-        `SELECT mycelium_cmd as command,
-                COUNT(*) as count,
-                AVG(savings_pct) as avg_savings_percent,
-                SUM(input_tokens) as tokens_input,
-                SUM(saved_tokens) as tokens_saved
-         FROM commands
-         GROUP BY mycelium_cmd
-         ORDER BY count DESC, SUM(saved_tokens) DESC
-         LIMIT ?`
-      )
-      .all(limit) as CommandAggregateRow[]
-  } catch (err) {
-    logger.debug({ err }, 'Failed to query top mycelium commands')
-    return []
-  } finally {
-    db.close()
+function toCommandHistoryEntry(entry: {
+  command: string
+  input_tokens: number
+  output_tokens: number
+  project_path: string
+  saved_tokens: number
+  savings_pct: number
+  session_id?: string | null
+  timestamp: string
+}): CommandHistoryEntry {
+  return {
+    command: entry.command,
+    filtered_tokens: entry.output_tokens,
+    original_tokens: entry.input_tokens,
+    project_path: entry.project_path,
+    saved_tokens: entry.saved_tokens,
+    savings_pct: entry.savings_pct,
+    session_id: entry.session_id ?? null,
+    timestamp: entry.timestamp,
   }
-}
-
-function projectHistoryParams(projectPath?: string): [string | null, string | null] {
-  if (!projectPath?.trim()) return [null, null]
-  const trimmed = projectPath.trim().replace(/[\\/]+$/, '')
-  return [trimmed, `${trimmed}/*`]
 }
 
 export async function getCommandHistory(limit = 50, projectPath?: string): Promise<CommandHistory> {
-  const db = getMyceliumDb()
-  if (!db) {
-    return { commands: [], total: 0 }
+  const result = await getGainHistory('json', { limit, projectPath })
+  if ('raw' in result) {
+    throw new Error('Mycelium history did not return JSON')
   }
 
-  try {
-    const [projectExact, projectGlob] = projectHistoryParams(projectPath)
-    const commands = db
-      .prepare(
-        `SELECT timestamp,
-                mycelium_cmd as command,
-                project_path,
-                input_tokens as original_tokens,
-                output_tokens as filtered_tokens,
-                saved_tokens,
-                savings_pct
-         FROM commands
-         WHERE (?1 IS NULL OR project_path = ?1 OR project_path GLOB ?2)
-         ORDER BY timestamp DESC
-         LIMIT ?3`
-      )
-      .all(projectExact, projectGlob, limit) as CommandHistoryEntry[]
-
-    const totalRow = db
-      .prepare(
-        `SELECT COUNT(*) as count
-         FROM commands
-         WHERE (?1 IS NULL OR project_path = ?1 OR project_path GLOB ?2)`
-      )
-      .get(projectExact, projectGlob) as { count: number } | undefined
-
-    return {
-      commands,
-      total: totalRow?.count ?? commands.length,
-    }
-  } catch (err) {
-    logger.debug({ err }, 'Failed to get command history')
-    return { commands: [], total: 0 }
-  } finally {
-    db.close()
+  const commands = (result.history ?? []).map(toCommandHistoryEntry)
+  return {
+    commands,
+    total: result.summary.total_commands,
   }
 }

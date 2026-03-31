@@ -1,102 +1,80 @@
-import type { Lesson, MemoryRow } from '../types.ts'
-import { getDb } from '../db.ts'
+import type { Lesson } from '../types.ts'
+import { createCliRunner } from '../lib/cli.ts'
+import { HYPHAE_BIN } from '../lib/config.ts'
+import { logger } from '../logger.ts'
 
-export function extractLessons(): Lesson[] {
-  const db = getDb()
-  if (!db) return []
+const LESSON_LIMIT = 50
+const runCli = createCliRunner(HYPHAE_BIN, 'hyphae')
+const LESSONS_SCHEMA_VERSION = '1.0'
 
-  const lessons: Lesson[] = []
-  const topicMemories = new Map<string, MemoryRow[]>()
-  const topics = ['corrections', 'errors/resolved', 'tests/resolved']
+export class HyphaeLessonsCliError extends Error {
+  kind: 'invalid_payload' | 'unavailable'
 
-  for (const topic of topics) {
-    const memories = db.prepare(`SELECT * FROM memories WHERE topic = ? ORDER BY created_at DESC LIMIT 50`).all(topic) as MemoryRow[]
-
-    if (memories.length > 0) {
-      topicMemories.set(topic, memories)
-    }
+  constructor(message: string, kind: 'invalid_payload' | 'unavailable', options?: { cause?: unknown }) {
+    super(message, options)
+    this.kind = kind
+    this.name = 'HyphaeLessonsCliError'
   }
+}
 
-  const corrections = topicMemories.get('corrections') || []
-  const correctionGroups = new Map<string, MemoryRow[]>()
+function isLessonCategory(value: unknown): value is Lesson['category'] {
+  return value === 'corrections' || value === 'errors' || value === 'tests'
+}
 
-  for (const memory of corrections) {
-    const keywords = memory.keywords ? (JSON.parse(memory.keywords) as string[]) : []
-    const key = keywords.slice(0, 2).join('|') || memory.summary.slice(0, 20)
-    let group = correctionGroups.get(key)
-    if (!group) {
-      group = []
-      correctionGroups.set(key, group)
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((entry) => typeof entry === 'string')
+}
+
+function isLesson(value: unknown): value is Lesson {
+  if (!value || typeof value !== 'object') return false
+  const lesson = value as Record<string, unknown>
+  return (
+    typeof lesson.id === 'string' &&
+    isLessonCategory(lesson.category) &&
+    typeof lesson.description === 'string' &&
+    typeof lesson.frequency === 'number' &&
+    isStringArray(lesson.source_topics) &&
+    isStringArray(lesson.keywords)
+  )
+}
+
+function parseLessons(stdout: string): Lesson[] {
+  try {
+    const parsed = JSON.parse(stdout) as unknown
+    if (
+      !parsed ||
+      typeof parsed !== 'object' ||
+      !('schema_version' in parsed) ||
+      (parsed as { schema_version?: string }).schema_version !== LESSONS_SCHEMA_VERSION ||
+      !('lessons' in parsed)
+    ) {
+      throw new HyphaeLessonsCliError('Hyphae lessons returned an invalid payload', 'invalid_payload')
     }
-    group.push(memory)
-  }
 
-  for (const [, items] of correctionGroups) {
-    if (items.length >= 1) {
-      lessons.push({
-        category: 'corrections',
-        description: items[0].summary,
-        frequency: items.length,
-        id: `correction-${lessons.length}`,
-        keywords: items[0].keywords ? (JSON.parse(items[0].keywords) as string[]) : [],
-        source_topics: ['corrections'],
-      })
+    const lessons = (parsed as { lessons?: unknown }).lessons
+    if (!Array.isArray(lessons) || !lessons.every(isLesson)) {
+      throw new HyphaeLessonsCliError('Hyphae lessons returned an invalid payload', 'invalid_payload')
     }
+
+    return lessons
+  } catch (err) {
+    logger.debug({ err }, 'Failed to parse Hyphae lessons CLI output')
+    if (err instanceof HyphaeLessonsCliError) throw err
+    throw new HyphaeLessonsCliError('Failed to parse Hyphae lessons CLI output', 'invalid_payload', { cause: err })
   }
+}
 
-  const resolvedErrors = topicMemories.get('errors/resolved') || []
-  const errorGroups = new Map<string, MemoryRow[]>()
-
-  for (const memory of resolvedErrors) {
-    const keywords = memory.keywords ? (JSON.parse(memory.keywords) as string[]) : []
-    const key = keywords[0] || memory.summary.slice(0, 30)
-    let group = errorGroups.get(key)
-    if (!group) {
-      group = []
-      errorGroups.set(key, group)
-    }
-    group.push(memory)
+async function runLessonsCli(): Promise<Lesson[]> {
+  try {
+    const stdout = await runCli(['--all-projects', 'lessons', '--limit', String(LESSON_LIMIT)])
+    return parseLessons(stdout)
+  } catch (err) {
+    if (err instanceof HyphaeLessonsCliError) throw err
+    logger.debug({ err }, 'Failed to load Hyphae lessons from CLI')
+    throw new HyphaeLessonsCliError('Failed to load Hyphae lessons from CLI', 'unavailable', { cause: err })
   }
+}
 
-  for (const [, items] of errorGroups) {
-    if (items.length >= 1) {
-      lessons.push({
-        category: 'errors',
-        description: items[0].summary,
-        frequency: items.length,
-        id: `error-${lessons.length}`,
-        keywords: items[0].keywords ? (JSON.parse(items[0].keywords) as string[]) : [],
-        source_topics: ['errors/resolved'],
-      })
-    }
-  }
-
-  const resolvedTests = topicMemories.get('tests/resolved') || []
-  const testGroups = new Map<string, MemoryRow[]>()
-
-  for (const memory of resolvedTests) {
-    const keywords = memory.keywords ? (JSON.parse(memory.keywords) as string[]) : []
-    const key = keywords[0] || memory.summary.slice(0, 30)
-    let group = testGroups.get(key)
-    if (!group) {
-      group = []
-      testGroups.set(key, group)
-    }
-    group.push(memory)
-  }
-
-  for (const [, items] of testGroups) {
-    if (items.length >= 1) {
-      lessons.push({
-        category: 'tests',
-        description: items[0].summary,
-        frequency: items.length,
-        id: `test-${lessons.length}`,
-        keywords: items[0].keywords ? (JSON.parse(items[0].keywords) as string[]) : [],
-        source_topics: ['tests/resolved'],
-      })
-    }
-  }
-
-  return lessons.sort((a, b) => b.frequency - a.frequency)
+export async function getLessons(): Promise<Lesson[]> {
+  return runLessonsCli()
 }

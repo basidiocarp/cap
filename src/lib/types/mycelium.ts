@@ -9,6 +9,26 @@ export interface MyceliumAnalytics {
 export interface GainResult {
   avg_savings_pct?: number
   by_command?: [string, number, number, number][]
+  history?: Array<{
+    command: string
+    input_tokens: number
+    output_tokens: number
+    project_path: string
+    saved_tokens: number
+    savings_pct: number
+    session_id?: string | null
+    timestamp: string
+  }>
+  schema_version?: string
+  summary?: {
+    avg_savings_pct: number
+    avg_time_ms: number
+    total_commands: number
+    total_input: number
+    total_output: number
+    total_saved: number
+    total_time_ms: number
+  }
   total_commands?: number
   total_input?: number
   total_saved?: number
@@ -21,6 +41,7 @@ export interface CommandHistoryEntry {
   project_path: string
   saved_tokens: number
   savings_pct: number
+  session_id?: string | null
   timestamp: string
 }
 

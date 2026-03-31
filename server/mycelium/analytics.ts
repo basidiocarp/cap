@@ -1,30 +1,25 @@
 import type { GainCliOutput } from './types.ts'
 import { cachedAsync } from '../lib/cache.ts'
 import { getDailyGainOutput, getGain } from './gain.ts'
-import { getCommandAggregates } from './history.ts'
-
-function isGainCliOutput(value: GainCliOutput | { raw: string } | null): value is GainCliOutput {
-  return value !== null && !('raw' in value)
-}
 
 async function computeAnalytics() {
   try {
     const [gain, daily] = await Promise.allSettled([getGain('json'), getDailyGainOutput()])
 
-    const gainRaw = gain.status === 'fulfilled' ? gain.value : null
+    const gainRaw = gain.status === 'fulfilled' && !('raw' in gain.value) ? gain.value : null
     const dailyRaw = daily.status === 'fulfilled' ? daily.value : null
-    const gainData = isGainCliOutput(gainRaw) ? gainRaw : null
-    const dailyData = isGainCliOutput(dailyRaw) ? dailyRaw : null
+    const gainData = gainRaw as GainCliOutput | null
+    const dailyData = dailyRaw as GainCliOutput | null
 
     const summary = gainData?.summary ?? dailyData?.summary
     const byDay = dailyData?.daily ?? []
-    const commandAggregates = getCommandAggregates(10)
+    const commandAggregates = gainData?.by_command ?? dailyData?.by_command ?? []
 
     const savings_by_category = commandAggregates.map((command) => ({
       category: command.command,
       commands: command.count,
-      rate: command.avg_savings_percent / 100,
-      tokens_input: command.tokens_input,
+      rate: command.avg_savings_pct / 100,
+      tokens_input: command.input_tokens,
       tokens_saved: command.tokens_saved,
     }))
 
@@ -40,7 +35,7 @@ async function computeAnalytics() {
     const filtered = totalSaved > 0 ? totalCommands : 0
     const passthrough = totalCommands - filtered
     const top_commands = commandAggregates.map((command) => ({
-      avg_savings_percent: command.avg_savings_percent,
+      avg_savings_percent: command.avg_savings_pct,
       command: command.command,
       count: command.count,
     }))

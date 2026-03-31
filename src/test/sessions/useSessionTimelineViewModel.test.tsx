@@ -195,6 +195,36 @@ describe('useSessionTimelineViewModel', () => {
     })
   })
 
+  it('selects the requested session when the URL uses the runtime session id', async () => {
+    mockTimeline = [
+      {
+        ended_at: '2026-03-27T12:10:00Z',
+        errors: '0',
+        events: [],
+        files_modified: '[]',
+        id: 'ses_internal',
+        last_activity_at: '2026-03-27T12:10:00Z',
+        outcome_count: 0,
+        project: 'cap',
+        recall_count: 0,
+        runtime_session_id: 'claude-session-42',
+        scope: 'worker-a',
+        started_at: '2026-03-27T12:00:00Z',
+        status: 'completed',
+        summary: 'Runtime-addressable session',
+        task: 'recent work',
+      },
+    ]
+
+    const { result } = renderHook(() => useSessionTimelineViewModel(), {
+      wrapper: createWrapper('/sessions?session=claude-session-42'),
+    })
+
+    await waitFor(() => {
+      expect(result.current.selectedSession?.id).toBe('ses_internal')
+    })
+  })
+
   it('opens, closes, and refreshes the timeline state through controller actions', async () => {
     const { result } = renderHook(() => useSessionTimelineViewModel(), {
       wrapper: createWrapper('/sessions'),

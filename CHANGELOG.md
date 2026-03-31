@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+## v0.11.0
+
+### Features
+
+- **Owned ecosystem reads**: Cap now consumes owned Hyphae, Mycelium, Canopy, and Stipe command surfaces instead of reconstructing those views from private databases or config files.
+- **Live contract coverage**: Added real Cap↔Hyphae and Cap↔Mycelium contract tests that execute the actual binaries and pin the argv plus JSON payload seams.
+
+### Improvements
+
+- **Versioned contract enforcement**: Server adapters now require published `schema_version` fields across the main Hyphae, Mycelium, Canopy, and Stipe boundaries.
+- **Session identity joins**: Session pages now prefer shared runtime-session ids and identity-v1 data when correlating Hyphae and Mycelium activity.
+- **Less private coupling**: Status, analytics, context, memoirs, lessons, and timeline reads now fail closed on contract errors instead of silently depending on internal storage shapes.
+
+## Unreleased
+
 ### Improvements
 
 - **Action-oriented empty states**: Memories and analytics now explain why data may be missing and link directly to the relevant repair or follow-up pages instead of stopping at passive alerts.

@@ -43,7 +43,7 @@ Tests for API routes using Hono's test client:
 
 **Integration tests**: Test API routes using Hono's request/response objects
 
-**No subprocess spawning**: Mocked RhizomeClient to avoid spawning the Rhizome binary
+**Mostly mocked subprocesses**: server unit tests usually mock CLI runners, but targeted Hyphae contract tests intentionally spawn the real `hyphae` binary against a temporary database
 
 ## Coverage Target
 

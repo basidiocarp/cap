@@ -26,7 +26,8 @@ export function useSessionTimelineViewModel() {
   const status = statusQuery.data
   const readiness = status ? getEcosystemReadinessModel(status, repairPlanQuery.data) : null
   const coverageIssues = buildCoverageIssues(commands.length, readiness, sessions, status)
-  const selectedSession = sessions.find((session) => session.id === selectedSessionId) ?? null
+  const selectedSession =
+    sessions.find((session) => session.id === selectedSessionId || session.runtime_session_id === selectedSessionId) ?? null
   const requestedSessionId = searchParams.get('session')
   const requestedDetail = searchParams.get('detail')
   const requestedSelectionKey = requestedSessionId ? `session:${requestedSessionId}` : requestedDetail === 'latest' ? 'detail:latest' : null
@@ -44,7 +45,9 @@ export function useSessionTimelineViewModel() {
     }
 
     if (requestedSessionId) {
-      const matchedSession = sessions.find((session) => session.id === requestedSessionId)
+      const matchedSession = sessions.find(
+        (session) => session.id === requestedSessionId || session.runtime_session_id === requestedSessionId
+      )
       if (matchedSession) {
         setSelectedSessionId(matchedSession.id)
         setHandledRouteSelectionKey(requestedSelectionKey)

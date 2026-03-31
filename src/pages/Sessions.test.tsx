@@ -354,6 +354,48 @@ describe('Sessions page', () => {
     expect(within(dialog).getByText('latest route session')).toBeInTheDocument()
   })
 
+  it('correlates Mycelium commands to a session by runtime session id before falling back to timestamps', () => {
+    mockTimeline = [
+      {
+        ended_at: '2026-03-27T12:10:00Z',
+        errors: null,
+        events: [],
+        files_modified: null,
+        id: 'ses_internal',
+        last_activity_at: '2026-03-27T12:10:00Z',
+        outcome_count: 0,
+        project: 'cap',
+        recall_count: 0,
+        runtime_session_id: 'claude-session-42',
+        scope: 'worker-e',
+        started_at: '2026-03-27T12:00:00Z',
+        status: 'completed',
+        summary: 'Session matched by runtime id.',
+        task: 'runtime id session',
+      },
+    ]
+    mockCommandHistory = {
+      commands: [
+        {
+          command: 'mycelium cargo test',
+          filtered_tokens: 200,
+          original_tokens: 1000,
+          project_path: '/workspace/cap',
+          saved_tokens: 800,
+          savings_pct: 80,
+          session_id: 'claude-session-42',
+          timestamp: '2026-03-27T14:04:00Z',
+        },
+      ],
+      total: 1,
+    }
+
+    renderWithProviders(<Sessions />, { route: '/sessions' })
+
+    expect(screen.getByText('1 Mycelium commands in scope')).toBeInTheDocument()
+    expect(screen.getByText('mycelium cargo test')).toBeInTheDocument()
+  })
+
   it('shows repair guidance when core tool coverage is missing', () => {
     mockStatus = {
       ...mockStatus,

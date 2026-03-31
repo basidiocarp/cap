@@ -21,37 +21,6 @@ export interface MemoryRow {
   superseded_by_memory_id?: string | null
 }
 
-export interface MemoirRow {
-  id: string
-  name: string
-  description: string
-  created_at: string
-  updated_at: string
-  consolidation_threshold: number
-}
-
-export interface ConceptRow {
-  id: string
-  memoir_id: string
-  name: string
-  definition: string
-  labels: string // JSON array
-  confidence: number
-  revision: number
-  created_at: string
-  updated_at: string
-  source_memory_ids: string // JSON array
-}
-
-export interface ConceptLinkRow {
-  id: string
-  source_id: string
-  target_id: string
-  relation: string
-  weight: number
-  created_at: string
-}
-
 export interface TopicSummary {
   topic: string
   count: number
@@ -82,6 +51,9 @@ export interface HealthResult {
 export interface SessionRecord {
   id: string
   project: string
+  project_root?: string | null
+  runtime_session_id?: string | null
+  worktree_id?: string | null
   scope?: string | null
   task: string | null
   started_at: string
@@ -119,4 +91,13 @@ export interface Lesson {
   frequency: number
   source_topics: string[]
   keywords: string[]
+}
+
+export interface HyphaeAnalytics {
+  importance_distribution: { critical: number; ephemeral: number; high: number; low: number; medium: number }
+  lifecycle: { avg_weight: number; created_last_7d: number; created_last_30d: number; decayed: number; min_weight: number; pruned: number }
+  memoir_stats: { code_memoirs: number; total: number; total_concepts: number; total_links: number }
+  memory_utilization: { rate: number; recalled: number; total: number }
+  search_stats: { empty_results: number; hit_rate: number; total_searches: number } | null
+  top_topics: { avg_weight: number; count: number; latest_created_at: string; name: string }[]
 }

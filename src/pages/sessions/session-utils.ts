@@ -92,6 +92,13 @@ function commandWindowEnd(session: SessionTimelineRecord): number {
 }
 
 export function commandsForSession(session: SessionTimelineRecord, commands: CommandHistoryEntry[]): CommandHistoryEntry[] {
+  if (session.runtime_session_id) {
+    const exactMatches = commands.filter((command) => command.session_id === session.runtime_session_id)
+    if (exactMatches.length > 0) {
+      return exactMatches
+    }
+  }
+
   const start = new Date(session.started_at).getTime()
   const end = commandWindowEnd(session)
   return commands.filter((command) => {

@@ -328,6 +328,7 @@ export interface CanopyEvidenceRef {
   related_memory_query: string | null
   related_session_id: string | null
   related_symbol: string | null
+  schema_version: '1.0'
   source_kind: CanopyEvidenceSourceKind
   source_ref: string
   summary: string | null
@@ -441,6 +442,7 @@ export interface CanopySnapshotSlaSummary {
 }
 
 export interface CanopySnapshot {
+  schema_version?: '1.0'
   agent_attention: CanopyAgentAttention[]
   agent_heartbeat_summaries: CanopyAgentHeartbeatSummary[]
   agents: CanopyAgentRegistration[]
@@ -463,6 +465,7 @@ export interface CanopySnapshot {
 }
 
 export interface CanopyTaskDetail {
+  schema_version?: '1.0'
   allowed_actions: CanopyOperatorAction[]
   agent_attention: CanopyAgentAttention[]
   agent_heartbeat_summaries: CanopyAgentHeartbeatSummary[]
