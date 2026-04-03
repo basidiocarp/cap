@@ -27,7 +27,7 @@ dist-ssr
 !/.plans/
 /.plans/rhizome-integration.md
 /CLAUDE.md
-/.claude/settings.json
+.claude/
 /.plans/
 /.rhizome/cache.json
 .rhizome/

@@ -64,7 +64,7 @@ Every color name comes from fungal biology, matching the monorepo's mycological 
 
 ### Why fungal naming?
 
-The monorepo already uses mycological names (mycelium, hyphae, cap, spore, rhizome); the palette extends that into the visual layer. Generic names like "red" carry no domain meaning, but `decay` on a health bar is self-documenting.
+The monorepo already uses mycological names (mycelium, hyphae, cap, spore, rhizome), so the palette extends that into the visual layer. Generic names like "red" carry no domain meaning; `decay` on a health bar is self-documenting.
 
 Each palette is a 10-shade Mantine tuple designed for dark mode first. Shade indices 5–7 are optimized for contrast against dark backgrounds.
 
@@ -84,4 +84,4 @@ Cap reads Hyphae's SQLite database directly (read-only, WAL mode) for fast queri
 
 ### Mantine as component library
 
-Mantine v8 gives us a dark-mode component system out of the box. Theme composition uses `createTheme` + `mergeThemeOverrides` with separate files for typography, colors, spacing, etc. The semantic color names (`decay`, `mycelium`, not `red`, `green`) are the contract; if we swap the component library later, the color assignments carry over.
+Mantine v8 provides a dark-mode component system without additional configuration. Theme composition uses `createTheme` + `mergeThemeOverrides` with separate files for typography, colors, spacing, etc. The semantic color names (`decay`, `mycelium`, not `red`, `green`) are the stable contract; if the component library changes later, the color assignments carry over.

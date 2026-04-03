@@ -1,6 +1,6 @@
 # Cap API Reference
 
-Cap's backend exposes REST endpoints for memory management, token analytics, code intelligence, and ecosystem health. All endpoints return JSON.
+Cap's backend exposes REST endpoints for memory management, token analytics, code intelligence, and ecosystem health. Every endpoint returns JSON.
 
 ## Base URL
 
@@ -877,8 +877,8 @@ Error responses include a message:
 
 ## Rate Limiting
 
-No rate limiting is currently enforced. For production deployments, consider adding rate limiting middleware.
+No rate limiting is currently enforced. Production deployments should add rate limiting middleware.
 
 ## CORS
 
-CORS is enabled for development. Configure `CORS_ORIGIN` in the backend as needed.
+CORS is enabled for development. Set `CORS_ORIGIN` in the backend to match your frontend origin.

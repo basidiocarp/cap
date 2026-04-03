@@ -37,23 +37,23 @@ hyphae init
 
 ## What You'll See
 
-**Dashboard**: Shows ecosystem health badges (Hyphae ✓/✗, Mycelium ✓/✗, Rhizome ✓/✗), total memory count, topic breakdown, average memory weight, and token savings percentage. A "Quick Context" search bar lets you describe a task and get relevant memories injected with token budgeting. Memory health chart shows per-topic weight decay and importance distribution (critical/high/fading).
+Dashboard shows ecosystem health badges (Hyphae ✓/✗, Mycelium ✓/✗, Rhizome ✓/✗), total memory count, topic breakdown, average memory weight, and token savings percentage. A "Quick Context" search bar lets you describe a task and get relevant memories injected with token budgeting. The memory health chart shows per-topic weight decay and importance distribution (critical/high/fading).
 
-**Memories**: Browse-first interface. Start with topic cards showing memory count and average weight per topic. Click a topic to see all memories in a table with summary, importance level, weight, keywords, and age. Search memories by FTS (full-text search) or click the "Memories" link from any topic. Click a memory row to open a detail modal showing raw excerpt, topic, weight progress, access count, keywords, created/updated/accessed dates, and related memory IDs.
+Memories is a browse-first interface. Start with topic cards showing memory count and average weight per topic. Click a topic to see all memories in a table with summary, importance level, weight, keywords, and age. Search memories by FTS (full-text search) or click the "Memories" link from any topic. Click a memory row to open a detail modal showing raw excerpt, topic, weight progress, access count, keywords, created/updated/accessed dates, and related memory IDs.
 
-**Memoirs**: Concept graph explorer. Lists all knowledge graphs (memoirs) and allows searching across all concepts. Click a memoir to explore its concept graph with interactive visualization. Use the depth slider to control BFS traversal depth (1-5 hops). Node colors represent concept kinds (function, class, interface, module, other). Edge colors show relation types (calls, contains, implements, imports). Click a concept node to inspect it with its full neighborhood. Use the search bar to find concepts by name or label.
+Memoirs is a concept graph explorer. It lists all knowledge graphs and allows searching across all concepts. Click a memoir to explore its concept graph with interactive visualization. Use the depth slider to control BFS traversal depth (1–5 hops). Node colors represent concept kinds (function, class, interface, module, other). Edge colors show relation types (calls, contains, implements, imports). Click a concept node to inspect it with its full neighborhood.
 
-**Analytics**: Multi-tab dashboard showing token savings trends, memory health metrics, code intelligence coverage, telemetry events, and usage/cost analysis. Token Savings tab shows total tokens saved and per-command breakdown. Memory Health tab displays topic health, weight distribution, and consolidation recommendations. Code Intelligence tab lists indexed languages and symbol counts. Telemetry tab shows event frequency. Usage/Cost tab breaks down sessions and API call costs. Ecosystem tab shows system-wide health.
+Analytics is a multi-tab dashboard covering token savings trends, memory health metrics, code intelligence coverage, telemetry events, and usage/cost analysis. The Token Savings tab shows total tokens saved and per-command breakdown. Memory Health displays topic health, weight distribution, and consolidation recommendations. Code Intelligence lists indexed languages and symbol counts. Telemetry shows event frequency. Usage/Cost breaks down sessions and API call costs.
 
-**Code Explorer**: File tree browser with symbol outline. Navigate the project file tree on the left; click a file to show its symbols (functions, classes, types, constants) on the right. Click a symbol to jump to it with syntax highlighting. The Tests and Annotations tabs show test definitions and code comments/annotations. Search files with the search bar. Use "Find References" to see all usages of a selected symbol across the project.
+Code Explorer is a file tree browser with symbol outline. Navigate the project file tree on the left; click a file to show its symbols (functions, classes, types, constants) on the right. Click a symbol to jump to it with syntax highlighting. The Tests and Annotations tabs show test definitions and code comments/annotations. Use "Find References" to see all usages of a selected symbol across the project.
 
-**Symbol Search**: Global cross-project symbol search. Type a symbol name (function, class, type, constant) and see matches across the entire codebase. Results show file path, line number, and symbol kind. Click a result to open the Code Explorer at that symbol's location. Useful for refactoring or understanding call graphs.
+Symbol Search is a global cross-project symbol search. Type a symbol name (function, class, type, constant) and see matches across the entire codebase. Results show file path, line number, and symbol kind. Click a result to open the Code Explorer at that symbol's location.
 
-**Diagnostics**: LSP diagnostics viewer. Shows all TypeScript/Rust/JavaScript/Python errors and warnings from the language server. Organized by file and severity (error/warning). Click a diagnostic to jump to its location in the Code Explorer. Requires the relevant language server to be installed and running (see Settings for LSP management).
+Diagnostics shows all TypeScript/Rust/JavaScript/Python errors and warnings from the language server, organized by file and severity (error/warning). Click a diagnostic to jump to its location in the Code Explorer. This page requires the relevant language server to be installed and running (see Settings for LSP management).
 
-**Status**: Ecosystem architecture diagram showing how Mycelium, Hyphae, and Rhizome connect. Displays installed tool versions, LSP server status, database size, and overall health. Useful for troubleshooting connection issues.
+Status shows an ecosystem architecture diagram of how Mycelium, Hyphae, and Rhizome connect, along with installed tool versions, LSP server status, database size, and overall health.
 
-**Settings**: Configuration and system management. Each tool card now shows the resolved file path Cap is using plus a provenance badge:
+Settings handles configuration and system management. Each tool card shows the resolved file path Cap is using plus a provenance badge:
 - `Config file`: Cap found a real config file and is reading it
 - `Env override`: an environment variable selected this path
 - `Platform default`: Cap is using the current OS default path because no override file was found
@@ -135,6 +135,4 @@ HYPHAE_DB=~/my-hyphae.db RHIZOME_PROJECT=/path/to/project npm run dev:all
 
 ## Next Steps
 
-- **Agent Integration**: Enable Hyphae MCP in Claude Code or your editor with `hyphae init`
-- **Token Optimization**: Start using Mycelium in your terminal to reduce AI-related token usage
-- **Code Insights**: Install language servers (TypeScript, Rust, Python, Go) in LSP Manager for full diagnostics
+Enable Hyphae MCP in Claude Code or your editor with `hyphae init`. Use Mycelium in your terminal to reduce AI-related token usage. Install language servers (TypeScript, Rust, Python, Go) in LSP Manager for full diagnostics.

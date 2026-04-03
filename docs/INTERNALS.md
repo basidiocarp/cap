@@ -1,6 +1,6 @@
 # Cap Internals
 
-Architecture and data flow reference for Cap's web dashboard backend and frontend.
+This document covers the architecture and data flow of Cap's backend (Hono server, SQLite, subprocesses) and frontend (React 19, TanStack Query). Read it when tracing a request end-to-end or understanding where a specific behavior lives.
 
 ---
 

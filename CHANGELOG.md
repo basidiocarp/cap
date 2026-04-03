@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed
+
+- Fixed .gitignore for .claude/ directory
+- Updated docs: API, getting started, internals, design choices
+- Moved INTERNALS.md to docs/
+
 ## v0.11.0
 
 ### Features
