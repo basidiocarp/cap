@@ -58,7 +58,6 @@
       "!.mesh",
       "!.next",
       "!node_modules",
-      "!**/*.config.ts",
       "!**/*.config.js",
       "!**/*.config.mjs",
       "!*.json",
