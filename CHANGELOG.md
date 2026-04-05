@@ -1,165 +1,193 @@
 # Changelog
 
-## Unreleased
+All notable changes to Cap are documented in this file.
+
+## [Unreleased]
 
 ### Changed
 
-- Fixed .gitignore for .claude/ directory
-- Updated docs: API, getting started, internals, design choices
-- Moved INTERNALS.md to docs/
+- **Contributor docs cleanup**: `.gitignore` now covers `.claude/`, the API and
+  getting-started docs were refreshed, and `INTERNALS.md` moved into `docs/`.
+- **Dashboard empty states**: Memories, analytics, settings, and cross-tool
+  navigation now explain missing data and repair paths more clearly.
+- **Dual-host language**: Host coverage guidance now treats Claude Code and
+  Codex as parallel modes instead of implying one default path.
 
-## v0.11.0
+## [0.11.0] - 2026-03-31
 
-### Features
+### Added
 
-- **Owned ecosystem reads**: Cap now consumes owned Hyphae, Mycelium, Canopy, and Stipe command surfaces instead of reconstructing those views from private databases or config files.
-- **Live contract coverage**: Added real Cap↔Hyphae and Cap↔Mycelium contract tests that execute the actual binaries and pin the argv plus JSON payload seams.
+- **Owned ecosystem reads**: Cap now consumes owned Hyphae, Mycelium, Canopy,
+  and Stipe command surfaces instead of reconstructing those views from private
+  storage.
+- **Live contract coverage**: Added real Cap-to-Hyphae and Cap-to-Mycelium
+  contract tests that execute the actual binaries and pin the argv and JSON
+  seams.
 
-### Improvements
+### Changed
 
-- **Versioned contract enforcement**: Server adapters now require published `schema_version` fields across the main Hyphae, Mycelium, Canopy, and Stipe boundaries.
-- **Session identity joins**: Session pages now prefer shared runtime-session ids and identity-v1 data when correlating Hyphae and Mycelium activity.
-- **Less private coupling**: Status, analytics, context, memoirs, lessons, and timeline reads now fail closed on contract errors instead of silently depending on internal storage shapes.
+- **Versioned contract enforcement**: Server adapters now require published
+  `schema_version` fields across the main Hyphae, Mycelium, Canopy, and Stipe
+  boundaries.
+- **Session identity joins**: Session pages now prefer shared runtime-session
+  ids and identity-v1 data when correlating Hyphae and Mycelium activity.
+- **Fail-closed dashboard reads**: Status, analytics, context, memoirs,
+  lessons, and timeline reads now stop on contract errors instead of leaning on
+  private storage shapes.
 
-## Unreleased
+## [0.10.0] - 2026-03-23
 
-### Improvements
+### Added
 
-- **Action-oriented empty states**: Memories and analytics now explain why data may be missing and link directly to the relevant repair or follow-up pages instead of stopping at passive alerts.
-- **Clearer memory review flow**: Memories now explains active, stale, and invalidated states more clearly, with invalidation copy that makes the recall-vs-audit distinction explicit.
-- **Dual-host language cleanup**: Host coverage controls and runtime guidance now present Claude Code and Codex as coexisting coverage modes instead of treating one host as the implicit primary view.
-- **Cross-tool navigation**: Memoirs, memories, symbol search, and code explorer now share deeper jump paths so users can move between episodic memory, structured knowledge, and code lookup with less manual re-entry.
-- **More trustworthy analytics framing**: Analytics now makes tool-scoped Mycelium views read more honestly, with clearer notes about what command streams are and are not represented.
-- **Settings failure state**: Settings now renders an explicit unavailable state with retry and repair links instead of looking blank when tool settings cannot be loaded.
+- **Codex-first onboarding**: Onboarding now presents a single Codex-oriented
+  path with required Codex work separated from optional Claude-specific setup.
 
-## v0.10.0
+### Changed
 
-### Features
+- **Codex mode summaries**: Status and onboarding now explain whether Codex mode
+  is ready, partial, or needs repair.
+- **Action ordering**: The Codex install profile and notify-adapter
+  requirements now appear ahead of Claude-specific follow-up steps.
 
-- **Codex mode onboarding**: Onboarding now presents a single Codex-first path with required Codex steps separated from optional Claude-specific coverage.
+## [0.9.0] - 2026-03-23
 
-### Improvements
+### Added
 
-- **Codex mode summaries**: Status and onboarding now explain whether Codex mode is ready, partial, or needs repair instead of making users combine multiple adapter chips mentally.
-- **Codex-first action ordering**: The Codex install profile and notify-adapter requirements are surfaced ahead of Claude-specific profile work.
+- **Codex adapter status**: Status and onboarding now distinguish Claude
+  lifecycle hooks, Codex MCP registration, and Codex notify coverage.
+- **Codex-aware usage parsing**: Usage analytics now ingest Codex session
+  transcripts and report Codex runtime and provider details more honestly.
 
-## v0.9.0
+### Changed
 
-### Features
+- **Adapter-oriented runtime model**: Runtime health is now represented
+  explicitly as host adapters, which makes Codex-first environments look
+  intentionally configured instead of half broken.
 
-- **Codex adapter status**: Status and onboarding now distinguish Claude lifecycle hooks, Codex MCP registration, and Codex notify adapter coverage instead of treating Claude hooks as the default integration model.
-- **Codex-aware usage parsing**: Usage analytics now ingest Codex session transcripts and report Codex runtime/provider details more honestly.
+## [0.8.0] - 2026-03-22
 
-### Improvements
+### Added
 
-- **Adapter-oriented runtime model**: Runtime health is now represented explicitly as host adapters, which makes Codex-first environments read as intentionally configured rather than partially broken.
+- **Repair console onboarding**: The onboarding page now loads structured Stipe
+  doctor and init reports and shows detected issues, planned steps, and repair
+  actions.
+- **Structured Stipe API**: Cap now exposes a repair-plan endpoint backed by
+  `stipe doctor --json` and `stipe init --dry-run --json`.
 
-## v0.8.0
+### Changed
 
-### Features
+- **Action prioritization**: Onboarding actions now prefer Stipe-provided repair
+  actions over Cap-side fallback heuristics.
 
-- **Repair console onboarding**: The onboarding page now loads structured Stipe doctor/init reports and shows detected issues, planned init steps, and recommended repair actions.
-- **Structured Stipe API**: Cap now exposes a repair-plan endpoint that consumes `stipe doctor --json` and `stipe init --dry-run --json`.
+## [0.7.0] - 2026-03-22
 
-### Improvements
+### Added
 
-- **Action prioritization**: Onboarding actions now prefer Stipe-provided repair actions over fallback status heuristics.
+- **Onboarding page**: Added `/onboard` with ecosystem setup guidance,
+  suggested fix commands, and links back into the dashboard.
+- **Stipe actions from the UI**: Allowlisted backend actions can now run safe
+  `stipe` flows such as `doctor`, `init`, and profile-based installs.
 
-## v0.7.0
+### Changed
 
-### Features
+- **Status getting-started card**: Status now surfaces onboarding guidance
+  directly when the ecosystem is only partially configured.
+- **Test-safe bootstrap**: The backend no longer starts its HTTP listener during
+  Vitest runs.
 
-- **Onboarding page**: New `/onboard` route with ecosystem setup guidance, suggested fix commands, and direct links back into the dashboard.
-- **Stipe actions from the UI**: Allowlisted backend actions let the dashboard run safe `stipe` flows such as `doctor`, `init`, and profile-based installs.
+## [0.4.0] - 2026-03-19
 
-### Improvements
+### Added
 
-- **Status page getting-started card**: Status now surfaces onboarding guidance directly when the ecosystem is partially configured.
-- **Test-safe server bootstrap**: The backend no longer starts its HTTP listener during Vitest runs, which keeps tests isolated and deterministic.
+- **Usage and cost analytics**: Cap can now estimate per-session and per-model
+  token cost from Claude Code transcripts.
+- **Agent telemetry backend**: Added backend endpoints for latency, error-rate,
+  and tool-usage metrics.
+- **Operational modes**: The settings page now offers Explore, Develop, and
+  Review layouts.
+- **Graph visualizations**: Memoirs, ecosystem architecture, and CodeExplorer
+  call graphs now have interactive graph views.
+- **Quick context panel**: The dashboard now shows recent memories, active
+  sessions, and pending tasks at a glance.
+- **CodeExplorer side panels**: Added annotations and cyclomatic-complexity
+  panels.
+- **Cross-tool analytics tabs**: Analytics now combines Mycelium, Hyphae,
+  Rhizome, and usage-cost views behind one date range filter.
+- **Settings page**: Added tool configuration, Hyphae prune controls, and mode
+  selection.
 
-## v0.4.0
+## [0.3.0] - 2026-03-18
 
-### Features
+### Added
 
-- **Usage & Cost analytics tab**: Parses Claude Code session transcripts to estimate per-session and per-model token costs, with cost breakdown charts and trend analysis.
-- **Agent telemetry backend**: New backend endpoints for collecting and querying agent performance metrics (latency, error rates, tool usage patterns).
-- **Operational modes**: Settings page offers Explore, Develop, and Review modes that adjust dashboard layout and visible panels per workflow.
-- **Force-graph visualization**: Interactive force-directed graph for memoir concepts on the Memoirs page, showing relationships and clusters.
-- **ReactFlow ecosystem architecture diagram**: Visual architecture map on the Status page showing how Mycelium, Hyphae, Rhizome, Cap, Spore, and Lamella interconnect.
-- **ReactFlow call graph**: Interactive call graph visualization in CodeExplorer showing function call relationships within a file.
-- **Quick Context section on Dashboard**: At-a-glance panel showing recent memories, active sessions, and pending tasks.
-- **Annotations and Complexity panels in CodeExplorer**: Side panels displaying code annotations (TODO/FIXME/NOTE) and cyclomatic complexity per function.
-- **Cross-tool analytics**: 4-tab analytics layout (Mycelium token savings, Hyphae memory stats, Rhizome code intel, Usage & Cost) with unified date range filtering.
-- **Settings page**: Tool configuration (binary paths, database locations), prune button for Hyphae memory cleanup, and operational mode selection.
+- **Error boundary**: All routes now sit behind a retryable error boundary to
+  prevent white-screen failures.
+- **LSP status page**: The status page now shows installed and running language
+  servers.
+- **Shared KPI cards**: Dashboard and analytics metric cards now use one common
+  component.
+- **Keyboard activation helper**: Clickable table rows now have shared keyboard
+  activation support.
+- **Shared config module**: Binary paths and environment defaults now resolve
+  from one place.
 
-## v0.3.0
+### Changed
 
-### Features
-- Error boundary wrapping all routes with retry button, prevents white-screen on chunk load failure
-- LSP status detection on the Status page: shows installed and running language servers
-- Shared `KpiCard` component for consistent metric cards across Dashboard and Analytics
-- Keyboard utility (`onActivate`) for accessible interactive table rows
-- Shared config module centralizing all binary paths and environment defaults
+- **Async backend reads**: Blocking `execSync` calls were removed from `/files`
+  and LSP status checks.
+- **Typed Mycelium integration**: Gain output and related frontend contracts now
+  use typed interfaces instead of `any`.
+- **UI polish**: SectionCard overflow, color mapping, duplicate memo logic,
+  sidebar highlighting, and shared loading components were cleaned up.
+- **Graceful shutdown**: Cap now destroys the Rhizome client before closing the
+  database.
+- **Centralized binary config**: `HYPHAE_BIN`, `MYCELIUM_BIN`, and
+  `RHIZOME_BIN` now live in shared config.
 
 ### Security
-- Input validation on POST `/store`, `/consolidate`: rejects empty fields, validates importance against allowlist, type-checks keywords array
-- Prune threshold validation: must be a finite number between 0 and 1
-- Clamped `limit` (max 200) and `depth` (max 5) query parameters to prevent expensive queries
-- NaN-safe numeric parameter parsing across all Rhizome route endpoints
 
-### Improvements
-- Converted blocking `execSync` to async in `/files` endpoint and LSP status checks
-- Fixed `cachedAsync` thundering herd: concurrent cache misses now share a single in-flight promise
-- Typed Mycelium CLI output: replaced 7 `as any` casts with `GainCliOutput` interface and type guard
-- Typed `myceliumApi.gain()` return: added `GainResult` interface, removed untyped `unknown`
-- API error messages now read server response body instead of generic HTTP status text
-- Fixed `SectionCard` overflow: `overflow: visible` on card root prevents chart tooltip clipping
-- Prevented silent `styles` override on `SectionCard` by excluding it from passthrough props
-- Fixed `.sort()` mutation in Diagnostics: replaced with immutable `.toSorted()`
-- Consolidated 5 color-mapping functions into `lib/colors.ts`, removed duplicates from pages
-- Merged duplicate `defPreview`/`hasMoreLines` useMemo in CodeExplorer into single memo
-- Dashboard uses shared `KpiCard` with accent colors and `h='100%'` for equal-height grid cards
-- Nav sidebar supports sub-route highlighting via `startsWith` matching
-- Diagnostics uses Mantine `ff='monospace'` instead of inline style
-- Removed duplicate `PageLoader` from App.tsx, imports shared component
-- Added `source_data` field to frontend `Memory` type to match backend `MemoryRow`
-- Keyboard accessibility on clickable table rows across CodeExplorer, SymbolSearch, Diagnostics, and Memoirs
-- Graceful shutdown calls `rhizome.destroy()` before closing database
-- CORS origin configurable via `CORS_ORIGIN` environment variable
-- Centralized `HYPHAE_BIN`, `MYCELIUM_BIN`, `RHIZOME_BIN` in shared config
+- **Input validation**: POST `/store` and `/consolidate` now reject empty
+  fields, validate importance, and type-check keywords.
+- **Query clamps**: `limit` and `depth` query parameters now cap expensive
+  requests.
+- **Safer numeric parsing**: Rhizome route parameters now reject NaN and related
+  malformed numeric input.
 
-## v0.2.0
+## [0.2.0] - 2026-03-16
 
-### Features
-- Rhizome integration: MCP client for code intelligence, persistent subprocess with JSON-RPC over stdio (`568ee98`)
-- Code Explorer page (`/code`): two-panel file tree + symbol outline with definition preview
-- Symbol Search page (`/symbols`): debounced global symbol search across project
-- Diagnostics page (`/diagnostics`): LSP diagnostics grouped by file with severity badges
-- Ecosystem Status page (`/status`): unified health for Mycelium, Hyphae, and Rhizome with auto-refresh
-- Rhizome API routes: 9 endpoints proxying MCP tool calls (symbols, structure, definition, search, references, diagnostics, hover, files, status)
-- Ecosystem status route: aggregated health from all three tools with 30s cache
-- Analytics overhaul: Hyphae, Mycelium, and Rhizome data in a tabbed layout with ring progress charts (`a59ad5e`)
-- Fungal color palette: 9 custom Mantine color tuples with semantic mappings
-- Typography: Roboto body/headings, JetBrains Mono Variable monospace
-- Sectioned sidebar navigation (Memory, Code, System)
+### Added
 
-### Improvements
-- Page colors use ecosystem palette instead of hardcoded hex
-- Theme system split into modules (colors, typography, shadows, spacing, interactions, tokens, components)
-- Header subtitle: "memory dashboard" → "ecosystem dashboard"
-- Mobile-responsive file tree with collapse toggle (`1e6d948`)
+- **Rhizome integration**: Added a persistent MCP client for code intelligence
+  over JSON-RPC stdio.
+- **Code Explorer**: Added the `/code` route with a file tree, symbol outline,
+  and definition preview.
+- **Symbol Search**: Added debounced project-wide symbol search.
+- **Diagnostics page**: Added grouped LSP diagnostics with severity badges.
+- **Ecosystem Status**: Added a unified health page for Mycelium, Hyphae, and
+  Rhizome with auto-refresh.
+- **Rhizome API routes**: Added proxy endpoints for symbols, structure,
+  definition, search, references, diagnostics, hover, files, and status.
+- **Analytics overhaul**: Hyphae, Mycelium, and Rhizome data now live in a
+  tabbed analytics layout.
+- **Visual system**: Added the fungal palette, typography system, and sectioned
+  sidebar navigation.
 
-### Documentation
-- Added `docs/design-choices.md` (color palette, typography, architecture)
-- Updated `README.md`
+### Changed
 
-### CI
-- GitHub Actions CI workflow (`deb7d9e`)
+- **Theme modularization**: Colors, typography, shadows, spacing,
+  interactions, tokens, and components were split into dedicated theme modules.
+- **Ecosystem branding**: The header subtitle now reads as an ecosystem
+  dashboard instead of only a memory dashboard.
+- **Mobile file tree**: The file tree now collapses cleanly on smaller screens.
 
-## v0.1.0
+## [0.1.0] - 2026-03-11
 
-### Features
-- Initial cap dashboard with Hyphae SQLite integration (`d740aac`)
+### Added
 
-### Chores
-- Biome lint fixes and config migration to v2.4.6 (`86b4408`)
+- **Initial dashboard**: Cap shipped as a dashboard on top of Hyphae SQLite
+  data.
+
+### Changed
+
+- **Frontend tooling**: Biome lint fixes and the config migration to v2.4.6
+  landed with the initial public release.
