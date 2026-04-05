@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { SessionUsage, UsageAggregate } from '../../lib/api'
 import { renderWithProviders } from '../../test/render'
-import { UsageCostTab } from './UsageCostTab'
+import { USAGE_COST_CHART_DIMENSIONS, UsageCostTab } from './UsageCostTab'
 
 function createAggregate(overrides: Partial<UsageAggregate> = {}): UsageAggregate {
   return {
@@ -53,5 +53,15 @@ describe('UsageCostTab', () => {
     expect(screen.getByText(/This tab shows parsed session history only/i)).toBeInTheDocument()
     expect(screen.getByText(/Seen in history: 1 Codex · 1 Claude Code/i)).toBeInTheDocument()
     expect(screen.getByText(/Codex sessions are parsed from the local Codex sessions directory/i)).toBeInTheDocument()
+  })
+
+  it('uses non-negative initial dimensions for the Recharts containers', () => {
+    expect(USAGE_COST_CHART_DIMENSIONS).toEqual({
+      height: 250,
+      initialDimension: { height: 0, width: 0 },
+      minHeight: 250,
+      minWidth: 100,
+      width: '100%',
+    })
   })
 })

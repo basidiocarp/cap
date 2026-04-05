@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import { AppShell, Group, NavLink, Text, Title } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
@@ -50,6 +51,7 @@ const NAV_SECTIONS = [
 
 export function AppLayout() {
   const [opened, { toggle }] = useDisclosure()
+  const navbarId = useId()
   const location = useLocation()
 
   return (
@@ -64,9 +66,18 @@ export function AppLayout() {
           px='md'
         >
           <Title
+            aria-controls={navbarId}
+            aria-expanded={opened}
+            aria-label='Toggle mobile navigation'
+            component='button'
             onClick={toggle}
             order={3}
-            style={{ cursor: 'pointer' }}
+            style={{
+              background: 'none',
+              border: 0,
+              cursor: 'pointer',
+              padding: 0,
+            }}
           >
             cap
           </Title>
@@ -79,7 +90,10 @@ export function AppLayout() {
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar p='xs'>
+      <AppShell.Navbar
+        id={navbarId}
+        p='xs'
+      >
         {NAV_SECTIONS.map((section) => (
           <div key={section.label}>
             <Text

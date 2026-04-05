@@ -44,10 +44,10 @@ export function LifecycleAdaptersCard({ status }: { status: EcosystemStatus }) {
         </Text>
         <Text size='sm'>Recommended lifecycle coverage</Text>
         <Group gap='xs'>
-          {hooks.lifecycle.map((hook) => (
+          {hooks.lifecycle.map((hook, index) => (
             <Badge
               color={hook.installed ? 'mycelium' : 'gray'}
-              key={hook.event}
+              key={`${hook.event}-${index}`}
               size='sm'
               variant='light'
             >
