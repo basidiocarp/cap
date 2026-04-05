@@ -3,7 +3,7 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
-import { CAP_API_KEY, CAP_HOST, CORS_ORIGIN } from './lib/config.ts'
+import { CAP_HOST, CORS_ORIGIN } from './lib/config.ts'
 import { registry } from './lib/rhizome-registry.ts'
 import { logger } from './logger.ts'
 import canopyRoutes from './routes/canopy.ts'
@@ -20,33 +20,54 @@ import usageRoutes from './routes/usage.ts'
 // API Key Authentication Middleware
 // ─────────────────────────────────────────────────────────────────────────────
 
+function getApiKey() {
+  return process.env.CAP_API_KEY?.trim() || undefined
+}
+
+function isUnauthenticatedDevMode() {
+  return process.env.CAP_ALLOW_UNAUTHENTICATED === '1'
+}
+
+function isVitestCompatibilityMode() {
+  return process.env.VITEST === 'true'
+}
+
 function createAuthMiddleware() {
   return async (c: Context, next: Next) => {
-    // Skip auth for health checks and dev servers (where CAP_API_KEY is not set)
-    if (!CAP_API_KEY) {
-      await next()
-      return
-    }
-
     // Health check endpoint is always allowed
     if (c.req.path === '/api/health') {
       await next()
       return
     }
 
+    if (isUnauthenticatedDevMode()) {
+      await next()
+      return
+    }
+
+    if (isVitestCompatibilityMode() && process.env.CAP_REQUIRE_AUTH_IN_TESTS !== '1') {
+      await next()
+      return
+    }
+
+    const apiKey = getApiKey()
+
+    if (!apiKey) {
+      logger.warn({ method: c.req.method, path: c.req.path }, 'Missing CAP_API_KEY')
+      return c.json({ error: 'API key required' }, 401)
+    }
+
     // Verify Authorization header for all /api/* endpoints
     const authHeader = c.req.header('Authorization')
     if (!authHeader) {
       logger.warn({ method: c.req.method, path: c.req.path }, 'Missing Authorization header')
-      c.status(401)
-      return c.json({ error: 'Authorization required' })
+      return c.json({ error: 'Authorization required' }, 401)
     }
 
     const [scheme, token] = authHeader.split(' ')
-    if (scheme !== 'Bearer' || token !== CAP_API_KEY) {
+    if (scheme !== 'Bearer' || token !== apiKey) {
       logger.warn({ method: c.req.method, path: c.req.path }, 'Invalid API key')
-      c.status(403)
-      return c.json({ error: 'Unauthorized' })
+      return c.json({ error: 'Unauthorized' }, 403)
     }
 
     await next()
@@ -91,8 +112,9 @@ const app = createApp()
 export function startServer() {
   const port = Number(process.env.PORT ?? 3001)
   const host = CAP_HOST
+  const authMode = isUnauthenticatedDevMode() ? 'explicit-unauthenticated-dev' : 'protected'
 
-  logger.info({ apiKeyRequired: !!CAP_API_KEY, host, port }, 'Cap server started')
+  logger.info({ apiKeyConfigured: !!getApiKey(), authMode, host, port }, 'Cap server started')
   serve({ fetch: app.fetch, hostname: host, port })
 }
 
