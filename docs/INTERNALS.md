@@ -16,7 +16,7 @@ const app = new Hono()
 // 1. Timing + logging (all requests)
 // 2. CORS (configurable origin)
 // 3. Global error handler (500 on uncaught error)
-// 4. Route registration (7 API namespaces)
+// 4. Route registration (9 API namespaces)
 ```
 
 **Graceful shutdown** on SIGINT/SIGTERM:
@@ -37,6 +37,7 @@ const app = new Hono()
 Each route module exports a `Hono` app and is mounted at a namespace:
 
 ```typescript
+app.route('/api/canopy', canopyRoutes)
 app.route('/api/hyphae', hyphaeRoutes)
 app.route('/api/lsp', lspRoutes)
 app.route('/api/mycelium', myceliumRoutes)
@@ -46,6 +47,15 @@ app.route('/api/status', statusRoutes)
 app.route('/api/telemetry', telemetryRoutes)
 app.route('/api/usage', usageRoutes)
 ```
+
+The backend is read-only for the direct SQLite Hyphae connection only. Several
+route namespaces still write through to sibling tools or config files:
+
+- `canopy` mutates task and handoff state via action endpoints
+- `hyphae` forwards store, forget, invalidate, importance, and consolidate operations
+- `rhizome` can rename symbols, move/copy symbols, and switch projects
+- `settings` writes tool config files and runs setup/repair actions
+- `lsp` can install language servers
 
 ---
 

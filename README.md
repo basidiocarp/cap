@@ -22,7 +22,9 @@ and host readiness.
 
 Cap is the operator-facing surface for the stack. The React app handles memory,
 analytics, and code exploration; the Hono server reads from Hyphae, Mycelium,
-Rhizome, and Stipe without becoming another source of truth.
+Rhizome, and Stipe while also brokering explicit write-through actions for
+settings, Rhizome project selection, and Canopy task workflows without becoming
+another source of truth.
 
 ---
 
@@ -42,7 +44,8 @@ Rhizome, and Stipe without becoming another source of truth.
 | **[volva](https://github.com/basidiocarp/volva)** | Execution-host runtime layer |
 
 > **Boundary:** `cap` owns the operator interface. It does not own memory
-> storage, token filtering, code parsing, lifecycle capture, or install policy.
+> storage, token filtering, code parsing, lifecycle capture, or install policy,
+> but it does broker some explicit writes on behalf of the operator.
 
 ---
 
@@ -69,12 +72,12 @@ Browser                  Cap server                 Ecosystem tools
 ───────                  ──────────                 ───────────────
 route load       ───►    Hono route         ───►    hyphae CLI / DB
 filter or query   ───►   typed read layer   ───►    mycelium, rhizome, stipe
-render charts     ◄───   JSON response      ◄───    read-only results
+render charts     ◄───   JSON response      ◄───    route results
 ```
 
 1. Serve pages: React renders dashboard, memory, symbol, and onboarding views.
-2. Collect data: the server reads from Hyphae, Mycelium, Rhizome, and Stipe.
-3. Normalize results: route handlers convert CLI and database output into UI-friendly shapes.
+2. Collect data: the server reads from Hyphae, Mycelium, Rhizome, Stipe, and the operational route groups.
+3. Normalize results: route handlers convert CLI and database output into UI-friendly shapes and forward explicit write-through actions.
 4. Render operations state: charts, tables, and status views expose the combined ecosystem picture.
 
 ---
@@ -98,8 +101,9 @@ render charts     ◄───   JSON response      ◄───    read-only re
 ## What Cap Owns
 
 - Operator-facing UI and navigation
-- Read-only aggregation across ecosystem tools
+- Boundary-aware aggregation across ecosystem tools
 - Route handlers that normalize tool output for the browser
+- Explicit write-through surfaces for settings, Rhizome project selection, and operator actions
 - Visualization of memory, analytics, code, and health data
 
 ## What Cap Does Not Own
@@ -114,7 +118,7 @@ render charts     ◄───   JSON response      ◄───    read-only re
 ## Key Features
 
 - Unified dashboard: brings together memory, code intelligence, and tool status in one UI.
-- Read-only backend: uses CLI and database reads rather than becoming another source of truth.
+- Boundary-aware backend: uses CLI and database reads where possible, then writes through only where the operator workflow requires it.
 - Operator onboarding: includes setup-focused routes for new installs and repair flows.
 - Analytics views: surfaces token savings and memory health without requiring manual shell work.
 

@@ -3,8 +3,6 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Too
 
 import type { SessionUsage, UsageAggregate, UsageTrend } from '../../lib/api'
 import { KpiCard } from '../../components/KpiCard'
-import { getHostCoverageView } from '../../lib/host-coverage-view'
-import { useHostCoverageStore } from '../../store/host-coverage'
 
 interface Props {
   aggregate: UsageAggregate | null
@@ -27,9 +25,30 @@ function formatTokens(tokens: number): string {
   return String(tokens)
 }
 
-export function UsageCostTab({ aggregate, sessions, trend }: Props) {
-  const hostCoveragePreference = useHostCoverageStore((state) => state.mode)
+function summarizeUsageHistory(sessions: SessionUsage[] | null) {
+  if (!sessions || sessions.length === 0) return null
 
+  const counts = sessions.reduce(
+    (acc, session) => {
+      acc[session.runtime] += 1
+      return acc
+    },
+    { 'claude-code': 0, codex: 0 }
+  )
+
+  const runtimeSummary: string[] = []
+
+  if (counts.codex > 0) runtimeSummary.push(`${counts.codex} Codex`)
+  if (counts['claude-code'] > 0) runtimeSummary.push(`${counts['claude-code']} Claude Code`)
+
+  return {
+    runtimeSummary: runtimeSummary.length > 0 ? runtimeSummary.join(' · ') : 'No runtime history was captured yet.',
+    title: 'Usage history only',
+    usageNote: 'This tab shows parsed session history only. It does not verify host configuration or installed adapters.',
+  }
+}
+
+export function UsageCostTab({ aggregate, sessions, trend }: Props) {
   if (!aggregate) {
     return (
       <Text
@@ -41,56 +60,7 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
     )
   }
 
-  const hasCodexSessions = sessions?.some((session) => session.runtime === 'codex') ?? false
-  const hasClaudeSessions = sessions?.some((session) => session.runtime === 'claude-code') ?? false
-  const hostCoverage = getHostCoverageView(
-    {
-      agents: {
-        claude_code: {
-          adapter: {
-            configured: hasClaudeSessions,
-            detected: false,
-            kind: 'hooks',
-            label: 'Claude lifecycle hooks',
-          },
-          config_path: null,
-          configured: hasClaudeSessions,
-          detected: false,
-          integration: 'hooks',
-          resolved_config_path: '/host/claude/settings.json',
-          resolved_config_source: 'platform_default',
-        },
-        codex: {
-          adapter: { configured: hasCodexSessions, detected: false, kind: 'mcp', label: 'Codex MCP' },
-          config_path: null,
-          configured: hasCodexSessions,
-          detected: false,
-          integration: 'mcp',
-          resolved_config_path: '/host/codex/config.toml',
-          resolved_config_source: 'platform_default',
-        },
-      },
-      hooks: { error_count: 0, installed_hooks: [], lifecycle: [], recent_errors: [] },
-      hyphae: {
-        activity: {
-          codex_memory_count: 0,
-          last_codex_memory_at: null,
-          last_session_memory_at: null,
-          last_session_topic: null,
-          recent_session_memory_count: 0,
-        },
-        available: true,
-        memoirs: 0,
-        memories: 0,
-        version: null,
-      },
-      lsps: [],
-      mycelium: { available: true, version: null },
-      project: { active: 'usage', recent: ['usage'] },
-      rhizome: { available: true, backend: null, languages: [] },
-    },
-    hostCoveragePreference
-  )
+  const usageHistory = summarizeUsageHistory(sessions)
 
   return (
     <Stack gap='lg'>
@@ -100,22 +70,24 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
             c='dimmed'
             size='sm'
           >
-            {hostCoverage.detail}
+            {usageHistory?.usageNote ?? 'This tab shows parsed session history only. It does not verify host configuration or installed adapters.'}
           </Text>
           <Badge
             color='gray'
             size='sm'
             variant='light'
           >
-            {hostCoverage.label}
+            {usageHistory?.title ?? 'Usage history'}
           </Badge>
         </Group>
-        <Text
-          c='dimmed'
-          size='xs'
-        >
-          {hostCoverage.usageNote}
-        </Text>
+        {usageHistory && (
+          <Text
+            c='dimmed'
+            size='xs'
+          >
+            Seen in history: {usageHistory.runtimeSummary}
+          </Text>
+        )}
       </Stack>
 
       <Grid>
@@ -264,13 +236,12 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
               ))}
             </Table.Tbody>
           </Table>
-          {hasCodexSessions && (
+          {sessions.some((session) => session.runtime === 'codex') && (
             <Text
               c='dimmed'
               size='xs'
             >
-              Codex sessions are parsed from the local Codex sessions directory, and costs stay `n/a` when the model pricing is unknown.{' '}
-              {hostCoverage.usageNote}
+              Codex sessions are parsed from the local Codex sessions directory, and costs stay `n/a` when the model pricing is unknown.
             </Text>
           )}
         </>

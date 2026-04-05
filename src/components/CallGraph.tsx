@@ -20,26 +20,40 @@ interface CallGraphProps {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const NODE_COLOR_FUNCTION = '#36b37e'
+const NODE_COLOR_HUB = '#845ef7'
 const NODE_COLOR_IMPORT = '#4c9aff'
 const NODE_COLOR_EXTERNAL = '#505f79'
 const EDGE_COLOR = '#6554c0'
 
-function classifyNode(name: string, callers: Set<string>, callees: Set<string>): string {
+type NodeRole = 'caller' | 'callee' | 'external' | 'hub'
+
+function classifyNode(name: string, callers: Set<string>, callees: Set<string>): NodeRole {
   if (name.includes('/') || name.includes('.') || name.includes('::')) {
     return 'external'
   }
-  if (callees.has(name) && !callers.has(name)) {
-    return 'import'
+  const isCaller = callers.has(name)
+  const isCallee = callees.has(name)
+
+  if (isCaller && isCallee) {
+    return 'hub'
   }
-  return 'function'
+  if (isCaller) {
+    return 'caller'
+  }
+  if (isCallee) {
+    return 'callee'
+  }
+  return 'hub'
 }
 
 function colorForType(type: string): string {
   switch (type) {
-    case 'function':
+    case 'caller':
       return NODE_COLOR_FUNCTION
-    case 'import':
+    case 'callee':
       return NODE_COLOR_IMPORT
+    case 'hub':
+      return NODE_COLOR_HUB
     default:
       return NODE_COLOR_EXTERNAL
   }
@@ -49,28 +63,49 @@ function colorForType(type: string): string {
 // Layout helper
 // ─────────────────────────────────────────────────────────────────────────────
 
-const COLS = 4
-const COL_WIDTH = 200
+const COL_WIDTH = 220
 const ROW_HEIGHT = 80
 
 function layoutNodes(names: string[], callers: Set<string>, callees: Set<string>): Node[] {
-  return names.map((name, i) => {
-    const type = classifyNode(name, callers, callees)
-    return {
-      data: { label: name },
-      id: name,
-      position: { x: (i % COLS) * COL_WIDTH, y: Math.floor(i / COLS) * ROW_HEIGHT },
-      style: {
-        background: colorForType(type),
-        border: `2px solid ${colorForType(type)}`,
-        borderRadius: 8,
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: 500,
-        opacity: 1,
-        padding: '6px 14px',
-      },
-    }
+  const grouped = new Map<NodeRole, string[]>([
+    ['caller', []],
+    ['hub', []],
+    ['callee', []],
+    ['external', []],
+  ])
+
+  for (const name of names) {
+    grouped.get(classifyNode(name, callers, callees))?.push(name)
+  }
+
+  const roleOrder: NodeRole[] = ['caller', 'hub', 'callee', 'external']
+
+  return roleOrder.flatMap((role, roleIndex) => {
+    const nodes = grouped
+      .get(role)!
+      .sort((a, b) => {
+        const degreeDelta = (callers.has(b) ? 1 : 0) + (callees.has(b) ? 1 : 0) - ((callers.has(a) ? 1 : 0) + (callees.has(a) ? 1 : 0))
+        return degreeDelta || a.localeCompare(b)
+      })
+
+    return nodes.map((name, i) => {
+      const type = classifyNode(name, callers, callees)
+      return {
+        data: { label: name },
+        id: name,
+        position: { x: roleIndex * COL_WIDTH, y: i * ROW_HEIGHT },
+        style: {
+          background: colorForType(type),
+          border: `2px solid ${colorForType(type)}`,
+          borderRadius: 8,
+          color: '#fff',
+          fontSize: 12,
+          fontWeight: 500,
+          opacity: 1,
+          padding: '6px 14px',
+        },
+      }
+    })
   })
 }
 

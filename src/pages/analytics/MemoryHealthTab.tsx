@@ -42,16 +42,14 @@ export function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
 
   const utilizationPct = Math.round(data.memory_utilization.rate * 100)
 
-  const importanceData = [
-    {
-      critical: data.importance_distribution.critical,
-      ephemeral: data.importance_distribution.ephemeral,
-      high: data.importance_distribution.high,
-      label: 'Importance',
-      low: data.importance_distribution.low,
-      medium: data.importance_distribution.medium,
-    },
+  const importanceRows = [
+    { count: data.importance_distribution.critical, importance: 'critical' },
+    { count: data.importance_distribution.high, importance: 'high' },
+    { count: data.importance_distribution.medium, importance: 'medium' },
+    { count: data.importance_distribution.low, importance: 'low' },
+    { count: data.importance_distribution.ephemeral, importance: 'ephemeral' },
   ]
+  const totalImportance = importanceRows.reduce((sum, row) => sum + row.count, 0)
 
   return (
     <Stack>
@@ -157,21 +155,36 @@ export function MemoryHealthTab({ data }: { data: HyphaeAnalytics | null }) {
       <SectionCard title='Importance Distribution'>
         <ChartBox>
           <BarChart
-            data={importanceData}
-            dataKey='label'
-            h={120}
-            orientation='vertical'
-            series={[
-              { color: 'gill.6', name: 'critical' },
-              { color: 'mycelium.6', name: 'high' },
-              { color: 'substrate.6', name: 'medium' },
-              { color: 'decay.5', name: 'low' },
-              { color: 'chitin.5', name: 'ephemeral' },
-            ]}
-            type='stacked'
-            withLegend
+            data={importanceRows}
+            dataKey='importance'
+            h={220}
+            series={[{ color: 'mycelium.6', name: 'count' }]}
           />
         </ChartBox>
+        <Text
+          c='dimmed'
+          size='xs'
+        >
+          Each bucket is shown separately so the important categories can be compared directly instead of being compressed into one stack.
+        </Text>
+        <Table striped>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Importance</Table.Th>
+              <Table.Th>Count</Table.Th>
+              <Table.Th>Share</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {importanceRows.map((row) => (
+              <Table.Tr key={row.importance}>
+                <Table.Td>{row.importance}</Table.Td>
+                <Table.Td>{row.count.toLocaleString()}</Table.Td>
+                <Table.Td>{totalImportance > 0 ? `${Math.round((row.count / totalImportance) * 100)}%` : '0%'}</Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
       </SectionCard>
 
       <Grid>

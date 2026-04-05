@@ -1,12 +1,18 @@
-import { PieChart } from '@mantine/charts'
-import { Alert, Badge, Button, Grid, Group, Stack, Table } from '@mantine/core'
+import { BarChart } from '@mantine/charts'
+import { Alert, Badge, Button, Grid, Group, Stack, Table, Text } from '@mantine/core'
 import { Link } from 'react-router-dom'
 
 import type { RhizomeAnalytics } from '../../lib/api'
 import { ActionEmptyState } from '../../components/ActionEmptyState'
 import { KpiCard } from '../../components/KpiCard'
 import { SectionCard } from '../../components/SectionCard'
-import { PIE_COLORS } from '../../lib/colors'
+import { ChartBox } from './ChartBox'
+
+function formatDuration(ms: number): string {
+  if (ms < 1000) return `${Math.round(ms)} ms`
+  if (ms < 10_000) return `${(ms / 1000).toFixed(1)} s`
+  return `${Math.round(ms / 1000)} s`
+}
 
 export function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null }) {
   if (!data) {
@@ -69,11 +75,13 @@ export function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null })
     )
   }
 
-  const pieData = data.tool_calls.map((tc, idx) => ({
-    color: PIE_COLORS[idx % PIE_COLORS.length],
-    name: tc.tool,
-    value: tc.count,
-  }))
+  const backendSummary = data.backend_usage.lsp && data.backend_usage.treesitter ? 'Mixed backend support' : data.backend_usage.lsp ? 'LSP only' : data.backend_usage.treesitter ? 'Tree-sitter only' : 'No backend coverage'
+  const toolCalls = [...data.tool_calls].sort((a, b) => b.count - a.count || a.tool.localeCompare(b.tool))
+  const totalCalls = toolCalls.reduce((sum, tool) => sum + tool.count, 0)
+  const weightedAverageDuration =
+    totalCalls > 0
+      ? toolCalls.reduce((sum, tool) => sum + tool.avg_duration_ms * tool.count, 0) / totalCalls
+      : 0
 
   return (
     <Stack>
@@ -104,7 +112,7 @@ export function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null })
           <KpiCard
             accent='chitin.5'
             label='Backend Status'
-            value={data.backend_usage.lsp ? 'LSP' : data.backend_usage.treesitter ? 'Tree-sitter' : 'None'}
+            value={backendSummary}
           >
             <Group
               gap='xs'
@@ -125,6 +133,28 @@ export function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null })
                 LSP
               </Badge>
             </Group>
+            <Text
+              c='dimmed'
+              size='xs'
+              mt='xs'
+            >
+              Backend state is shown directly. Mixed support is not collapsed into a single label.
+            </Text>
+          </KpiCard>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          <KpiCard
+            accent='fruiting.6'
+            label='Weighted Avg Duration'
+            value={formatDuration(weightedAverageDuration)}
+          >
+            <Text
+              c='dimmed'
+              size='xs'
+              mt='xs'
+            >
+              Across {totalCalls.toLocaleString()} tool calls
+            </Text>
           </KpiCard>
         </Grid.Col>
       </Grid>
@@ -146,20 +176,39 @@ export function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null })
       )}
 
       {data.tool_calls.length > 0 && (
-        <SectionCard title='Tool Call Distribution'>
-          <Group
-            justify='center'
-            mih={260}
-            miw={260}
-          >
-            <PieChart
-              data={pieData}
-              mx='auto'
-              size={250}
-              withLabels
-              withTooltip
+        <SectionCard title='Tool Call Comparison'>
+          <ChartBox mih={280}>
+            <BarChart
+              data={toolCalls}
+              dataKey='tool'
+              h={280}
+              series={[{ color: 'fruiting.6', name: 'count' }]}
             />
-          </Group>
+          </ChartBox>
+          <Text
+            c='dimmed'
+            size='xs'
+          >
+            Tool calls are sorted by volume so the chart stays readable as the set grows. Average duration stays in the table below.
+          </Text>
+          <Table striped>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Tool</Table.Th>
+                <Table.Th>Calls</Table.Th>
+                <Table.Th>Avg Duration</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {toolCalls.map((tool) => (
+                <Table.Tr key={tool.tool}>
+                  <Table.Td>{tool.tool}</Table.Td>
+                  <Table.Td>{tool.count.toLocaleString()}</Table.Td>
+                  <Table.Td>{formatDuration(tool.avg_duration_ms)}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
         </SectionCard>
       )}
 
