@@ -76,6 +76,10 @@ export function codexConfigPath(): string {
   return join(homedir(), '.codex', 'config.toml')
 }
 
+export function cursorConfigPath(): string {
+  return join(homedir(), '.cursor', 'mcp.json')
+}
+
 export function codexSessionsDir(): string {
   return join(homedir(), '.codex', 'sessions')
 }

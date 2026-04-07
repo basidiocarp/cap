@@ -1,5 +1,8 @@
 import type { LspInfo, ProjectInfo, RhizomeStatus } from './rhizome'
 
+export type StatusHost = 'claude-code' | 'codex' | 'cursor' | 'unknown'
+export type AdapterStatus = 'connected' | 'partial' | 'none'
+
 export interface CodexNotifyStatus {
   command: string | null
   config_path: string | null
@@ -59,10 +62,12 @@ export interface HookHealthResult {
 }
 
 export interface EcosystemStatus {
+  adapter_status?: AdapterStatus
   agents: {
     claude_code: AgentRuntimeStatus
     codex: AgentRuntimeStatus
   }
+  host?: StatusHost
   hyphae: {
     activity: HyphaeMemoryActivity
     available: boolean

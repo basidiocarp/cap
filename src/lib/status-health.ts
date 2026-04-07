@@ -12,6 +12,24 @@ export function summarizeHookHealth(status: EcosystemStatus): HookHealthSummary 
   const missingLifecycle = missingLifecycleHooks(status)
   const hookCount = status.hooks.installed_hooks.length
   const claudeConfigured = status.agents.claude_code.adapter.configured
+  const codexPrimary = status.host === 'codex' && status.adapter_status !== 'none' && !claudeConfigured
+  const cursorPrimary = status.host === 'cursor' && status.adapter_status === 'connected' && !claudeConfigured
+
+  if (codexPrimary) {
+    return {
+      color: 'gray',
+      detail: 'Codex host coverage is active. Claude lifecycle hooks are optional unless you also use Claude Code on this machine.',
+      label: 'Optional for Codex',
+    }
+  }
+
+  if (cursorPrimary) {
+    return {
+      color: 'gray',
+      detail: 'Cursor host coverage is active. Claude lifecycle hooks are optional unless you also use Claude Code on this machine.',
+      label: 'Optional for Cursor',
+    }
+  }
 
   if (hookCount === 0) {
     const emptyState = getClaudeLifecycleAdapterEmptyState(status)

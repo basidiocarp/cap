@@ -10,6 +10,7 @@ import { HookSummaryIcon } from './statusHelpers'
 
 export function LifecycleAdaptersCard({ status }: { status: EcosystemStatus }) {
   const { emptyState, hasErrors, hooks, missingLifecycle, summary } = getLifecycleAdaptersModel(status)
+  const lifecycleRepairRelevant = !summary.label.startsWith('Optional for ')
 
   return (
     <SectionCard title='Lifecycle adapters'>
@@ -56,7 +57,7 @@ export function LifecycleAdaptersCard({ status }: { status: EcosystemStatus }) {
             </Badge>
           ))}
         </Group>
-        {missingLifecycle.length > 0 && (
+        {missingLifecycle.length > 0 && lifecycleRepairRelevant && (
           <Stack gap='xs'>
             <Text
               c='dimmed'
@@ -83,14 +84,16 @@ export function LifecycleAdaptersCard({ status }: { status: EcosystemStatus }) {
         >
           <Stack gap='xs'>
             <Text size='sm'>{emptyState.detail}</Text>
-            <Button
-              component={Link}
-              size='xs'
-              to='/onboard'
-              variant='subtle'
-            >
-              Open onboarding
-            </Button>
+            {lifecycleRepairRelevant && (
+              <Button
+                component={Link}
+                size='xs'
+                to='/onboard'
+                variant='subtle'
+              >
+                Open onboarding
+              </Button>
+            )}
           </Stack>
         </Alert>
       ) : (

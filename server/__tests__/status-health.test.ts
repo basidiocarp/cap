@@ -92,4 +92,65 @@ describe('status health copy', () => {
     expect(summary.detail).toContain('Open onboarding')
     expect(summary.detail).toContain('PostToolUse')
   })
+
+  it('treats missing Claude hooks as optional when Codex is the active host', () => {
+    const status = createStatus()
+    status.host = 'codex'
+    status.adapter_status = 'connected'
+    status.agents.claude_code.configured = false
+    status.agents.claude_code.detected = false
+    status.agents.claude_code.adapter.configured = false
+    status.agents.claude_code.adapter.detected = false
+    status.agents.claude_code.config_path = null
+    status.agents.codex.configured = true
+    status.agents.codex.detected = true
+    status.agents.codex.adapter.configured = true
+    status.agents.codex.adapter.detected = true
+    status.agents.codex.notify = {
+      command: 'hyphae codex-notify',
+      config_path: '/Users/test/.codex/config.toml',
+      configured: true,
+      contract_matched: true,
+    }
+
+    const summary = summarizeHookHealth(status)
+
+    expect(summary.label).toBe('Optional for Codex')
+    expect(summary.detail).toContain('optional')
+    expect(getClaudeLifecycleAdapterEmptyState(status).title).toContain('optional')
+  })
+
+  it('treats missing Claude hooks as optional when Cursor is fully connected', () => {
+    const status = createStatus()
+    status.host = 'cursor'
+    status.adapter_status = 'connected'
+    status.agents.claude_code.configured = false
+    status.agents.claude_code.detected = false
+    status.agents.claude_code.adapter.configured = false
+    status.agents.claude_code.adapter.detected = false
+    status.agents.claude_code.config_path = null
+
+    const summary = summarizeHookHealth(status)
+
+    expect(summary.label).toBe('Optional for Cursor')
+    expect(summary.detail).toContain('optional')
+    expect(getClaudeLifecycleAdapterEmptyState(status).title).toContain('optional')
+  })
+
+  it('does not treat missing Claude hooks as optional when Cursor is only partial', () => {
+    const status = createStatus()
+    status.host = 'cursor'
+    status.adapter_status = 'partial'
+    status.agents.claude_code.configured = false
+    status.agents.claude_code.detected = false
+    status.agents.claude_code.adapter.configured = false
+    status.agents.claude_code.adapter.detected = false
+    status.agents.claude_code.config_path = null
+
+    const summary = summarizeHookHealth(status)
+
+    expect(summary.label).toBe('Not configured')
+    expect(summary.detail).toContain('Open onboarding')
+    expect(getClaudeLifecycleAdapterEmptyState(status).title).toBe('No Claude lifecycle adapter installed')
+  })
 })

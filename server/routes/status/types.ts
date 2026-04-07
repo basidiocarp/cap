@@ -6,6 +6,9 @@ export interface LspInfo {
   running: boolean
 }
 
+export type StatusHost = 'claude-code' | 'codex' | 'cursor' | 'unknown'
+export type AdapterStatus = 'connected' | 'partial' | 'none'
+
 export interface HookInfo {
   command: string
   event: string
@@ -61,10 +64,12 @@ export interface HyphaeMemoryActivity {
 }
 
 export interface StatusResult {
+  adapter_status?: AdapterStatus
   agents: {
     claude_code: AgentRuntimeStatus
     codex: AgentRuntimeStatus
   }
+  host?: StatusHost
   hyphae: {
     activity: HyphaeMemoryActivity
     available: boolean

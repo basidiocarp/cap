@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as canopy from '../canopy'
 import * as hyphae from '../hyphae'
+import { HyphaeSessionTimelineDetailCliError } from '../hyphae/session-timeline-detail-cli.ts'
 import { createApp } from '../index'
 import { registry } from '../lib/rhizome-registry'
 import * as mycelium from '../mycelium'
@@ -98,6 +99,8 @@ describe('API Routes', () => {
       expect(res.status).toBe(200)
 
       const json = (await res.json()) as Record<string, unknown>
+      expect(json).toHaveProperty('host')
+      expect(json).toHaveProperty('adapter_status')
       expect(json).toHaveProperty('agents')
       expect(json).toHaveProperty('project')
       expect(json).toHaveProperty('hooks')
@@ -959,6 +962,57 @@ describe('API Routes', () => {
       expect(timelineSpy).not.toHaveBeenCalled()
       await expect(res.json()).resolves.toEqual({
         error: 'project_root and worktree_id must be provided together',
+      })
+    })
+  })
+
+  describe('GET /api/sessions/:id/timeline', () => {
+    it('returns normalized events for a selected session id', async () => {
+      const eventsSpy = vi.spyOn(hyphae, 'getSessionTimelineEvents').mockResolvedValue([
+        {
+          content: 'Recalled 3 memories: session attribution bridge',
+          timestamp: '2026-03-27T12:02:00Z',
+          type: 'recall',
+        },
+      ])
+
+      const req = new Request('http://localhost:3001/api/sessions/ses_123/timeline')
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(eventsSpy).toHaveBeenCalledWith('ses_123')
+      await expect(res.json()).resolves.toEqual([
+        {
+          content: 'Recalled 3 memories: session attribution bridge',
+          timestamp: '2026-03-27T12:02:00Z',
+          type: 'recall',
+        },
+      ])
+    })
+
+    it('returns an empty array when the selected session has no timeline events', async () => {
+      const eventsSpy = vi.spyOn(hyphae, 'getSessionTimelineEvents').mockResolvedValue([])
+
+      const req = new Request('http://localhost:3001/api/sessions/ses_empty/timeline')
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(eventsSpy).toHaveBeenCalledWith('ses_empty')
+      await expect(res.json()).resolves.toEqual([])
+    })
+
+    it('returns 404 when the session id is missing from Hyphae', async () => {
+      const eventsSpy = vi
+        .spyOn(hyphae, 'getSessionTimelineEvents')
+        .mockRejectedValue(new HyphaeSessionTimelineDetailCliError('Hyphae session timeline did not include the requested session', 'not_found'))
+
+      const req = new Request('http://localhost:3001/api/sessions/ses_missing/timeline')
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(404)
+      expect(eventsSpy).toHaveBeenCalledWith('ses_missing')
+      await expect(res.json()).resolves.toEqual({
+        error: 'Not found',
       })
     })
   })
