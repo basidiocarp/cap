@@ -8,6 +8,10 @@ permissions:
   contents: write
   actions: read
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build release assets
@@ -55,7 +59,7 @@ jobs:
         run: |
           mkdir release
           find artifacts -type f -name '*.tar.gz' -exec cp {} release/ \;
-          cd release && sha256sum * > SHA256SUMS
+          cd release && sha256sum -- * > SHA256SUMS
 
       - name: Extract release notes from tag
         run: |
