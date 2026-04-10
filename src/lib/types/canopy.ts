@@ -54,6 +54,10 @@ export type CanopyHandoffType =
   | 'record_decision'
   | 'close_task'
 export type CanopyCouncilMessageType = 'proposal' | 'objection' | 'evidence' | 'decision' | 'handoff' | 'status'
+export type CanopyCouncilParticipantRole = 'reviewer' | 'architect'
+export type CanopyCouncilParticipantStatus = 'pending' | 'summoned' | 'accepted' | 'completed' | 'declined'
+export type CanopyCouncilSessionState = 'open' | 'closed'
+export type CanopyCouncilSessionTimelineKind = 'summon' | 'response' | 'output' | 'decision' | 'closure'
 export type CanopyEvidenceSourceKind =
   | 'hyphae_session'
   | 'hyphae_recall'
@@ -75,6 +79,7 @@ export type CanopyTaskEventType =
   | 'relationship_updated'
   | 'handoff_created'
   | 'handoff_updated'
+  | 'council_session_summoned'
   | 'council_message_posted'
   | 'evidence_attached'
   | 'follow_up_task_created'
@@ -147,6 +152,7 @@ export type CanopyOperatorActionKind =
   | 'set_review_due_at'
   | 'clear_review_due_at'
   | 'create_handoff'
+  | 'summon_council_session'
   | 'post_council_message'
   | 'attach_evidence'
   | 'create_follow_up_task'
@@ -315,9 +321,37 @@ export interface CanopyHandoffAttention {
 export interface CanopyCouncilMessage {
   author_agent_id: string
   body: string
+  created_at: string | null
   message_id: string
   message_type: CanopyCouncilMessageType
   task_id: string
+}
+
+export interface CanopyCouncilSessionParticipant {
+  agent_id: string | null
+  role: CanopyCouncilParticipantRole
+  status?: CanopyCouncilParticipantStatus | null
+}
+
+export interface CanopyCouncilSessionTimelineEntry {
+  actor_agent_id?: string | null
+  body: string
+  created_at: string | null
+  kind: CanopyCouncilSessionTimelineKind
+  title?: string | null
+}
+
+export interface CanopyCouncilSession {
+  council_session_id: string
+  created_at: string
+  participants: CanopyCouncilSessionParticipant[]
+  session_summary: string | null
+  state: CanopyCouncilSessionState
+  task_id: string
+  timeline: CanopyCouncilSessionTimelineEntry[]
+  transcript_ref: string | null
+  updated_at: string
+  worktree_id: string | null
 }
 
 export interface CanopyEvidenceRef {
@@ -479,6 +513,7 @@ export interface CanopyTaskDetail {
   heartbeats: CanopyAgentHeartbeatEvent[]
   handoff_attention: CanopyHandoffAttention[]
   handoffs: CanopyHandoff[]
+  council_session?: CanopyCouncilSession | null
   messages: CanopyCouncilMessage[]
   operator_actions: CanopyOperatorAction[]
   ownership: CanopyTaskOwnershipSummary
@@ -518,6 +553,7 @@ export interface CanopyTaskActionInput {
     | 'set_review_due_at'
     | 'clear_review_due_at'
     | 'create_handoff'
+    | 'summon_council_session'
     | 'post_council_message'
     | 'attach_evidence'
     | 'create_follow_up_task'

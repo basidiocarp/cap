@@ -29,7 +29,7 @@ export function TaskActivitySections({
         handoffAttentionById={handoffAttentionById}
         handoffs={detail.handoffs}
       />
-      <TaskCouncilSection messages={detail.messages} />
+      <TaskCouncilSection detail={detail} />
       <TaskEvidenceSection evidence={detail.evidence} />
     </>
   )

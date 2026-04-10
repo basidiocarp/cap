@@ -1354,6 +1354,7 @@ const mockTaskDetail: CanopyTaskDetail = {
     {
       author_agent_id: 'agent-1',
       body: 'Ready for review.',
+      created_at: '2026-03-27T12:10:00Z',
       message_id: 'msg-1',
       message_type: 'status',
       task_id: 'task-1',
@@ -2426,6 +2427,20 @@ describe('Canopy page', () => {
 
   it('forwards operator actions from the task detail modal', async () => {
     const user = userEvent.setup()
+    currentTaskDetail = structuredClone(mockTaskDetail)
+    currentTaskDetail.allowed_actions.push({
+      action_id: 'allowed-summon-council',
+      agent_id: 'agent-1',
+      due_at: null,
+      expires_at: null,
+      handoff_id: null,
+      kind: 'summon_council_session',
+      level: 'needs_attention',
+      summary: 'Create a task-linked council session with reviewer and architect roles.',
+      target_kind: 'task',
+      task_id: 'task-1',
+      title: 'Summon council for Add Cap Canopy page',
+    })
 
     renderWithProviders(<Canopy />, { route: '/canopy?task=task-1' })
 
@@ -2544,6 +2559,13 @@ describe('Canopy page', () => {
       requested_action: 'Confirm the queue wiring',
       taskId: 'task-1',
       to_agent_id: 'agent-2',
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Summon council' }))
+    expect(taskActionMutateMock).toHaveBeenCalledWith({
+      action: 'summon_council_session',
+      changed_by: 'operator',
+      taskId: 'task-1',
     })
 
     await user.type(screen.getByLabelText('Message body'), 'Operator initiated a follow-up review.')

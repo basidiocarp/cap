@@ -114,6 +114,7 @@ const ALLOWED_TASK_ACTIONS = new Set([
   'set_review_due_at',
   'clear_review_due_at',
   'create_handoff',
+  'summon_council_session',
   'post_council_message',
   'attach_evidence',
   'create_follow_up_task',

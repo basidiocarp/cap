@@ -214,6 +214,32 @@ export function TaskCoordinationActionsSection({ agents, detail }: { agents: Can
         </Stack>
       ) : null}
 
+      {allowedKinds.has('summon_council_session') ? (
+        <Stack gap='xs'>
+          <Text fw={600}>Summon council</Text>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Open a task-linked council session with the fixed reviewer and architect roles.
+          </Text>
+          <Group justify='flex-end'>
+            <Button
+              loading={taskActionMutation.isPending}
+              onClick={() =>
+                taskActionMutation.mutate({
+                  action: 'summon_council_session',
+                  changed_by: TASK_OPERATOR_ACTOR,
+                  taskId: detail.task.task_id,
+                })
+              }
+            >
+              Summon council
+            </Button>
+          </Group>
+        </Stack>
+      ) : null}
+
       {allowedKinds.has('post_council_message') ? (
         <Stack gap='xs'>
           <Text fw={600}>Post council message</Text>

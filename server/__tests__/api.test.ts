@@ -1613,6 +1613,61 @@ describe('API Routes', () => {
       })
     })
 
+    it('forwards summon council task actions to Canopy', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
+        status: 'review_required',
+        task_id: 'task-1',
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({
+          action: 'summon_council_session',
+          changed_by: 'operator',
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(taskActionSpy).toHaveBeenCalledWith('task-1', {
+        actingAgentId: undefined,
+        action: 'summon_council_session',
+        assignedTo: undefined,
+        authorAgentId: undefined,
+        blockedReason: undefined,
+        changedBy: 'operator',
+        clearOwnerNote: undefined,
+        closureSummary: undefined,
+        dueAt: undefined,
+        evidenceLabel: undefined,
+        evidenceSourceKind: undefined,
+        evidenceSourceRef: undefined,
+        evidenceSummary: undefined,
+        expiresAt: undefined,
+        followUpDescription: undefined,
+        followUpTitle: undefined,
+        fromAgentId: undefined,
+        handoffSummary: undefined,
+        handoffType: undefined,
+        messageBody: undefined,
+        messageType: undefined,
+        note: undefined,
+        ownerNote: undefined,
+        priority: undefined,
+        relatedFile: undefined,
+        relatedHandoffId: undefined,
+        relatedMemoryQuery: undefined,
+        relatedSessionId: undefined,
+        relatedSymbol: undefined,
+        requestedAction: undefined,
+        reviewDueAt: undefined,
+        severity: undefined,
+        toAgentId: undefined,
+        verificationState: undefined,
+      })
+    })
+
     it('forwards follow-up task actions to Canopy', async () => {
       const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction').mockResolvedValue({
         status: 'review_required',
