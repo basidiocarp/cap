@@ -1,4 +1,3 @@
-import { useId } from 'react'
 import { AppShell, Group, NavLink, Text, Title } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import {
@@ -16,6 +15,7 @@ import {
   IconSearch,
   IconSettings,
 } from '@tabler/icons-react'
+import { useId } from 'react'
 import { Outlet, NavLink as RouterNavLink, useLocation } from 'react-router-dom'
 
 const NAV_SECTIONS = [

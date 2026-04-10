@@ -5,10 +5,10 @@ export default defineConfig({
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
   },
   test: {
-    globals: true,
     environment: 'node',
-    include: ['server/__tests__/**/*.test.ts'],
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache'],
+    globals: true,
+    include: ['server/__tests__/**/*.test.ts'],
     server: {
       deps: {
         // Allow .ts extension imports in server code

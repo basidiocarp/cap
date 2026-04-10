@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-
 import { Hono } from 'hono'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -37,7 +36,7 @@ async function putJson(app: Hono, path: string, body: unknown) {
       body: JSON.stringify(body),
       headers: { 'content-type': 'application/json' },
       method: 'PUT',
-    }),
+    })
   )
 }
 
@@ -86,7 +85,7 @@ describe('settings config writes', () => {
     writeFileSync(
       configPath('hyphae'),
       ['[store]', 'path = "db.sqlite"', '', 'embedding_model = "old"', 'similarity_threshold = 0.25', ''].join('\n'),
-      'utf-8',
+      'utf-8'
     )
 
     const hyphaeRes = await putJson(app, '/hyphae', {
@@ -105,7 +104,7 @@ describe('settings config writes', () => {
 
     expect(rhizomeRes.status).toBe(200)
     expect(readConfig('rhizome')).toBe(
-      ['auto_export = true', 'languages = ["rust", "c++", "line\\nbreak", "quote\\"me", "slash\\\\path"]', ''].join('\n'),
+      ['auto_export = true', 'languages = ["rust", "c++", "line\\nbreak", "quote\\"me", "slash\\\\path"]', ''].join('\n')
     )
   })
 
@@ -118,8 +117,6 @@ describe('settings config writes', () => {
     })
 
     expect(res.status).toBe(200)
-    expect(readConfig('mycelium')).toBe(
-      ['[filters.hyphae]', 'enabled = false', '', '[filters.rhizome]', 'enabled = true', ''].join('\n'),
-    )
+    expect(readConfig('mycelium')).toBe(['[filters.hyphae]', 'enabled = false', '', '[filters.rhizome]', 'enabled = true', ''].join('\n'))
   })
 })

@@ -74,23 +74,14 @@ function normalizeEvent(value: unknown): SessionTimelineDetailEvent | null {
 
   const type = isSessionTimelineDetailEventType(record.type) ? record.type : normalizeLegacyType(record)
   const timestamp =
-    typeof record.timestamp === 'string'
-      ? record.timestamp
-      : typeof record.occurred_at === 'string'
-        ? record.occurred_at
-        : null
+    typeof record.timestamp === 'string' ? record.timestamp : typeof record.occurred_at === 'string' ? record.occurred_at : null
   const content =
     typeof record.content === 'string'
       ? record.content
       : [typeof record.title === 'string' ? record.title : null, typeof record.detail === 'string' ? record.detail : null]
           .filter((part): part is string => Boolean(part))
           .join(': ')
-  const score =
-    typeof record.score === 'number'
-      ? record.score
-      : typeof record.signal_value === 'number'
-        ? record.signal_value
-        : undefined
+  const score = typeof record.score === 'number' ? record.score : typeof record.signal_value === 'number' ? record.signal_value : undefined
 
   if (!type || !timestamp || !content) return null
 

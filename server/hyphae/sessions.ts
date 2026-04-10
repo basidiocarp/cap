@@ -1,8 +1,8 @@
 import type { SessionRecord, SessionTimelineDetailEvent, SessionTimelineRecord } from '../types.ts'
 import type { SessionCliQuery } from './session-list-cli.ts'
 import { getSessionListFromCli } from './session-list-cli.ts'
-import { getSessionTimelineEventsFromCli } from './session-timeline-detail-cli.ts'
 import { getSessionTimelineFromCli } from './session-timeline-cli.ts'
+import { getSessionTimelineEventsFromCli } from './session-timeline-detail-cli.ts'
 
 export async function getSessions(options: SessionCliQuery = {}, limit = 20): Promise<SessionRecord[]> {
   return getSessionListFromCli(options, limit)

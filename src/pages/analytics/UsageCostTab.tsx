@@ -79,7 +79,8 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
             c='dimmed'
             size='sm'
           >
-            {usageHistory?.usageNote ?? 'This tab shows parsed session history only. It does not verify host configuration or installed adapters.'}
+            {usageHistory?.usageNote ??
+              'This tab shows parsed session history only. It does not verify host configuration or installed adapters.'}
           </Text>
           <Badge
             color='gray'

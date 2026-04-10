@@ -19,7 +19,6 @@ describe('Canopy CLI consumer', () => {
   it('accepts snapshot payloads with versioned evidence refs', async () => {
     runCliMock.mockResolvedValue(
       JSON.stringify({
-        schema_version: '1.0',
         evidence: [
           {
             evidence_id: '01KMSCANOPYEVIDENCE00000001',
@@ -36,6 +35,7 @@ describe('Canopy CLI consumer', () => {
             task_id: '01KMSCANOPYTASK0000000001',
           },
         ],
+        schema_version: '1.0',
         tasks: [],
       })
     )
@@ -54,7 +54,6 @@ describe('Canopy CLI consumer', () => {
   it('rejects snapshot payloads with unversioned evidence refs', async () => {
     runCliMock.mockResolvedValue(
       JSON.stringify({
-        schema_version: '1.0',
         evidence: [
           {
             evidence_id: '01KMSCANOPYEVIDENCE00000001',
@@ -70,6 +69,7 @@ describe('Canopy CLI consumer', () => {
             task_id: '01KMSCANOPYTASK0000000001',
           },
         ],
+        schema_version: '1.0',
         tasks: [],
       })
     )
@@ -88,9 +88,7 @@ describe('Canopy CLI consumer', () => {
   it('rejects task detail payloads with an unsupported evidence schema version', async () => {
     runCliMock.mockResolvedValue(
       JSON.stringify({
-        schema_version: '1.0',
         allowed_actions: [],
-        task: { task_id: 'task-1' },
         evidence: [
           {
             evidence_id: '01KMSCANOPYEVIDENCE00000001',
@@ -107,6 +105,8 @@ describe('Canopy CLI consumer', () => {
             task_id: '01KMSCANOPYTASK0000000001',
           },
         ],
+        schema_version: '1.0',
+        task: { task_id: 'task-1' },
       })
     )
 

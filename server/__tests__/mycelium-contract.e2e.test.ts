@@ -36,9 +36,9 @@ function runMycelium(args: string[]): string {
     encoding: 'utf8',
     env: {
       ...process.env,
+      CLAUDE_SESSION_ID: runtimeSessionId,
       MYCELIUM_DB_PATH: dbPath,
       MYCELIUM_PROJECT_PATH: projectRoot,
-      CLAUDE_SESSION_ID: runtimeSessionId,
       NO_COLOR: '1',
     },
     timeout: 10_000,

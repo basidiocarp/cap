@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 
-import * as hyphae from '../hyphae.ts'
 import { HyphaeSessionTimelineDetailCliError } from '../hyphae/session-timeline-detail-cli.ts'
+import * as hyphae from '../hyphae.ts'
 
 const app = new Hono()
 

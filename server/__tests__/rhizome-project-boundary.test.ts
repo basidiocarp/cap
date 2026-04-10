@@ -36,7 +36,7 @@ describe('POST /api/rhizome/project boundary', () => {
 
     vi.mocked(fs.existsSync).mockImplementation(() => true)
     vi.mocked(fs.realpathSync).mockImplementation((path) => String(path))
-    vi.mocked(fs.statSync).mockImplementation((path) => ({ isDirectory: () => path !== '/projects/not-a-directory' } as never))
+    vi.mocked(fs.statSync).mockImplementation((path) => ({ isDirectory: () => path !== '/projects/not-a-directory' }) as never)
   })
 
   afterEach(() => {

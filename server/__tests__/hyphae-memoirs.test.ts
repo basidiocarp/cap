@@ -26,7 +26,6 @@ describe('Hyphae memoir CLI consumer', () => {
     runCliMock
       .mockResolvedValueOnce(
         JSON.stringify({
-          schema_version: '1.0',
           concepts: [
             {
               confidence: 0.4,
@@ -64,6 +63,7 @@ describe('Hyphae memoir CLI consumer', () => {
           },
           offset: 0,
           query: null,
+          schema_version: '1.0',
           stats: {
             avg_confidence: 0.68,
             label_counts: [{ count: 1, label: 'function' }],
@@ -75,7 +75,6 @@ describe('Hyphae memoir CLI consumer', () => {
       )
       .mockResolvedValueOnce(
         JSON.stringify({
-          schema_version: '1.0',
           concepts: [
             {
               confidence: 0.9,
@@ -101,6 +100,7 @@ describe('Hyphae memoir CLI consumer', () => {
           },
           offset: 2,
           query: null,
+          schema_version: '1.0',
           stats: {
             avg_confidence: 0.68,
             label_counts: [{ count: 1, label: 'function' }],
@@ -161,7 +161,6 @@ describe('Hyphae memoir CLI consumer', () => {
   it('sorts memoir lists by updated_at descending to preserve the existing Cap sidebar order', async () => {
     runCliMock.mockResolvedValue(
       JSON.stringify({
-        schema_version: '1.0',
         memoirs: [
           {
             concept_count: 1,
@@ -188,6 +187,7 @@ describe('Hyphae memoir CLI consumer', () => {
             },
           },
         ],
+        schema_version: '1.0',
       })
     )
 
@@ -208,7 +208,6 @@ describe('Hyphae memoir CLI consumer', () => {
   it('returns inspect neighbors in the legacy Cap shape', async () => {
     runCliMock.mockResolvedValue(
       JSON.stringify({
-        schema_version: '1.0',
         concept: {
           confidence: 0.9,
           created_at: '2026-03-24T00:00:00Z',
@@ -276,6 +275,7 @@ describe('Hyphae memoir CLI consumer', () => {
             },
           ],
         },
+        schema_version: '1.0',
       })
     )
 
@@ -364,7 +364,7 @@ describe('Hyphae memoir CLI consumer', () => {
   })
 
   it('throws when memoir search-all returns a payload that does not match the contract', async () => {
-    runCliMock.mockResolvedValue(JSON.stringify({ schema_version: '1.0', results: [{ id: 'concept-1' }] }))
+    runCliMock.mockResolvedValue(JSON.stringify({ results: [{ id: 'concept-1' }], schema_version: '1.0' }))
 
     const { memoirSearchAll } = await import('../hyphae/memoirs-cli.ts')
     await expect(memoirSearchAll('context')).rejects.toThrow('Hyphae memoir search-all returned an invalid payload')
@@ -381,7 +381,6 @@ describe('Hyphae memoir CLI consumer', () => {
     runCliMock
       .mockResolvedValueOnce(
         JSON.stringify({
-          schema_version: '1.0',
           limit: 500,
           memoir: {
             consolidation_threshold: 50,
@@ -407,12 +406,12 @@ describe('Hyphae memoir CLI consumer', () => {
               updated_at: '2026-03-24T00:00:00Z',
             },
           ],
+          schema_version: '1.0',
           total: 2,
         })
       )
       .mockResolvedValueOnce(
         JSON.stringify({
-          schema_version: '1.0',
           limit: 500,
           memoir: {
             consolidation_threshold: 50,
@@ -438,6 +437,7 @@ describe('Hyphae memoir CLI consumer', () => {
               updated_at: '2026-03-24T00:00:00Z',
             },
           ],
+          schema_version: '1.0',
           total: 2,
         })
       )
@@ -476,7 +476,6 @@ describe('Hyphae memoir CLI consumer', () => {
     runCliMock
       .mockResolvedValueOnce(
         JSON.stringify({
-          schema_version: '1.0',
           limit: 500,
           offset: 0,
           query: 'context',
@@ -504,12 +503,12 @@ describe('Hyphae memoir CLI consumer', () => {
               },
             },
           ],
+          schema_version: '1.0',
           total: 2,
         })
       )
       .mockResolvedValueOnce(
         JSON.stringify({
-          schema_version: '1.0',
           limit: 500,
           offset: 1,
           query: 'context',
@@ -537,6 +536,7 @@ describe('Hyphae memoir CLI consumer', () => {
               },
             },
           ],
+          schema_version: '1.0',
           total: 2,
         })
       )

@@ -17,12 +17,12 @@ describe('AppLayout', () => {
           path='/'
         >
           <Route
-            index
             element={<div>Home</div>}
+            index
           />
         </Route>
       </Routes>,
-      { route: '/' },
+      { route: '/' }
     )
 
     const toggleButton = screen.getByRole('button', { name: 'Toggle mobile navigation' })

@@ -6,9 +6,7 @@ import { renderWithProviders } from '../../test/render'
 import { MemoryHealthTab } from './MemoryHealthTab'
 
 vi.mock('@mantine/charts', () => ({
-  BarChart: ({ data }: { data: Array<{ importance: string }> }) => (
-    <div data-testid='importance-chart'>{JSON.stringify(data)}</div>
-  ),
+  BarChart: ({ data }: { data: Array<{ importance: string }> }) => <div data-testid='importance-chart'>{JSON.stringify(data)}</div>,
 }))
 
 function createAnalytics(overrides: Partial<HyphaeAnalytics> = {}): HyphaeAnalytics {

@@ -1004,7 +1004,9 @@ describe('API Routes', () => {
     it('returns 404 when the session id is missing from Hyphae', async () => {
       const eventsSpy = vi
         .spyOn(hyphae, 'getSessionTimelineEvents')
-        .mockRejectedValue(new HyphaeSessionTimelineDetailCliError('Hyphae session timeline did not include the requested session', 'not_found'))
+        .mockRejectedValue(
+          new HyphaeSessionTimelineDetailCliError('Hyphae session timeline did not include the requested session', 'not_found')
+        )
 
       const req = new Request('http://localhost:3001/api/sessions/ses_missing/timeline')
       const res = await app.fetch(req)

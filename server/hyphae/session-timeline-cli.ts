@@ -40,9 +40,7 @@ function isSessionTimelineRecord(value: unknown): value is SessionTimelineRecord
     typeof record.project === 'string' &&
     'project_root' in record &&
     (record.project_root === null || typeof record.project_root === 'string') &&
-    (record.runtime_session_id === null ||
-      typeof record.runtime_session_id === 'string' ||
-      record.runtime_session_id === undefined) &&
+    (record.runtime_session_id === null || typeof record.runtime_session_id === 'string' || record.runtime_session_id === undefined) &&
     'worktree_id' in record &&
     (record.worktree_id === null || typeof record.worktree_id === 'string') &&
     (record.scope === null || typeof record.scope === 'string' || record.scope === undefined) &&

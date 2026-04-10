@@ -75,13 +75,18 @@ export function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null })
     )
   }
 
-  const backendSummary = data.backend_usage.lsp && data.backend_usage.treesitter ? 'Mixed backend support' : data.backend_usage.lsp ? 'LSP only' : data.backend_usage.treesitter ? 'Tree-sitter only' : 'No backend coverage'
+  const backendSummary =
+    data.backend_usage.lsp && data.backend_usage.treesitter
+      ? 'Mixed backend support'
+      : data.backend_usage.lsp
+        ? 'LSP only'
+        : data.backend_usage.treesitter
+          ? 'Tree-sitter only'
+          : 'No backend coverage'
   const toolCalls = [...data.tool_calls].sort((a, b) => b.count - a.count || a.tool.localeCompare(b.tool))
   const totalCalls = toolCalls.reduce((sum, tool) => sum + tool.count, 0)
   const weightedAverageDuration =
-    totalCalls > 0
-      ? toolCalls.reduce((sum, tool) => sum + tool.avg_duration_ms * tool.count, 0) / totalCalls
-      : 0
+    totalCalls > 0 ? toolCalls.reduce((sum, tool) => sum + tool.avg_duration_ms * tool.count, 0) / totalCalls : 0
 
   return (
     <Stack>
@@ -135,8 +140,8 @@ export function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null })
             </Group>
             <Text
               c='dimmed'
-              size='xs'
               mt='xs'
+              size='xs'
             >
               Backend state is shown directly. Mixed support is not collapsed into a single label.
             </Text>
@@ -150,8 +155,8 @@ export function CodeIntelligenceTab({ data }: { data: RhizomeAnalytics | null })
           >
             <Text
               c='dimmed'
-              size='xs'
               mt='xs'
+              size='xs'
             >
               Across {totalCalls.toLocaleString()} tool calls
             </Text>

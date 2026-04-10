@@ -10,9 +10,7 @@ describe('LifecycleAdaptersCard', () => {
     const status = createEcosystemStatus({
       hooks: {
         error_count: 0,
-        installed_hooks: [
-          { command: 'hyphae hook', event: 'PostToolUse', matcher: '*' },
-        ],
+        installed_hooks: [{ command: 'hyphae hook', event: 'PostToolUse', matcher: '*' }],
         lifecycle: [
           { event: 'PostToolUse', installed: true, matching_hooks: 1 },
           { event: 'PostToolUse', installed: false, matching_hooks: 2 },
@@ -28,9 +26,9 @@ describe('LifecycleAdaptersCard', () => {
 
       expect(screen.getByText('SessionEnd')).toBeInTheDocument()
       expect(
-        consoleError.mock.calls.flat().some((value) =>
-          typeof value === 'string' && value.includes('Encountered two children with the same key'),
-        ),
+        consoleError.mock.calls
+          .flat()
+          .some((value) => typeof value === 'string' && value.includes('Encountered two children with the same key'))
       ).toBe(false)
     } finally {
       consoleError.mockRestore()

@@ -6,9 +6,7 @@ import { renderWithProviders } from '../../test/render'
 import { CodeIntelligenceTab } from './CodeIntelligenceTab'
 
 vi.mock('@mantine/charts', () => ({
-  BarChart: ({ data }: { data: Array<{ tool: string }> }) => (
-    <div data-testid='tool-chart'>{JSON.stringify(data)}</div>
-  ),
+  BarChart: ({ data }: { data: Array<{ tool: string }> }) => <div data-testid='tool-chart'>{JSON.stringify(data)}</div>,
 }))
 
 function createAnalytics(overrides: Partial<RhizomeAnalytics> = {}): RhizomeAnalytics {

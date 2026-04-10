@@ -25,10 +25,10 @@ describe('Hyphae read CLI consumer', () => {
   it('loads stats from the Hyphae CLI all-projects surface', async () => {
     runCliMock.mockResolvedValue(
       JSON.stringify({
-        schema_version: '1.0',
         avg_weight: 0.73,
         newest_memory: '2026-03-30T15:00:00Z',
         oldest_memory: '2026-03-29T11:00:00Z',
+        schema_version: '1.0',
         total_memories: 12,
         total_topics: 4,
       })
@@ -48,7 +48,6 @@ describe('Hyphae read CLI consumer', () => {
   it('preserves topic-filtered recall through the Hyphae CLI contract', async () => {
     runCliMock.mockResolvedValue(
       JSON.stringify({
-        schema_version: '1.0',
         limit: 20,
         query: 'local storage',
         results: [
@@ -68,6 +67,7 @@ describe('Hyphae read CLI consumer', () => {
             weight: 0.88,
           },
         ],
+        schema_version: '1.0',
         total: 1,
       })
     )
@@ -102,7 +102,6 @@ describe('Hyphae read CLI consumer', () => {
   it('accepts limited global search results while preserving the total-match contract', async () => {
     runCliMock.mockResolvedValue(
       JSON.stringify({
-        schema_version: '1.0',
         limit: 1,
         query: 'local storage',
         results: [
@@ -123,6 +122,7 @@ describe('Hyphae read CLI consumer', () => {
             weight: 0.88,
           },
         ],
+        schema_version: '1.0',
         total: 3,
       })
     )
@@ -206,14 +206,16 @@ describe('Hyphae read CLI consumer', () => {
   })
 
   it('rejects search payloads that omit the Hyphae total field', async () => {
-    runCliMock.mockResolvedValue(JSON.stringify({ schema_version: '1.0', results: [] }))
+    runCliMock.mockResolvedValue(JSON.stringify({ results: [], schema_version: '1.0' }))
 
     const { searchGlobalFromCli } = await import('../hyphae/reads-cli.ts')
     await expect(searchGlobalFromCli('local storage', 5)).rejects.toThrow('Hyphae search returned an invalid payload')
   })
 
   it('rejects stats payloads that omit the schema version', async () => {
-    runCliMock.mockResolvedValue(JSON.stringify({ avg_weight: 0.73, newest_memory: null, oldest_memory: null, total_memories: 12, total_topics: 4 }))
+    runCliMock.mockResolvedValue(
+      JSON.stringify({ avg_weight: 0.73, newest_memory: null, oldest_memory: null, total_memories: 12, total_topics: 4 })
+    )
 
     const { getStatsFromCli } = await import('../hyphae/reads-cli.ts')
     await expect(getStatsFromCli()).rejects.toThrow('Hyphae stats returned an invalid payload')
@@ -298,7 +300,6 @@ describe('Hyphae read CLI consumer', () => {
   it('sorts topic memories by newest-first to preserve the existing Cap contract', async () => {
     runCliMock.mockResolvedValue(
       JSON.stringify({
-        schema_version: '1.0',
         memories: [
           {
             access_count: 1,
@@ -331,6 +332,7 @@ describe('Hyphae read CLI consumer', () => {
             weight: 0.2,
           },
         ],
+        schema_version: '1.0',
       })
     )
 

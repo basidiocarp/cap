@@ -6,11 +6,11 @@ describe('Stipe contract parsers', () => {
   it('accepts versioned stipe doctor payloads', () => {
     const parsed = parseStipeDoctorReport(
       JSON.stringify({
-        schema_version: '1.0',
+        checks: [{ message: 'missing', name: 'hyphae database', passed: false, repair_actions: [] }],
         healthy: false,
-        summary: '1 checks need attention.',
-        checks: [{ name: 'hyphae database', message: 'missing', passed: false, repair_actions: [] }],
         repair_actions: [],
+        schema_version: '1.0',
+        summary: '1 checks need attention.',
       })
     ) as Record<string, unknown>
 
@@ -21,10 +21,10 @@ describe('Stipe contract parsers', () => {
     expect(() =>
       parseStipeDoctorReport(
         JSON.stringify({
-          healthy: false,
-          summary: '1 checks need attention.',
           checks: [],
+          healthy: false,
           repair_actions: [],
+          summary: '1 checks need attention.',
         })
       )
     ).toThrow('Invalid stipe doctor payload')
@@ -33,14 +33,14 @@ describe('Stipe contract parsers', () => {
   it('accepts versioned stipe init plan payloads', () => {
     const parsed = parseStipeInitPlan(
       JSON.stringify({
-        schema_version: '1.0',
-        dry_run: true,
-        target_client: 'codex',
-        selected_hosts: ['Codex CLI'],
-        detected_hosts: ['Codex CLI'],
         detected_clients: ['Codex CLI'],
-        steps: [{ title: 'Register the hyphae MCP server', detail: 'Wire Hyphae into the selected host.', status: 'planned' }],
+        detected_hosts: ['Codex CLI'],
+        dry_run: true,
         repair_actions: [],
+        schema_version: '1.0',
+        selected_hosts: ['Codex CLI'],
+        steps: [{ detail: 'Wire Hyphae into the selected host.', status: 'planned', title: 'Register the hyphae MCP server' }],
+        target_client: 'codex',
       })
     ) as Record<string, unknown>
 
@@ -51,12 +51,12 @@ describe('Stipe contract parsers', () => {
     expect(() =>
       parseStipeInitPlan(
         JSON.stringify({
-          dry_run: true,
-          selected_hosts: [],
-          detected_hosts: [],
           detected_clients: [],
-          steps: [],
+          detected_hosts: [],
+          dry_run: true,
           repair_actions: [],
+          selected_hosts: [],
+          steps: [],
         })
       )
     ).toThrow('Invalid stipe init plan payload')

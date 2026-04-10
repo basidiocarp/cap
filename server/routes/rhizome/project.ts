@@ -33,7 +33,11 @@ function getCanonicalPath(path: string): string | null {
 function getAllowedProjectRoots(): { canonicalRoots: Set<string>; rawRoots: Set<string> } {
   const rawRoots = new Set<string>()
   const canonicalRoots = new Set<string>()
-  const roots = [registry.getActiveProject(), ...registry.getRecentProjects(), ...parseAllowedProjectRoots(process.env.CAP_ALLOWED_PROJECT_ROOTS)]
+  const roots = [
+    registry.getActiveProject(),
+    ...registry.getRecentProjects(),
+    ...parseAllowedProjectRoots(process.env.CAP_ALLOWED_PROJECT_ROOTS),
+  ]
 
   for (const root of roots) {
     if (!root) {

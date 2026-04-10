@@ -2,9 +2,9 @@ import { Hono } from 'hono'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const loggerMock = vi.hoisted(() => ({
+  debug: vi.fn(),
   error: vi.fn(),
   info: vi.fn(),
-  debug: vi.fn(),
   warn: vi.fn(),
 }))
 
@@ -21,8 +21,8 @@ vi.mock('../routes/settings.ts', () => {
 })
 
 const previousEnv = {
-  apiKey: process.env.CAP_API_KEY,
   allowUnauthenticated: process.env.CAP_ALLOW_UNAUTHENTICATED,
+  apiKey: process.env.CAP_API_KEY,
   requireAuthInTests: process.env.CAP_REQUIRE_AUTH_IN_TESTS,
   vitest: process.env.VITEST,
 }

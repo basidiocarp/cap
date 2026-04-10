@@ -1,6 +1,6 @@
+import { execFile } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, dirname } from 'node:path'
-import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 
 import type { LspInfo, PromiseFilled, StatusResult } from './types.ts'

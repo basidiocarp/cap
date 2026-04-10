@@ -81,12 +81,10 @@ function layoutNodes(names: string[], callers: Set<string>, callees: Set<string>
   const roleOrder: NodeRole[] = ['caller', 'hub', 'callee', 'external']
 
   return roleOrder.flatMap((role, roleIndex) => {
-    const nodes = grouped
-      .get(role)!
-      .sort((a, b) => {
-        const degreeDelta = (callers.has(b) ? 1 : 0) + (callees.has(b) ? 1 : 0) - ((callers.has(a) ? 1 : 0) + (callees.has(a) ? 1 : 0))
-        return degreeDelta || a.localeCompare(b)
-      })
+    const nodes = (grouped.get(role) ?? []).sort((a, b) => {
+      const degreeDelta = (callers.has(b) ? 1 : 0) + (callees.has(b) ? 1 : 0) - ((callers.has(a) ? 1 : 0) + (callees.has(a) ? 1 : 0))
+      return degreeDelta || a.localeCompare(b)
+    })
 
     return nodes.map((name, i) => {
       const type = classifyNode(name, callers, callees)
