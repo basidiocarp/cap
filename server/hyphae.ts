@@ -13,5 +13,5 @@ export {
   recall,
   searchGlobal,
 } from './hyphae/reads.ts'
-export { getSessions, getSessionTimeline } from './hyphae/sessions.ts'
+export { getSessions, getSessionTimeline, getSessionTimelineEvents } from './hyphae/sessions.ts'
 export { consolidate, forget, invalidateMemory, store, updateImportance } from './hyphae/writes.ts'

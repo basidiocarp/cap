@@ -156,10 +156,11 @@ cap
 
 ## Documentation
 
-- [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md): local setup and first run
-- [docs/API.md](docs/API.md): backend routes and server contract notes
-- [docs/INTERNALS.md](docs/INTERNALS.md): implementation structure and technical details
-- [docs/ROADMAP.md](docs/ROADMAP.md): planned dashboard work
+- [docs/README.md](docs/README.md): repo-local docs index
+- [docs/getting-started.md](docs/getting-started.md): local setup and first run
+- [docs/api.md](docs/api.md): backend routes and server contract notes
+- [docs/internals.md](docs/internals.md): implementation structure and technical details
+- [docs/roadmap.md](docs/roadmap.md): planned dashboard work
 - [docs/design-choices.md](docs/design-choices.md): UX and implementation tradeoffs
 
 ## Development

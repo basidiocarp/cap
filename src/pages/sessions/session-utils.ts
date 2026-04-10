@@ -1,4 +1,4 @@
-import type { CommandHistoryEntry, SessionTimelineEntry, SessionTimelineRecord } from '../../lib/types'
+import type { CommandHistoryEntry, SessionTimelineEntry, SessionTimelineEventType, SessionTimelineRecord } from '../../lib/types'
 
 export function statusColor(status: string): string {
   switch (status.toLowerCase()) {
@@ -67,21 +67,102 @@ export function parseJsonStrings(raw: string | null | undefined): string[] {
   }
 }
 
-export function eventColor(event: SessionTimelineEntry): string {
-  if (event.kind === 'recall') return 'blue'
+type SessionTimelineRenderableEntry = SessionTimelineEntry & {
+  content?: string | null
+  score?: number | null
+  timestamp?: string | null
+  type?: SessionTimelineEventType | null
+}
+
+export function getTimelineEventTimestamp(event: SessionTimelineRenderableEntry): string {
+  return event.timestamp ?? event.occurred_at
+}
+
+export function getTimelineEventType(event: SessionTimelineRenderableEntry): SessionTimelineEventType {
+  if (event.type && event.type !== 'outcome') {
+    return event.type
+  }
+
+  if (event.kind === 'recall') return 'recall'
 
   switch (event.signal_type) {
+    case 'correction':
+      return 'correction'
+    case 'export':
+    case 'session_export':
+      return 'export'
+    case 'build_failed':
+    case 'session_failure':
+    case 'test_failed':
+    case 'test_failure':
+    case 'tool_error':
+      return 'error'
     case 'build_passed':
     case 'error_free_run':
     case 'error_resolved':
     case 'session_success':
     case 'test_passed':
     case 'test_pass':
-      return 'green'
+      return 'test_pass'
+    case 'summary':
+    case 'session_summary':
+      return 'summary'
+    default:
+      return 'summary'
+  }
+}
+
+export function timelineEventLabel(eventType: SessionTimelineEventType): string {
+  switch (eventType) {
     case 'correction':
-    case 'session_failure':
-    case 'tool_error':
+      return 'Correction'
+    case 'error':
+      return 'Error'
+    case 'export':
+      return 'Export'
+    case 'outcome':
+      return 'Outcome'
+    case 'recall':
+      return 'Recall'
+    case 'summary':
+      return 'Summary'
+    case 'test_fail':
+      return 'Test failed'
+    case 'test_pass':
+      return 'Test passed'
+    default:
+      return 'Summary'
+  }
+}
+
+export function sortTimelineEvents<T extends SessionTimelineRenderableEntry>(events: T[], direction: 'asc' | 'desc' = 'asc'): T[] {
+  const sorted = [...events].sort((left, right) => {
+    const leftTime = new Date(getTimelineEventTimestamp(left)).getTime()
+    const rightTime = new Date(getTimelineEventTimestamp(right)).getTime()
+
+    if (leftTime !== rightTime) {
+      return leftTime - rightTime
+    }
+
+    return left.id.localeCompare(right.id)
+  })
+
+  return direction === 'asc' ? sorted : sorted.reverse()
+}
+
+export function eventColor(event: SessionTimelineRenderableEntry): string {
+  switch (getTimelineEventType(event)) {
+    case 'recall':
+      return 'blue'
+    case 'error':
+    case 'test_fail':
       return 'red'
+    case 'correction':
+      return 'yellow'
+    case 'export':
+      return 'cyan'
+    case 'test_pass':
+      return 'green'
     default:
       return 'gray'
   }

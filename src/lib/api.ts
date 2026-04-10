@@ -124,6 +124,7 @@ export {
   lspApi,
   myceliumApi,
   rhizomeApi,
+  sessionsApi,
   settingsApi,
   statusApi,
   stipeApi,

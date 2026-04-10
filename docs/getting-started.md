@@ -1,6 +1,6 @@
 # Cap Getting Started
 
-Cap is a web dashboard for the claude-mycelium ecosystem. It shows Hyphae memories, Mycelium token savings, and Rhizome code intelligence in a unified interface.
+Cap is a web dashboard for the basidiocarp ecosystem. It shows Hyphae memories, Mycelium token savings, and Rhizome code intelligence in a unified interface.
 
 ## Prerequisites
 

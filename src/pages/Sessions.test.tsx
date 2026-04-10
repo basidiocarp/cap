@@ -288,13 +288,171 @@ describe('Sessions page', () => {
     await user.click(screen.getByRole('button', { name: 'View details' }))
 
     expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText('Session')).toBeInTheDocument()
     expect(screen.getByText('Summary')).toBeInTheDocument()
     expect(screen.getByText('Files Modified (3)')).toBeInTheDocument()
     expect(screen.getByText('Errors (2)')).toBeInTheDocument()
-    expect(screen.getByText('Activity (9)')).toBeInTheDocument()
+    expect(screen.getByText('Timeline (9)')).toBeInTheDocument()
     expect(screen.getByText('Mycelium Commands (4)')).toBeInTheDocument()
     expect(screen.getByText('Event 9')).toBeInTheDocument()
     expect(screen.getByText('mycelium cargo build')).toBeInTheDocument()
+  })
+
+  it('sorts the session timeline oldest first and renders normalized event types distinctly', async () => {
+    const user = userEvent.setup()
+    mockTimeline = [
+      {
+        ended_at: '2026-03-27T12:10:00Z',
+        errors: null,
+        events: [
+          {
+            content: 'Wrap-up notes',
+            detail: null,
+            id: 'evt_7',
+            kind: 'outcome',
+            memory_count: null,
+            occurred_at: '2026-03-27T12:07:00Z',
+            recall_event_id: null,
+            score: null,
+            signal_type: null,
+            signal_value: null,
+            source: null,
+            timestamp: '2026-03-27T12:07:00Z',
+            title: 'Session summary',
+            type: 'summary',
+          },
+          {
+            content: 'Search memory for the session attribution bridge',
+            detail: 'Search the recall cache for the runtime handoff.',
+            id: 'evt_1',
+            kind: 'recall',
+            memory_count: 3,
+            occurred_at: '2026-03-27T12:01:00Z',
+            recall_event_id: 'evt_1',
+            score: 0.87,
+            signal_type: null,
+            signal_value: null,
+            source: 'hyphae.recall',
+            timestamp: '2026-03-27T12:01:00Z',
+            title: 'Recall',
+            type: 'recall',
+          },
+          {
+            content: 'Session export written to /tmp/session-timeline.json',
+            detail: null,
+            id: 'evt_6',
+            kind: 'outcome',
+            memory_count: null,
+            occurred_at: '2026-03-27T12:06:00Z',
+            recall_event_id: null,
+            score: null,
+            signal_type: null,
+            signal_value: null,
+            source: null,
+            timestamp: '2026-03-27T12:06:00Z',
+            title: 'Export',
+            type: 'export',
+          },
+          {
+            content: 'Corrected the session classification after review.',
+            detail: null,
+            id: 'evt_2',
+            kind: 'outcome',
+            memory_count: null,
+            occurred_at: '2026-03-27T12:02:00Z',
+            recall_event_id: null,
+            score: null,
+            signal_type: 'correction',
+            signal_value: null,
+            source: null,
+            timestamp: '2026-03-27T12:02:00Z',
+            title: 'Correction',
+            type: 'correction',
+          },
+          {
+            content: 'The first validation step failed.',
+            detail: null,
+            id: 'evt_3',
+            kind: 'outcome',
+            memory_count: null,
+            occurred_at: '2026-03-27T12:03:00Z',
+            recall_event_id: null,
+            score: null,
+            signal_type: 'tool_error',
+            signal_value: null,
+            source: null,
+            timestamp: '2026-03-27T12:03:00Z',
+            title: 'Error',
+            type: 'error',
+          },
+          {
+            content: 'Vitest passed on retry.',
+            detail: null,
+            id: 'evt_5',
+            kind: 'outcome',
+            memory_count: null,
+            occurred_at: '2026-03-27T12:05:00Z',
+            recall_event_id: null,
+            score: null,
+            signal_type: 'test_passed',
+            signal_value: 1,
+            source: null,
+            timestamp: '2026-03-27T12:05:00Z',
+            title: 'Test passed',
+            type: 'test_pass',
+          },
+          {
+            content: 'Vitest failed on the first run.',
+            detail: null,
+            id: 'evt_4',
+            kind: 'outcome',
+            memory_count: null,
+            occurred_at: '2026-03-27T12:04:00Z',
+            recall_event_id: null,
+            score: null,
+            signal_type: 'session_failure',
+            signal_value: 0,
+            source: null,
+            timestamp: '2026-03-27T12:04:00Z',
+            title: 'Test failed',
+            type: 'test_fail',
+          },
+        ],
+        files_modified: '["src/pages/Sessions.tsx"]',
+        id: 'ses_timeline_types',
+        last_activity_at: '2026-03-27T12:10:00Z',
+        outcome_count: 6,
+        project: 'cap',
+        recall_count: 1,
+        scope: 'worker-e',
+        started_at: '2026-03-27T12:00:00Z',
+        status: 'completed',
+        summary: 'Normalized timeline rendering.',
+        task: 'normalized timeline',
+      },
+    ]
+
+    renderWithProviders(<Sessions />, { route: '/sessions' })
+
+    await user.click(screen.getByRole('button', { name: 'View details' }))
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('heading', { name: 'Timeline (7)' })).toBeInTheDocument()
+    expect(
+      within(dialog).getByText('Events are shown oldest first so you can follow the session from recall to outcome.')
+    ).toBeInTheDocument()
+    expect(within(dialog).getAllByText('recall').length).toBeGreaterThan(0)
+    expect(within(dialog).getAllByText('correction').length).toBeGreaterThan(0)
+    expect(within(dialog).getAllByText('error').length).toBeGreaterThan(0)
+    expect(within(dialog).getAllByText('test_pass').length).toBeGreaterThan(0)
+    expect(within(dialog).getAllByText('test_fail').length).toBeGreaterThan(0)
+    expect(within(dialog).getAllByText('export').length).toBeGreaterThan(0)
+    expect(within(dialog).getAllByText('summary').length).toBeGreaterThan(0)
+    expect(within(dialog).getByText('Score 0.87')).toBeInTheDocument()
+
+    const oldest = within(dialog).getByText('Search memory for the session attribution bridge')
+    const newest = within(dialog).getByText('Wrap-up notes')
+    expect(oldest.compareDocumentPosition(newest) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
   })
 
   it('preserves count-only error payloads in the session drilldown', async () => {

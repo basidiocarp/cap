@@ -1,19 +1,46 @@
 import { Badge, Group, Stack, Text, ThemeIcon } from '@mantine/core'
-import { IconCircleCheck, IconHistory, IconSearch } from '@tabler/icons-react'
+import {
+  IconAlertCircle,
+  IconArrowBackUp,
+  IconBook2,
+  IconCircleCheck,
+  IconCircleX,
+  IconFileExport,
+  IconFileText,
+  IconSearch,
+} from '@tabler/icons-react'
 
 import type { SessionTimelineEntry } from '../../lib/types'
 import { timeAgo } from '../../lib/time'
-import { eventColor } from './session-utils'
+import { eventColor, getTimelineEventTimestamp, getTimelineEventType, timelineEventLabel } from './session-utils'
 
-function eventIcon(event: SessionTimelineEntry) {
-  if (event.kind === 'recall') return <IconSearch size={14} />
-  if (event.signal_type === 'session_success' || event.signal_type === 'build_passed' || event.signal_type === 'test_passed') {
-    return <IconCircleCheck size={14} />
+function eventIcon(type: ReturnType<typeof getTimelineEventType>) {
+  switch (type) {
+    case 'recall':
+      return <IconBook2 size={14} />
+    case 'error':
+      return <IconCircleX size={14} />
+    case 'correction':
+      return <IconArrowBackUp size={14} />
+    case 'test_pass':
+      return <IconCircleCheck size={14} />
+    case 'test_fail':
+      return <IconAlertCircle size={14} />
+    case 'export':
+      return <IconFileExport size={14} />
+    case 'summary':
+      return <IconFileText size={14} />
+    default:
+      return <IconSearch size={14} />
   }
-  return <IconHistory size={14} />
 }
 
 export function SessionEventRow({ event }: { event: SessionTimelineEntry }) {
+  const type = getTimelineEventType(event)
+  const timestamp = getTimelineEventTimestamp(event)
+  const headline = event.content ?? event.title
+  const detail = event.content && event.content !== event.title ? (event.detail ?? null) : event.detail
+
   return (
     <Group
       align='flex-start'
@@ -27,48 +54,70 @@ export function SessionEventRow({ event }: { event: SessionTimelineEntry }) {
         size='md'
         variant='light'
       >
-        {eventIcon(event)}
+        {eventIcon(type)}
       </ThemeIcon>
 
       <Stack
-        gap={2}
+        gap={3}
         style={{ flex: 1 }}
       >
         <Group
           gap='xs'
           justify='space-between'
+          wrap='nowrap'
         >
-          <Text
-            fw={500}
-            size='sm'
+          <Group
+            gap='xs'
+            wrap='nowrap'
           >
-            {event.title}
-          </Text>
+            <Text
+              fw={600}
+              size='sm'
+            >
+              {timelineEventLabel(type)}
+            </Text>
+            <Badge
+              color={eventColor(event)}
+              size='xs'
+              variant='light'
+            >
+              {type}
+            </Badge>
+          </Group>
           <Text
             c='dimmed'
             size='xs'
           >
-            {timeAgo(event.occurred_at, { allowMonths: true })}
+            {timeAgo(timestamp, { allowMonths: true })}
           </Text>
         </Group>
 
-        {event.detail ? (
+        <Text
+          fw={500}
+          size='sm'
+        >
+          {headline}
+        </Text>
+
+        {detail ? (
           <Text
             c='dimmed'
             size='sm'
           >
-            {event.detail}
+            {detail}
           </Text>
         ) : null}
 
         <Group gap='xs'>
-          <Badge
-            color={eventColor(event)}
-            size='xs'
-            variant='light'
-          >
-            {event.kind}
-          </Badge>
+          {event.score != null ? (
+            <Badge
+              color={eventColor(event)}
+              size='xs'
+              variant='outline'
+            >
+              Score {event.score}
+            </Badge>
+          ) : null}
           {event.memory_count != null ? (
             <Badge
               color='gray'
@@ -85,6 +134,15 @@ export function SessionEventRow({ event }: { event: SessionTimelineEntry }) {
               variant='outline'
             >
               {event.signal_type}
+            </Badge>
+          ) : null}
+          {event.source ? (
+            <Badge
+              color='gray'
+              size='xs'
+              variant='outline'
+            >
+              {event.source}
             </Badge>
           ) : null}
         </Group>

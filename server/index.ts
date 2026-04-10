@@ -10,6 +10,7 @@ import canopyRoutes from './routes/canopy.ts'
 import hyphaeRoutes from './routes/hyphae.ts'
 import lspRoutes from './routes/lsp.ts'
 import myceliumRoutes from './routes/mycelium.ts'
+import sessionsRoutes from './routes/sessions.ts'
 import rhizomeRoutes from './routes/rhizome.ts'
 import settingsRoutes from './routes/settings.ts'
 import statusRoutes from './routes/status.ts'
@@ -96,6 +97,7 @@ export function createApp(): Hono {
   app.route('/api/hyphae', hyphaeRoutes)
   app.route('/api/lsp', lspRoutes)
   app.route('/api/mycelium', myceliumRoutes)
+  app.route('/api/sessions', sessionsRoutes)
   app.route('/api/rhizome', rhizomeRoutes)
   app.route('/api/settings', settingsRoutes)
   app.route('/api/status', statusRoutes)

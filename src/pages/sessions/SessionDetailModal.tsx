@@ -3,7 +3,7 @@ import { Badge, Code, Group, Modal, ScrollArea, Stack, Text } from '@mantine/cor
 import type { CommandHistoryEntry, SessionTimelineRecord } from '../../lib/types'
 import { SectionCard } from '../../components/SectionCard'
 import { SessionEventRow } from './SessionEventRow'
-import { formatDuration, parseJsonCount, parseJsonStrings, statusColor } from './session-utils'
+import { formatDuration, parseJsonCount, parseJsonStrings, sortTimelineEvents, statusColor } from './session-utils'
 
 export function SessionDetailModal({
   commands,
@@ -71,6 +71,18 @@ export function SessionDetailModal({
               {session.outcome_count} outcomes
             </Badge>
           </Group>
+
+          <SectionCard
+            padding='sm'
+            title='Session'
+          >
+            <Stack gap='xs'>
+              <Text size='sm'>Project: {session.project}</Text>
+              <Text size='sm'>Worktree: {session.worktree_id ?? 'Not recorded'}</Text>
+              <Text size='sm'>Task: {session.task || 'Untitled Session'}</Text>
+              <Text size='sm'>Duration: {formatDuration(session.started_at, session.ended_at)}</Text>
+            </Stack>
+          </SectionCard>
 
           {session.summary ? (
             <SectionCard
@@ -140,22 +152,30 @@ export function SessionDetailModal({
 
           <SectionCard
             padding='sm'
-            title={`Activity (${session.events.length})`}
+            title={`Timeline (${session.events.length})`}
           >
             <Stack gap='sm'>
               {session.events.length > 0 ? (
-                session.events.map((event) => (
-                  <SessionEventRow
-                    event={event}
-                    key={event.id}
-                  />
-                ))
+                <>
+                  <Text
+                    c='dimmed'
+                    size='sm'
+                  >
+                    Events are shown oldest first so you can follow the session from recall to outcome.
+                  </Text>
+                  {sortTimelineEvents(session.events).map((event) => (
+                    <SessionEventRow
+                      event={event}
+                      key={event.id}
+                    />
+                  ))}
+                </>
               ) : (
                 <Text
                   c='dimmed'
                   size='sm'
                 >
-                  No structured recall or outcome events are attached to this session yet.
+                  No timeline events have been recorded for this session yet.
                 </Text>
               )}
             </Stack>

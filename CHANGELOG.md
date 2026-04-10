@@ -4,14 +4,47 @@ All notable changes to Cap are documented in this file.
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-04-09
+
+### Added
+
+- **Session detail API**: Cap now exposes dedicated Hyphae session-detail
+  routes and server-side helpers for timeline inspection.
+
+### Changed
+
+- **Session timeline UI**: The sessions experience now renders richer event
+  detail, stronger detail-modal utilities, and dedicated client-side session
+  query helpers.
+- **Docs structure**: The docs set now uses the lowercase path layout with a
+  central `docs/README.md` and plan index.
+
+## [0.11.1] - 2026-04-05
+
+### Fixed
+
+- **Cap auth and write boundaries**: The API no longer fails open when
+  `CAP_API_KEY` is unset, settings writes reject malformed payloads earlier, and
+  Rhizome project switching now enforces the configured project boundary.
+- **Analytics and status fidelity**: Usage, code-intelligence, and memory-health
+  views now present cross-tool state more honestly, session lifecycle badges use
+  stable keys, and analytics charts use safer sizing defaults.
+- **Session timeline detail**: Cap now exposes a per-session timeline route and
+  renders detailed session events with chronology, typed event treatment, and
+  cleaner empty states.
+- **Mobile navigation accessibility**: The mobile nav toggle is now a real
+  button with ARIA state and keyboard interaction.
+- **Tooling coverage**: Biome now includes config TypeScript files,
+  `vitest.frontend.config.ts` is part of node-side TS coverage, and `lint:check`
+  provides a non-mutating lint gate.
+
 ### Changed
 
 - **Contributor docs cleanup**: `.gitignore` now covers `.claude/`, the API and
   getting-started docs were refreshed, and `INTERNALS.md` moved into `docs/`.
-- **Dashboard empty states**: Memories, analytics, settings, and cross-tool
-  navigation now explain missing data and repair paths more clearly.
-- **Dual-host language**: Host coverage guidance now treats Claude Code and
-  Codex as parallel modes instead of implying one default path.
+- **Dashboard guidance and framing**: Empty states, host-coverage wording, and
+  ecosystem boundary docs were updated so Cap describes Claude Code and Codex
+  support more accurately.
 
 ## [0.11.0] - 2026-03-31
 

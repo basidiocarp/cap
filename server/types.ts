@@ -64,10 +64,12 @@ export interface SessionRecord {
   status: string
 }
 
+export type SessionTimelineEntryKind = 'outcome' | 'recall'
+
 export interface SessionTimelineEntry {
   detail: string | null
   id: string
-  kind: 'outcome' | 'recall'
+  kind: SessionTimelineEntryKind
   memory_count: number | null
   occurred_at: string
   recall_event_id: string | null
@@ -75,6 +77,15 @@ export interface SessionTimelineEntry {
   signal_value: number | null
   source: string | null
   title: string
+}
+
+export type SessionTimelineDetailEventType = 'correction' | 'error' | 'export' | 'recall' | 'summary' | 'test_fail' | 'test_pass'
+
+export interface SessionTimelineDetailEvent {
+  content: string
+  score?: number
+  timestamp: string
+  type: SessionTimelineDetailEventType
 }
 
 export interface SessionTimelineRecord extends SessionRecord {
