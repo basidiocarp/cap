@@ -149,6 +149,10 @@ Configuration reads and writes for ecosystem tools.
 
 Returns the aggregated ecosystem status document.
 
+Status preview and customization reads should consume the portable
+`resolved-status-customization-v1` shape rather than acting as the source of
+truth for host-specific statusline config blobs.
+
 ## Telemetry
 
 - `GET /telemetry/`
