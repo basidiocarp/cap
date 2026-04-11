@@ -161,6 +161,8 @@ Returns the telemetry rollup or a 500 error if telemetry aggregation fails.
 - `GET /usage/sessions`
 - `GET /usage/trend`
 
+These routes are consumer surfaces. They should read normalized usage summaries and session history from ecosystem tools instead of acting as the source contract for host usage parsing.
+
 ## Notes
 
 - Treat each route group as its own contract surface.

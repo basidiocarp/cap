@@ -4,6 +4,14 @@ All notable changes to Cap are documented in this file.
 
 ## [Unreleased]
 
+## [0.11.3] - 2026-04-10
+
+### Changed
+
+- **Usage API contract framing**: the API docs now make it explicit that Cap's
+  usage routes are consumer surfaces over normalized summaries and session
+  history, not the source contract for host-specific usage parsing.
+
 ## [0.11.2] - 2026-04-09
 
 ### Added
