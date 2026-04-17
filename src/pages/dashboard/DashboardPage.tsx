@@ -1,7 +1,7 @@
 import { Badge, Grid, Group, Stack, Title } from '@mantine/core'
 import { useQueries } from '@tanstack/react-query'
 
-import type { HealthResult, Stats, TopicSummary } from '../../lib/api'
+import type { GainResult, HealthResult, Stats, TopicSummary } from '../../lib/api'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { PageLoader } from '../../components/PageLoader'
 import { hyphaeApi, myceliumApi } from '../../lib/api'
@@ -29,7 +29,7 @@ export function DashboardPage() {
   const stats = statsQuery.data as Stats | undefined
   const topics = (topicsQuery.data ?? []) as TopicSummary[]
   const health = (healthQuery.data ?? []) as HealthResult[]
-  const gain = gainQuery.data as Record<string, unknown> | undefined
+  const gain = gainQuery.data as GainResult | undefined
 
   if (loading) {
     return <PageLoader />

@@ -2302,8 +2302,9 @@ describe('Canopy page', () => {
 
     renderWithProviders(<Canopy />, { route: '/canopy' })
 
-    expect(screen.getByText('critical queue failed')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Critical · error' })).toBeInTheDocument()
+    // Errors are now aggregated: one alert showing which queues failed
+    expect(screen.getByText('1 queue unavailable')).toBeInTheDocument()
+    expect(screen.getByText('Critical')).toBeInTheDocument()
   })
 
   it('supports runtime triage filters', () => {

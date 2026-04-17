@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import type { CanopySavedView, CanopySearchParamUpdates } from './canopy-filters'
 import { useCanopySnapshot, useCanopyTaskDetail, useProjectContextController } from '../../lib/queries'
 import { filterCanopyTasks, groupOperatorActionsByTask, groupTasksByStatus, resolveCanopyViewState } from './canopy-filters'
+import { useCanopyQueueSnapshots } from './useCanopyQueueSnapshots'
 
 export function useCanopyPageState() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -13,146 +14,8 @@ export function useCanopyPageState() {
   const { data: project } = useProjectContextController()
   const activeProject = project?.active ?? null
 
-  const criticalQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'critical',
-    project: activeProject ?? undefined,
-  })
-  const unacknowledgedQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'unacknowledged',
-    project: activeProject ?? undefined,
-  })
-  const blockedQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'blocked',
-    project: activeProject ?? undefined,
-  })
-  const dependencyBlockedQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'blocked_by_dependencies',
-    project: activeProject ?? undefined,
-  })
-  const reviewWithGraphPressureQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'review_with_graph_pressure',
-    project: activeProject ?? undefined,
-  })
-  const reviewHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'review_handoff_follow_through',
-    project: activeProject ?? undefined,
-  })
-  const dueSoonReviewHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'due_soon_review_handoff_follow_through',
-    project: activeProject ?? undefined,
-  })
-  const overdueReviewHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'overdue_review_handoff_follow_through',
-    project: activeProject ?? undefined,
-  })
-  const reviewDecisionFollowThroughQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'review_decision_follow_through',
-    project: activeProject ?? undefined,
-  })
-  const dueSoonReviewDecisionFollowThroughQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'due_soon_review_decision_follow_through',
-    project: activeProject ?? undefined,
-  })
-  const overdueReviewDecisionFollowThroughQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'overdue_review_decision_follow_through',
-    project: activeProject ?? undefined,
-  })
-  const reviewAwaitingSupportQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'review_awaiting_support',
-    project: activeProject ?? undefined,
-  })
-  const reviewReadyForDecisionQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'review_ready_for_decision',
-    project: activeProject ?? undefined,
-  })
-  const reviewReadyForCloseoutQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'review_ready_for_closeout',
-    project: activeProject ?? undefined,
-  })
-  const handoffQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'handoffs',
-    project: activeProject ?? undefined,
-  })
-  const unclaimedQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'unclaimed',
-    project: activeProject ?? undefined,
-  })
-  const assignedAwaitingClaimQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'assigned_awaiting_claim',
-    project: activeProject ?? undefined,
-  })
-  const claimedNotStartedQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'claimed_not_started',
-    project: activeProject ?? undefined,
-  })
-  const inProgressQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'in_progress',
-    project: activeProject ?? undefined,
-  })
-  const stalledQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'stalled',
-    project: activeProject ?? undefined,
-  })
-  const pausedResumableQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'paused_resumable',
-    project: activeProject ?? undefined,
-  })
-  const dueSoonQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'due_soon',
-    project: activeProject ?? undefined,
-  })
-  const dueSoonExecutionQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'due_soon_execution',
-    project: activeProject ?? undefined,
-  })
-  const dueSoonReviewQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'due_soon_review',
-    project: activeProject ?? undefined,
-  })
-  const overdueExecutionQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'overdue_execution',
-    project: activeProject ?? undefined,
-  })
-  const overdueExecutionOwnedQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'overdue_execution_owned',
-    project: activeProject ?? undefined,
-  })
-  const overdueExecutionUnclaimedQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'overdue_execution_unclaimed',
-    project: activeProject ?? undefined,
-  })
-  const overdueReviewQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'overdue_review',
-    project: activeProject ?? undefined,
-  })
-  const awaitingHandoffAcceptanceQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'awaiting_handoff_acceptance',
-    project: activeProject ?? undefined,
-  })
-  const dueSoonHandoffAcceptanceQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'due_soon_handoff_acceptance',
-    project: activeProject ?? undefined,
-  })
-  const overdueHandoffAcceptanceQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'overdue_handoff_acceptance',
-    project: activeProject ?? undefined,
-  })
-  const acceptedHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'accepted_handoff_follow_through',
-    project: activeProject ?? undefined,
-  })
-  const dueSoonAcceptedHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'due_soon_accepted_handoff_follow_through',
-    project: activeProject ?? undefined,
-  })
-  const overdueAcceptedHandoffFollowThroughQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'overdue_accepted_handoff_follow_through',
-    project: activeProject ?? undefined,
-  })
-  const followUpChainsQueueSnapshotQuery = useCanopySnapshot({
-    preset: 'follow_up_chains',
-    project: activeProject ?? undefined,
-  })
+  // Load all queue snapshots in a single hook call
+  const queueSnapshots = useCanopyQueueSnapshots(activeProject ?? undefined)
   const snapshotQuery = useCanopySnapshot({
     acknowledged: acknowledgedFilter === 'all' ? undefined : acknowledgedFilter,
     preset: savedView,
@@ -262,82 +125,12 @@ export function useCanopyPageState() {
     })
 
   return {
-    acceptedHandoffFollowThroughQueueSnapshot: {
-      error: acceptedHandoffFollowThroughQueueSnapshotQuery.error,
-      isLoading: acceptedHandoffFollowThroughQueueSnapshotQuery.isLoading,
-      snapshot: acceptedHandoffFollowThroughQueueSnapshotQuery.data,
-    },
     acknowledgedFilter,
     activeProject,
-    assignedAwaitingClaimQueueSnapshot: {
-      error: assignedAwaitingClaimQueueSnapshotQuery.error,
-      isLoading: assignedAwaitingClaimQueueSnapshotQuery.isLoading,
-      snapshot: assignedAwaitingClaimQueueSnapshotQuery.data,
-    },
     availableAgents,
-    awaitingHandoffAcceptanceQueueSnapshot: {
-      error: awaitingHandoffAcceptanceQueueSnapshotQuery.error,
-      isLoading: awaitingHandoffAcceptanceQueueSnapshotQuery.isLoading,
-      snapshot: awaitingHandoffAcceptanceQueueSnapshotQuery.data,
-    },
-    blockedQueueSnapshot: {
-      error: blockedQueueSnapshotQuery.error,
-      isLoading: blockedQueueSnapshotQuery.isLoading,
-      snapshot: blockedQueueSnapshotQuery.data,
-    },
-    claimedNotStartedQueueSnapshot: {
-      error: claimedNotStartedQueueSnapshotQuery.error,
-      isLoading: claimedNotStartedQueueSnapshotQuery.isLoading,
-      snapshot: claimedNotStartedQueueSnapshotQuery.data,
-    },
     closeTask: () => updateSearchParams({ task: null }, { replace: false }),
-    criticalQueueSnapshot: {
-      error: criticalQueueSnapshotQuery.error,
-      isLoading: criticalQueueSnapshotQuery.isLoading,
-      snapshot: criticalQueueSnapshotQuery.data,
-    },
     deadlineSummaryByTaskId,
-    dependencyBlockedQueueSnapshot: {
-      error: dependencyBlockedQueueSnapshotQuery.error,
-      isLoading: dependencyBlockedQueueSnapshotQuery.isLoading,
-      snapshot: dependencyBlockedQueueSnapshotQuery.data,
-    },
     detailQuery,
-    dueSoonAcceptedHandoffFollowThroughQueueSnapshot: {
-      error: dueSoonAcceptedHandoffFollowThroughQueueSnapshotQuery.error,
-      isLoading: dueSoonAcceptedHandoffFollowThroughQueueSnapshotQuery.isLoading,
-      snapshot: dueSoonAcceptedHandoffFollowThroughQueueSnapshotQuery.data,
-    },
-    dueSoonExecutionQueueSnapshot: {
-      error: dueSoonExecutionQueueSnapshotQuery.error,
-      isLoading: dueSoonExecutionQueueSnapshotQuery.isLoading,
-      snapshot: dueSoonExecutionQueueSnapshotQuery.data,
-    },
-    dueSoonHandoffAcceptanceQueueSnapshot: {
-      error: dueSoonHandoffAcceptanceQueueSnapshotQuery.error,
-      isLoading: dueSoonHandoffAcceptanceQueueSnapshotQuery.isLoading,
-      snapshot: dueSoonHandoffAcceptanceQueueSnapshotQuery.data,
-    },
-    dueSoonQueueSnapshot: {
-      error: dueSoonQueueSnapshotQuery.error,
-      isLoading: dueSoonQueueSnapshotQuery.isLoading,
-      snapshot: dueSoonQueueSnapshotQuery.data,
-    },
-    dueSoonReviewDecisionFollowThroughQueueSnapshot: {
-      error: dueSoonReviewDecisionFollowThroughQueueSnapshotQuery.error,
-      isLoading: dueSoonReviewDecisionFollowThroughQueueSnapshotQuery.isLoading,
-      snapshot: dueSoonReviewDecisionFollowThroughQueueSnapshotQuery.data,
-    },
-    dueSoonReviewHandoffFollowThroughQueueSnapshot: {
-      error: dueSoonReviewHandoffFollowThroughQueueSnapshotQuery.error,
-      isLoading: dueSoonReviewHandoffFollowThroughQueueSnapshotQuery.isLoading,
-      snapshot: dueSoonReviewHandoffFollowThroughQueueSnapshotQuery.data,
-    },
-    dueSoonReviewQueueSnapshot: {
-      error: dueSoonReviewQueueSnapshotQuery.error,
-      isLoading: dueSoonReviewQueueSnapshotQuery.isLoading,
-      snapshot: dueSoonReviewQueueSnapshotQuery.data,
-    },
     executionSummaryByTaskId,
     filteredAgentAttention,
     filteredAgents,
@@ -346,106 +139,17 @@ export function useCanopyPageState() {
     filteredHandoffs,
     filteredTaskAttention,
     filteredTasks,
-    followUpChainsQueueSnapshot: {
-      error: followUpChainsQueueSnapshotQuery.error,
-      isLoading: followUpChainsQueueSnapshotQuery.isLoading,
-      snapshot: followUpChainsQueueSnapshotQuery.data,
-    },
     groupedTasks,
-    handoffQueueSnapshot: {
-      error: handoffQueueSnapshotQuery.error,
-      isLoading: handoffQueueSnapshotQuery.isLoading,
-      snapshot: handoffQueueSnapshotQuery.data,
-    },
     heartbeatSummaryByTaskId,
-    inProgressQueueSnapshot: {
-      error: inProgressQueueSnapshotQuery.error,
-      isLoading: inProgressQueueSnapshotQuery.isLoading,
-      snapshot: inProgressQueueSnapshotQuery.data,
-    },
     modalOpen,
     openQueuePreset: openPreset,
     openSavedView: openPreset,
     openTask: (taskId: string) => updateSearchParams({ task: taskId }, { replace: false }),
     operatorActionsByTaskId,
-    overdueAcceptedHandoffFollowThroughQueueSnapshot: {
-      error: overdueAcceptedHandoffFollowThroughQueueSnapshotQuery.error,
-      isLoading: overdueAcceptedHandoffFollowThroughQueueSnapshotQuery.isLoading,
-      snapshot: overdueAcceptedHandoffFollowThroughQueueSnapshotQuery.data,
-    },
-    overdueExecutionOwnedQueueSnapshot: {
-      error: overdueExecutionOwnedQueueSnapshotQuery.error,
-      isLoading: overdueExecutionOwnedQueueSnapshotQuery.isLoading,
-      snapshot: overdueExecutionOwnedQueueSnapshotQuery.data,
-    },
-    overdueExecutionQueueSnapshot: {
-      error: overdueExecutionQueueSnapshotQuery.error,
-      isLoading: overdueExecutionQueueSnapshotQuery.isLoading,
-      snapshot: overdueExecutionQueueSnapshotQuery.data,
-    },
-    overdueExecutionUnclaimedQueueSnapshot: {
-      error: overdueExecutionUnclaimedQueueSnapshotQuery.error,
-      isLoading: overdueExecutionUnclaimedQueueSnapshotQuery.isLoading,
-      snapshot: overdueExecutionUnclaimedQueueSnapshotQuery.data,
-    },
-    overdueHandoffAcceptanceQueueSnapshot: {
-      error: overdueHandoffAcceptanceQueueSnapshotQuery.error,
-      isLoading: overdueHandoffAcceptanceQueueSnapshotQuery.isLoading,
-      snapshot: overdueHandoffAcceptanceQueueSnapshotQuery.data,
-    },
-    overdueReviewDecisionFollowThroughQueueSnapshot: {
-      error: overdueReviewDecisionFollowThroughQueueSnapshotQuery.error,
-      isLoading: overdueReviewDecisionFollowThroughQueueSnapshotQuery.isLoading,
-      snapshot: overdueReviewDecisionFollowThroughQueueSnapshotQuery.data,
-    },
-    overdueReviewHandoffFollowThroughQueueSnapshot: {
-      error: overdueReviewHandoffFollowThroughQueueSnapshotQuery.error,
-      isLoading: overdueReviewHandoffFollowThroughQueueSnapshotQuery.isLoading,
-      snapshot: overdueReviewHandoffFollowThroughQueueSnapshotQuery.data,
-    },
-    overdueReviewQueueSnapshot: {
-      error: overdueReviewQueueSnapshotQuery.error,
-      isLoading: overdueReviewQueueSnapshotQuery.isLoading,
-      snapshot: overdueReviewQueueSnapshotQuery.data,
-    },
     ownershipByTaskId,
-    pausedResumableQueueSnapshot: {
-      error: pausedResumableQueueSnapshotQuery.error,
-      isLoading: pausedResumableQueueSnapshotQuery.isLoading,
-      snapshot: pausedResumableQueueSnapshotQuery.data,
-    },
     priorityFilter,
+    queueSnapshots,
     relationshipSummaryByTaskId,
-    reviewAwaitingSupportQueueSnapshot: {
-      error: reviewAwaitingSupportQueueSnapshotQuery.error,
-      isLoading: reviewAwaitingSupportQueueSnapshotQuery.isLoading,
-      snapshot: reviewAwaitingSupportQueueSnapshotQuery.data,
-    },
-    reviewDecisionFollowThroughQueueSnapshot: {
-      error: reviewDecisionFollowThroughQueueSnapshotQuery.error,
-      isLoading: reviewDecisionFollowThroughQueueSnapshotQuery.isLoading,
-      snapshot: reviewDecisionFollowThroughQueueSnapshotQuery.data,
-    },
-    reviewHandoffFollowThroughQueueSnapshot: {
-      error: reviewHandoffFollowThroughQueueSnapshotQuery.error,
-      isLoading: reviewHandoffFollowThroughQueueSnapshotQuery.isLoading,
-      snapshot: reviewHandoffFollowThroughQueueSnapshotQuery.data,
-    },
-    reviewReadyForCloseoutQueueSnapshot: {
-      error: reviewReadyForCloseoutQueueSnapshotQuery.error,
-      isLoading: reviewReadyForCloseoutQueueSnapshotQuery.isLoading,
-      snapshot: reviewReadyForCloseoutQueueSnapshotQuery.data,
-    },
-    reviewReadyForDecisionQueueSnapshot: {
-      error: reviewReadyForDecisionQueueSnapshotQuery.error,
-      isLoading: reviewReadyForDecisionQueueSnapshotQuery.isLoading,
-      snapshot: reviewReadyForDecisionQueueSnapshotQuery.data,
-    },
-    reviewWithGraphPressureQueueSnapshot: {
-      error: reviewWithGraphPressureQueueSnapshotQuery.error,
-      isLoading: reviewWithGraphPressureQueueSnapshotQuery.isLoading,
-      snapshot: reviewWithGraphPressureQueueSnapshotQuery.data,
-    },
     savedView,
     searchQuery,
     severityFilter,
@@ -453,23 +157,8 @@ export function useCanopyPageState() {
     snapshotQuery,
     snapshotSlaSummary: snapshot?.sla_summary,
     sortMode,
-    stalledQueueSnapshot: {
-      error: stalledQueueSnapshotQuery.error,
-      isLoading: stalledQueueSnapshotQuery.isLoading,
-      snapshot: stalledQueueSnapshotQuery.data,
-    },
     statusFilter,
     taskAttentionById,
-    unacknowledgedQueueSnapshot: {
-      error: unacknowledgedQueueSnapshotQuery.error,
-      isLoading: unacknowledgedQueueSnapshotQuery.isLoading,
-      snapshot: unacknowledgedQueueSnapshotQuery.data,
-    },
-    unclaimedQueueSnapshot: {
-      error: unclaimedQueueSnapshotQuery.error,
-      isLoading: unclaimedQueueSnapshotQuery.isLoading,
-      snapshot: unclaimedQueueSnapshotQuery.data,
-    },
     updateSearchParams,
   }
 }

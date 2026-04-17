@@ -13,25 +13,11 @@ import { useCanopyPageState } from './useCanopyPageState'
 export function CanopyPage() {
   const {
     acknowledgedFilter,
-    acceptedHandoffFollowThroughQueueSnapshot,
     activeProject,
-    assignedAwaitingClaimQueueSnapshot,
     availableAgents,
-    awaitingHandoffAcceptanceQueueSnapshot,
-    blockedQueueSnapshot,
-    claimedNotStartedQueueSnapshot,
     closeTask,
-    criticalQueueSnapshot,
     deadlineSummaryByTaskId,
-    dependencyBlockedQueueSnapshot,
     detailQuery,
-    dueSoonAcceptedHandoffFollowThroughQueueSnapshot,
-    dueSoonHandoffAcceptanceQueueSnapshot,
-    dueSoonQueueSnapshot,
-    dueSoonExecutionQueueSnapshot,
-    dueSoonReviewHandoffFollowThroughQueueSnapshot,
-    dueSoonReviewDecisionFollowThroughQueueSnapshot,
-    dueSoonReviewQueueSnapshot,
     executionSummaryByTaskId,
     filteredAgentAttention,
     filteredAgents,
@@ -40,33 +26,16 @@ export function CanopyPage() {
     filteredHandoffs,
     filteredTaskAttention,
     filteredTasks,
-    followUpChainsQueueSnapshot,
     groupedTasks,
-    handoffQueueSnapshot,
     heartbeatSummaryByTaskId,
-    inProgressQueueSnapshot,
     modalOpen,
     openQueuePreset,
     openSavedView,
     openTask,
-    overdueAcceptedHandoffFollowThroughQueueSnapshot,
-    overdueHandoffAcceptanceQueueSnapshot,
-    overdueExecutionQueueSnapshot,
-    overdueExecutionOwnedQueueSnapshot,
-    overdueExecutionUnclaimedQueueSnapshot,
-    overdueReviewQueueSnapshot,
-    overdueReviewHandoffFollowThroughQueueSnapshot,
-    overdueReviewDecisionFollowThroughQueueSnapshot,
     operatorActionsByTaskId,
     ownershipByTaskId,
-    pausedResumableQueueSnapshot,
     priorityFilter,
-    reviewDecisionFollowThroughQueueSnapshot,
-    reviewAwaitingSupportQueueSnapshot,
-    reviewReadyForDecisionQueueSnapshot,
-    reviewReadyForCloseoutQueueSnapshot,
-    reviewHandoffFollowThroughQueueSnapshot,
-    reviewWithGraphPressureQueueSnapshot,
+    queueSnapshots,
     relationshipSummaryByTaskId,
     savedView,
     searchQuery,
@@ -75,11 +44,8 @@ export function CanopyPage() {
     snapshotSlaSummary,
     snapshotQuery,
     sortMode,
-    stalledQueueSnapshot,
     statusFilter,
     taskAttentionById,
-    unacknowledgedQueueSnapshot,
-    unclaimedQueueSnapshot,
     updateSearchParams,
   } = useCanopyPageState()
 
@@ -87,178 +53,22 @@ export function CanopyPage() {
     return <PageLoader />
   }
 
+  // Aggregate queue errors
+  const failedQueues = queueSnapshots.filter((q) => q.error instanceof Error).map((q) => q.label)
+  const hasQueueErrors = failedQueues.length > 0
+
   return (
     <Stack>
       <Title order={2}>Canopy</Title>
 
       <ErrorAlert error={snapshotQuery.error} />
       <ErrorAlert error={detailQuery.error} />
-      <ErrorAlert
-        error={criticalQueueSnapshot.error instanceof Error ? criticalQueueSnapshot.error : undefined}
-        title='Critical queue unavailable'
-      />
-      <ErrorAlert
-        error={unacknowledgedQueueSnapshot.error instanceof Error ? unacknowledgedQueueSnapshot.error : undefined}
-        title='Unacknowledged queue unavailable'
-      />
-      <ErrorAlert
-        error={blockedQueueSnapshot.error instanceof Error ? blockedQueueSnapshot.error : undefined}
-        title='Blocked queue unavailable'
-      />
-      <ErrorAlert
-        error={dependencyBlockedQueueSnapshot.error instanceof Error ? dependencyBlockedQueueSnapshot.error : undefined}
-        title='Dependency queue unavailable'
-      />
-      <ErrorAlert
-        error={reviewWithGraphPressureQueueSnapshot.error instanceof Error ? reviewWithGraphPressureQueueSnapshot.error : undefined}
-        title='Review graph pressure queue unavailable'
-      />
-      <ErrorAlert
-        error={reviewHandoffFollowThroughQueueSnapshot.error instanceof Error ? reviewHandoffFollowThroughQueueSnapshot.error : undefined}
-        title='Review handoff follow-through queue unavailable'
-      />
-      <ErrorAlert
-        error={
-          dueSoonReviewHandoffFollowThroughQueueSnapshot.error instanceof Error
-            ? dueSoonReviewHandoffFollowThroughQueueSnapshot.error
-            : undefined
-        }
-        title='Due soon review handoff follow-through queue unavailable'
-      />
-      <ErrorAlert
-        error={
-          overdueReviewHandoffFollowThroughQueueSnapshot.error instanceof Error
-            ? overdueReviewHandoffFollowThroughQueueSnapshot.error
-            : undefined
-        }
-        title='Overdue review handoff follow-through queue unavailable'
-      />
-      <ErrorAlert
-        error={
-          dueSoonReviewDecisionFollowThroughQueueSnapshot.error instanceof Error
-            ? dueSoonReviewDecisionFollowThroughQueueSnapshot.error
-            : undefined
-        }
-        title='Due soon review decision queue unavailable'
-      />
-      <ErrorAlert
-        error={
-          overdueReviewDecisionFollowThroughQueueSnapshot.error instanceof Error
-            ? overdueReviewDecisionFollowThroughQueueSnapshot.error
-            : undefined
-        }
-        title='Overdue review decision queue unavailable'
-      />
-      <ErrorAlert
-        error={reviewDecisionFollowThroughQueueSnapshot.error instanceof Error ? reviewDecisionFollowThroughQueueSnapshot.error : undefined}
-        title='Review decision or closeout queue unavailable'
-      />
-      <ErrorAlert
-        error={reviewAwaitingSupportQueueSnapshot.error instanceof Error ? reviewAwaitingSupportQueueSnapshot.error : undefined}
-        title='Review awaiting support queue unavailable'
-      />
-      <ErrorAlert
-        error={reviewReadyForDecisionQueueSnapshot.error instanceof Error ? reviewReadyForDecisionQueueSnapshot.error : undefined}
-        title='Review ready for decision queue unavailable'
-      />
-      <ErrorAlert
-        error={reviewReadyForCloseoutQueueSnapshot.error instanceof Error ? reviewReadyForCloseoutQueueSnapshot.error : undefined}
-        title='Review ready for closeout queue unavailable'
-      />
-      <ErrorAlert
-        error={handoffQueueSnapshot.error instanceof Error ? handoffQueueSnapshot.error : undefined}
-        title='Handoff queue unavailable'
-      />
-      <ErrorAlert
-        error={unclaimedQueueSnapshot.error instanceof Error ? unclaimedQueueSnapshot.error : undefined}
-        title='Unclaimed queue unavailable'
-      />
-      <ErrorAlert
-        error={assignedAwaitingClaimQueueSnapshot.error instanceof Error ? assignedAwaitingClaimQueueSnapshot.error : undefined}
-        title='Assigned awaiting claim queue unavailable'
-      />
-      <ErrorAlert
-        error={claimedNotStartedQueueSnapshot.error instanceof Error ? claimedNotStartedQueueSnapshot.error : undefined}
-        title='Claimed not started queue unavailable'
-      />
-      <ErrorAlert
-        error={inProgressQueueSnapshot.error instanceof Error ? inProgressQueueSnapshot.error : undefined}
-        title='In progress queue unavailable'
-      />
-      <ErrorAlert
-        error={stalledQueueSnapshot.error instanceof Error ? stalledQueueSnapshot.error : undefined}
-        title='Stalled queue unavailable'
-      />
-      <ErrorAlert
-        error={pausedResumableQueueSnapshot.error instanceof Error ? pausedResumableQueueSnapshot.error : undefined}
-        title='Paused resumable queue unavailable'
-      />
-      <ErrorAlert
-        error={dueSoonQueueSnapshot.error instanceof Error ? dueSoonQueueSnapshot.error : undefined}
-        title='Due soon queue unavailable'
-      />
-      <ErrorAlert
-        error={dueSoonExecutionQueueSnapshot.error instanceof Error ? dueSoonExecutionQueueSnapshot.error : undefined}
-        title='Due soon execution queue unavailable'
-      />
-      <ErrorAlert
-        error={dueSoonReviewQueueSnapshot.error instanceof Error ? dueSoonReviewQueueSnapshot.error : undefined}
-        title='Due soon review queue unavailable'
-      />
-      <ErrorAlert
-        error={overdueExecutionQueueSnapshot.error instanceof Error ? overdueExecutionQueueSnapshot.error : undefined}
-        title='Overdue execution queue unavailable'
-      />
-      <ErrorAlert
-        error={overdueExecutionOwnedQueueSnapshot.error instanceof Error ? overdueExecutionOwnedQueueSnapshot.error : undefined}
-        title='Overdue execution owned queue unavailable'
-      />
-      <ErrorAlert
-        error={overdueExecutionUnclaimedQueueSnapshot.error instanceof Error ? overdueExecutionUnclaimedQueueSnapshot.error : undefined}
-        title='Overdue execution unclaimed queue unavailable'
-      />
-      <ErrorAlert
-        error={overdueReviewQueueSnapshot.error instanceof Error ? overdueReviewQueueSnapshot.error : undefined}
-        title='Overdue review queue unavailable'
-      />
-      <ErrorAlert
-        error={awaitingHandoffAcceptanceQueueSnapshot.error instanceof Error ? awaitingHandoffAcceptanceQueueSnapshot.error : undefined}
-        title='Awaiting handoff acceptance queue unavailable'
-      />
-      <ErrorAlert
-        error={dueSoonHandoffAcceptanceQueueSnapshot.error instanceof Error ? dueSoonHandoffAcceptanceQueueSnapshot.error : undefined}
-        title='Due soon handoff acceptance queue unavailable'
-      />
-      <ErrorAlert
-        error={overdueHandoffAcceptanceQueueSnapshot.error instanceof Error ? overdueHandoffAcceptanceQueueSnapshot.error : undefined}
-        title='Overdue handoff acceptance queue unavailable'
-      />
-      <ErrorAlert
-        error={
-          acceptedHandoffFollowThroughQueueSnapshot.error instanceof Error ? acceptedHandoffFollowThroughQueueSnapshot.error : undefined
-        }
-        title='Accepted handoff follow-through queue unavailable'
-      />
-      <ErrorAlert
-        error={
-          dueSoonAcceptedHandoffFollowThroughQueueSnapshot.error instanceof Error
-            ? dueSoonAcceptedHandoffFollowThroughQueueSnapshot.error
-            : undefined
-        }
-        title='Due soon accepted handoff follow-through queue unavailable'
-      />
-      <ErrorAlert
-        error={
-          overdueAcceptedHandoffFollowThroughQueueSnapshot.error instanceof Error
-            ? overdueAcceptedHandoffFollowThroughQueueSnapshot.error
-            : undefined
-        }
-        title='Overdue accepted handoff follow-through queue unavailable'
-      />
-      <ErrorAlert
-        error={followUpChainsQueueSnapshot.error instanceof Error ? followUpChainsQueueSnapshot.error : undefined}
-        title='Follow-up queue unavailable'
-      />
+      {hasQueueErrors && (
+        <ErrorAlert
+          error={new Error(failedQueues.join(', '))}
+          title={`${failedQueues.length} queue${failedQueues.length === 1 ? '' : 's'} unavailable`}
+        />
+      )}
 
       <Text
         c='dimmed'
@@ -289,43 +99,9 @@ export function CanopyPage() {
 
       <SectionCard title='Operator queues'>
         <CanopyQueuesSection
-          acceptedHandoffFollowThroughQueueSnapshot={acceptedHandoffFollowThroughQueueSnapshot}
-          assignedAwaitingClaimQueueSnapshot={assignedAwaitingClaimQueueSnapshot}
-          awaitingHandoffAcceptanceQueueSnapshot={awaitingHandoffAcceptanceQueueSnapshot}
-          blockedQueueSnapshot={blockedQueueSnapshot}
-          claimedNotStartedQueueSnapshot={claimedNotStartedQueueSnapshot}
-          criticalQueueSnapshot={criticalQueueSnapshot}
-          dependencyBlockedQueueSnapshot={dependencyBlockedQueueSnapshot}
-          dueSoonAcceptedHandoffFollowThroughQueueSnapshot={dueSoonAcceptedHandoffFollowThroughQueueSnapshot}
-          dueSoonExecutionQueueSnapshot={dueSoonExecutionQueueSnapshot}
-          dueSoonHandoffAcceptanceQueueSnapshot={dueSoonHandoffAcceptanceQueueSnapshot}
-          dueSoonQueueSnapshot={dueSoonQueueSnapshot}
-          dueSoonReviewDecisionFollowThroughQueueSnapshot={dueSoonReviewDecisionFollowThroughQueueSnapshot}
-          dueSoonReviewHandoffFollowThroughQueueSnapshot={dueSoonReviewHandoffFollowThroughQueueSnapshot}
-          dueSoonReviewQueueSnapshot={dueSoonReviewQueueSnapshot}
-          followUpChainsQueueSnapshot={followUpChainsQueueSnapshot}
-          handoffQueueSnapshot={handoffQueueSnapshot}
-          inProgressQueueSnapshot={inProgressQueueSnapshot}
           openQueuePreset={openQueuePreset}
-          overdueAcceptedHandoffFollowThroughQueueSnapshot={overdueAcceptedHandoffFollowThroughQueueSnapshot}
-          overdueExecutionOwnedQueueSnapshot={overdueExecutionOwnedQueueSnapshot}
-          overdueExecutionQueueSnapshot={overdueExecutionQueueSnapshot}
-          overdueExecutionUnclaimedQueueSnapshot={overdueExecutionUnclaimedQueueSnapshot}
-          overdueHandoffAcceptanceQueueSnapshot={overdueHandoffAcceptanceQueueSnapshot}
-          overdueReviewDecisionFollowThroughQueueSnapshot={overdueReviewDecisionFollowThroughQueueSnapshot}
-          overdueReviewHandoffFollowThroughQueueSnapshot={overdueReviewHandoffFollowThroughQueueSnapshot}
-          overdueReviewQueueSnapshot={overdueReviewQueueSnapshot}
-          pausedResumableQueueSnapshot={pausedResumableQueueSnapshot}
-          reviewAwaitingSupportQueueSnapshot={reviewAwaitingSupportQueueSnapshot}
-          reviewDecisionFollowThroughQueueSnapshot={reviewDecisionFollowThroughQueueSnapshot}
-          reviewHandoffFollowThroughQueueSnapshot={reviewHandoffFollowThroughQueueSnapshot}
-          reviewReadyForCloseoutQueueSnapshot={reviewReadyForCloseoutQueueSnapshot}
-          reviewReadyForDecisionQueueSnapshot={reviewReadyForDecisionQueueSnapshot}
-          reviewWithGraphPressureQueueSnapshot={reviewWithGraphPressureQueueSnapshot}
+          queueSnapshots={queueSnapshots}
           savedView={savedView}
-          stalledQueueSnapshot={stalledQueueSnapshot}
-          unacknowledgedQueueSnapshot={unacknowledgedQueueSnapshot}
-          unclaimedQueueSnapshot={unclaimedQueueSnapshot}
         />
       </SectionCard>
 

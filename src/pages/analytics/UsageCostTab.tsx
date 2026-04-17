@@ -1,5 +1,5 @@
+import { BarChart, LineChart } from '@mantine/charts'
 import { Badge, Grid, Group, Stack, Table, Text, Title } from '@mantine/core'
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 import type { SessionUsage, UsageAggregate, UsageTrend } from '../../lib/api'
 import { KpiCard } from '../../components/KpiCard'
@@ -10,14 +10,6 @@ interface Props {
   sessions: SessionUsage[] | null
   trend: UsageTrend[] | null
 }
-
-export const USAGE_COST_CHART_DIMENSIONS = {
-  height: 250,
-  initialDimension: { height: 0, width: 0 },
-  minHeight: 250,
-  minWidth: 100,
-  width: '100%',
-} as const
 
 function formatCost(cost: number): string {
   if (cost < 0.01) return '<$0.01'
@@ -135,69 +127,28 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
         <>
           <Title order={4}>Daily Cost Trend</Title>
           <ChartBox mih={250}>
-            <ResponsiveContainer
-              height={USAGE_COST_CHART_DIMENSIONS.height}
-              initialDimension={USAGE_COST_CHART_DIMENSIONS.initialDimension}
-              minHeight={USAGE_COST_CHART_DIMENSIONS.minHeight}
-              minWidth={USAGE_COST_CHART_DIMENSIONS.minWidth}
-              width={USAGE_COST_CHART_DIMENSIONS.width}
-            >
-              <LineChart data={trend}>
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis
-                  dataKey='date'
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(v: number) => formatCost(v)}
-                />
-                <Tooltip formatter={(v) => formatCost(Number(v))} />
-                <Line
-                  dataKey='cost'
-                  name='Cost'
-                  stroke='var(--mantine-color-fruiting-6)'
-                  strokeWidth={2}
-                  type='monotone'
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <LineChart
+              curveType='monotone'
+              data={trend}
+              dataKey='date'
+              h={300}
+              series={[{ color: 'fruiting.6', name: 'cost' }]}
+              strokeWidth={2}
+            />
           </ChartBox>
 
           <Title order={4}>Token Usage by Day</Title>
           <ChartBox mih={250}>
-            <ResponsiveContainer
-              height={USAGE_COST_CHART_DIMENSIONS.height}
-              initialDimension={USAGE_COST_CHART_DIMENSIONS.initialDimension}
-              minHeight={USAGE_COST_CHART_DIMENSIONS.minHeight}
-              minWidth={USAGE_COST_CHART_DIMENSIONS.minWidth}
-              width={USAGE_COST_CHART_DIMENSIONS.width}
-            >
-              <BarChart data={trend}>
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis
-                  dataKey='date'
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(v: number) => formatTokens(v)}
-                />
-                <Tooltip formatter={(v) => formatTokens(Number(v))} />
-                <Bar
-                  dataKey='input_tokens'
-                  fill='var(--mantine-color-mycelium-6)'
-                  name='Input'
-                  stackId='tokens'
-                />
-                <Bar
-                  dataKey='output_tokens'
-                  fill='var(--mantine-color-spore-6)'
-                  name='Output'
-                  stackId='tokens'
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            <BarChart
+              data={trend}
+              dataKey='date'
+              h={300}
+              series={[
+                { color: 'mycelium.6', name: 'input_tokens' },
+                { color: 'spore.6', name: 'output_tokens' },
+              ]}
+              type='stacked'
+            />
           </ChartBox>
         </>
       )}

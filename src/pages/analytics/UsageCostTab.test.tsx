@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { SessionUsage, UsageAggregate } from '../../lib/api'
 import { renderWithProviders } from '../../test/render'
-import { USAGE_COST_CHART_DIMENSIONS, UsageCostTab } from './UsageCostTab'
+import { UsageCostTab } from './UsageCostTab'
 
 function createAggregate(overrides: Partial<UsageAggregate> = {}): UsageAggregate {
   return {
@@ -55,13 +55,20 @@ describe('UsageCostTab', () => {
     expect(screen.getByText(/Codex sessions are parsed from the local Codex sessions directory/i)).toBeInTheDocument()
   })
 
-  it('uses non-negative initial dimensions for the Recharts containers', () => {
-    expect(USAGE_COST_CHART_DIMENSIONS).toEqual({
-      height: 250,
-      initialDimension: { height: 0, width: 0 },
-      minHeight: 250,
-      minWidth: 100,
-      width: '100%',
-    })
+  it('renders with trend data', () => {
+    const trend = [
+      { cost: 5.0, date: '2026-04-01', input_tokens: 1000, output_tokens: 500, sessions: 3 },
+      { cost: 6.5, date: '2026-04-02', input_tokens: 1200, output_tokens: 600, sessions: 4 },
+    ]
+    renderWithProviders(
+      <UsageCostTab
+        aggregate={createAggregate()}
+        sessions={null}
+        trend={trend}
+      />
+    )
+
+    expect(screen.getByText('Daily Cost Trend')).toBeInTheDocument()
+    expect(screen.getByText('Token Usage by Day')).toBeInTheDocument()
   })
 })

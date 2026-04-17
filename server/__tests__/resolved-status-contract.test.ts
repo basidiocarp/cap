@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { readFileSync, existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { describe, expect, it } from 'vitest'
 
 function septaDir(): string {
   return join(process.cwd(), '..', 'septa')
@@ -19,14 +19,10 @@ describe('resolved status customization contract', () => {
       required?: string[]
     }
 
-    expect(schema.required).toEqual(
-      expect.arrayContaining(['schema_version', 'resolved_status', 'capabilities', 'customization', 'origin'])
-    )
+    expect(schema.required).toEqual(expect.arrayContaining(['schema_version', 'segments', 'theme']))
 
     const properties = schema.properties ?? {}
-    expect(properties).toHaveProperty('resolved_status')
-    expect(properties).toHaveProperty('capabilities')
-    expect(properties).toHaveProperty('customization')
-    expect(properties).toHaveProperty('origin')
+    expect(properties).toHaveProperty('segments')
+    expect(properties).toHaveProperty('theme')
   })
 })

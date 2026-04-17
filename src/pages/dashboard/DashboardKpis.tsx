@@ -1,16 +1,10 @@
 import { Grid } from '@mantine/core'
 
-import type { Stats } from '../../lib/api'
+import type { GainResult, Stats } from '../../lib/api'
 import { KpiCard } from '../../components/KpiCard'
 
-export function DashboardKpis({ gain, stats }: { gain: Record<string, unknown> | undefined; stats: Stats }) {
-  const nestedSummary = gain?.summary && typeof gain.summary === 'object' ? (gain.summary as Record<string, unknown>) : null
-  const avgSavingsPct =
-    typeof gain?.avg_savings_pct === 'number'
-      ? (gain.avg_savings_pct as number)
-      : typeof nestedSummary?.avg_savings_pct === 'number'
-        ? (nestedSummary.avg_savings_pct as number)
-        : null
+export function DashboardKpis({ gain, stats }: { gain: GainResult | undefined; stats: Stats }) {
+  const avgSavingsPct = gain?.avg_savings_pct ?? gain?.summary?.avg_savings_pct ?? null
 
   return (
     <Grid>
