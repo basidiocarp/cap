@@ -2252,4 +2252,116 @@ describe('API Routes', () => {
       await expect(res.json()).resolves.toEqual([])
     })
   })
+
+  describe('GET /api/canopy/notifications', () => {
+    it('returns notifications list from the Canopy DB', async () => {
+      const notifSpy = vi.spyOn(canopy, 'listNotifications').mockReturnValue([
+        {
+          agent_id: 'agent-1',
+          created_at: '2026-04-17T10:00:00Z',
+          event_type: 'task_assigned',
+          notification_id: 'notif-1',
+          payload: { task_id: 'task-1' },
+          seen: false,
+          task_id: 'task-1',
+        },
+      ])
+
+      const res = await app.fetch(new Request('http://localhost:3001/api/canopy/notifications'))
+
+      expect(res.status).toBe(200)
+      expect(notifSpy).toHaveBeenCalledWith(20)
+      await expect(res.json()).resolves.toEqual({
+        notifications: [
+          {
+            agent_id: 'agent-1',
+            created_at: '2026-04-17T10:00:00Z',
+            event_type: 'task_assigned',
+            notification_id: 'notif-1',
+            payload: { task_id: 'task-1' },
+            seen: false,
+            task_id: 'task-1',
+          },
+        ],
+      })
+    })
+
+    it('returns empty list when the Canopy DB is absent', async () => {
+      vi.spyOn(canopy, 'listNotifications').mockImplementation(() => {
+        throw new Error('no such file or directory')
+      })
+
+      const res = await app.fetch(new Request('http://localhost:3001/api/canopy/notifications'))
+
+      expect(res.status).toBe(200)
+      await expect(res.json()).resolves.toEqual({ notifications: [] })
+    })
+
+    it('respects a custom limit query parameter', async () => {
+      const notifSpy = vi.spyOn(canopy, 'listNotifications').mockReturnValue([])
+
+      const res = await app.fetch(new Request('http://localhost:3001/api/canopy/notifications?limit=5'))
+
+      expect(res.status).toBe(200)
+      expect(notifSpy).toHaveBeenCalledWith(5)
+    })
+  })
+
+  describe('POST /api/canopy/notifications/:id/mark-read', () => {
+    it('marks a single notification read', async () => {
+      const markSpy = vi.spyOn(canopy, 'markNotificationRead').mockReturnValue(undefined)
+
+      const req = new Request('http://localhost:3001/api/canopy/notifications/notif-1/mark-read', {
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(markSpy).toHaveBeenCalledWith('notif-1')
+      await expect(res.json()).resolves.toEqual({ ok: true })
+    })
+
+    it('returns ok when the Canopy DB is absent', async () => {
+      vi.spyOn(canopy, 'markNotificationRead').mockImplementation(() => {
+        throw new Error('no such file or directory')
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/notifications/notif-1/mark-read', {
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      await expect(res.json()).resolves.toEqual({ ok: true })
+    })
+  })
+
+  describe('POST /api/canopy/notifications/mark-all-read', () => {
+    it('marks all notifications read', async () => {
+      const markAllSpy = vi.spyOn(canopy, 'markAllNotificationsRead').mockReturnValue(undefined)
+
+      const req = new Request('http://localhost:3001/api/canopy/notifications/mark-all-read', {
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      expect(markAllSpy).toHaveBeenCalledWith()
+      await expect(res.json()).resolves.toEqual({ ok: true })
+    })
+
+    it('returns ok when the Canopy DB is absent', async () => {
+      vi.spyOn(canopy, 'markAllNotificationsRead').mockImplementation(() => {
+        throw new Error('no such file or directory')
+      })
+
+      const req = new Request('http://localhost:3001/api/canopy/notifications/mark-all-read', {
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(200)
+      await expect(res.json()).resolves.toEqual({ ok: true })
+    })
+  })
 })

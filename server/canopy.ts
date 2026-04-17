@@ -1,5 +1,100 @@
+import Database from 'better-sqlite3'
+
 import { createCliRunner } from './lib/cli.ts'
-import { CANOPY_BIN } from './lib/config.ts'
+import { CANOPY_BIN, CANOPY_DB } from './lib/config.ts'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Notification types
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface CanopyNotificationRow {
+  notification_id: string
+  event_type: string
+  task_id: string | null
+  agent_id: string | null
+  payload: Record<string, unknown>
+  seen: boolean
+  created_at: string
+}
+
+interface RawNotificationRow {
+  notification_id: string
+  event_type: string
+  task_id: string | null
+  agent_id: string | null
+  payload: string
+  seen: number
+  created_at: string
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Notification DB accessors
+// ─────────────────────────────────────────────────────────────────────────────
+
+function openReadOnly(): Database.Database {
+  return new Database(CANOPY_DB, { fileMustExist: true, readonly: true })
+}
+
+function openReadWrite(): Database.Database {
+  return new Database(CANOPY_DB, { fileMustExist: true })
+}
+
+function parseNotificationRow(row: RawNotificationRow): CanopyNotificationRow {
+  let payload: Record<string, unknown> = {}
+  try {
+    const parsed: unknown = JSON.parse(row.payload)
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      payload = parsed as Record<string, unknown>
+    }
+  } catch {
+    // leave payload as empty object if parsing fails
+  }
+
+  return {
+    agent_id: row.agent_id,
+    created_at: row.created_at,
+    event_type: row.event_type,
+    notification_id: row.notification_id,
+    payload,
+    seen: row.seen === 1,
+    task_id: row.task_id,
+  }
+}
+
+export function listNotifications(limit = 20): CanopyNotificationRow[] {
+  const db = openReadOnly()
+  try {
+    const rows = db
+      .prepare(
+        `SELECT notification_id, event_type, task_id, agent_id, payload, seen, created_at
+         FROM notifications
+         ORDER BY created_at DESC
+         LIMIT ?`
+      )
+      .all(limit) as RawNotificationRow[]
+    return rows.map(parseNotificationRow)
+  } finally {
+    db.close()
+  }
+}
+
+export function markNotificationRead(id: string): void {
+  const db = openReadWrite()
+  try {
+    db.prepare(`UPDATE notifications SET seen = 1 WHERE notification_id = ?`).run(id)
+  } finally {
+    db.close()
+  }
+}
+
+export function markAllNotificationsRead(): void {
+  const db = openReadWrite()
+  try {
+    db.prepare(`UPDATE notifications SET seen = 1 WHERE seen = 0`).run()
+  } finally {
+    db.close()
+  }
+}
 
 const run = createCliRunner(CANOPY_BIN, 'canopy')
 const CANOPY_API_SCHEMA_VERSION = '1.0'

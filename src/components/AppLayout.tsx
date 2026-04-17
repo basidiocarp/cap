@@ -18,6 +18,8 @@ import {
 import { useId } from 'react'
 import { Outlet, NavLink as RouterNavLink, useLocation } from 'react-router-dom'
 
+import { NotificationPanel } from './NotificationPanel'
+
 const NAV_SECTIONS = [
   {
     items: [
@@ -63,30 +65,34 @@ export function AppLayout() {
       <AppShell.Header>
         <Group
           h='100%'
+          justify='space-between'
           px='md'
         >
-          <Title
-            aria-controls={navbarId}
-            aria-expanded={opened}
-            aria-label='Toggle mobile navigation'
-            component='button'
-            onClick={toggle}
-            order={3}
-            style={{
-              background: 'none',
-              border: 0,
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          >
-            cap
-          </Title>
-          <Text
-            c='dimmed'
-            size='sm'
-          >
-            ecosystem dashboard
-          </Text>
+          <Group>
+            <Title
+              aria-controls={navbarId}
+              aria-expanded={opened}
+              aria-label='Toggle mobile navigation'
+              component='button'
+              onClick={toggle}
+              order={3}
+              style={{
+                background: 'none',
+                border: 0,
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              cap
+            </Title>
+            <Text
+              c='dimmed'
+              size='sm'
+            >
+              ecosystem dashboard
+            </Text>
+          </Group>
+          <NotificationPanel />
         </Group>
       </AppShell.Header>
 

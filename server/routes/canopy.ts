@@ -88,4 +88,43 @@ app.get('/agents', async (c) => {
   }
 })
 
+app.get('/notifications', (c) => {
+  try {
+    const rawLimit = c.req.query('limit')
+    const limit = rawLimit ? Math.min(Math.max(1, Number.parseInt(rawLimit, 10) || 20), 100) : 20
+    const notifications = canopy.listNotifications(limit)
+    return c.json({ notifications })
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('no such file')) {
+      return c.json({ notifications: [] })
+    }
+    return c.json({ error: err instanceof Error ? err.message : 'Failed to list Canopy notifications' }, 500)
+  }
+})
+
+app.post('/notifications/:id/mark-read', (c) => {
+  try {
+    const id = c.req.param('id')
+    canopy.markNotificationRead(id)
+    return c.json({ ok: true })
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('no such file')) {
+      return c.json({ ok: true })
+    }
+    return c.json({ error: err instanceof Error ? err.message : 'Failed to mark notification read' }, 500)
+  }
+})
+
+app.post('/notifications/mark-all-read', (c) => {
+  try {
+    canopy.markAllNotificationsRead()
+    return c.json({ ok: true })
+  } catch (err) {
+    if (err instanceof Error && err.message.includes('no such file')) {
+      return c.json({ ok: true })
+    }
+    return c.json({ error: err instanceof Error ? err.message : 'Failed to mark all notifications read' }, 500)
+  }
+})
+
 export default app

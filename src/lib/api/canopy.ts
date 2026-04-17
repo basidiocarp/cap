@@ -1,6 +1,7 @@
 import type {
   CanopyAgent,
   CanopyHandoffActionInput,
+  CanopyNotification,
   CanopySnapshot,
   CanopySnapshotPreset,
   CanopyTaskActionInput,
@@ -17,6 +18,9 @@ export const canopyApi = {
     }),
   handoffAction: (handoffId: string, body: CanopyHandoffActionInput) =>
     post(`/canopy/handoffs/${encodeURIComponent(handoffId)}/actions`, body),
+  markAllNotificationsRead: () => post<{ ok: boolean }>('/canopy/notifications/mark-all-read', {}),
+  markNotificationRead: (id: string) => post<{ ok: boolean }>(`/canopy/notifications/${encodeURIComponent(id)}/mark-read`, {}),
+  notifications: () => get<{ notifications: CanopyNotification[] }>('/canopy/notifications'),
   snapshot: (options?: {
     acknowledged?: string
     attentionAtLeast?: string

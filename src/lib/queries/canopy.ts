@@ -5,6 +5,7 @@ import { canopyApi } from '../api'
 
 export const canopyKeys = {
   agents: (options?: { project?: string }) => ['canopy', 'agents', options?.project] as const,
+  notifications: () => ['canopy', 'notifications'] as const,
   snapshot: (options?: {
     acknowledged?: string
     attentionAtLeast?: string
@@ -104,5 +105,35 @@ export function useCanopyAgents(project?: string) {
   return useQuery({
     queryFn: () => canopyApi.agents({ project }),
     queryKey: canopyKeys.agents({ project }),
+  })
+}
+
+export function useCanopyNotifications() {
+  return useQuery({
+    queryFn: () => canopyApi.notifications(),
+    queryKey: canopyKeys.notifications(),
+    refetchInterval: 10_000,
+  })
+}
+
+export function useMarkNotificationRead() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => canopyApi.markNotificationRead(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: canopyKeys.notifications() })
+    },
+  })
+}
+
+export function useMarkAllNotificationsRead() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () => canopyApi.markAllNotificationsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: canopyKeys.notifications() })
+    },
   })
 }
