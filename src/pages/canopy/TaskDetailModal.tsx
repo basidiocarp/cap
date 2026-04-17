@@ -10,6 +10,7 @@ import { TaskOperatorActionsSection } from './TaskOperatorActionsSection'
 import { TaskOverviewSection } from './TaskOverviewSection'
 import { TaskRelatedTasksSection } from './TaskRelatedTasksSection'
 import { TaskRuntimeSummaryGrid } from './TaskRuntimeSummaryGrid'
+import { ToolAdoptionPanel } from './ToolAdoptionPanel'
 import { useTaskDetailMaps } from './task-detail-maps'
 
 export function TaskDetailModal({
@@ -65,6 +66,13 @@ export function TaskDetailModal({
 
             <Divider label='Runtime Summary' />
             <TaskRuntimeSummaryGrid detail={detail} />
+
+            {detail.tool_adoption_score ? (
+              <>
+                <Divider label='Tool Adoption' />
+                <ToolAdoptionPanel score={detail.tool_adoption_score} />
+              </>
+            ) : null}
 
             {detail.related_tasks.length > 0 ? (
               <>

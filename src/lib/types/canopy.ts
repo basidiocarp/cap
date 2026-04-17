@@ -509,6 +509,13 @@ export interface CanopySnapshot {
   tasks: CanopyTask[]
 }
 
+export interface ToolAdoptionScore {
+  score: number
+  tools_used: string[]
+  tools_relevant: string[]
+  evaluated_at: string
+}
+
 export interface CanopyTaskDetail {
   schema_version?: '1.0'
   allowed_actions: CanopyOperatorAction[]
@@ -533,6 +540,7 @@ export interface CanopyTaskDetail {
   relationship_summary: CanopyTaskRelationshipSummary
   sla_summary: CanopyTaskSlaSummary
   task: CanopyTask
+  tool_adoption_score?: ToolAdoptionScore
 }
 
 export interface CanopyTaskActionInput {
@@ -615,4 +623,25 @@ export interface CanopyHandoffActionInput {
   acting_agent_id?: string
   changed_by: string
   note?: string
+}
+
+export type CanopyNotificationEventType =
+  | 'task_assigned'
+  | 'task_completed'
+  | 'task_blocked'
+  | 'task_cancelled'
+  | 'evidence_received'
+  | 'handoff_ready'
+  | 'handoff_rejected'
+  | 'council_opened'
+  | 'council_closed'
+
+export interface CanopyNotification {
+  notification_id: string
+  event_type: CanopyNotificationEventType
+  task_id: string | null
+  agent_id: string | null
+  payload: Record<string, unknown>
+  seen: boolean
+  created_at: string
 }

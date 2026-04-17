@@ -28,6 +28,8 @@ export type {
   CanopyHandoffAttentionReason,
   CanopyHandoffStatus,
   CanopyHandoffType,
+  CanopyNotification,
+  CanopyNotificationEventType,
   CanopyOperatorAction,
   CanopyOperatorActionKind,
   CanopyOperatorActionTargetKind,
@@ -54,6 +56,7 @@ export type {
   CanopyTaskSlaSummary,
   CanopyTaskStatus,
   CanopyVerificationState,
+  ToolAdoptionScore,
 } from './canopy'
 export type {
   Concept,
