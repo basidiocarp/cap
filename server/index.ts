@@ -54,8 +54,9 @@ function createAuthMiddleware() {
     const apiKey = getApiKey()
 
     if (!apiKey) {
-      logger.warn({ method: c.req.method, path: c.req.path }, 'Missing CAP_API_KEY')
-      return c.json({ error: 'API key required' }, 401)
+      // No API key configured — auth is disabled, allow all requests
+      await next()
+      return
     }
 
     // Verify Authorization header for all /api/* endpoints
