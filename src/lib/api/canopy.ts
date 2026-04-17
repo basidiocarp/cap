@@ -1,4 +1,5 @@
 import type {
+  CanopyAgent,
   CanopyHandoffActionInput,
   CanopySnapshot,
   CanopySnapshotPreset,
@@ -10,6 +11,10 @@ import type {
 import { get, post } from './http'
 
 export const canopyApi = {
+  agents: (options?: { project?: string }) =>
+    get<CanopyAgent[]>('/canopy/agents', {
+      project: options?.project ?? '',
+    }),
   handoffAction: (handoffId: string, body: CanopyHandoffActionInput) =>
     post(`/canopy/handoffs/${encodeURIComponent(handoffId)}/actions`, body),
   snapshot: (options?: {

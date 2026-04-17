@@ -439,3 +439,16 @@ export async function applyHandoffAction<T = unknown>(
   const raw = await run(args)
   return parseJson<T>(raw, 'canopy handoff action')
 }
+
+export async function getAgents<T = unknown>(options?: { projectRoot?: string }): Promise<T[]> {
+  try {
+    const args = ['agent', 'list', '--format', 'json']
+    if (options?.projectRoot) args.push('--project-root', options.projectRoot)
+
+    const raw = await run(args)
+    const parsed = parseJson<T[]>(raw, 'canopy agent list')
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}

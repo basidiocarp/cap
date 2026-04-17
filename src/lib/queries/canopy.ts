@@ -4,6 +4,7 @@ import type { CanopyHandoffActionInput, CanopyTaskActionInput } from '../types'
 import { canopyApi } from '../api'
 
 export const canopyKeys = {
+  agents: (options?: { project?: string }) => ['canopy', 'agents', options?.project] as const,
   snapshot: (options?: {
     acknowledged?: string
     attentionAtLeast?: string
@@ -96,5 +97,12 @@ export function useCanopyHandoffAction() {
       queryClient.invalidateQueries({ queryKey: ['canopy'] })
       queryClient.invalidateQueries({ queryKey: canopyKeys.task(variables.taskId) })
     },
+  })
+}
+
+export function useCanopyAgents(project?: string) {
+  return useQuery({
+    queryFn: () => canopyApi.agents({ project }),
+    queryKey: canopyKeys.agents({ project }),
   })
 }

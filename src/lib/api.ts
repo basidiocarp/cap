@@ -12,6 +12,7 @@ export type {
   AggregateTelemetry,
   Annotation,
   CallSite,
+  CanopyAgent,
   CanopyAgentAttention,
   CanopyAgentAttentionReason,
   CanopyAgentHeartbeatEvent,

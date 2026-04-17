@@ -1665,6 +1665,10 @@ const useCanopyHandoffActionMock = vi.fn(() => ({
 }))
 
 vi.mock('../lib/queries', () => ({
+  useCanopyAgents: () => ({
+    data: [],
+    isLoading: false,
+  }),
   useCanopyHandoffAction: () => useCanopyHandoffActionMock(),
   useCanopySnapshot: (options?: {
     acknowledged?: string

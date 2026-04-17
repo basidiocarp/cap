@@ -1,4 +1,5 @@
 export type {
+  CanopyAgent,
   CanopyAgentAttention,
   CanopyAgentAttentionReason,
   CanopyAgentHeartbeatEvent,

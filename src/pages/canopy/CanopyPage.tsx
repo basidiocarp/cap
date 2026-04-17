@@ -3,6 +3,8 @@ import { Stack, Text, Title } from '@mantine/core'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { PageLoader } from '../../components/PageLoader'
 import { SectionCard } from '../../components/SectionCard'
+import { useCanopyAgents } from '../../lib/queries'
+import { CanopyAgentsPanel } from './CanopyAgentsPanel'
 import { CanopyFilterPanel } from './CanopyFilterPanel'
 import { CanopyQueuesSection } from './CanopyQueuesSection'
 import { CanopySavedViewsSection } from './CanopySavedViewsSection'
@@ -48,6 +50,8 @@ export function CanopyPage() {
     taskAttentionById,
     updateSearchParams,
   } = useCanopyPageState()
+
+  const agentsQuery = useCanopyAgents(activeProject ?? undefined)
 
   if (snapshotQuery.isLoading) {
     return <PageLoader />
@@ -104,6 +108,12 @@ export function CanopyPage() {
           savedView={savedView}
         />
       </SectionCard>
+
+      {agentsQuery.data && agentsQuery.data.length > 0 && (
+        <SectionCard title='Active agents'>
+          <CanopyAgentsPanel agents={agentsQuery.data} />
+        </SectionCard>
+      )}
 
       <CanopySummaryMetrics
         filteredAgents={filteredAgents}

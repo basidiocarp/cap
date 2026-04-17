@@ -80,4 +80,12 @@ app.post('/handoffs/:handoffId/actions', async (c) => {
   }
 })
 
+app.get('/agents', async (c) => {
+  try {
+    return c.json(await canopy.getAgents({ projectRoot: c.req.query('project') || undefined }))
+  } catch (err) {
+    return c.json({ error: err instanceof Error ? err.message : 'Failed to get Canopy agents' }, 500)
+  }
+})
+
 export default app

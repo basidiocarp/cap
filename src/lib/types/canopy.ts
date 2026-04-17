@@ -183,6 +183,17 @@ export interface CanopyAgentRegistration {
   worktree_id: string
 }
 
+export interface CanopyAgent {
+  agent_id: string
+  role: string
+  status: 'active' | 'idle' | 'offline'
+  current_task_id: string | null
+  freshness: 'fresh' | 'stale' | 'expired'
+  heartbeat_at: string
+  model: string | null
+  capabilities: string[]
+}
+
 export interface CanopyAgentHeartbeatEvent {
   agent_id: string
   created_at: string
