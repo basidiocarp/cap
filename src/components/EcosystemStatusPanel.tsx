@@ -11,7 +11,7 @@ import { useAnnulusStatus } from '../lib/queries'
 
 function toolColor(report: AnnulusToolReport): string {
   if (!report.available) return 'red'
-  if (report.degraded_capabilities.length > 0) return 'yellow'
+  if (report.degraded_capabilities.length > 0) return 'orange'
   return 'green'
 }
 
@@ -22,12 +22,12 @@ function toolLabel(report: AnnulusToolReport): string {
 }
 
 function tierLabel(tier: 'tier1' | 'tier2' | 'tier3'): string {
-  const labels: Record<string, string> = {
+  const labels: Record<'tier1' | 'tier2' | 'tier3', string> = {
     tier1: 'Tier 1',
     tier2: 'Tier 2',
     tier3: 'Tier 3',
   }
-  return labels[tier] ?? tier
+  return labels[tier]
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -72,6 +72,17 @@ export function EcosystemStatusPanel() {
         size='xs'
       >
         Ecosystem status unavailable
+      </Text>
+    )
+  }
+
+  if (data.reports.length === 0) {
+    return (
+      <Text
+        c='dimmed'
+        size='xs'
+      >
+        No tool reports available
       </Text>
     )
   }

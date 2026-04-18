@@ -178,7 +178,7 @@ export function cursorAdapterStatusFromConfig(
     return 'partial'
   }
 
-  return 'partial'
+  return 'none'
 }
 
 function cursorAdapterStatus(): NonNullable<StatusResult['adapter_status']> {

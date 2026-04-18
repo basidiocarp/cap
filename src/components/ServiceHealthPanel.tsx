@@ -31,12 +31,10 @@ function buildToolChecks(status: EcosystemStatus): ToolCheck[] {
   ]
 }
 
-type HealthLevel = 'red' | 'amber'
-
 interface PanelState {
   color: 'red' | 'yellow'
   downTools: string[]
-  level: HealthLevel
+  level: 'red' | 'amber'
   title: string
 }
 
@@ -81,6 +79,7 @@ export function ServiceHealthPanel() {
   return (
     <Alert
       color={panel.color}
+      data-health-level={panel.level}
       icon={<IconHeartbeat size={16} />}
       styles={{ root: { borderRadius: 0 } }}
       title={
