@@ -14,8 +14,6 @@ export function useCanopyPageState() {
   const { data: project } = useProjectContextController()
   const activeProject = project?.active ?? null
 
-  // Load all queue snapshots in a single hook call
-  const queueSnapshots = useCanopyQueueSnapshots(activeProject ?? undefined)
   const snapshotQuery = useCanopySnapshot({
     acknowledged: acknowledgedFilter === 'all' ? undefined : acknowledgedFilter,
     preset: savedView,
@@ -26,6 +24,11 @@ export function useCanopyPageState() {
   })
   const detailQuery = useCanopyTaskDetail(selectedTaskId)
   const snapshot = snapshotQuery.data
+
+  // Defer all 35 queue badge queries until the primary snapshot has resolved.
+  // On first render this cuts simultaneous queries from ~37 down to 1-3.
+  const queueSnapshots = useCanopyQueueSnapshots(activeProject ?? undefined, !!snapshot)
+
   const availableAgents = snapshot?.agents ?? []
 
   const taskAttentionById = useMemo(
