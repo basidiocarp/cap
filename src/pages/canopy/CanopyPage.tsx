@@ -1,5 +1,6 @@
 import { Stack, Text, Title } from '@mantine/core'
 
+import { EmptyState } from '../../components/EmptyState'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { PageLoader } from '../../components/PageLoader'
 import { SectionCard } from '../../components/SectionCard'
@@ -60,6 +61,16 @@ export function CanopyPage() {
   // Aggregate queue errors
   const failedQueues = queueSnapshots.filter((q) => q.error instanceof Error).map((q) => q.label)
   const hasQueueErrors = failedQueues.length > 0
+
+  // Only show the empty state when no filters are active and the snapshot has loaded with no tasks
+  const filtersAreInactive =
+    !searchQuery &&
+    statusFilter === 'all' &&
+    savedView === 'default' &&
+    priorityFilter === 'all' &&
+    severityFilter === 'all' &&
+    acknowledgedFilter === 'all'
+  const showEmptyState = !snapshotQuery.isLoading && !snapshotQuery.error && filteredTasks.length === 0 && filtersAreInactive
 
   return (
     <Stack>
@@ -132,6 +143,10 @@ export function CanopyPage() {
           snapshotSlaSummary={snapshotSlaSummary}
         />
       </SectionCard>
+
+      {showEmptyState && (
+        <EmptyState mt='md'>No tasks yet. Tasks appear here once Canopy records coordination activity for this project.</EmptyState>
+      )}
 
       <CanopyTaskBoard
         deadlineSummaryByTaskId={deadlineSummaryByTaskId}

@@ -2,6 +2,7 @@ import { Badge, Grid, Group, Stack, Title } from '@mantine/core'
 import { useQueries } from '@tanstack/react-query'
 
 import type { GainResult, HealthResult, Stats, TopicSummary } from '../../lib/api'
+import { EmptyState } from '../../components/EmptyState'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { PageLoader } from '../../components/PageLoader'
 import { hyphaeApi, myceliumApi } from '../../lib/api'
@@ -24,7 +25,6 @@ export function DashboardPage() {
   const { data: ecosystemStatus } = useEcosystemStatus()
 
   const loading = statsQuery.isLoading || topicsQuery.isLoading || healthQuery.isLoading || gainQuery.isLoading
-  const error = statsQuery.error || topicsQuery.error || healthQuery.error || gainQuery.error
 
   const stats = statsQuery.data as Stats | undefined
   const topics = (topicsQuery.data ?? []) as TopicSummary[]
@@ -33,10 +33,6 @@ export function DashboardPage() {
 
   if (loading) {
     return <PageLoader />
-  }
-
-  if (error) {
-    return <ErrorAlert error={error instanceof Error ? error : new Error('Failed to load')} />
   }
 
   return (
@@ -66,6 +62,17 @@ export function DashboardPage() {
         </Group>
       )}
 
+      <ErrorAlert
+        error={statsQuery.error}
+        title='Failed to load analytics'
+      />
+      <ErrorAlert
+        error={gainQuery.error}
+        title='Failed to load savings data'
+      />
+
+      {!statsQuery.error && !stats && <EmptyState>No analytics data available yet.</EmptyState>}
+
       {stats && (
         <DashboardKpis
           gain={gain}
@@ -77,10 +84,18 @@ export function DashboardPage() {
 
       <Grid>
         <Grid.Col span={{ base: 12, md: 6 }}>
+          <ErrorAlert
+            error={topicsQuery.error}
+            title='Failed to load topics'
+          />
           <TopicsSection topics={topics} />
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 6 }}>
+          <ErrorAlert
+            error={healthQuery.error}
+            title='Failed to load health status'
+          />
           <MemoryHealthSection health={health} />
         </Grid.Col>
       </Grid>
