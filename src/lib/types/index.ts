@@ -1,3 +1,4 @@
+export type { AnnulusStatus, AnnulusToolReport } from './annulus'
 export type {
   CanopyAgent,
   CanopyAgentAttention,

@@ -1,3 +1,4 @@
+export * from './annulus'
 export * from './canopy'
 export * from './hyphae'
 export * from './lsp'

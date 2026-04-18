@@ -11,6 +11,8 @@ export type {
   AgentRuntimeStatus,
   AggregateTelemetry,
   Annotation,
+  AnnulusStatus,
+  AnnulusToolReport,
   CallSite,
   CanopyAgent,
   CanopyAgentAttention,
@@ -127,6 +129,7 @@ export type {
   UsageTrend,
 } from './types'
 export {
+  annulusApi,
   canopyApi,
   hyphaeApi,
   lspApi,

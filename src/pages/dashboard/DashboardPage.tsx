@@ -2,6 +2,7 @@ import { Badge, Grid, Group, Stack, Title } from '@mantine/core'
 import { useQueries } from '@tanstack/react-query'
 
 import type { GainResult, HealthResult, Stats, TopicSummary } from '../../lib/api'
+import { EcosystemStatusPanel } from '../../components/EcosystemStatusPanel'
 import { EmptyState } from '../../components/EmptyState'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { PageLoader } from '../../components/PageLoader'
@@ -38,6 +39,8 @@ export function DashboardPage() {
   return (
     <Stack>
       <Title order={2}>Dashboard</Title>
+
+      <EcosystemStatusPanel />
 
       {ecosystemStatus && (
         <Group gap='xs'>

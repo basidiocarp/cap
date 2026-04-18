@@ -1,6 +1,7 @@
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
+export const ANNULUS_BIN = process.env.ANNULUS_BIN ?? 'annulus'
 export const HYPHAE_BIN = process.env.HYPHAE_BIN ?? 'hyphae'
 export const MYCELIUM_BIN = process.env.MYCELIUM_BIN ?? 'mycelium'
 export const RHIZOME_BIN = process.env.RHIZOME_BIN ?? 'rhizome'

@@ -7,6 +7,7 @@ import { CAP_HOST, CORS_ORIGIN } from './lib/config.ts'
 import { registry } from './lib/rhizome-registry.ts'
 import { logger } from './logger.ts'
 import canopyRoutes from './routes/canopy.ts'
+import ecosystemRoutes from './routes/ecosystem.ts'
 import hyphaeRoutes from './routes/hyphae.ts'
 import lspRoutes from './routes/lsp.ts'
 import myceliumRoutes from './routes/mycelium.ts'
@@ -95,6 +96,7 @@ export function createApp(): Hono {
   })
 
   app.route('/api/canopy', canopyRoutes)
+  app.route('/api/ecosystem', ecosystemRoutes)
   app.route('/api/hyphae', hyphaeRoutes)
   app.route('/api/lsp', lspRoutes)
   app.route('/api/mycelium', myceliumRoutes)
