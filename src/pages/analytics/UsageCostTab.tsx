@@ -2,6 +2,7 @@ import { BarChart, LineChart } from '@mantine/charts'
 import { Badge, Grid, Group, Stack, Table, Text, Title } from '@mantine/core'
 
 import type { SessionUsage, UsageAggregate, UsageTrend } from '../../lib/api'
+import { EmptyState } from '../../components/EmptyState'
 import { KpiCard } from '../../components/KpiCard'
 import { ChartBox } from './ChartBox'
 
@@ -59,6 +60,10 @@ export function UsageCostTab({ aggregate, sessions, trend }: Props) {
         No usage data available. Session transcripts will be parsed when available.
       </Text>
     )
+  }
+
+  if (aggregate.sessions === 0) {
+    return <EmptyState>No session transcripts found. Start a Claude Code session to see usage data.</EmptyState>
   }
 
   const usageHistory = summarizeUsageHistory(sessions)

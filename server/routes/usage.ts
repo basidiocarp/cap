@@ -14,7 +14,12 @@ app.get('/', (c) => {
 
 app.get('/sessions', (c) => {
   const since = c.req.query('since')
-  const limit = Number.parseInt(c.req.query('limit') ?? '20', 10)
+  const limitParam = c.req.query('limit') ?? '20'
+  const limit = Number.parseInt(limitParam, 10)
+  if (!Number.isFinite(limit) || limit < 1) {
+    return c.json({ error: 'limit must be a positive integer' }, 400)
+  }
+
   const sessions = getUsageData()
 
   let filtered = sessions
@@ -22,7 +27,7 @@ app.get('/sessions', (c) => {
     filtered = sessions.filter((s) => s.timestamp >= since)
   }
 
-  return c.json(filtered.slice(0, limit))
+  return c.json(filtered.slice(0, limit).map(({ _transcriptPath: _, ...s }) => s))
 })
 
 app.get('/trend', (c) => {

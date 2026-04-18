@@ -25,10 +25,10 @@ export function aggregateUsage(sessions: SessionUsage[]): UsageAggregate {
     totalCache += session.cache_tokens
   }
 
-  const totalTokens = totalInput + totalOutput + totalCache
+  const inputSide = totalInput + totalCache
   return {
     avg_cost_per_session: totalCost / sessions.length,
-    cache_hit_rate: totalTokens > 0 ? totalCache / totalTokens : 0,
+    cache_hit_rate: inputSide > 0 ? totalCache / inputSide : 0,
     sessions: sessions.length,
     total_cache_tokens: totalCache,
     total_cost: totalCost,
