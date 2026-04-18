@@ -1,9 +1,11 @@
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+
+const cargoAvailable = spawnSync('cargo', ['--version'], { stdio: 'pipe' }).status === 0
 
 let myceliumBin = 'mycelium'
 
@@ -67,7 +69,7 @@ function seedFixture() {
   runMycelium(['env'])
 }
 
-describe.sequential('Cap to Mycelium live contract', () => {
+describe.runIf(cargoAvailable).sequential('Cap to Mycelium live contract', () => {
   beforeAll(async () => {
     tmpRoot = mkdtempSync(join(tmpdir(), 'cap-mycelium-contract-'))
     dbPath = join(tmpRoot, 'history.db')

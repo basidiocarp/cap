@@ -1,9 +1,11 @@
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+
+const cargoAvailable = spawnSync('cargo', ['--version'], { stdio: 'pipe' }).status === 0
 
 let hyphaeBin = 'hyphae'
 
@@ -125,7 +127,7 @@ function seedFixture() {
   ])
 }
 
-describe.sequential('Cap to Hyphae live contract', () => {
+describe.runIf(cargoAvailable).sequential('Cap to Hyphae live contract', () => {
   beforeAll(async () => {
     tmpRoot = mkdtempSync(join(tmpdir(), 'cap-hyphae-contract-'))
     const dbPath = join(tmpRoot, 'hyphae.db')
