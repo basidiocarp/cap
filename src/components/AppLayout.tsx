@@ -19,6 +19,7 @@ import { useId } from 'react'
 import { Outlet, NavLink as RouterNavLink, useLocation } from 'react-router-dom'
 
 import { NotificationPanel } from './NotificationPanel'
+import { ServiceHealthPanel } from './ServiceHealthPanel'
 
 const NAV_SECTIONS = [
   {
@@ -128,6 +129,7 @@ export function AppLayout() {
       </AppShell.Navbar>
 
       <AppShell.Main>
+        <ServiceHealthPanel />
         <Outlet />
       </AppShell.Main>
     </AppShell>
