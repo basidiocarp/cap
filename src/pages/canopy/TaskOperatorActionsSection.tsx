@@ -1,6 +1,12 @@
 import { Button, Group, Select, Stack, Text, Textarea, TextInput } from '@mantine/core'
 
-import type { CanopyAgentRegistration, CanopyTaskDetail, CanopyTaskPriority, CanopyTaskSeverity, CanopyVerificationState } from '../../lib/api'
+import type {
+  CanopyAgentRegistration,
+  CanopyTaskDetail,
+  CanopyTaskPriority,
+  CanopyTaskSeverity,
+  CanopyVerificationState,
+} from '../../lib/api'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { useTaskActionState } from './useTaskActionState'
 

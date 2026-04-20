@@ -75,7 +75,7 @@ export type {
   Stats,
   TopicSummary,
 } from './hyphae'
-export type { CommandHistory, CommandHistoryEntry, GainResult, MyceliumAnalytics } from './mycelium'
+export type { CommandHistory, CommandHistoryEntry, GainResult, MyceliumAnalytics, ProjectGainStats } from './mycelium'
 export type {
   Annotation,
   CallSite,

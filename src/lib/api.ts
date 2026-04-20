@@ -104,6 +104,7 @@ export type {
   ModeConfig,
   MyceliumAnalytics,
   ParameterInfo,
+  ProjectGainStats,
   ProjectInfo,
   PruneResult,
   RhizomeAnalytics,

@@ -1,4 +1,4 @@
-import type { CommandHistory, GainResult, MyceliumAnalytics } from '../types'
+import type { CommandHistory, GainResult, ProjectGainStats, MyceliumAnalytics } from '../types'
 import { get } from './http'
 
 export const myceliumApi = {
@@ -7,4 +7,5 @@ export const myceliumApi = {
     get<CommandHistory>('/mycelium/history', { limit: limit ? String(limit) : '', project: project ?? '' }),
   gain: () => get<GainResult>('/mycelium/gain'),
   gainHistory: () => get<GainResult>('/mycelium/gain/history'),
+  gainProjects: () => get<ProjectGainStats[]>('/mycelium/gain/projects'),
 }

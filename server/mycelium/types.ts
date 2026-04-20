@@ -1,5 +1,14 @@
+export interface GainProjectStats {
+  project_path: string
+  commands: number
+  saved_tokens: number
+  avg_savings_pct: number
+  last_used: string
+}
+
 export interface GainCliOutput {
   by_command: GainCommandStats[]
+  by_project?: GainProjectStats[]
   daily?: GainDailyStats[]
   history?: GainHistoryEntry[]
   schema_version: '1.0'

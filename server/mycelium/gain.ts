@@ -1,4 +1,4 @@
-import type { GainCliOutput, GainCommandStats, GainDailyStats, GainHistoryEntry, GainSummary, GainTextResult } from './types.ts'
+import type { GainCliOutput, GainCommandStats, GainDailyStats, GainHistoryEntry, GainProjectStats, GainSummary, GainTextResult } from './types.ts'
 import { createCliRunner } from '../lib/cli.ts'
 import { MYCELIUM_BIN } from '../lib/config.ts'
 import { logger } from '../logger.ts'
@@ -66,6 +66,18 @@ function isGainHistoryEntry(value: unknown): value is GainHistoryEntry {
   )
 }
 
+function isGainProjectStats(value: unknown): value is GainProjectStats {
+  const record = asRecord(value)
+  return (
+    !!record &&
+    typeof record.project_path === 'string' &&
+    typeof record.commands === 'number' &&
+    typeof record.saved_tokens === 'number' &&
+    typeof record.avg_savings_pct === 'number' &&
+    typeof record.last_used === 'string'
+  )
+}
+
 function isGainCliOutput(value: unknown): value is GainCliOutput {
   const record = asRecord(value)
   return (
@@ -75,7 +87,8 @@ function isGainCliOutput(value: unknown): value is GainCliOutput {
     Array.isArray(record.by_command) &&
     record.by_command.every(isGainCommandStats) &&
     (record.daily === undefined || (Array.isArray(record.daily) && record.daily.every(isGainDailyStats))) &&
-    (record.history === undefined || (Array.isArray(record.history) && record.history.every(isGainHistoryEntry)))
+    (record.history === undefined || (Array.isArray(record.history) && record.history.every(isGainHistoryEntry))) &&
+    (record.by_project === undefined || (Array.isArray(record.by_project) && record.by_project.every(isGainProjectStats)))
   )
 }
 
@@ -90,8 +103,12 @@ function parseGainOutput(raw: string): GainCliOutput {
   }
 }
 
-export async function getGain(format: 'json' | 'text' = 'json'): Promise<GainCliOutput | GainTextResult> {
-  const raw = await run(['gain', '--format', format])
+export async function getGain(format: 'json' | 'text' = 'json', options?: { projectPath?: string }): Promise<GainCliOutput | GainTextResult> {
+  const args = ['gain', '--format', format]
+  if (options?.projectPath?.trim()) {
+    args.splice(1, 0, '--project-path', options.projectPath.trim())
+  }
+  const raw = await run(args)
   if (format === 'json') return parseGainOutput(raw)
   return { raw }
 }
@@ -117,5 +134,16 @@ export async function getDailyGainOutput(): Promise<GainCliOutput | null> {
   } catch (err) {
     logger.debug({ err }, 'Failed to load Mycelium daily gain output')
     return null
+  }
+}
+
+export async function getProjectsGain(): Promise<GainProjectStats[]> {
+  try {
+    const raw = await run(['gain', '--projects', '--format', 'json'])
+    const parsed = parseGainOutput(raw)
+    return parsed.by_project ?? []
+  } catch (err) {
+    logger.debug({ err }, 'Failed to load Mycelium projects gain output')
+    return []
   }
 }

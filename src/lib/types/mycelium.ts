@@ -6,9 +6,18 @@ export interface MyceliumAnalytics {
   total_stats: { overall_rate: number; total_commands: number; total_tokens_input: number; total_tokens_saved: number }
 }
 
+export interface ProjectGainStats {
+  project_path: string
+  commands: number
+  saved_tokens: number
+  avg_savings_pct: number
+  last_used: string
+}
+
 export interface GainResult {
   avg_savings_pct?: number
   by_command?: [string, number, number, number][]
+  by_project?: ProjectGainStats[]
   history?: Array<{
     command: string
     input_tokens: number

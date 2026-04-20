@@ -1,14 +1,29 @@
 import { BarChart, LineChart } from '@mantine/charts'
 import { Alert, Button, Grid, Stack, Table, Text } from '@mantine/core'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 
 import type { MyceliumAnalytics } from '../../lib/api'
+import { myceliumApi } from '../../lib/api/mycelium'
 import { ActionEmptyState } from '../../components/ActionEmptyState'
 import { KpiCard } from '../../components/KpiCard'
 import { SectionCard } from '../../components/SectionCard'
 import { ChartBox } from './ChartBox'
 
+function shortenProjectPath(path: string, maxComponents: number = 2): string {
+  const parts = path.split('/')
+  if (parts.length <= maxComponents) return path
+  const last = parts.slice(-maxComponents).join('/')
+  return `.../${last}`
+}
+
 export function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
+  const { data: projectsGain } = useQuery({
+    queryKey: ['mycelium', 'gain', 'projects'],
+    queryFn: () => myceliumApi.gainProjects(),
+    enabled: !!data,
+  })
+
   if (!data) {
     return (
       <ActionEmptyState
@@ -159,6 +174,37 @@ export function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
                   <Table.Td>{cmd.command}</Table.Td>
                   <Table.Td>{cmd.count.toLocaleString()}</Table.Td>
                   <Table.Td>{cmd.avg_savings_percent.toFixed(1)}%</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </SectionCard>
+      )}
+
+      {projectsGain && projectsGain.length > 0 && (
+        <SectionCard title='By Project'>
+          <Table striped>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Project</Table.Th>
+                <Table.Th>Commands</Table.Th>
+                <Table.Th>Tokens Saved</Table.Th>
+                <Table.Th>Avg Savings %</Table.Th>
+                <Table.Th>Last Used</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {projectsGain.map((project) => (
+                <Table.Tr key={project.project_path}>
+                  <Table.Td title={project.project_path}>
+                    <Text size='sm'>{shortenProjectPath(project.project_path)}</Text>
+                  </Table.Td>
+                  <Table.Td>{project.commands.toLocaleString()}</Table.Td>
+                  <Table.Td>{project.saved_tokens.toLocaleString()}</Table.Td>
+                  <Table.Td>{project.avg_savings_pct.toFixed(1)}%</Table.Td>
+                  <Table.Td>
+                    <Text size='sm'>{project.last_used.slice(0, 10)}</Text>
+                  </Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>

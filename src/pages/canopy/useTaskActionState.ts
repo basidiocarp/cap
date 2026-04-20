@@ -30,9 +30,7 @@ export function useTaskActionState(detail: CanopyTaskDetail, agents: CanopyAgent
   const [blockedReason, setBlockedReason] = useState(detail.task.blocked_reason ?? '')
   const [assignedTo, setAssignedTo] = useState<string | null>(detail.task.owner_agent_id ?? agents[0]?.agent_id ?? null)
   const [reassignNote, setReassignNote] = useState('')
-  const [executionAgentId, setExecutionAgentId] = useState<string | null>(
-    detail.task.owner_agent_id ?? agents[0]?.agent_id ?? null
-  )
+  const [executionAgentId, setExecutionAgentId] = useState<string | null>(detail.task.owner_agent_id ?? agents[0]?.agent_id ?? null)
   const [executionNote, setExecutionNote] = useState('')
   const [reviewOutcome, setReviewOutcome] = useState<Extract<CanopyVerificationState, 'failed' | 'pending'>>(
     detail.task.verification_state === 'failed' ? 'failed' : 'pending'
