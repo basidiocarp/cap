@@ -18,6 +18,36 @@ export interface GainResult {
   avg_savings_pct?: number
   by_command?: [string, number, number, number][]
   by_project?: ProjectGainStats[]
+  daily?: Array<{
+    avg_time_ms: number
+    commands: number
+    date: string
+    input_tokens: number
+    output_tokens: number
+    saved_tokens: number
+    savings_pct: number
+    total_time_ms: number
+  }>
+  weekly?: Array<{
+    avg_time_ms: number
+    commands: number
+    date: string
+    input_tokens: number
+    output_tokens: number
+    saved_tokens: number
+    savings_pct: number
+    total_time_ms: number
+  }>
+  monthly?: Array<{
+    avg_time_ms: number
+    commands: number
+    date: string
+    input_tokens: number
+    output_tokens: number
+    saved_tokens: number
+    savings_pct: number
+    total_time_ms: number
+  }>
   history?: Array<{
     command: string
     input_tokens: number

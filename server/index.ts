@@ -36,8 +36,8 @@ function isVitestCompatibilityMode() {
 
 function createAuthMiddleware() {
   return async (c: Context, next: Next) => {
-    // Health check endpoint is always allowed
-    if (c.req.path === '/api/health') {
+    // Health check and client config endpoints are always allowed
+    if (c.req.path === '/api/health' || c.req.path === '/api/client-config') {
       await next()
       return
     }
@@ -108,6 +108,7 @@ export function createApp(): Hono {
   app.route('/api/usage', usageRoutes)
 
   app.get('/api/health', (c) => c.json({ status: 'ok' }))
+  app.get('/api/client-config', (c) => c.json({ authRequired: !!getApiKey() }))
 
   return app
 }

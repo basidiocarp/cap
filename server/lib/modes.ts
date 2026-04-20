@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { dirname } from 'node:path'
+
+import { appConfigDir, appConfigPath } from './platform.ts'
 
 export interface Mode {
   description: string
@@ -13,8 +14,8 @@ export interface ModeConfig {
   modes: Record<string, Mode>
 }
 
-const CONFIG_DIR = join(homedir(), '.config', 'basidiocarp')
-const CONFIG_PATH = join(CONFIG_DIR, 'modes.json')
+const CONFIG_DIR = appConfigDir('basidiocarp')
+const CONFIG_PATH = appConfigPath('basidiocarp', 'modes.json')
 
 const DEFAULT_CONFIG: ModeConfig = {
   active: 'develop',
@@ -76,7 +77,7 @@ export function loadModes(): ModeConfig {
 }
 
 export function saveModes(config: ModeConfig): void {
-  mkdirSync(CONFIG_DIR, { recursive: true })
+  mkdirSync(dirname(CONFIG_PATH), { recursive: true })
   writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2))
 }
 

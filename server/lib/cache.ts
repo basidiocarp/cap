@@ -18,7 +18,7 @@ export function cachedAsync<T>(fn: () => Promise<T>, ttlMs: number): () => Promi
     if (pending) return pending
     pending = fn()
       .then((data) => {
-        entry = { data, ts: now }
+        entry = { data, ts: Date.now() }
         pending = null
         return data
       })

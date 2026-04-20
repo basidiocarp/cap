@@ -61,7 +61,7 @@ function isDoctorCheck(value: unknown): boolean {
   return (
     isRecord(value) &&
     typeof value.name === 'string' &&
-    typeof value.message === 'string' &&
+    (typeof value.message === 'string' || value.message === null) &&
     typeof value.passed === 'boolean' &&
     (value.repair_actions === undefined || (Array.isArray(value.repair_actions) && value.repair_actions.every(isRepairAction)))
   )

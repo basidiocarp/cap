@@ -1,5 +1,14 @@
 const BASE = '/api'
 
+let _apiKey: string | null = typeof localStorage !== 'undefined' ? localStorage.getItem('cap:apiKey') : null
+
+export function setApiKey(key: string): void {
+  _apiKey = key
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('cap:apiKey', key)
+  }
+}
+
 function getOrigin(): string {
   return (globalThis as { location?: { origin?: string } }).location?.origin ?? 'http://localhost'
 }
@@ -28,8 +37,26 @@ function createUrl(path: string, params?: Record<string, string>): URL {
   return url
 }
 
-async function request<T>(path: string, init: RequestInit = {}, params?: Record<string, string>): Promise<T> {
-  const res = await fetch(createUrl(path, params).toString(), init)
+async function request<T>(path: string, init: RequestInit = {}, params?: Record<string, string>, _isRetry = false): Promise<T> {
+  const headers: Record<string, string> = { ...((init.headers as Record<string, string>) || {}) }
+  if (_apiKey) {
+    headers['Authorization'] = `Bearer ${_apiKey}`
+  }
+
+  const res = await fetch(createUrl(path, params).toString(), {
+    ...init,
+    headers,
+  })
+
+  if (res.status === 401 && !_isRetry) {
+    const key = window.prompt('Enter the Cap API key:')
+    if (key) {
+      setApiKey(key)
+      return request<T>(path, init, params, true)
+    }
+    throw new Error('Authorization required')
+  }
+
   if (!res.ok) {
     throw new Error(await extractErrorMessage(res))
   }
@@ -59,4 +86,12 @@ export function put<T>(path: string, body: unknown) {
 
 export function del<T>(path: string) {
   return request<T>(path, { method: 'DELETE' })
+}
+
+export interface ClientConfig {
+  authRequired: boolean
+}
+
+export function getClientConfig(): Promise<ClientConfig> {
+  return get<ClientConfig>('/client-config')
 }

@@ -2,6 +2,22 @@ import Database from 'better-sqlite3'
 
 import { createCliRunner } from './lib/cli.ts'
 import { CANOPY_BIN, CANOPY_DB } from './lib/config.ts'
+import {
+  ALLOWED_SORTS,
+  ALLOWED_VIEWS,
+  ALLOWED_PRESETS,
+  ALLOWED_PRIORITIES,
+  ALLOWED_SEVERITIES,
+  ALLOWED_ATTENTION_LEVELS,
+  ALLOWED_ACKNOWLEDGED,
+  ALLOWED_TASK_ACTIONS,
+  ALLOWED_TASK_RELATIONSHIP_ROLES,
+  ALLOWED_HANDOFF_ACTIONS,
+  ALLOWED_HANDOFF_TYPES,
+  ALLOWED_VERIFICATION_STATES,
+  ALLOWED_COUNCIL_MESSAGE_TYPES,
+  ALLOWED_EVIDENCE_SOURCE_KINDS,
+} from './lib/canopy-validators.ts'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Notification types
@@ -98,153 +114,6 @@ export function markAllNotificationsRead(): void {
 
 const run = createCliRunner(CANOPY_BIN, 'canopy')
 const CANOPY_API_SCHEMA_VERSION = '1.0'
-const ALLOWED_SORTS = new Set(['status', 'title', 'updated_at', 'created_at', 'verification', 'priority', 'severity', 'attention'])
-const ALLOWED_VIEWS = new Set([
-  'all',
-  'active',
-  'blocked',
-  'blocked_by_dependencies',
-  'review',
-  'due_soon_review_handoff_follow_through',
-  'overdue_review_handoff_follow_through',
-  'due_soon_review_decision_follow_through',
-  'overdue_review_decision_follow_through',
-  'review_with_graph_pressure',
-  'review_handoff_follow_through',
-  'review_decision_follow_through',
-  'review_awaiting_support',
-  'review_ready_for_decision',
-  'review_ready_for_closeout',
-  'handoffs',
-  'follow_up_chains',
-  'unclaimed',
-  'assigned_awaiting_claim',
-  'claimed_not_started',
-  'in_progress',
-  'stalled',
-  'paused_resumable',
-  'due_soon',
-  'due_soon_execution',
-  'due_soon_review',
-  'overdue_execution',
-  'overdue_execution_owned',
-  'overdue_execution_unclaimed',
-  'overdue_review',
-  'awaiting_handoff_acceptance',
-  'due_soon_handoff_acceptance',
-  'overdue_handoff_acceptance',
-  'accepted_handoff_follow_through',
-  'due_soon_accepted_handoff_follow_through',
-  'overdue_accepted_handoff_follow_through',
-  'attention',
-])
-const ALLOWED_PRESETS = new Set([
-  'default',
-  'attention',
-  'review_queue',
-  'due_soon_review_handoff_follow_through',
-  'overdue_review_handoff_follow_through',
-  'due_soon_review_decision_follow_through',
-  'overdue_review_decision_follow_through',
-  'review_with_graph_pressure',
-  'review_handoff_follow_through',
-  'review_decision_follow_through',
-  'review_awaiting_support',
-  'review_ready_for_decision',
-  'review_ready_for_closeout',
-  'blocked',
-  'blocked_by_dependencies',
-  'handoffs',
-  'follow_up_chains',
-  'unclaimed',
-  'assigned_awaiting_claim',
-  'claimed_not_started',
-  'in_progress',
-  'stalled',
-  'paused_resumable',
-  'due_soon',
-  'due_soon_execution',
-  'due_soon_review',
-  'overdue_execution',
-  'overdue_execution_owned',
-  'overdue_execution_unclaimed',
-  'overdue_review',
-  'awaiting_handoff_acceptance',
-  'due_soon_handoff_acceptance',
-  'overdue_handoff_acceptance',
-  'accepted_handoff_follow_through',
-  'due_soon_accepted_handoff_follow_through',
-  'overdue_accepted_handoff_follow_through',
-  'critical',
-  'unacknowledged',
-])
-const ALLOWED_PRIORITIES = new Set(['low', 'medium', 'high', 'critical'])
-const ALLOWED_SEVERITIES = new Set(['none', 'low', 'medium', 'high', 'critical'])
-const ALLOWED_ATTENTION_LEVELS = new Set(['normal', 'needs_attention', 'critical'])
-const ALLOWED_ACKNOWLEDGED = new Set(['true', 'false'])
-const ALLOWED_TASK_ACTIONS = new Set([
-  'acknowledge_task',
-  'unacknowledge_task',
-  'claim_task',
-  'start_task',
-  'resume_task',
-  'pause_task',
-  'yield_task',
-  'complete_task',
-  'verify_task',
-  'record_decision',
-  'close_task',
-  'reassign_task',
-  'resolve_dependency',
-  'reopen_blocked_task_when_unblocked',
-  'promote_follow_up',
-  'close_follow_up_chain',
-  'set_task_priority',
-  'set_task_severity',
-  'block_task',
-  'unblock_task',
-  'update_task_note',
-  'set_task_due_at',
-  'clear_task_due_at',
-  'set_review_due_at',
-  'clear_review_due_at',
-  'create_handoff',
-  'summon_council_session',
-  'post_council_message',
-  'attach_evidence',
-  'create_follow_up_task',
-  'link_task_dependency',
-])
-const ALLOWED_TASK_RELATIONSHIP_ROLES = new Set(['blocks', 'blocked_by'])
-const ALLOWED_HANDOFF_ACTIONS = new Set([
-  'accept_handoff',
-  'reject_handoff',
-  'cancel_handoff',
-  'complete_handoff',
-  'follow_up_handoff',
-  'expire_handoff',
-])
-const ALLOWED_VERIFICATION_STATES = new Set(['pending', 'passed', 'failed'])
-const ALLOWED_HANDOFF_TYPES = new Set([
-  'request_help',
-  'request_review',
-  'transfer_ownership',
-  'request_verification',
-  'record_decision',
-  'close_task',
-])
-const ALLOWED_COUNCIL_MESSAGE_TYPES = new Set(['proposal', 'objection', 'evidence', 'decision', 'handoff', 'status'])
-const ALLOWED_EVIDENCE_SOURCE_KINDS = new Set([
-  'hyphae_session',
-  'hyphae_recall',
-  'hyphae_outcome',
-  'cortina_event',
-  'mycelium_command',
-  'mycelium_explain',
-  'rhizome_impact',
-  'rhizome_export',
-  'manual_note',
-])
 const EVIDENCE_REF_SCHEMA_VERSION = '1.0'
 
 function asRecord(value: unknown): Record<string, unknown> | null {

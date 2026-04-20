@@ -5,16 +5,24 @@ import * as mycelium from '../mycelium.ts'
 const app = new Hono()
 
 app.get('/gain', async (c) => {
-  const format = (c.req.query('format') ?? 'json') as 'json' | 'text'
-  const projectPath = c.req.query('project_path')
-  const data = await mycelium.getGain(format, projectPath ? { projectPath } : undefined)
-  return c.json(data)
+  try {
+    const format = (c.req.query('format') ?? 'json') as 'json' | 'text'
+    const projectPath = c.req.query('project_path')
+    const data = await mycelium.getGain(format, projectPath ? { projectPath } : undefined)
+    return c.json(data)
+  } catch (err) {
+    return c.json({ error: err instanceof Error ? err.message : 'Failed to get gain data' }, 500)
+  }
 })
 
 app.get('/gain/history', async (c) => {
-  const format = (c.req.query('format') ?? 'json') as 'json' | 'text'
-  const data = await mycelium.getGainHistory(format)
-  return c.json(data)
+  try {
+    const format = (c.req.query('format') ?? 'json') as 'json' | 'text'
+    const data = await mycelium.getGainHistory(format)
+    return c.json(data)
+  } catch (err) {
+    return c.json({ error: err instanceof Error ? err.message : 'Failed to get gain data' }, 500)
+  }
 })
 
 app.get('/gain/projects', async (c) => {

@@ -284,7 +284,7 @@ export function validateTaskAction(body: unknown): ValidationResult<ValidatedTas
 
   // Action-specific validation
   const executionActions = ['claim_task', 'start_task', 'resume_task', 'pause_task', 'yield_task', 'complete_task'] as const
-  if (executionActions.includes(b.action as any) && !b.acting_agent_id?.trim()) {
+  if ((executionActions as readonly string[]).includes(b.action) && !b.acting_agent_id?.trim()) {
     return { error: `${b.action} requires an acting_agent_id`, ok: false }
   }
 

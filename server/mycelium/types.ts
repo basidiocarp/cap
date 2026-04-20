@@ -10,6 +10,8 @@ export interface GainCliOutput {
   by_command: GainCommandStats[]
   by_project?: GainProjectStats[]
   daily?: GainDailyStats[]
+  weekly?: GainDailyStats[]
+  monthly?: GainDailyStats[]
   history?: GainHistoryEntry[]
   schema_version: '1.0'
   summary: GainSummary
