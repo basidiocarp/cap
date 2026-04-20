@@ -125,7 +125,7 @@ describe('Hyphae write routes', () => {
       })
 
       expect(res.status).toBe(400)
-      const json = await res.json()
+      const json = await res.json() as Record<string, unknown>
       expect(json.error).toContain('Invalid importance')
       expect(storeCliMock).not.toHaveBeenCalled()
     })
@@ -183,7 +183,7 @@ describe('Hyphae write routes', () => {
       })
 
       expect(res.status).toBe(502)
-      const json = await res.json()
+      const json = await res.json() as Record<string, unknown>
       expect(json.error).toBe('hyphae operation failed')
       expect(json.detail).toBe('CLI failed')
     })
@@ -237,7 +237,7 @@ describe('Hyphae write routes', () => {
       const res = await deleteRequest(app, '/memories/mem_missing')
 
       expect(res.status).toBe(502)
-      const json = await res.json()
+      const json = await res.json() as Record<string, unknown>
       expect(json.error).toBe('hyphae operation failed')
       expect(json.detail).toBe('Memory not found')
     })
@@ -277,7 +277,7 @@ describe('Hyphae write routes', () => {
       })
 
       expect(res.status).toBe(400)
-      const json = await res.json()
+      const json = await res.json() as Record<string, unknown>
       expect(json.error).toContain('Invalid importance')
       expect(updateImportanceCliMock).not.toHaveBeenCalled()
     })
@@ -315,7 +315,7 @@ describe('Hyphae write routes', () => {
       })
 
       expect(res.status).toBe(502)
-      const json = await res.json()
+      const json = await res.json() as Record<string, unknown>
       expect(json.error).toBe('hyphae operation failed')
       expect(json.detail).toBe('Update failed')
     })
@@ -482,7 +482,7 @@ describe('Hyphae write routes', () => {
       })
 
       expect(res.status).toBe(502)
-      const json = await res.json()
+      const json = await res.json() as Record<string, unknown>
       expect(json.error).toBe('hyphae operation failed')
       expect(json.detail).toBe('Consolidation failed')
     })

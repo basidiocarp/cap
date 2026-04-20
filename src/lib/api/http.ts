@@ -49,7 +49,7 @@ async function request<T>(path: string, init: RequestInit = {}, params?: Record<
   })
 
   if (res.status === 401 && !_isRetry) {
-    const key = window.prompt('Enter the Cap API key:')
+    const key = (globalThis as { prompt?: ((msg: string) => string | null) }).prompt?.('Enter the Cap API key:') ?? null
     if (key) {
       setApiKey(key)
       return request<T>(path, init, params, true)

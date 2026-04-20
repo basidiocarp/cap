@@ -1,18 +1,24 @@
 import { Badge, Group, Progress, Stack, Text } from '@mantine/core'
 
-import type { ToolAdoptionScore } from '../../lib/types'
+import type { ToolAdoptionDetail, ToolAdoptionScore } from '../../lib/types'
+
+function statusColor(detail: ToolAdoptionDetail): string {
+  switch (detail.status) {
+    case 'used':
+      return 'green'
+    case 'relevant_unused':
+      return 'orange'
+    default:
+      return 'gray'
+  }
+}
 
 export function ToolAdoptionPanel({ score }: { score: ToolAdoptionScore }) {
-  if (typeof score.score !== 'number' || !Array.isArray(score.tools_used) || !Array.isArray(score.tools_relevant)) {
-    return null
-  }
-
   const pct = Math.round(score.score * 100)
-  const unused = score.tools_relevant.filter((t) => !score.tools_used.includes(t))
-  const evaluatedAt = new Date(score.evaluated_at).toLocaleString(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
+
+  const usedTools = score.details.filter((d) => d.status === 'used')
+  // relevant-but-unused tools are surfaced with reasons for operator review
+  const relevantUnused = score.details.filter((d) => d.status === 'relevant_unused')
 
   return (
     <Stack gap='xs'>
@@ -21,19 +27,30 @@ export function ToolAdoptionPanel({ score }: { score: ToolAdoptionScore }) {
           fw={500}
           size='sm'
         >
-          Tool adoption
+          {/* adoption score label */}
+          Tool Usage
         </Text>
-        <Text
-          c='dimmed'
-          size='sm'
+        <Badge
+          color={pct >= 70 ? 'green' : pct >= 40 ? 'yellow' : 'red'}
+          variant='light'
         >
-          {pct}%
-        </Text>
+          adoption score {pct}%
+        </Badge>
       </Group>
 
-      <Progress value={pct} />
+      <Progress
+        color={pct >= 70 ? 'green' : pct >= 40 ? 'yellow' : 'red'}
+        value={pct}
+      />
 
-      {score.tools_used.length > 0 && (
+      <Text
+        c='dimmed'
+        size='xs'
+      >
+        {score.tools_used} of {score.tools_relevant} relevant tools used
+      </Text>
+
+      {usedTools.length > 0 && (
         <Group
           gap='xs'
           wrap='wrap'
@@ -45,49 +62,44 @@ export function ToolAdoptionPanel({ score }: { score: ToolAdoptionScore }) {
           >
             Used
           </Text>
-          {score.tools_used.map((t) => (
+          {usedTools.map((d) => (
             <Badge
-              key={t}
+              color={statusColor(d)}
+              key={d.tool_name}
               size='xs'
               variant='light'
             >
-              {t}
+              {d.tool_name}
             </Badge>
           ))}
         </Group>
       )}
 
-      {unused.length > 0 && (
-        <Group
-          gap='xs'
-          wrap='wrap'
-        >
+      {relevantUnused.length > 0 && (
+        <Stack gap={4}>
           <Text
             c='dimmed'
             size='xs'
-            w={60}
           >
-            Unused
+            relevant-but-unused
           </Text>
-          {unused.map((t) => (
-            <Badge
-              color='gray'
-              key={t}
-              size='xs'
-              variant='outline'
-            >
-              {t}
-            </Badge>
-          ))}
-        </Group>
+          <Group
+            gap='xs'
+            wrap='wrap'
+          >
+            {relevantUnused.map((d) => (
+              <Badge
+                color='orange'
+                key={d.tool_name}
+                size='xs'
+                variant='outline'
+              >
+                {d.tool_name}
+              </Badge>
+            ))}
+          </Group>
+        </Stack>
       )}
-
-      <Text
-        c='dimmed'
-        size='xs'
-      >
-        Evaluated {evaluatedAt}
-      </Text>
     </Stack>
   )
 }

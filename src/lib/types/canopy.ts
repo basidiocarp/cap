@@ -509,11 +509,20 @@ export interface CanopySnapshot {
   tasks: CanopyTask[]
 }
 
+export type ToolAdoptionStatus = 'used' | 'available_unused' | 'relevant_unused'
+
+export interface ToolAdoptionDetail {
+  tool_name: string
+  source: string
+  status: ToolAdoptionStatus
+}
+
 export interface ToolAdoptionScore {
   score: number
-  tools_used: string[]
-  tools_relevant: string[]
-  evaluated_at: string
+  tools_used: number
+  tools_relevant: number
+  tools_available: number
+  details: ToolAdoptionDetail[]
 }
 
 export interface CanopyTaskDetail {

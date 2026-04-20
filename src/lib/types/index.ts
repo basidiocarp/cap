@@ -57,7 +57,9 @@ export type {
   CanopyTaskSlaSummary,
   CanopyTaskStatus,
   CanopyVerificationState,
+  ToolAdoptionDetail,
   ToolAdoptionScore,
+  ToolAdoptionStatus,
 } from './canopy'
 export type {
   Concept,
