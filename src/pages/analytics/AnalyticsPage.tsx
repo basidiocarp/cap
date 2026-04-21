@@ -31,13 +31,20 @@ export function AnalyticsPage() {
   const { data: hyphaeData = null, isLoading: hyphaeLoading } = useHyphaeAnalytics()
   const { data: myceliumData = null, isLoading: myceliumLoading } = useMyceliumAnalytics()
   const { data: rhizomeData = null, isLoading: rhizomeLoading } = useRhizomeAnalytics()
-  const { data: telemetryData = null } = useTelemetry(isTelemetryTabActive)
-  const { data: usageAggregate = null } = useUsageAggregate(isUsageTabActive)
-  const { data: usageTrend = null } = useUsageTrend(30, isUsageTabActive)
-  const { data: usageSessions = null } = useUsageSessions(20, isUsageTabActive)
+  const { data: telemetryData = null, isLoading: telemetryLoading } = useTelemetry(isTelemetryTabActive)
+  const { data: usageAggregate = null, isLoading: usageAggregateLoading } = useUsageAggregate(isUsageTabActive)
+  const { data: usageTrend = null, isLoading: usageTrendLoading } = useUsageTrend(30, isUsageTabActive)
+  const { data: usageSessions = null, isLoading: usageSessionsLoading } = useUsageSessions(20, isUsageTabActive)
   const { data: commandHistory = null } = useCommandHistory(50, isCommandHistoryTabActive)
 
-  const loading = hyphaeLoading || myceliumLoading || rhizomeLoading
+  const loading =
+    hyphaeLoading ||
+    myceliumLoading ||
+    rhizomeLoading ||
+    telemetryLoading ||
+    usageAggregateLoading ||
+    usageTrendLoading ||
+    usageSessionsLoading
 
   const totalTokensSaved = myceliumData ? myceliumData.total_stats.total_tokens_saved : null
   const memoryUtilization = hyphaeData ? Math.round(hyphaeData.memory_utilization.rate * 100) : null

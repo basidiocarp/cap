@@ -53,6 +53,8 @@ export interface AgentRuntimeStatus {
   detected: boolean
   integration: 'hooks' | 'mcp'
   notify?: CodexNotifyStatus
+  resolved_config_path: string
+  resolved_config_source: 'config_file' | 'platform_default'
 }
 
 export interface HyphaeMemoryActivity {

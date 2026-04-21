@@ -21,7 +21,7 @@ export interface SessionsByDay {
 
 export interface AggregateTelemetry {
   avg_session_length: number
-  most_active_project: string
+  most_active_project: string | null
   most_edited_files: FileActivity[]
   most_run_commands: CommandUsage[]
   most_used_tools: ToolUsage[]

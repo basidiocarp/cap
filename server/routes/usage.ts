@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 
 import { cached } from '../lib/cache.ts'
-import { aggregateUsage, scanAllSessions, usageTrend } from '../lib/usage.ts'
+import { aggregateUsage, isValidSince, scanAllSessions, usageTrend } from '../lib/usage.ts'
 
 const getUsageData = cached(() => scanAllSessions(), 60_000)
 
@@ -20,14 +20,15 @@ app.get('/sessions', (c) => {
     return c.json({ error: 'limit must be a positive integer' }, 400)
   }
 
-  const sessions = getUsageData()
-
-  let filtered = sessions
-  if (since) {
-    filtered = sessions.filter((s) => s.timestamp >= since)
+  if (since !== undefined && !isValidSince(since)) {
+    return c.json({ error: 'since must be a valid ISO date string' }, 400)
   }
 
-  return c.json(filtered.slice(0, limit).map(({ _transcriptPath: _, ...s }) => s))
+  // Filter by passing `since` directly to scanAllSessions, which uses
+  // ISO string comparison against session.timestamp (the authoritative value).
+  const sessions = since ? scanAllSessions(since) : getUsageData()
+
+  return c.json(sessions.slice(0, limit).map(({ _transcriptPath: _, ...s }) => s))
 })
 
 app.get('/trend', (c) => {

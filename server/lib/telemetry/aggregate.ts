@@ -19,7 +19,8 @@ export function aggregateTelemetry(since?: string): AggregateTelemetry {
     projectCounts[session.project] = (projectCounts[session.project] ?? 0) + 1
     totalMessages += session.duration_messages
 
-    const telemetry = parseSessionTelemetry(session._transcriptPath ?? '')
+    if (!session._transcriptPath) continue
+    const telemetry = parseSessionTelemetry(session._transcriptPath)
     if (!telemetry) continue
 
     allTools = mergeCountMaps(allTools, telemetry.tools)
@@ -35,7 +36,7 @@ export function aggregateTelemetry(since?: string): AggregateTelemetry {
     .map(([date, count]) => ({ count, date }))
     .sort((a, b) => a.date.localeCompare(b.date))
 
-  const mostActiveProject = Object.entries(projectCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'unknown'
+  const mostActiveProject = Object.entries(projectCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
 
   return {
     avg_session_length: sessions.length > 0 ? totalMessages / sessions.length : 0,
