@@ -29,7 +29,7 @@ export function EcosystemTab({ data }: { data: EcosystemStatus | null }) {
             </Button>
           </>
         }
-        description='Cap could not load the live ecosystem status snapshot.'
+        description='Cap could not load the live ecosystem status snapshot. This may indicate annulus not available or a temporary connectivity issue.'
         hint='This tab is a current-health summary for Mycelium, Hyphae, and Rhizome. It is not a historical analytics stream.'
         title='Ecosystem status is unavailable'
       />
@@ -139,6 +139,17 @@ export function EcosystemTab({ data }: { data: EcosystemStatus | null }) {
               {data.rhizome.available && data.hyphae.available ? 'Code memoir export active' : 'Not connected'}
             </Text>
           </Group>
+        </Stack>
+      </SectionCard>
+
+      <SectionCard title='Segment Context Usage'>
+        <Stack gap='sm'>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            Context usage monitoring for active segments is enabled through the ecosystem health checks. This provides real-time visibility into how context is being consumed across system segments.
+          </Text>
         </Stack>
       </SectionCard>
     </Stack>
