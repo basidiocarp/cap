@@ -5,6 +5,7 @@ import { hyphaeApi } from '../api'
 export const hyphaeKeys = {
   analytics: () => ['hyphae', 'analytics'] as const,
   context: (task: string, project?: string) => ['hyphae', 'context', task, project] as const,
+  evaluate: (days: number) => ['hyphae', 'evaluate', days] as const,
   health: (topic?: string) => ['hyphae', 'health', topic] as const,
   lessons: () => ['hyphae', 'lessons'] as const,
   memoir: (name: string, options?: { limit?: number; offset?: number; q?: string }) =>
@@ -95,6 +96,14 @@ export function useHyphaeAnalytics(enabled = true) {
     enabled,
     queryFn: () => hyphaeApi.analytics(),
     queryKey: hyphaeKeys.analytics(),
+  })
+}
+
+export function useEvaluation(days = 14, enabled = true) {
+  return useQuery({
+    enabled,
+    queryFn: () => hyphaeApi.evaluate(days),
+    queryKey: hyphaeKeys.evaluate(days),
   })
 }
 

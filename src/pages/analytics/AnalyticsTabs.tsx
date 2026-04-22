@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react'
 import { Tabs } from '@mantine/core'
-import { IconActivity, IconBrain, IconChartBar, IconCode, IconCurrencyDollar, IconHistory, IconNetwork } from '@tabler/icons-react'
+import { IconActivity, IconBrain, IconChartBar, IconChartDots3, IconCode, IconCurrencyDollar, IconHistory, IconNetwork } from '@tabler/icons-react'
 import { lazy, Suspense } from 'react'
 
 import type {
   AggregateTelemetry,
   CommandHistory,
   EcosystemStatus,
+  EvaluationResult,
   HyphaeAnalytics,
   MyceliumAnalytics,
   RhizomeAnalytics,
@@ -23,6 +24,7 @@ const TelemetryTab = lazy(() => import('./TelemetryTab').then((m) => ({ default:
 const CodeIntelligenceTab = lazy(() => import('./CodeIntelligenceTab').then((m) => ({ default: m.CodeIntelligenceTab })))
 const EcosystemTab = lazy(() => import('./EcosystemTab').then((m) => ({ default: m.EcosystemTab })))
 const UsageCostTab = lazy(() => import('./UsageCostTab').then((m) => ({ default: m.UsageCostTab })))
+const EvaluationTab = lazy(() => import('./EvaluationTab').then((m) => ({ default: m.EvaluationTab })))
 
 const DEFAULT_TAB = 'token-savings'
 
@@ -34,6 +36,7 @@ export function AnalyticsTabs({
   activeTab,
   commandHistory,
   ecosystemData,
+  evaluationData,
   hyphaeData,
   myceliumData,
   onTabChange,
@@ -46,6 +49,7 @@ export function AnalyticsTabs({
   activeTab: string
   commandHistory: CommandHistory | null
   ecosystemData: EcosystemStatus | null
+  evaluationData: EvaluationResult | null
   hyphaeData: HyphaeAnalytics | null
   myceliumData: MyceliumAnalytics | null
   onTabChange: (value: string) => void
@@ -103,6 +107,12 @@ export function AnalyticsTabs({
           value='usage'
         >
           Usage &amp; Cost
+        </Tabs.Tab>
+        <Tabs.Tab
+          leftSection={<IconChartDots3 size={16} />}
+          value='evaluation'
+        >
+          Evaluation
         </Tabs.Tab>
       </Tabs.List>
 
@@ -170,6 +180,15 @@ export function AnalyticsTabs({
             sessions={usageSessions}
             trend={usageTrend}
           />
+        </AnalyticsPanel>
+      </Tabs.Panel>
+
+      <Tabs.Panel
+        pt='md'
+        value='evaluation'
+      >
+        <AnalyticsPanel>
+          <EvaluationTab data={evaluationData} />
         </AnalyticsPanel>
       </Tabs.Panel>
     </Tabs>

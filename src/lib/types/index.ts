@@ -67,6 +67,8 @@ export type {
   ConceptLink,
   ConceptNeighbor,
   ContextEntry,
+  EvaluationPeriodMetric,
+  EvaluationResult,
   GatherContextResult,
   HealthResult,
   HyphaeAnalytics,

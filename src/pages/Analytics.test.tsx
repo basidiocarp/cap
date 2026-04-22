@@ -7,6 +7,7 @@ import { Analytics } from './Analytics'
 vi.mock('../lib/queries', () => ({
   useCommandHistory: () => ({ data: { commands: [], total: 0 } }),
   useEcosystemStatus: () => ({ data: null }),
+  useEvaluation: () => ({ data: null }),
   useHyphaeAnalytics: () => ({ data: null, isLoading: false }),
   useMyceliumAnalytics: () => ({ data: null, isLoading: false }),
   useRhizomeAnalytics: () => ({ data: null, isLoading: false }),

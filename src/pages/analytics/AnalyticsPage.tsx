@@ -5,6 +5,7 @@ import { PageLoader } from '../../components/PageLoader'
 import {
   useCommandHistory,
   useEcosystemStatus,
+  useEvaluation,
   useHyphaeAnalytics,
   useMyceliumAnalytics,
   useRhizomeAnalytics,
@@ -23,11 +24,13 @@ export function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState(DEFAULT_TAB)
 
   const isCommandHistoryTabActive = activeTab === 'command-history'
+  const isEvaluationTabActive = activeTab === 'evaluation'
   const isTelemetryTabActive = activeTab === 'telemetry'
   const isEcosystemTabActive = activeTab === 'ecosystem'
   const isUsageTabActive = activeTab === 'usage'
 
   const { data: ecosystemData = null } = useEcosystemStatus(isEcosystemTabActive)
+  const { data: evaluationData = null } = useEvaluation(14, isEvaluationTabActive)
   const { data: hyphaeData = null, isLoading: hyphaeLoading } = useHyphaeAnalytics()
   const { data: myceliumData = null, isLoading: myceliumLoading } = useMyceliumAnalytics()
   const { data: rhizomeData = null, isLoading: rhizomeLoading } = useRhizomeAnalytics()
@@ -68,6 +71,7 @@ export function AnalyticsPage() {
         activeTab={activeTab}
         commandHistory={commandHistory}
         ecosystemData={ecosystemData}
+        evaluationData={evaluationData}
         hyphaeData={hyphaeData}
         myceliumData={myceliumData}
         onTabChange={setActiveTab}

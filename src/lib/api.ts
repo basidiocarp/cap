@@ -83,6 +83,8 @@ export type {
   EcosystemSettings,
   EcosystemStatus,
   EnclosingClass,
+  EvaluationPeriodMetric,
+  EvaluationResult,
   ExportedSymbol,
   FileNode,
   FileSummary,

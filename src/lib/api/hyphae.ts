@@ -1,6 +1,7 @@
 import type {
   Concept,
   ConceptInspection,
+  EvaluationResult,
   GatherContextResult,
   HealthResult,
   HyphaeAnalytics,
@@ -20,6 +21,7 @@ export const hyphaeApi = {
   analytics: () => get<HyphaeAnalytics>('/hyphae/analytics'),
   consolidate: (topic: string, keepOriginals?: boolean) =>
     post<{ result: string }>('/hyphae/consolidate', { keep_originals: keepOriginals, topic }),
+  evaluate: (days = 14) => get<EvaluationResult>('/hyphae/evaluate', { days: String(days) }),
   context: (task: string, project?: string, budget?: number) =>
     get<GatherContextResult>('/hyphae/context', {
       budget: budget ? String(budget) : '',

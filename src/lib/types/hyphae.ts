@@ -128,3 +128,19 @@ export interface IngestionSource {
   last_ingested: string | null
   source_path: string
 }
+
+export interface EvaluationPeriodMetric {
+  name: string
+  previous: string
+  recent: string
+  trend: 'improving' | 'declining' | 'stable' | 'unknown'
+}
+
+export interface EvaluationResult {
+  days: number
+  half_days: number
+  overall_verdict: string
+  metrics: EvaluationPeriodMetric[]
+  recall_non_zero_rate: string | null
+  recall_avg_effectiveness: string | null
+}

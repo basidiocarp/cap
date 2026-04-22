@@ -189,6 +189,15 @@ app.get('/analytics', async (c) => {
     return c.json({ error: 'Hyphae analytics unavailable' }, 502)
   }
 })
+
+app.get('/evaluate', async (c) => {
+  const days = Number(c.req.query('days') ?? '14')
+  try {
+    return c.json(await hyphae.getEvaluation(Number.isFinite(days) ? days : 14))
+  } catch {
+    return c.json({ error: 'Hyphae evaluate unavailable' }, 502)
+  }
+})
 app.get('/sources', async (c) => {
   try {
     return c.json(await hyphae.getIngestionSources())
