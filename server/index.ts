@@ -121,6 +121,12 @@ export function startServer() {
   const authMode = isUnauthenticatedDevMode() ? 'explicit-unauthenticated-dev' : 'protected'
 
   logger.info({ apiKeyConfigured: !!getApiKey(), authMode, host, port }, 'Cap server started')
+  if (host !== '127.0.0.1' && !getApiKey()) {
+    logger.warn(
+      { host },
+      'CAP_HOST is set beyond localhost but CAP_API_KEY is not configured — ' + 'all write routes are accessible without authentication'
+    )
+  }
   serve({ fetch: app.fetch, hostname: host, port })
 }
 

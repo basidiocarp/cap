@@ -165,10 +165,10 @@ describe('Canopy stale-on-error cache (/api/canopy/snapshot)', () => {
     expect(res.status).toBe(200)
     expect(snapshotSpy).toHaveBeenCalledWith(
       expect.objectContaining({
-        projectRoot: '/workspace/cap',
         preset: 'review_queue',
-        sort: 'attention',
         priorityAtLeast: 'high',
+        projectRoot: '/workspace/cap',
+        sort: 'attention',
       })
     )
   })
