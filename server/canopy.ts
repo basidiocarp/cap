@@ -1,23 +1,23 @@
 import Database from 'better-sqlite3'
 
-import { createCliRunner } from './lib/cli.ts'
-import { CANOPY_BIN, CANOPY_DB } from './lib/config.ts'
 import {
-  ALLOWED_SORTS,
-  ALLOWED_VIEWS,
+  ALLOWED_ACKNOWLEDGED,
+  ALLOWED_ATTENTION_LEVELS,
+  ALLOWED_COUNCIL_MESSAGE_TYPES,
+  ALLOWED_EVIDENCE_SOURCE_KINDS,
+  ALLOWED_HANDOFF_ACTIONS,
+  ALLOWED_HANDOFF_TYPES,
   ALLOWED_PRESETS,
   ALLOWED_PRIORITIES,
   ALLOWED_SEVERITIES,
-  ALLOWED_ATTENTION_LEVELS,
-  ALLOWED_ACKNOWLEDGED,
+  ALLOWED_SORTS,
   ALLOWED_TASK_ACTIONS,
   ALLOWED_TASK_RELATIONSHIP_ROLES,
-  ALLOWED_HANDOFF_ACTIONS,
-  ALLOWED_HANDOFF_TYPES,
   ALLOWED_VERIFICATION_STATES,
-  ALLOWED_COUNCIL_MESSAGE_TYPES,
-  ALLOWED_EVIDENCE_SOURCE_KINDS,
+  ALLOWED_VIEWS,
 } from './lib/canopy-validators.ts'
+import { createCliRunner } from './lib/cli.ts'
+import { CANOPY_BIN, CANOPY_DB } from './lib/config.ts'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Notification types

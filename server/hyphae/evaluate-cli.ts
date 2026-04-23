@@ -121,7 +121,7 @@ function parseRecallEffectiveness(lines: string[]): { nonZeroRate: string | null
     }
   }
 
-  return { nonZeroRate, avgEffectiveness }
+  return { avgEffectiveness, nonZeroRate }
 }
 
 function parseEvaluation(stdout: string, days: number): EvaluationResult {
@@ -146,10 +146,10 @@ function parseEvaluation(stdout: string, days: number): EvaluationResult {
   return {
     days,
     half_days: Math.floor(days / 2),
-    overall_verdict: overallVerdict || 'Unable to evaluate',
     metrics,
-    recall_non_zero_rate: nonZeroRate,
+    overall_verdict: overallVerdict || 'Unable to evaluate',
     recall_avg_effectiveness: avgEffectiveness,
+    recall_non_zero_rate: nonZeroRate,
   }
 }
 

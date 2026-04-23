@@ -40,7 +40,7 @@ function createUrl(path: string, params?: Record<string, string>): URL {
 async function request<T>(path: string, init: RequestInit = {}, params?: Record<string, string>, _isRetry = false): Promise<T> {
   const headers: Record<string, string> = { ...((init.headers as Record<string, string>) || {}) }
   if (_apiKey) {
-    headers['Authorization'] = `Bearer ${_apiKey}`
+    headers.Authorization = `Bearer ${_apiKey}`
   }
 
   const res = await fetch(createUrl(path, params).toString(), {
@@ -49,7 +49,7 @@ async function request<T>(path: string, init: RequestInit = {}, params?: Record<
   })
 
   if (res.status === 401 && !_isRetry) {
-    const key = (globalThis as { prompt?: ((msg: string) => string | null) }).prompt?.('Enter the Cap API key:') ?? null
+    const key = (globalThis as { prompt?: (msg: string) => string | null }).prompt?.('Enter the Cap API key:') ?? null
     if (key) {
       setApiKey(key)
       return request<T>(path, init, params, true)

@@ -21,7 +21,6 @@ export const hyphaeApi = {
   analytics: () => get<HyphaeAnalytics>('/hyphae/analytics'),
   consolidate: (topic: string, keepOriginals?: boolean) =>
     post<{ result: string }>('/hyphae/consolidate', { keep_originals: keepOriginals, topic }),
-  evaluate: (days = 14) => get<EvaluationResult>('/hyphae/evaluate', { days: String(days) }),
   context: (task: string, project?: string, budget?: number) =>
     get<GatherContextResult>('/hyphae/context', {
       budget: budget ? String(budget) : '',
@@ -29,6 +28,7 @@ export const hyphaeApi = {
       task,
     }),
   deleteMemory: (id: string) => del<{ result: string }>(`/hyphae/memories/${encodeURIComponent(id)}`),
+  evaluate: (days = 14) => get<EvaluationResult>('/hyphae/evaluate', { days: String(days) }),
   health: (topic?: string) => get<HealthResult[]>('/hyphae/health', { topic: topic ?? '' }),
   invalidateMemory: (id: string, reason?: string) =>
     post<{ result: string }>(`/hyphae/memories/${encodeURIComponent(id)}/invalidate`, reason ? { reason } : {}),

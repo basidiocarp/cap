@@ -148,7 +148,8 @@ export function EcosystemTab({ data }: { data: EcosystemStatus | null }) {
             c='dimmed'
             size='sm'
           >
-            Context usage monitoring for active segments is enabled through the ecosystem health checks. This provides real-time visibility into how context is being consumed across system segments.
+            Context usage monitoring for active segments is enabled through the ecosystem health checks. This provides real-time visibility
+            into how context is being consumed across system segments.
           </Text>
         </Stack>
       </SectionCard>

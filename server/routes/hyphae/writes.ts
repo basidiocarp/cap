@@ -28,7 +28,7 @@ app.post('/store', async (c) => {
     const result = await hyphae.store(body.topic, body.summary, body.importance, body.keywords)
     return c.json({ result })
   } catch (err) {
-    return c.json({ error: 'hyphae operation failed', detail: err instanceof Error ? err.message : String(err) }, 502)
+    return c.json({ detail: err instanceof Error ? err.message : String(err), error: 'hyphae operation failed' }, 502)
   }
 })
 
@@ -37,7 +37,7 @@ app.delete('/memories/:id', async (c) => {
     const result = await hyphae.forget(c.req.param('id'))
     return c.json({ result })
   } catch (err) {
-    return c.json({ error: 'hyphae operation failed', detail: err instanceof Error ? err.message : String(err) }, 502)
+    return c.json({ detail: err instanceof Error ? err.message : String(err), error: 'hyphae operation failed' }, 502)
   }
 })
 
@@ -60,7 +60,7 @@ app.put('/memories/:id/importance', async (c) => {
     const result = await hyphae.updateImportance(c.req.param('id'), body.importance)
     return c.json({ result })
   } catch (err) {
-    return c.json({ error: 'hyphae operation failed', detail: err instanceof Error ? err.message : String(err) }, 502)
+    return c.json({ detail: err instanceof Error ? err.message : String(err), error: 'hyphae operation failed' }, 502)
   }
 })
 
@@ -90,7 +90,7 @@ app.post('/consolidate', async (c) => {
     const result = await hyphae.consolidate(body.topic, body.keep_originals)
     return c.json({ result })
   } catch (err) {
-    return c.json({ error: 'hyphae operation failed', detail: err instanceof Error ? err.message : String(err) }, 502)
+    return c.json({ detail: err instanceof Error ? err.message : String(err), error: 'hyphae operation failed' }, 502)
   }
 })
 

@@ -63,7 +63,11 @@ export function EvaluationTab({ data }: { data: EvaluationResult | null }) {
     )
   }
 
-  const verdictColor = data.overall_verdict.toLowerCase().includes('needs attention') ? 'yellow' : data.overall_verdict.toLowerCase().includes('excellent') ? 'green' : 'blue'
+  const verdictColor = data.overall_verdict.toLowerCase().includes('needs attention')
+    ? 'yellow'
+    : data.overall_verdict.toLowerCase().includes('excellent')
+      ? 'green'
+      : 'blue'
 
   return (
     <Stack>
@@ -71,8 +75,8 @@ export function EvaluationTab({ data }: { data: EvaluationResult | null }) {
         color='spore'
         title='What this tab measures'
       >
-        Agent Evaluation compares agent performance across two equal time periods: the first {data.half_days} days versus the most recent {data.half_days} days.
-        Metrics show trends to help identify if agent behavior is improving, declining, or staying stable.
+        Agent Evaluation compares agent performance across two equal time periods: the first {data.half_days} days versus the most recent{' '}
+        {data.half_days} days. Metrics show trends to help identify if agent behavior is improving, declining, or staying stable.
       </Alert>
 
       <SectionCard title='Period Configuration'>
@@ -108,7 +112,8 @@ export function EvaluationTab({ data }: { data: EvaluationResult | null }) {
           color={verdictColor}
           title={data.overall_verdict}
         >
-          This represents the consolidated evaluation outcome across all tracked metrics. Review the detailed metrics table below for specific areas of change.
+          This represents the consolidated evaluation outcome across all tracked metrics. Review the detailed metrics table below for
+          specific areas of change.
         </Alert>
       </SectionCard>
 

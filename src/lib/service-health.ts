@@ -10,5 +10,5 @@ export function buildAvailabilityReport(status: EcosystemStatus): AvailabilityRe
   const tier1_healthy = status.hyphae.available
   const tier2_healthy = status.mycelium.available && status.rhizome !== undefined
   const serviceStatus = !tier1_healthy ? 'red' : !tier2_healthy ? 'amber' : 'green'
-  return { tier1_healthy, tier2_healthy, status: serviceStatus }
+  return { status: serviceStatus, tier1_healthy, tier2_healthy }
 }

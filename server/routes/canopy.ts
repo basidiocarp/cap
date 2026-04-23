@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 
 import * as canopy from '../canopy.ts'
-import { logger } from '../logger.ts'
 import {
   ALLOWED_ACKNOWLEDGED,
   ALLOWED_ATTENTION_LEVELS,
@@ -13,6 +12,7 @@ import {
   validateHandoffAction,
   validateTaskAction,
 } from '../lib/canopy-validators.ts'
+import { logger } from '../logger.ts'
 
 const app = new Hono()
 

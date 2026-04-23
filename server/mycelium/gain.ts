@@ -1,4 +1,12 @@
-import type { GainCliOutput, GainCommandStats, GainDailyStats, GainHistoryEntry, GainProjectStats, GainSummary, GainTextResult } from './types.ts'
+import type {
+  GainCliOutput,
+  GainCommandStats,
+  GainDailyStats,
+  GainHistoryEntry,
+  GainProjectStats,
+  GainSummary,
+  GainTextResult,
+} from './types.ts'
 import { createCliRunner } from '../lib/cli.ts'
 import { MYCELIUM_BIN } from '../lib/config.ts'
 import { logger } from '../logger.ts'
@@ -103,7 +111,10 @@ function parseGainOutput(raw: string): GainCliOutput {
   }
 }
 
-export async function getGain(format: 'json' | 'text' = 'json', options?: { projectPath?: string }): Promise<GainCliOutput | GainTextResult> {
+export async function getGain(
+  format: 'json' | 'text' = 'json',
+  options?: { projectPath?: string }
+): Promise<GainCliOutput | GainTextResult> {
   const args = ['gain', '--format', format]
   if (options?.projectPath?.trim()) {
     args.splice(1, 0, '--project-path', options.projectPath.trim())

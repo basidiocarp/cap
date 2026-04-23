@@ -1,8 +1,8 @@
 export type { EvaluationResult } from './hyphae/evaluate-cli.ts'
 export type { IngestionSource } from './hyphae/reads.ts'
 export { getAnalytics } from './hyphae/analytics.ts'
-export { getEvaluation } from './hyphae/evaluate-cli.ts'
 export { gatherContext } from './hyphae/context.ts'
+export { getEvaluation } from './hyphae/evaluate-cli.ts'
 export { getLessons } from './hyphae/lessons.ts'
 export { memoirInspect, memoirList, memoirSearch, memoirSearchAll, memoirShow } from './hyphae/memoirs.ts'
 export {

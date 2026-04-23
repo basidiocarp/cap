@@ -1,4 +1,4 @@
-import type { CommandHistory, GainResult, ProjectGainStats, MyceliumAnalytics } from '../types'
+import type { CommandHistory, GainResult, MyceliumAnalytics, ProjectGainStats } from '../types'
 import { get } from './http'
 
 export const myceliumApi = {

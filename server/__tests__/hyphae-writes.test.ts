@@ -8,11 +8,11 @@ const invalidateMemoryCliMock = vi.fn()
 const consolidateCliMock = vi.fn()
 
 vi.mock('../hyphae/writes.ts', () => ({
-  store: storeCliMock,
-  forget: forgetCliMock,
-  updateImportance: updateImportanceCliMock,
-  invalidateMemory: invalidateMemoryCliMock,
   consolidate: consolidateCliMock,
+  forget: forgetCliMock,
+  invalidateMemory: invalidateMemoryCliMock,
+  store: storeCliMock,
+  updateImportance: updateImportanceCliMock,
 }))
 
 function createApp() {
@@ -105,8 +105,8 @@ describe('Hyphae write routes', () => {
       const app = await createApp()
 
       const res = await postJson(app, '/store', {
-        topic: '   ',
         summary: 'test summary',
+        topic: '   ',
       })
 
       expect(res.status).toBe(400)
@@ -119,13 +119,13 @@ describe('Hyphae write routes', () => {
       const app = await createApp()
 
       const res = await postJson(app, '/store', {
-        topic: 'decisions/api',
-        summary: 'test summary',
         importance: 'bogus',
+        summary: 'test summary',
+        topic: 'decisions/api',
       })
 
       expect(res.status).toBe(400)
-      const json = await res.json() as Record<string, unknown>
+      const json = (await res.json()) as Record<string, unknown>
       expect(json.error).toContain('Invalid importance')
       expect(storeCliMock).not.toHaveBeenCalled()
     })
@@ -137,9 +137,9 @@ describe('Hyphae write routes', () => {
         const app = await createApp()
 
         const res = await postJson(app, '/store', {
-          topic: 'decisions/api',
-          summary: 'test summary',
           importance,
+          summary: 'test summary',
+          topic: 'decisions/api',
         })
 
         expect(res.status).toBe(200)
@@ -163,9 +163,9 @@ describe('Hyphae write routes', () => {
       const app = await createApp()
 
       const res = await postJson(app, '/store', {
-        topic: 'decisions/api',
-        summary: 'test summary',
         keywords: 'not-an-array',
+        summary: 'test summary',
+        topic: 'decisions/api',
       })
 
       expect(res.status).toBe(400)
@@ -178,12 +178,12 @@ describe('Hyphae write routes', () => {
       const app = await createApp()
 
       const res = await postJson(app, '/store', {
-        topic: 'decisions/api',
         summary: 'test summary',
+        topic: 'decisions/api',
       })
 
       expect(res.status).toBe(502)
-      const json = await res.json() as Record<string, unknown>
+      const json = (await res.json()) as Record<string, unknown>
       expect(json.error).toBe('hyphae operation failed')
       expect(json.detail).toBe('CLI failed')
     })
@@ -193,10 +193,10 @@ describe('Hyphae write routes', () => {
       const app = await createApp()
 
       const res = await postJson(app, '/store', {
-        topic: 'decisions/api',
-        summary: 'test summary',
         importance: 'high',
         keywords: ['rust', 'storage'],
+        summary: 'test summary',
+        topic: 'decisions/api',
       })
 
       expect(res.status).toBe(200)
@@ -208,9 +208,9 @@ describe('Hyphae write routes', () => {
       const app = await createApp()
 
       const res = await postJson(app, '/store', {
-        topic: 'decisions/api',
-        summary: 'test summary',
         importance: 'CRITICAL',
+        summary: 'test summary',
+        topic: 'decisions/api',
       })
 
       expect(res.status).toBe(200)
@@ -237,7 +237,7 @@ describe('Hyphae write routes', () => {
       const res = await deleteRequest(app, '/memories/mem_missing')
 
       expect(res.status).toBe(502)
-      const json = await res.json() as Record<string, unknown>
+      const json = (await res.json()) as Record<string, unknown>
       expect(json.error).toBe('hyphae operation failed')
       expect(json.detail).toBe('Memory not found')
     })
@@ -277,7 +277,7 @@ describe('Hyphae write routes', () => {
       })
 
       expect(res.status).toBe(400)
-      const json = await res.json() as Record<string, unknown>
+      const json = (await res.json()) as Record<string, unknown>
       expect(json.error).toContain('Invalid importance')
       expect(updateImportanceCliMock).not.toHaveBeenCalled()
     })
@@ -315,7 +315,7 @@ describe('Hyphae write routes', () => {
       })
 
       expect(res.status).toBe(502)
-      const json = await res.json() as Record<string, unknown>
+      const json = (await res.json()) as Record<string, unknown>
       expect(json.error).toBe('hyphae operation failed')
       expect(json.detail).toBe('Update failed')
     })
@@ -450,8 +450,8 @@ describe('Hyphae write routes', () => {
       const app = await createApp()
 
       const res = await postJson(app, '/consolidate', {
-        topic: 'decisions/api',
         keep_originals: false,
+        topic: 'decisions/api',
       })
 
       expect(res.status).toBe(200)
@@ -464,8 +464,8 @@ describe('Hyphae write routes', () => {
       const app = await createApp()
 
       const res = await postJson(app, '/consolidate', {
-        topic: 'decisions/api',
         keep_originals: true,
+        topic: 'decisions/api',
       })
 
       expect(res.status).toBe(200)
@@ -482,7 +482,7 @@ describe('Hyphae write routes', () => {
       })
 
       expect(res.status).toBe(502)
-      const json = await res.json() as Record<string, unknown>
+      const json = (await res.json()) as Record<string, unknown>
       expect(json.error).toBe('hyphae operation failed')
       expect(json.detail).toBe('Consolidation failed')
     })

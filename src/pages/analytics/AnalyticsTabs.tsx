@@ -1,6 +1,15 @@
 import type { ReactNode } from 'react'
 import { Tabs } from '@mantine/core'
-import { IconActivity, IconBrain, IconChartBar, IconChartDots3, IconCode, IconCurrencyDollar, IconHistory, IconNetwork } from '@tabler/icons-react'
+import {
+  IconActivity,
+  IconBrain,
+  IconChartBar,
+  IconChartDots3,
+  IconCode,
+  IconCurrencyDollar,
+  IconHistory,
+  IconNetwork,
+} from '@tabler/icons-react'
 import { lazy, Suspense } from 'react'
 
 import type {

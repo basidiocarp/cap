@@ -4,10 +4,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 
 import type { MyceliumAnalytics } from '../../lib/api'
-import { myceliumApi } from '../../lib/api/mycelium'
 import { ActionEmptyState } from '../../components/ActionEmptyState'
 import { KpiCard } from '../../components/KpiCard'
 import { SectionCard } from '../../components/SectionCard'
+import { myceliumApi } from '../../lib/api/mycelium'
 import { ChartBox } from './ChartBox'
 
 function shortenProjectPath(path: string, maxComponents: number = 2): string {
@@ -19,9 +19,9 @@ function shortenProjectPath(path: string, maxComponents: number = 2): string {
 
 export function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
   const { data: projectsGain } = useQuery({
-    queryKey: ['mycelium', 'gain', 'projects'],
-    queryFn: () => myceliumApi.gainProjects(),
     enabled: !!data,
+    queryFn: () => myceliumApi.gainProjects(),
+    queryKey: ['mycelium', 'gain', 'projects'],
   })
 
   if (!data) {
