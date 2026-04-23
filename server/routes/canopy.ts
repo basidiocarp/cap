@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 
 import * as canopy from '../canopy.ts'
+import { logger } from '../logger.ts'
 import {
   ALLOWED_ACKNOWLEDGED,
   ALLOWED_ATTENTION_LEVELS,
@@ -21,6 +22,7 @@ let _lastSnapshotAt = 0
 const SNAPSHOT_STALE_MS = 60_000
 
 app.get('/snapshot', async (c) => {
+  const start = Date.now()
   try {
     const rawAcknowledged = c.req.query('acknowledged')
     const rawAttentionAtLeast = c.req.query('attention_at_least')
@@ -41,10 +43,14 @@ app.get('/snapshot', async (c) => {
       view: rawView && ALLOWED_VIEWS.has(rawView) ? rawView : undefined,
     })
 
+    const duration_ms = Date.now() - start
+    logger.info({ duration_ms }, 'canopy snapshot fetched')
     _lastSnapshot = result
     _lastSnapshotAt = Date.now()
     return c.json(result)
   } catch (_err) {
+    const duration_ms = Date.now() - start
+    logger.error({ duration_ms, error: _err instanceof Error ? _err.message : String(_err) }, 'canopy snapshot failed')
     if (_lastSnapshot && Date.now() - _lastSnapshotAt < SNAPSHOT_STALE_MS) {
       return c.json({ ...(_lastSnapshot as object), stale: true }, 200)
     }
