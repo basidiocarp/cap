@@ -15,6 +15,11 @@ import {
 
 const app = new Hono()
 
+// Stale-on-error cache for snapshot
+let _lastSnapshot: unknown = null
+let _lastSnapshotAt = 0
+const SNAPSHOT_STALE_MS = 60_000
+
 app.get('/snapshot', async (c) => {
   try {
     const rawAcknowledged = c.req.query('acknowledged')
@@ -25,20 +30,25 @@ app.get('/snapshot', async (c) => {
     const rawSeverityAtLeast = c.req.query('severity_at_least')
     const rawView = c.req.query('view')
 
-    return c.json(
-      await canopy.getSnapshot({
-        acknowledged: rawAcknowledged && ALLOWED_ACKNOWLEDGED.has(rawAcknowledged) ? rawAcknowledged : undefined,
-        attentionAtLeast: rawAttentionAtLeast && ALLOWED_ATTENTION_LEVELS.has(rawAttentionAtLeast) ? rawAttentionAtLeast : undefined,
-        preset: rawPreset && ALLOWED_PRESETS.has(rawPreset) ? rawPreset : undefined,
-        priorityAtLeast: rawPriorityAtLeast && ALLOWED_PRIORITIES.has(rawPriorityAtLeast) ? rawPriorityAtLeast : undefined,
-        projectRoot: c.req.query('project') || undefined,
-        severityAtLeast: rawSeverityAtLeast && ALLOWED_SEVERITIES.has(rawSeverityAtLeast) ? rawSeverityAtLeast : undefined,
-        sort: rawSort && ALLOWED_SORTS.has(rawSort) ? rawSort : undefined,
-        view: rawView && ALLOWED_VIEWS.has(rawView) ? rawView : undefined,
-      })
-    )
-  } catch (err) {
-    return c.json({ error: err instanceof Error ? err.message : 'Failed to get Canopy snapshot' }, 500)
+    const result = await canopy.getSnapshot({
+      acknowledged: rawAcknowledged && ALLOWED_ACKNOWLEDGED.has(rawAcknowledged) ? rawAcknowledged : undefined,
+      attentionAtLeast: rawAttentionAtLeast && ALLOWED_ATTENTION_LEVELS.has(rawAttentionAtLeast) ? rawAttentionAtLeast : undefined,
+      preset: rawPreset && ALLOWED_PRESETS.has(rawPreset) ? rawPreset : undefined,
+      priorityAtLeast: rawPriorityAtLeast && ALLOWED_PRIORITIES.has(rawPriorityAtLeast) ? rawPriorityAtLeast : undefined,
+      projectRoot: c.req.query('project') || undefined,
+      severityAtLeast: rawSeverityAtLeast && ALLOWED_SEVERITIES.has(rawSeverityAtLeast) ? rawSeverityAtLeast : undefined,
+      sort: rawSort && ALLOWED_SORTS.has(rawSort) ? rawSort : undefined,
+      view: rawView && ALLOWED_VIEWS.has(rawView) ? rawView : undefined,
+    })
+
+    _lastSnapshot = result
+    _lastSnapshotAt = Date.now()
+    return c.json(result)
+  } catch (_err) {
+    if (_lastSnapshot && Date.now() - _lastSnapshotAt < SNAPSHOT_STALE_MS) {
+      return c.json({ ...(_lastSnapshot as object), stale: true }, 200)
+    }
+    return c.json({ error: 'Canopy unavailable', stale: false }, 503)
   }
 })
 
