@@ -1,5 +1,6 @@
-import { Stack, Text, Title } from '@mantine/core'
+import { Alert, Stack, Text, Title } from '@mantine/core'
 
+import type { DriftSignals } from '../../lib/types'
 import { EmptyState } from '../../components/EmptyState'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { PageLoader } from '../../components/PageLoader'
@@ -12,6 +13,26 @@ import { CanopySavedViewsSection } from './CanopySavedViewsSection'
 import { CanopySnapshotBadges, CanopySummaryMetrics, CanopyTaskBoard } from './CanopySnapshotSections'
 import { TaskDetailModal } from './TaskDetailModal'
 import { useCanopyPageState } from './useCanopyPageState'
+
+function getActiveDriftSignals(signals: DriftSignals): string[] {
+  const active: string[] = []
+
+  if (signals.high_correction_rate) {
+    active.push('High correction rate — agents are making many self-corrections')
+  }
+
+  if (signals.test_failure_streak > 0) {
+    active.push(
+      `Test failure streak — ${signals.test_failure_streak} consecutive failure${signals.test_failure_streak === 1 ? '' : 's'} with no passing run`
+    )
+  }
+
+  if (signals.evidence_gap_hours !== null && signals.evidence_gap_hours > 24) {
+    active.push(`Evidence gap — no evidence attached in ${Math.round(signals.evidence_gap_hours)} hours`)
+  }
+
+  return active
+}
 
 export function CanopyPage() {
   const {
@@ -44,6 +65,7 @@ export function CanopyPage() {
     searchQuery,
     slaSummaryByTaskId,
     severityFilter,
+    snapshot,
     snapshotSlaSummary,
     snapshotQuery,
     sortMode,
@@ -57,6 +79,9 @@ export function CanopyPage() {
   if (snapshotQuery.isLoading) {
     return <PageLoader />
   }
+
+  // Check for active drift signals
+  const activeDriftSignals = snapshot?.drift_signals ? getActiveDriftSignals(snapshot.drift_signals) : []
 
   // Aggregate queue errors
   const failedQueues = queueSnapshots.filter((q) => q.error instanceof Error).map((q) => q.label)
@@ -83,6 +108,24 @@ export function CanopyPage() {
           error={new Error(failedQueues.join(', '))}
           title={`${failedQueues.length} queue${failedQueues.length === 1 ? '' : 's'} unavailable`}
         />
+      )}
+
+      {activeDriftSignals.length > 0 && (
+        <Alert
+          color='yellow'
+          title='Drift detected'
+        >
+          <Stack gap='xs'>
+            {activeDriftSignals.map((signal) => (
+              <Text
+                key={signal}
+                size='sm'
+              >
+                {signal}
+              </Text>
+            ))}
+          </Stack>
+        </Alert>
       )}
 
       <Text

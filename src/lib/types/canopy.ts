@@ -486,6 +486,12 @@ export interface CanopySnapshotSlaSummary {
   overdue_count: number
 }
 
+export interface DriftSignals {
+  high_correction_rate: boolean
+  test_failure_streak: number
+  evidence_gap_hours: number | null
+}
+
 export interface CanopySnapshot {
   schema_version?: '1.0'
   agent_attention: CanopyAgentAttention[]
@@ -494,6 +500,7 @@ export interface CanopySnapshot {
   attention: CanopySnapshotAttentionSummary
   sla_summary: CanopySnapshotSlaSummary
   deadline_summaries: CanopyTaskDeadlineSummary[]
+  drift_signals?: DriftSignals
   evidence: CanopyEvidenceRef[]
   execution_summaries: CanopyTaskExecutionSummary[]
   heartbeats: CanopyAgentHeartbeatEvent[]

@@ -157,6 +157,7 @@ export function useCanopyPageState() {
     searchQuery,
     severityFilter,
     slaSummaryByTaskId,
+    snapshot,
     snapshotQuery,
     snapshotSlaSummary: snapshot?.sla_summary,
     sortMode,

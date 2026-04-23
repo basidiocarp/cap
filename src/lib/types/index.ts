@@ -57,6 +57,7 @@ export type {
   CanopyTaskSlaSummary,
   CanopyTaskStatus,
   CanopyVerificationState,
+  DriftSignals,
   ToolAdoptionDetail,
   ToolAdoptionScore,
   ToolAdoptionStatus,
