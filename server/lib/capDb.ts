@@ -1,8 +1,12 @@
+import { mkdirSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import Database from 'better-sqlite3'
 
-export const CAP_DB = process.env.CAP_DB ?? join(homedir(), '.local', 'share', 'cap', 'cap.db')
+// Read dynamically so tests can override process.env.CAP_DB before first openDb() call.
+function getDbPath(): string {
+  return process.env.CAP_DB ?? join(homedir(), '.local', 'share', 'cap', 'cap.db')
+}
 
 export interface ConversationSession {
   session_id: string
@@ -39,7 +43,9 @@ export function openDb(): Database.Database {
   }
 
   if (!dbInstance) {
-    dbInstance = new Database(CAP_DB)
+    const path = getDbPath()
+    mkdirSync(dirname(path), { recursive: true })
+    dbInstance = new Database(path)
     initSchema(dbInstance)
   }
 
@@ -74,8 +80,7 @@ function initSchema(db: Database.Database): void {
       prompt_tokens INTEGER NOT NULL DEFAULT 0,
       completion_tokens INTEGER NOT NULL DEFAULT 0,
       cost_usd REAL NOT NULL DEFAULT 0.0,
-      recorded_at TEXT NOT NULL,
-      FOREIGN KEY (session_id) REFERENCES conversation_sessions(session_id)
+      recorded_at TEXT NOT NULL
     );
   `)
 
@@ -178,11 +183,19 @@ export type BudgetStatus =
   | { status: 'warning'; spent_usd: number; limit_usd: number; percent: number }
   | { status: 'exceeded'; spent_usd: number; limit_usd: number }
 
-export function getBudgetStatus(): BudgetStatus {
-  return computeBudgetStatus()
+export function getBudgetStatus(sessionId?: string): BudgetStatus {
+  return computeBudgetStatus(sessionId)
 }
 
-export function computeBudgetStatus(): BudgetStatus {
+export function getSessionSpend(sessionId: string): number {
+  const db = openDb()
+  const row = db
+    .prepare('SELECT COALESCE(SUM(cost_usd), 0) as total FROM cost_entries WHERE session_id = ?')
+    .get(sessionId) as { total: number }
+  return row.total
+}
+
+export function computeBudgetStatus(sessionId?: string): BudgetStatus {
   const config = getBudgetConfig()
   const summary = getCostSummary()
 
@@ -216,6 +229,18 @@ export function computeBudgetStatus(): BudgetStatus {
     }
     if (percent >= config.warn_at_percent) {
       return { status: 'warning', spent_usd: summary.month_usd, limit_usd: config.monthly_limit_usd, percent }
+    }
+  }
+
+  // Check per-session limit when session_id is provided
+  if (config.per_session_limit_usd && sessionId) {
+    const sessionSpend = getSessionSpend(sessionId)
+    const percent = (sessionSpend / config.per_session_limit_usd) * 100
+    if (sessionSpend > config.per_session_limit_usd) {
+      return { status: 'exceeded', spent_usd: sessionSpend, limit_usd: config.per_session_limit_usd }
+    }
+    if (percent >= config.warn_at_percent) {
+      return { status: 'warning', spent_usd: sessionSpend, limit_usd: config.per_session_limit_usd, percent }
     }
   }
 

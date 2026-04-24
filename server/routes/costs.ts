@@ -35,8 +35,8 @@ app.post('/', async (c) => {
       cost_usd: body.cost_usd || 0,
     })
 
-    // Compute budget status
-    const budgetStatus = computeBudgetStatus()
+    // Compute budget status (pass session_id to enforce per-session limit)
+    const budgetStatus = computeBudgetStatus(body.session_id)
 
     // Handle budget exceeded
     if (budgetStatus.status === 'exceeded') {
