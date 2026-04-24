@@ -14,6 +14,7 @@ export const CORS_ORIGIN = process.env.CORS_ORIGIN ?? 'http://localhost:5173'
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const CANOPY_DB = process.env.CANOPY_DB ?? join(homedir(), '.local', 'share', 'canopy', 'canopy.db')
+export const CAP_DB = process.env.CAP_DB ?? join(homedir(), '.local', 'share', 'cap', 'cap.db')
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Network Configuration
