@@ -139,7 +139,15 @@ export function recordCostEntry(entry: Omit<CostEntry, 'recorded_at'>): void {
     INSERT INTO cost_entries (entry_id, session_id, model, prompt_tokens, completion_tokens, cost_usd, recorded_at)
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `)
-  stmt.run(entry.entry_id, entry.session_id, entry.model, entry.prompt_tokens, entry.completion_tokens, entry.cost_usd, new Date().toISOString())
+  stmt.run(
+    entry.entry_id,
+    entry.session_id,
+    entry.model,
+    entry.prompt_tokens,
+    entry.completion_tokens,
+    entry.cost_usd,
+    new Date().toISOString()
+  )
 }
 
 export function getCostSummary(): {
@@ -172,9 +180,9 @@ export function getCostSummary(): {
   const monthResult = monthStmt.get(monthAgo.toISOString()) as { total: number }
 
   return {
+    month_usd: monthResult.total,
     today_usd: todayResult.total,
     week_usd: weekResult.total,
-    month_usd: monthResult.total,
   }
 }
 
@@ -189,9 +197,9 @@ export function getBudgetStatus(sessionId?: string): BudgetStatus {
 
 export function getSessionSpend(sessionId: string): number {
   const db = openDb()
-  const row = db
-    .prepare('SELECT COALESCE(SUM(cost_usd), 0) as total FROM cost_entries WHERE session_id = ?')
-    .get(sessionId) as { total: number }
+  const row = db.prepare('SELECT COALESCE(SUM(cost_usd), 0) as total FROM cost_entries WHERE session_id = ?').get(sessionId) as {
+    total: number
+  }
   return row.total
 }
 
@@ -203,10 +211,10 @@ export function computeBudgetStatus(sessionId?: string): BudgetStatus {
   if (config.daily_limit_usd) {
     const percent = (summary.today_usd / config.daily_limit_usd) * 100
     if (summary.today_usd > config.daily_limit_usd) {
-      return { status: 'exceeded', spent_usd: summary.today_usd, limit_usd: config.daily_limit_usd }
+      return { limit_usd: config.daily_limit_usd, spent_usd: summary.today_usd, status: 'exceeded' }
     }
     if (percent >= config.warn_at_percent) {
-      return { status: 'warning', spent_usd: summary.today_usd, limit_usd: config.daily_limit_usd, percent }
+      return { limit_usd: config.daily_limit_usd, percent, spent_usd: summary.today_usd, status: 'warning' }
     }
   }
 
@@ -214,10 +222,10 @@ export function computeBudgetStatus(sessionId?: string): BudgetStatus {
   if (config.weekly_limit_usd) {
     const percent = (summary.week_usd / config.weekly_limit_usd) * 100
     if (summary.week_usd > config.weekly_limit_usd) {
-      return { status: 'exceeded', spent_usd: summary.week_usd, limit_usd: config.weekly_limit_usd }
+      return { limit_usd: config.weekly_limit_usd, spent_usd: summary.week_usd, status: 'exceeded' }
     }
     if (percent >= config.warn_at_percent) {
-      return { status: 'warning', spent_usd: summary.week_usd, limit_usd: config.weekly_limit_usd, percent }
+      return { limit_usd: config.weekly_limit_usd, percent, spent_usd: summary.week_usd, status: 'warning' }
     }
   }
 
@@ -225,10 +233,10 @@ export function computeBudgetStatus(sessionId?: string): BudgetStatus {
   if (config.monthly_limit_usd) {
     const percent = (summary.month_usd / config.monthly_limit_usd) * 100
     if (summary.month_usd > config.monthly_limit_usd) {
-      return { status: 'exceeded', spent_usd: summary.month_usd, limit_usd: config.monthly_limit_usd }
+      return { limit_usd: config.monthly_limit_usd, spent_usd: summary.month_usd, status: 'exceeded' }
     }
     if (percent >= config.warn_at_percent) {
-      return { status: 'warning', spent_usd: summary.month_usd, limit_usd: config.monthly_limit_usd, percent }
+      return { limit_usd: config.monthly_limit_usd, percent, spent_usd: summary.month_usd, status: 'warning' }
     }
   }
 
@@ -237,21 +245,30 @@ export function computeBudgetStatus(sessionId?: string): BudgetStatus {
     const sessionSpend = getSessionSpend(sessionId)
     const percent = (sessionSpend / config.per_session_limit_usd) * 100
     if (sessionSpend > config.per_session_limit_usd) {
-      return { status: 'exceeded', spent_usd: sessionSpend, limit_usd: config.per_session_limit_usd }
+      return { limit_usd: config.per_session_limit_usd, spent_usd: sessionSpend, status: 'exceeded' }
     }
     if (percent >= config.warn_at_percent) {
-      return { status: 'warning', spent_usd: sessionSpend, limit_usd: config.per_session_limit_usd, percent }
+      return { limit_usd: config.per_session_limit_usd, percent, spent_usd: sessionSpend, status: 'warning' }
     }
   }
 
-  return { status: 'ok', spent_usd: summary.today_usd, limit_usd: config.daily_limit_usd }
+  return { limit_usd: config.daily_limit_usd, spent_usd: summary.today_usd, status: 'ok' }
 }
 
 export function getBudgetConfig(): BudgetConfig {
   const db = openDb()
   const stmt = db.prepare('SELECT * FROM budget_config WHERE id = 1')
   const row = stmt.get() as BudgetConfig
-  return row || { id: 1, daily_limit_usd: null, weekly_limit_usd: null, monthly_limit_usd: null, per_session_limit_usd: null, warn_at_percent: 80 }
+  return (
+    row || {
+      daily_limit_usd: null,
+      id: 1,
+      monthly_limit_usd: null,
+      per_session_limit_usd: null,
+      warn_at_percent: 80,
+      weekly_limit_usd: null,
+    }
+  )
 }
 
 export function setBudgetConfig(config: Partial<BudgetConfig>): void {

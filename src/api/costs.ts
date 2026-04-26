@@ -32,9 +32,9 @@ const API_BASE = '/api/cost'
 
 export async function recordCost(entry: Omit<CostEntry, 'entry_id' | 'recorded_at'>): Promise<{ entry_id: string; status: BudgetStatus }> {
   const res = await fetch(`${API_BASE}/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(entry),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
   })
 
   if (!res.ok) {
@@ -67,9 +67,9 @@ export async function getBudgetStatus(): Promise<BudgetStatus> {
 
 export async function updateBudgetConfig(config: Partial<BudgetConfig>): Promise<BudgetConfig> {
   const res = await fetch(`${API_BASE}/budget`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(config),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'PUT',
   })
 
   if (!res.ok) {

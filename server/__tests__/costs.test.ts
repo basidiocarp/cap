@@ -3,14 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import {
-  closeDb,
-  computeBudgetStatus,
-  getBudgetConfig,
-  getCostSummary,
-  recordCostEntry,
-  setBudgetConfig,
-} from '../lib/capDb.ts'
+import { closeDb, computeBudgetStatus, getBudgetConfig, getCostSummary, recordCostEntry, setBudgetConfig } from '../lib/capDb.ts'
 
 const tempDirs: string[] = []
 
@@ -45,12 +38,12 @@ describe('computeBudgetStatus', () => {
   it('returns ok when spend is below warning threshold', () => {
     setBudgetConfig({ daily_limit_usd: 1.0, warn_at_percent: 80 })
     recordCostEntry({
-      entry_id: 'e1',
-      session_id: 's1',
-      model: 'claude-opus-4-6',
-      prompt_tokens: 100,
       completion_tokens: 50,
       cost_usd: 0.5,
+      entry_id: 'e1',
+      model: 'claude-opus-4-6',
+      prompt_tokens: 100,
+      session_id: 's1',
     })
 
     const status = computeBudgetStatus()
@@ -60,12 +53,12 @@ describe('computeBudgetStatus', () => {
   it('returns warning when spend reaches warn_at_percent of daily limit', () => {
     setBudgetConfig({ daily_limit_usd: 1.0, warn_at_percent: 80 })
     recordCostEntry({
-      entry_id: 'e2',
-      session_id: 's1',
-      model: 'claude-opus-4-6',
-      prompt_tokens: 100,
       completion_tokens: 50,
       cost_usd: 0.85,
+      entry_id: 'e2',
+      model: 'claude-opus-4-6',
+      prompt_tokens: 100,
+      session_id: 's1',
     })
 
     const status = computeBudgetStatus()
@@ -79,12 +72,12 @@ describe('computeBudgetStatus', () => {
   it('returns exceeded when spend exceeds daily limit', () => {
     setBudgetConfig({ daily_limit_usd: 1.0 })
     recordCostEntry({
-      entry_id: 'e3',
-      session_id: 's1',
-      model: 'claude-opus-4-6',
-      prompt_tokens: 100,
       completion_tokens: 50,
       cost_usd: 1.5,
+      entry_id: 'e3',
+      model: 'claude-opus-4-6',
+      prompt_tokens: 100,
+      session_id: 's1',
     })
 
     const status = computeBudgetStatus()
@@ -98,12 +91,12 @@ describe('computeBudgetStatus', () => {
   it('enforces per_session_limit_usd when session_id is provided', () => {
     setBudgetConfig({ per_session_limit_usd: 0.5 })
     recordCostEntry({
-      entry_id: 'e4',
-      session_id: 'session-x',
-      model: 'claude-opus-4-6',
-      prompt_tokens: 100,
       completion_tokens: 50,
       cost_usd: 0.6,
+      entry_id: 'e4',
+      model: 'claude-opus-4-6',
+      prompt_tokens: 100,
+      session_id: 'session-x',
     })
 
     // Without session_id — should not exceed (no daily/weekly/monthly limits set)
@@ -122,12 +115,12 @@ describe('computeBudgetStatus', () => {
 describe('recordCostEntry + getCostSummary', () => {
   it('round-trips a cost entry into the summary', () => {
     recordCostEntry({
-      entry_id: 'round-trip-1',
-      session_id: 'sess-1',
-      model: 'claude-sonnet-4-6',
-      prompt_tokens: 200,
       completion_tokens: 100,
       cost_usd: 0.25,
+      entry_id: 'round-trip-1',
+      model: 'claude-sonnet-4-6',
+      prompt_tokens: 200,
+      session_id: 'sess-1',
     })
 
     const summary = getCostSummary()
@@ -139,12 +132,12 @@ describe('recordCostEntry + getCostSummary', () => {
   it('accumulates multiple entries', () => {
     for (let i = 0; i < 3; i++) {
       recordCostEntry({
-        entry_id: `entry-${i}`,
-        session_id: 'sess-2',
-        model: 'claude-haiku-4-5',
-        prompt_tokens: 50,
         completion_tokens: 25,
         cost_usd: 0.1,
+        entry_id: `entry-${i}`,
+        model: 'claude-haiku-4-5',
+        prompt_tokens: 50,
+        session_id: 'sess-2',
       })
     }
 

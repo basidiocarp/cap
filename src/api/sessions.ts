@@ -17,9 +17,9 @@ export async function getConversation(sessionId: string): Promise<SessionConvers
 
 export async function setConversation(sessionId: string, conversationId: string): Promise<SessionConversation> {
   const res = await fetch(`${API_BASE}/${sessionId}/conversation`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ conversation_id: conversationId }),
+    headers: { 'Content-Type': 'application/json' },
+    method: 'POST',
   })
 
   if (!res.ok) {

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { Hono } from 'hono'
-import { computeBudgetStatus, getBudgetConfig, recordCostEntry, setBudgetConfig, getCostSummary } from '../lib/capDb.ts'
+
+import { computeBudgetStatus, getBudgetConfig, getCostSummary, recordCostEntry, setBudgetConfig } from '../lib/capDb.ts'
 
 const app = new Hono()
 
@@ -27,12 +28,12 @@ app.post('/', async (c) => {
 
     // Record the cost entry
     recordCostEntry({
-      entry_id,
-      session_id: body.session_id,
-      model: body.model,
-      prompt_tokens: body.prompt_tokens || 0,
       completion_tokens: body.completion_tokens || 0,
       cost_usd: body.cost_usd || 0,
+      entry_id,
+      model: body.model,
+      prompt_tokens: body.prompt_tokens || 0,
+      session_id: body.session_id,
     })
 
     // Compute budget status (pass session_id to enforce per-session limit)
@@ -42,11 +43,11 @@ app.post('/', async (c) => {
     if (budgetStatus.status === 'exceeded') {
       return c.json(
         {
-          status: 'exceeded',
-          spent_usd: budgetStatus.spent_usd,
           limit_usd: budgetStatus.limit_usd,
+          spent_usd: budgetStatus.spent_usd,
+          status: 'exceeded',
         },
-        402,
+        402
       )
     }
 

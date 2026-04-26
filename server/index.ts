@@ -18,6 +18,7 @@ import settingsRoutes from './routes/settings.ts'
 import statusRoutes from './routes/status.ts'
 import telemetryRoutes from './routes/telemetry.ts'
 import usageRoutes from './routes/usage.ts'
+import watcherRoutes from './routes/watchers.ts'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // API Key Authentication Middleware
@@ -108,6 +109,7 @@ export function createApp(): Hono {
   app.route('/api/status', statusRoutes)
   app.route('/api/telemetry', telemetryRoutes)
   app.route('/api/usage', usageRoutes)
+  app.route('/api/watchers', watcherRoutes)
 
   app.get('/api/health', (c) => c.json({ status: 'ok' }))
   app.get('/api/client-config', (c) => c.json({ authRequired: !!getApiKey() }))

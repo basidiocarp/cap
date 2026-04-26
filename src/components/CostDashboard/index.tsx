@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
 import { Alert, Card, Grid, Group, Progress, Stack, Text } from '@mantine/core'
+import { useEffect, useState } from 'react'
+
 import type { BudgetStatus, CostSummary } from '../../api/costs'
 import { getBudgetStatus, getCostSummary } from '../../api/costs'
 import { KpiCard } from '../KpiCard'
@@ -75,27 +76,21 @@ export function CostDashboard() {
       )}
 
       <Grid>
-        <Grid.Col
-          span={{ base: 12, md: 4 }}
-        >
+        <Grid.Col span={{ base: 12, md: 4 }}>
           <KpiCard
             accent='blue'
             label='Today'
             value={`$${summary?.today_usd.toFixed(2) || '0.00'}`}
           />
         </Grid.Col>
-        <Grid.Col
-          span={{ base: 12, md: 4 }}
-        >
+        <Grid.Col span={{ base: 12, md: 4 }}>
           <KpiCard
             accent='blue'
             label='This Week'
             value={`$${summary?.week_usd.toFixed(2) || '0.00'}`}
           />
         </Grid.Col>
-        <Grid.Col
-          span={{ base: 12, md: 4 }}
-        >
+        <Grid.Col span={{ base: 12, md: 4 }}>
           <KpiCard
             accent='blue'
             label='This Month'
@@ -119,9 +114,7 @@ export function CostDashboard() {
               >
                 Budget Usage
               </Text>
-              <Text size='sm'>
-                {Math.round(percentUsed * 10) / 10}% of limit
-              </Text>
+              <Text size='sm'>{Math.round(percentUsed * 10) / 10}% of limit</Text>
             </Group>
             <Progress
               color={status.status === 'warning' ? 'yellow' : 'red'}
