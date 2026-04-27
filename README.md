@@ -146,11 +146,45 @@ cap
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `3001` | Backend server port |
+| `CAP_HOST` | `127.0.0.1` | Bind address. Non-loopback binds require `CAP_API_KEY`. |
+| `CAP_API_KEY` | unset | Enables Bearer token auth on all `/api/*` routes when set. |
+| `CAP_ALLOW_UNAUTHENTICATED` | unset | Set to `1` to disable auth entirely (dev/test use only). Logs a warning. |
+| `CORS_ORIGIN` | `http://localhost:5173` | Allowed frontend origin for CORS. |
+| `CAP_WEBHOOK_SECRET` | unset | HMAC secret for generic webhook payloads. Required unless `CAP_ALLOW_UNAUTHENTICATED=1`. |
+| `CAP_GITHUB_SECRET` | unset | HMAC secret for GitHub webhook payloads. Required unless `CAP_ALLOW_UNAUTHENTICATED=1`. |
 | `HYPHAE_DB` | `~/.local/share/hyphae/hyphae.db` | Hyphae database path |
 | `HYPHAE_BIN` | `hyphae` | Hyphae CLI binary |
 | `MYCELIUM_BIN` | `mycelium` | Mycelium CLI binary |
 | `RHIZOME_BIN` | `rhizome` | Rhizome CLI binary |
 | `RHIZOME_PROJECT` | `process.cwd()` | Project root for Rhizome analysis |
+
+### Auth Behavior
+
+| Scenario | Result |
+|----------|--------|
+| `CAP_API_KEY` set | All `/api/*` routes require `Authorization: Bearer <key>`. Health and client-config are always public. |
+| `CAP_API_KEY` unset + `CAP_HOST=127.0.0.1` (default) | All routes are open — local-dev pass-through. |
+| `CAP_API_KEY` unset + non-loopback `CAP_HOST` | All routes return `503` with a message to set `CAP_API_KEY`. Health and client-config remain public. |
+| `CAP_ALLOW_UNAUTHENTICATED=1` | Overrides all of the above — all routes are open. Logs a prominent warning. |
+
+The `CAP_ALLOW_UNAUTHENTICATED=1` escape hatch is intended for local testing only. Do not set it on network-exposed instances.
+
+### Browser API Key Storage
+
+When `CAP_API_KEY` is set, the browser stores the key in `localStorage` under the key `cap:apiKey`. This is intentional for the localhost-only deployment model — `localStorage` is scoped to the origin and does not travel in cookies or CORS requests.
+
+If Cap is exposed beyond localhost, treat the stored key with the same care as a browser cookie: it is visible to any JavaScript on the same origin and persists across sessions. Protect it accordingly (use a strong random key, restrict the server's bind address, and consider clearing it when the session ends).
+
+### Webhook Auth Behavior
+
+Both `/api/watchers/webhook` and `/api/watchers/github` require HMAC signature validation by default. Missing secrets are treated as configuration errors, not open access:
+
+| Scenario | Result |
+|----------|--------|
+| Secret set + correct signature | `200 OK` |
+| Secret set + wrong signature | `401 Unauthorized` |
+| No secret + `CAP_ALLOW_UNAUTHENTICATED` unset | `401 Unauthorized` |
+| No secret + `CAP_ALLOW_UNAUTHENTICATED=1` | `200 OK` (with a warning log) |
 
 ---
 

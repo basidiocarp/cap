@@ -8,8 +8,11 @@ export class WebhookWatcher implements WatcherAdapter {
 
   validate(body: Buffer, signature: string, secret: string): boolean {
     if (!secret) {
-      logger.warn('webhook-watcher: secret not configured, skipping validation')
-      return true
+      // Pure HMAC check: no secret means we cannot verify — reject.
+      // The caller is responsible for checking any dev-mode bypass before
+      // invoking validate().
+      logger.warn('webhook-watcher: secret not configured — rejecting unsigned payload')
+      return false
     }
 
     try {

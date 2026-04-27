@@ -36,7 +36,11 @@ function isVitestCompatibilityMode() {
   return process.env.VITEST === 'true'
 }
 
-function createAuthMiddleware() {
+function isLocalhostBind(host: string): boolean {
+  return host === '127.0.0.1' || host === '::1' || host === 'localhost' || host === '::ffff:127.0.0.1'
+}
+
+function createAuthMiddleware(boundHost: string) {
   return async (c: Context, next: Next) => {
     // Health check and client config endpoints are always allowed
     if (c.req.path === '/api/health' || c.req.path === '/api/client-config') {
@@ -45,6 +49,7 @@ function createAuthMiddleware() {
     }
 
     if (isUnauthenticatedDevMode()) {
+      logger.warn('CAP_ALLOW_UNAUTHENTICATED is set — all requests are allowed without authentication')
       await next()
       return
     }
@@ -57,7 +62,23 @@ function createAuthMiddleware() {
     const apiKey = getApiKey()
 
     if (!apiKey) {
-      // No API key configured — auth is disabled, allow all requests
+      // No API key configured — check the bound host captured at startup.
+      // Localhost-only binds preserve the local-dev experience.
+      // Non-loopback binds without an API key block all write/action routes to
+      // prevent unauthenticated access on network-exposed instances.
+      if (!isLocalhostBind(boundHost)) {
+        logger.warn(
+          { host: boundHost, method: c.req.method, path: c.req.path },
+          'Refusing request on non-loopback bind: CAP_API_KEY is not set'
+        )
+        return c.json(
+          {
+            error: 'API key required for non-loopback deployments. Set CAP_API_KEY to enable access.',
+          },
+          503
+        )
+      }
+      // Localhost bind with no API key — allow (local-dev mode)
       await next()
       return
     }
@@ -79,7 +100,7 @@ function createAuthMiddleware() {
   }
 }
 
-export function createApp(): Hono {
+export function createApp(boundHost = process.env.CAP_HOST ?? '127.0.0.1'): Hono {
   const app = new Hono()
 
   app.use('*', async (c: Context, next: Next) => {
@@ -90,7 +111,7 @@ export function createApp(): Hono {
   })
 
   app.use('*', cors({ origin: CORS_ORIGIN }))
-  app.use('/api/*', createAuthMiddleware())
+  app.use('/api/*', createAuthMiddleware(boundHost))
 
   app.onError((err, c) => {
     logger.error({ err, method: c.req.method, path: c.req.path }, 'Request error')
@@ -117,15 +138,17 @@ export function createApp(): Hono {
   return app
 }
 
-const app = createApp()
-
 export function startServer() {
   const port = Number(process.env.PORT ?? 3001)
   const host = CAP_HOST
   const authMode = isUnauthenticatedDevMode() ? 'explicit-unauthenticated-dev' : 'protected'
 
+  // Create the app with the resolved host so auth middleware closes over the
+  // startup value rather than reading env at request time.
+  const app = createApp(host)
+
   logger.info({ apiKeyConfigured: !!getApiKey(), authMode, host, port }, 'Cap server started')
-  if (host !== '127.0.0.1' && !getApiKey()) {
+  if (!isLocalhostBind(host) && !getApiKey()) {
     logger.warn(
       { host },
       'CAP_HOST is set beyond localhost but CAP_API_KEY is not configured — ' + 'all write routes are accessible without authentication'

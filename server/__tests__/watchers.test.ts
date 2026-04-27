@@ -31,9 +31,42 @@ describe('Watchers API', () => {
   })
 
   describe('POST /api/watchers/webhook', () => {
-    it('accepts payload when no secret is configured', async () => {
+    it('rejects payload when no secret is configured (secure default)', async () => {
       const originalSecret = process.env.CAP_WEBHOOK_SECRET
+      const originalAllowUnauth = process.env.CAP_ALLOW_UNAUTHENTICATED
       delete process.env.CAP_WEBHOOK_SECRET
+      delete process.env.CAP_ALLOW_UNAUTHENTICATED
+
+      try {
+        const payload = JSON.stringify({ test: 'data' })
+        const req = new Request('http://localhost:3001/api/watchers/webhook', {
+          body: payload,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        })
+
+        const res = await app.fetch(req)
+        expect(res.status).toBe(401)
+
+        const json = (await res.json()) as Record<string, unknown>
+        expect(json.error).toBe('Unauthorized')
+      } finally {
+        if (originalSecret !== undefined) {
+          process.env.CAP_WEBHOOK_SECRET = originalSecret
+        }
+        if (originalAllowUnauth !== undefined) {
+          process.env.CAP_ALLOW_UNAUTHENTICATED = originalAllowUnauth
+        }
+      }
+    })
+
+    it('accepts payload when no secret is configured and CAP_ALLOW_UNAUTHENTICATED=1', async () => {
+      const originalSecret = process.env.CAP_WEBHOOK_SECRET
+      const originalAllowUnauth = process.env.CAP_ALLOW_UNAUTHENTICATED
+      delete process.env.CAP_WEBHOOK_SECRET
+      process.env.CAP_ALLOW_UNAUTHENTICATED = '1'
 
       try {
         const payload = JSON.stringify({ test: 'data' })
@@ -54,6 +87,11 @@ describe('Watchers API', () => {
       } finally {
         if (originalSecret !== undefined) {
           process.env.CAP_WEBHOOK_SECRET = originalSecret
+        }
+        if (originalAllowUnauth !== undefined) {
+          process.env.CAP_ALLOW_UNAUTHENTICATED = originalAllowUnauth
+        } else {
+          delete process.env.CAP_ALLOW_UNAUTHENTICATED
         }
       }
     })
@@ -122,27 +160,76 @@ describe('Watchers API', () => {
       }
     })
 
-    it('rejects invalid JSON payload', async () => {
-      const req = new Request('http://localhost:3001/api/watchers/webhook', {
-        body: 'not valid json {',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      })
+    it('rejects invalid JSON payload (with CAP_ALLOW_UNAUTHENTICATED to bypass sig check)', async () => {
+      const originalAllowUnauth = process.env.CAP_ALLOW_UNAUTHENTICATED
+      const originalSecret = process.env.CAP_WEBHOOK_SECRET
+      process.env.CAP_ALLOW_UNAUTHENTICATED = '1'
+      delete process.env.CAP_WEBHOOK_SECRET
 
-      const res = await app.fetch(req)
-      expect(res.status).toBe(400)
+      try {
+        const req = new Request('http://localhost:3001/api/watchers/webhook', {
+          body: 'not valid json {',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        })
 
-      const json = (await res.json()) as Record<string, unknown>
-      expect(json.error).toBe('Invalid JSON')
+        const res = await app.fetch(req)
+        expect(res.status).toBe(400)
+
+        const json = (await res.json()) as Record<string, unknown>
+        expect(json.error).toBe('Invalid JSON')
+      } finally {
+        if (originalAllowUnauth !== undefined) {
+          process.env.CAP_ALLOW_UNAUTHENTICATED = originalAllowUnauth
+        } else {
+          delete process.env.CAP_ALLOW_UNAUTHENTICATED
+        }
+        if (originalSecret !== undefined) {
+          process.env.CAP_WEBHOOK_SECRET = originalSecret
+        }
+      }
     })
   })
 
   describe('POST /api/watchers/github', () => {
-    it('accepts payload when no secret is configured', async () => {
+    it('rejects payload when no secret is configured (secure default)', async () => {
       const originalSecret = process.env.CAP_GITHUB_SECRET
+      const originalAllowUnauth = process.env.CAP_ALLOW_UNAUTHENTICATED
       delete process.env.CAP_GITHUB_SECRET
+      delete process.env.CAP_ALLOW_UNAUTHENTICATED
+
+      try {
+        const payload = JSON.stringify({ action: 'opened' })
+        const req = new Request('http://localhost:3001/api/watchers/github', {
+          body: payload,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        })
+
+        const res = await app.fetch(req)
+        expect(res.status).toBe(401)
+
+        const json = (await res.json()) as Record<string, unknown>
+        expect(json.error).toBe('Unauthorized')
+      } finally {
+        if (originalSecret !== undefined) {
+          process.env.CAP_GITHUB_SECRET = originalSecret
+        }
+        if (originalAllowUnauth !== undefined) {
+          process.env.CAP_ALLOW_UNAUTHENTICATED = originalAllowUnauth
+        }
+      }
+    })
+
+    it('accepts payload when no secret is configured and CAP_ALLOW_UNAUTHENTICATED=1', async () => {
+      const originalSecret = process.env.CAP_GITHUB_SECRET
+      const originalAllowUnauth = process.env.CAP_ALLOW_UNAUTHENTICATED
+      delete process.env.CAP_GITHUB_SECRET
+      process.env.CAP_ALLOW_UNAUTHENTICATED = '1'
 
       try {
         const payload = JSON.stringify({ action: 'opened' })
@@ -162,6 +249,11 @@ describe('Watchers API', () => {
       } finally {
         if (originalSecret !== undefined) {
           process.env.CAP_GITHUB_SECRET = originalSecret
+        }
+        if (originalAllowUnauth !== undefined) {
+          process.env.CAP_ALLOW_UNAUTHENTICATED = originalAllowUnauth
+        } else {
+          delete process.env.CAP_ALLOW_UNAUTHENTICATED
         }
       }
     })
@@ -230,20 +322,36 @@ describe('Watchers API', () => {
       }
     })
 
-    it('rejects invalid JSON payload', async () => {
-      const req = new Request('http://localhost:3001/api/watchers/github', {
-        body: 'not valid json {',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      })
+    it('rejects invalid JSON payload (with CAP_ALLOW_UNAUTHENTICATED to bypass sig check)', async () => {
+      const originalAllowUnauth = process.env.CAP_ALLOW_UNAUTHENTICATED
+      const originalSecret = process.env.CAP_GITHUB_SECRET
+      process.env.CAP_ALLOW_UNAUTHENTICATED = '1'
+      delete process.env.CAP_GITHUB_SECRET
 
-      const res = await app.fetch(req)
-      expect(res.status).toBe(400)
+      try {
+        const req = new Request('http://localhost:3001/api/watchers/github', {
+          body: 'not valid json {',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        })
 
-      const json = (await res.json()) as Record<string, unknown>
-      expect(json.error).toBe('Invalid JSON')
+        const res = await app.fetch(req)
+        expect(res.status).toBe(400)
+
+        const json = (await res.json()) as Record<string, unknown>
+        expect(json.error).toBe('Invalid JSON')
+      } finally {
+        if (originalAllowUnauth !== undefined) {
+          process.env.CAP_ALLOW_UNAUTHENTICATED = originalAllowUnauth
+        } else {
+          delete process.env.CAP_ALLOW_UNAUTHENTICATED
+        }
+        if (originalSecret !== undefined) {
+          process.env.CAP_GITHUB_SECRET = originalSecret
+        }
+      }
     })
   })
 
@@ -262,6 +370,14 @@ describe('Watchers API', () => {
 
         // Wrong signature should not match
         expect(watcher.validate(payload, 'sha256=wrong', secret)).toBe(false)
+      })
+
+      it('rejects when secret is empty (pure HMAC: no env coupling)', () => {
+        const watcher = new WebhookWatcher()
+        const payload = Buffer.from('test payload')
+        // validate() is a pure HMAC function — no secret always means reject,
+        // regardless of CAP_ALLOW_UNAUTHENTICATED. The bypass is the route layer's job.
+        expect(watcher.validate(payload, '', '')).toBe(false)
       })
 
       it('transforms raw event to dashboard_update', () => {
@@ -293,6 +409,14 @@ describe('Watchers API', () => {
 
         // Wrong signature should not match
         expect(watcher.validate(payload, 'sha256=wrong', secret)).toBe(false)
+      })
+
+      it('rejects when secret is empty (pure HMAC: no env coupling)', () => {
+        const watcher = new GithubWatcher()
+        const payload = Buffer.from('test payload')
+        // validate() is a pure HMAC function — no secret always means reject,
+        // regardless of CAP_ALLOW_UNAUTHENTICATED. The bypass is the route layer's job.
+        expect(watcher.validate(payload, '', '')).toBe(false)
       })
 
       it('transforms pull_request opened event to notify', () => {

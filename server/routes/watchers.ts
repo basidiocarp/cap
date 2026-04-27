@@ -6,6 +6,10 @@ import { registry } from '../lib/watchers/registry.ts'
 import { WebhookWatcher } from '../lib/watchers/webhook.ts'
 import { logger } from '../logger.ts'
 
+function isUnauthenticatedDevMode() {
+  return process.env.CAP_ALLOW_UNAUTHENTICATED === '1'
+}
+
 // Register watchers at module load time
 registry.register(new WebhookWatcher())
 registry.register(new GithubWatcher())
@@ -35,8 +39,12 @@ app.post('/webhook', async (c) => {
       return c.json({ error: 'Adapter not found' }, 500)
     }
 
-    // Validate signature
-    if (!adapter.validate(bodyBuffer, signature, webhookSecret)) {
+    // Validate signature — skip only in explicit dev-mode bypass.
+    // The bypass check lives here (route layer) rather than inside validate()
+    // so that validate() stays a pure HMAC function.
+    if (!webhookSecret && isUnauthenticatedDevMode()) {
+      logger.warn('webhook: secret not configured and CAP_ALLOW_UNAUTHENTICATED is set — allowing unsigned payload')
+    } else if (!adapter.validate(bodyBuffer, signature, webhookSecret)) {
       logger.warn('webhook: signature validation failed')
       return c.json({ error: 'Unauthorized' }, 401)
     }
@@ -84,8 +92,12 @@ app.post('/github', async (c) => {
       return c.json({ error: 'Adapter not found' }, 500)
     }
 
-    // Validate signature
-    if (!adapter.validate(bodyBuffer, signature, githubSecret)) {
+    // Validate signature — skip only in explicit dev-mode bypass.
+    // The bypass check lives here (route layer) rather than inside validate()
+    // so that validate() stays a pure HMAC function.
+    if (!githubSecret && isUnauthenticatedDevMode()) {
+      logger.warn('github: secret not configured and CAP_ALLOW_UNAUTHENTICATED is set — allowing unsigned payload')
+    } else if (!adapter.validate(bodyBuffer, signature, githubSecret)) {
       logger.warn('github: signature validation failed')
       return c.json({ error: 'Unauthorized' }, 401)
     }
