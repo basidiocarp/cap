@@ -2002,6 +2002,62 @@ describe('API Routes', () => {
       })
     })
 
+    it('rejects null task action body with 400 without calling the adapter', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify(null),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(taskActionSpy).not.toHaveBeenCalled()
+    })
+
+    it('rejects array task action body with 400 without calling the adapter', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify([]),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(taskActionSpy).not.toHaveBeenCalled()
+    })
+
+    it('rejects scalar task action body with 400 without calling the adapter', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify(42),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(taskActionSpy).not.toHaveBeenCalled()
+    })
+
+    it('rejects whitespace-only changed_by in task action body with 400 without calling the adapter', async () => {
+      const taskActionSpy = vi.spyOn(canopy, 'applyTaskAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/tasks/task-1/actions', {
+        body: JSON.stringify({ action: 'acknowledge_task', changed_by: '   ' }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(taskActionSpy).not.toHaveBeenCalled()
+    })
+
     it('forwards handoff action mutations to Canopy', async () => {
       const handoffActionSpy = vi.spyOn(canopy, 'applyHandoffAction').mockResolvedValue({
         handoff_id: 'handoff-1',
@@ -2065,6 +2121,64 @@ describe('API Routes', () => {
       await expect(res.json()).resolves.toMatchObject({
         error: 'Unsupported Canopy handoff action: not_real',
       })
+    })
+  })
+
+  describe('POST /api/canopy/handoffs/:handoffId/actions — malformed bodies', () => {
+    it('rejects null handoff action body with 400 without calling the adapter', async () => {
+      const handoffActionSpy = vi.spyOn(canopy, 'applyHandoffAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/handoffs/handoff-1/actions', {
+        body: JSON.stringify(null),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(handoffActionSpy).not.toHaveBeenCalled()
+    })
+
+    it('rejects array handoff action body with 400 without calling the adapter', async () => {
+      const handoffActionSpy = vi.spyOn(canopy, 'applyHandoffAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/handoffs/handoff-1/actions', {
+        body: JSON.stringify([]),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(handoffActionSpy).not.toHaveBeenCalled()
+    })
+
+    it('rejects scalar handoff action body with 400 without calling the adapter', async () => {
+      const handoffActionSpy = vi.spyOn(canopy, 'applyHandoffAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/handoffs/handoff-1/actions', {
+        body: JSON.stringify(42),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(handoffActionSpy).not.toHaveBeenCalled()
+    })
+
+    it('rejects whitespace-only changed_by in handoff action body with 400 without calling the adapter', async () => {
+      const handoffActionSpy = vi.spyOn(canopy, 'applyHandoffAction')
+
+      const req = new Request('http://localhost:3001/api/canopy/handoffs/handoff-1/actions', {
+        body: JSON.stringify({ action: 'cancel_handoff', changed_by: '   ' }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      })
+      const res = await app.fetch(req)
+
+      expect(res.status).toBe(400)
+      expect(handoffActionSpy).not.toHaveBeenCalled()
     })
   })
 

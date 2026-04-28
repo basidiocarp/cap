@@ -271,10 +271,14 @@ export interface ValidatedHandoffAction {
  * - enum values for verification_state, handoff_type, etc. are valid
  */
 export function validateTaskAction(body: unknown): ValidationResult<ValidatedTaskAction> {
+  // Guard against non-object bodies (null, arrays, scalars) before property access
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+    return { error: 'Canopy task action requires action and changed_by', ok: false }
+  }
   const b = body as TaskActionBody
 
-  // Required fields
-  if (!b.action || !b.changed_by) {
+  // Required fields — trim changed_by to reject whitespace-only identity strings
+  if (!b.action || !b.changed_by?.trim()) {
     return { error: 'Canopy task action requires action and changed_by', ok: false }
   }
 
@@ -422,10 +426,14 @@ export function validateTaskAction(body: unknown): ValidationResult<ValidatedTas
  * - action-specific field requirements (e.g., accept_handoff requires acting_agent_id)
  */
 export function validateHandoffAction(body: unknown): ValidationResult<ValidatedHandoffAction> {
+  // Guard against non-object bodies (null, arrays, scalars) before property access
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+    return { error: 'Canopy handoff action requires action and changed_by', ok: false }
+  }
   const b = body as HandoffActionBody
 
-  // Required fields
-  if (!b.action || !b.changed_by) {
+  // Required fields — trim changed_by to reject whitespace-only identity strings
+  if (!b.action || !b.changed_by?.trim()) {
     return { error: 'Canopy handoff action requires action and changed_by', ok: false }
   }
 

@@ -326,6 +326,26 @@ describe('Task action validators', () => {
         expect(result.data.priority).toBe('high')
       }
     })
+
+    it('rejects null body', () => {
+      const result = validateTaskAction(null)
+      expect(result).toEqual({ error: 'Canopy task action requires action and changed_by', ok: false })
+    })
+
+    it('rejects array body', () => {
+      const result = validateTaskAction([])
+      expect(result).toEqual({ error: 'Canopy task action requires action and changed_by', ok: false })
+    })
+
+    it('rejects scalar body', () => {
+      const result = validateTaskAction(42)
+      expect(result).toEqual({ error: 'Canopy task action requires action and changed_by', ok: false })
+    })
+
+    it('rejects whitespace-only changed_by', () => {
+      const result = validateTaskAction({ action: 'acknowledge_task', changed_by: '   ' })
+      expect(result).toEqual({ error: 'Canopy task action requires action and changed_by', ok: false })
+    })
   })
 
   describe('validateHandoffAction', () => {
@@ -391,6 +411,26 @@ describe('Task action validators', () => {
       if (result.ok) {
         expect(result.data.note).toBe('Rejection reason')
       }
+    })
+
+    it('rejects null body', () => {
+      const result = validateHandoffAction(null)
+      expect(result).toEqual({ error: 'Canopy handoff action requires action and changed_by', ok: false })
+    })
+
+    it('rejects array body', () => {
+      const result = validateHandoffAction([])
+      expect(result).toEqual({ error: 'Canopy handoff action requires action and changed_by', ok: false })
+    })
+
+    it('rejects scalar body', () => {
+      const result = validateHandoffAction(42)
+      expect(result).toEqual({ error: 'Canopy handoff action requires action and changed_by', ok: false })
+    })
+
+    it('rejects whitespace-only changed_by', () => {
+      const result = validateHandoffAction({ action: 'cancel_handoff', changed_by: '   ' })
+      expect(result).toEqual({ error: 'Canopy handoff action requires action and changed_by', ok: false })
     })
   })
 })

@@ -1699,7 +1699,17 @@ describe('Canopy page', () => {
     currentTaskDetail = structuredClone(mockTaskDetail)
     useCanopySnapshotMock.mockClear()
     useCanopyTaskActionMock.mockClear()
+    useCanopyTaskActionMock.mockImplementation(() => ({
+      error: null,
+      isPending: false,
+      mutate: taskActionMutateMock,
+    }))
     useCanopyHandoffActionMock.mockClear()
+    useCanopyHandoffActionMock.mockImplementation(() => ({
+      error: null,
+      isPending: false,
+      mutate: handoffActionMutateMock,
+    }))
     taskActionMutateMock.mockClear()
     handoffActionMutateMock.mockClear()
   })
@@ -2799,5 +2809,18 @@ describe('Canopy page', () => {
 
     expect(await screen.findByText('Could not load task detail for the selected Canopy task.')).toBeInTheDocument()
     expect(screen.getAllByText('task detail failed').length).toBeGreaterThan(0)
+  })
+
+  it('renders a visible error when a task action mutation fails', () => {
+    useCanopyTaskActionMock.mockImplementation(() => ({
+      error: new Error('canopy rejected the action'),
+      isPending: false,
+      mutate: taskActionMutateMock,
+    }))
+
+    renderWithProviders(<Canopy />, { route: '/canopy?task=task-1' })
+
+    // Error is surfaced in the operator actions panel — visible to the operator
+    expect(screen.getAllByText('canopy rejected the action').length).toBeGreaterThan(0)
   })
 })
