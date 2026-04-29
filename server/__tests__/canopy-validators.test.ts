@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { CANOPY_NOTIFICATION_EVENT_TYPES, parseNotificationRow } from '../canopy.ts'
 import { validateHandoffAction, validateTaskAction } from '../lib/canopy-validators'
 
 describe('Task action validators', () => {
@@ -473,5 +474,53 @@ describe('Task action validators', () => {
       const result = validateHandoffAction({ action: 'cancel_handoff', changed_by: '   ' })
       expect(result).toEqual({ error: 'Canopy handoff action requires action and changed_by', ok: false })
     })
+  })
+})
+
+describe('Notification event_type enum (F2.9)', () => {
+  // F2.6 and F2.7 are covered end-to-end in canopy-client.test.ts via the consumer
+  // fetch functions (validators are not exported from canopy.ts). This block covers
+  // F2.9: parseNotificationRow validates event_type against the closed septa enum.
+
+  const baseRow = {
+    agent_id: 'agent-1',
+    created_at: '2026-04-29T12:00:00Z',
+    notification_id: 'n-1',
+    payload: '{}',
+    seen: 0,
+    task_id: 'task-1',
+  }
+
+  it('exposes all 9 schema enum values verbatim', () => {
+    expect(CANOPY_NOTIFICATION_EVENT_TYPES.size).toBe(9)
+    for (const value of [
+      'task_assigned',
+      'task_completed',
+      'task_blocked',
+      'task_cancelled',
+      'evidence_received',
+      'handoff_ready',
+      'handoff_rejected',
+      'council_opened',
+      'council_closed',
+    ]) {
+      expect(CANOPY_NOTIFICATION_EVENT_TYPES.has(value)).toBe(true)
+    }
+  })
+
+  it('parseNotificationRow accepts a valid event_type', () => {
+    const result = parseNotificationRow({ ...baseRow, event_type: 'task_assigned' })
+    expect(result).not.toBeNull()
+    expect(result?.event_type).toBe('task_assigned')
+  })
+
+  it('parseNotificationRow returns null for an unknown event_type', () => {
+    const result = parseNotificationRow({ ...baseRow, event_type: 'definitely_not_in_enum' })
+    expect(result).toBeNull()
+  })
+
+  it('parseNotificationRow returns null for empty event_type', () => {
+    const result = parseNotificationRow({ ...baseRow, event_type: '' })
+    expect(result).toBeNull()
   })
 })

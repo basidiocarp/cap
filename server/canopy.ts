@@ -18,6 +18,7 @@ import {
 } from './lib/canopy-validators.ts'
 import { createCliRunner } from './lib/cli.ts'
 import { CANOPY_BIN, CANOPY_DB } from './lib/config.ts'
+import { logger } from './logger.ts'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Notification types
@@ -44,6 +45,22 @@ interface RawNotificationRow {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Notification event_type enum (mirrors septa/canopy-notification-v1.schema.json)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const CANOPY_NOTIFICATION_EVENT_TYPES = new Set([
+  'task_assigned',
+  'task_completed',
+  'task_blocked',
+  'task_cancelled',
+  'evidence_received',
+  'handoff_ready',
+  'handoff_rejected',
+  'council_opened',
+  'council_closed',
+])
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Notification DB accessors
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -55,7 +72,12 @@ function openReadWrite(): Database.Database {
   return new Database(CANOPY_DB, { fileMustExist: true })
 }
 
-function parseNotificationRow(row: RawNotificationRow): CanopyNotificationRow {
+export function parseNotificationRow(row: RawNotificationRow): CanopyNotificationRow | null {
+  if (!CANOPY_NOTIFICATION_EVENT_TYPES.has(row.event_type)) {
+    logger.warn({ event_type: row.event_type, notification_id: row.notification_id }, 'Unknown notification event_type')
+    return null
+  }
+
   let payload: Record<string, unknown> = {}
   try {
     const parsed: unknown = JSON.parse(row.payload)
@@ -88,7 +110,7 @@ export function listNotifications(limit = 20): CanopyNotificationRow[] {
          LIMIT ?`
       )
       .all(limit) as RawNotificationRow[]
-    return rows.map(parseNotificationRow)
+    return rows.map(parseNotificationRow).filter((row): row is CanopyNotificationRow => row !== null)
   } finally {
     db.close()
   }
@@ -141,7 +163,14 @@ function validateEvidenceRefs(payload: unknown, label: string): void {
 
 function validateCanopySnapshot(payload: unknown): void {
   const record = asRecord(payload)
-  if (record?.schema_version !== CANOPY_API_SCHEMA_VERSION || !Array.isArray(record.tasks) || !Array.isArray(record.evidence)) {
+  if (
+    record?.schema_version !== CANOPY_API_SCHEMA_VERSION ||
+    !Array.isArray(record.tasks) ||
+    !Array.isArray(record.evidence) ||
+    !asRecord(record.attention) ||
+    !asRecord(record.sla_summary) ||
+    !asRecord(record.drift_signals)
+  ) {
     throw new Error('Invalid payload from canopy api snapshot')
   }
   validateEvidenceRefs(payload, 'canopy api snapshot')
@@ -153,7 +182,9 @@ function validateCanopyTaskDetail(payload: unknown): void {
     record?.schema_version !== CANOPY_API_SCHEMA_VERSION ||
     !asRecord(record.task) ||
     !Array.isArray(record.allowed_actions) ||
-    !Array.isArray(record.evidence)
+    !Array.isArray(record.evidence) ||
+    !asRecord(record.attention) ||
+    !asRecord(record.sla_summary)
   ) {
     throw new Error('Invalid payload from canopy api task')
   }
