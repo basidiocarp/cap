@@ -57,6 +57,19 @@ function isRepairAction(value: unknown): boolean {
   )
 }
 
+function isInitPlanRepairAction(value: unknown): boolean {
+  if (!isRecord(value)) return false
+  if (typeof value.action_key !== 'string') return false
+  if (typeof value.command !== 'string') return false
+  if (typeof value.label !== 'string') return false
+  if (value.args !== undefined && !Array.isArray(value.args)) return false
+  if (value.tier !== undefined && typeof value.tier !== 'string') return false
+  if (value.description !== undefined && value.description !== null && typeof value.description !== 'string') {
+    return false
+  }
+  return true
+}
+
 function isDoctorCheck(value: unknown): boolean {
   return (
     isRecord(value) &&
@@ -100,7 +113,7 @@ function isStipeInitPlan(value: unknown): boolean {
     Array.isArray(value.steps) &&
     value.steps.every(isInitStep) &&
     Array.isArray(value.repair_actions) &&
-    value.repair_actions.every(isRepairAction)
+    value.repair_actions.every(isInitPlanRepairAction)
   )
 }
 
