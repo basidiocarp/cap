@@ -61,4 +61,103 @@ describe('Stipe contract parsers', () => {
       )
     ).toThrow('Invalid stipe init plan payload')
   })
+
+  it('accepts stipe doctor with null repair_action description', () => {
+    const parsed = parseStipeDoctorReport(
+      JSON.stringify({
+        checks: [],
+        healthy: true,
+        repair_actions: [{ command: 'restart-server', description: null, label: 'Restart', args: [], tier: 'primary' }],
+        schema_version: '1.0',
+        summary: 'All checks pass.',
+      })
+    ) as Record<string, unknown>
+
+    expect(parsed.schema_version).toBe('1.0')
+  })
+
+  it('accepts stipe doctor with null repair_action description in nested check', () => {
+    const parsed = parseStipeDoctorReport(
+      JSON.stringify({
+        checks: [
+          {
+            message: 'needs repair',
+            name: 'test-check',
+            passed: false,
+            repair_actions: [{ command: 'fix', description: null, label: 'Fix', args: [], tier: 'secondary' }],
+          },
+        ],
+        healthy: false,
+        repair_actions: [],
+        schema_version: '1.0',
+        summary: 'Check failed.',
+      })
+    ) as Record<string, unknown>
+
+    expect(parsed.schema_version).toBe('1.0')
+  })
+
+  it('accepts stipe init plan with null step detail', () => {
+    const parsed = parseStipeInitPlan(
+      JSON.stringify({
+        detected_clients: [],
+        detected_hosts: [],
+        dry_run: true,
+        repair_actions: [],
+        schema_version: '1.0',
+        selected_hosts: [],
+        steps: [{ detail: null, status: 'planned', title: 'Step title' }],
+      })
+    ) as Record<string, unknown>
+
+    expect(parsed.schema_version).toBe('1.0')
+  })
+
+  it('accepts stipe init plan with missing step detail', () => {
+    const parsed = parseStipeInitPlan(
+      JSON.stringify({
+        detected_clients: [],
+        detected_hosts: [],
+        dry_run: true,
+        repair_actions: [],
+        schema_version: '1.0',
+        selected_hosts: [],
+        steps: [{ status: 'planned', title: 'Step title' }],
+      })
+    ) as Record<string, unknown>
+
+    expect(parsed.schema_version).toBe('1.0')
+  })
+
+  it('still accepts stipe doctor with string repair_action description', () => {
+    const parsed = parseStipeDoctorReport(
+      JSON.stringify({
+        checks: [],
+        healthy: true,
+        repair_actions: [
+          { command: 'restart-server', description: 'Restart the server gracefully', label: 'Restart', args: [], tier: 'primary' },
+        ],
+        schema_version: '1.0',
+        summary: 'All checks pass.',
+      })
+    ) as Record<string, unknown>
+
+    expect(parsed.schema_version).toBe('1.0')
+  })
+
+  it('still accepts stipe init plan with string step detail', () => {
+    const parsed = parseStipeInitPlan(
+      JSON.stringify({
+        detected_clients: [],
+        detected_hosts: [],
+        dry_run: true,
+        repair_actions: [],
+        schema_version: '1.0',
+        selected_hosts: [],
+        steps: [{ detail: 'Register the hyphae MCP server.', status: 'planned', title: 'Register' }],
+      })
+    ) as Record<string, unknown>
+
+    expect(parsed.schema_version).toBe('1.0')
+  })
 })

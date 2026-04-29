@@ -50,7 +50,7 @@ function isRepairAction(value: unknown): boolean {
   return (
     isRecord(value) &&
     typeof value.command === 'string' &&
-    typeof value.description === 'string' &&
+    (typeof value.description === 'string' || value.description === null) &&
     typeof value.label === 'string' &&
     Array.isArray(value.args) &&
     typeof value.tier === 'string'
@@ -81,7 +81,12 @@ function isStipeDoctorReport(value: unknown): boolean {
 }
 
 function isInitStep(value: unknown): boolean {
-  return isRecord(value) && typeof value.title === 'string' && typeof value.detail === 'string' && typeof value.status === 'string'
+  return (
+    isRecord(value) &&
+    typeof value.title === 'string' &&
+    (typeof value.detail === 'string' || value.detail === null || value.detail === undefined) &&
+    typeof value.status === 'string'
+  )
 }
 
 function isStipeInitPlan(value: unknown): boolean {
