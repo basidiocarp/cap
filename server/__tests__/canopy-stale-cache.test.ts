@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as canopy from '../canopy'
 import { createApp } from '../index'
+import { clearSnapshotCache } from '../routes/canopy'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Canopy Stale-on-Error Cache Tests
@@ -12,7 +13,8 @@ describe('Canopy stale-on-error cache (/api/canopy/snapshot)', () => {
 
   beforeEach(() => {
     vi.restoreAllMocks()
-    // Create a fresh app instance for each test to reset module-level cache
+    // Clear the module-level stale cache so tests don't bleed into each other
+    clearSnapshotCache()
     app = createApp()
   })
 
@@ -171,5 +173,69 @@ describe('Canopy stale-on-error cache (/api/canopy/snapshot)', () => {
         sort: 'attention',
       })
     )
+  })
+
+  it('two-project: failure for project A does NOT return stale data from project B', async () => {
+    const snapshotSpy = vi.spyOn(canopy, 'getSnapshot')
+
+    const projectBSnapshot = {
+      agents: [],
+      evidence: [],
+      handoffs: [],
+      heartbeats: [],
+      tasks: [{ task_id: 'task-b', title: 'project B task' }],
+    }
+
+    // First request for project B succeeds and populates cache for project B
+    snapshotSpy.mockResolvedValue(projectBSnapshot)
+    const reqB = new Request('http://localhost:3001/api/canopy/snapshot?project=/workspace/project-b')
+    const resB = await app.fetch(reqB)
+    expect(resB.status).toBe(200)
+    const bodyB = (await resB.json()) as Record<string, unknown>
+    expect(bodyB.tasks).toEqual([{ task_id: 'task-b', title: 'project B task' }])
+
+    // Now make canopy fail for all requests
+    snapshotSpy.mockRejectedValue(new Error('Canopy CLI crashed'))
+
+    // Request for project A (different project) should NOT get project B stale data
+    const reqA = new Request('http://localhost:3001/api/canopy/snapshot?project=/workspace/project-a')
+    const resA = await app.fetch(reqA)
+
+    expect(resA.status).toBe(503)
+    const bodyA = (await resA.json()) as Record<string, unknown>
+    expect(bodyA.error).toBe('Canopy unavailable')
+    expect(bodyA.stale).toBe(false)
+  })
+
+  it('two-filter: failure for filter combo X does NOT return stale data from filter combo Y', async () => {
+    const snapshotSpy = vi.spyOn(canopy, 'getSnapshot')
+
+    const reviewQueueSnapshot = {
+      agents: [],
+      evidence: [],
+      handoffs: [],
+      heartbeats: [],
+      tasks: [{ task_id: 'task-review', title: 'review queue task' }],
+    }
+
+    // First request with preset=review_queue succeeds and populates that cache entry
+    snapshotSpy.mockResolvedValue(reviewQueueSnapshot)
+    const reqReview = new Request('http://localhost:3001/api/canopy/snapshot?project=/workspace/cap&preset=review_queue')
+    const resReview = await app.fetch(reqReview)
+    expect(resReview.status).toBe(200)
+    const bodyReview = (await resReview.json()) as Record<string, unknown>
+    expect(bodyReview.tasks).toEqual([{ task_id: 'task-review', title: 'review queue task' }])
+
+    // Now make canopy fail for all requests
+    snapshotSpy.mockRejectedValue(new Error('Canopy CLI crashed'))
+
+    // Request with a different filter (no preset) should NOT get review_queue stale data
+    const reqNoFilter = new Request('http://localhost:3001/api/canopy/snapshot?project=/workspace/cap')
+    const resNoFilter = await app.fetch(reqNoFilter)
+
+    expect(resNoFilter.status).toBe(503)
+    const bodyNoFilter = (await resNoFilter.json()) as Record<string, unknown>
+    expect(bodyNoFilter.error).toBe('Canopy unavailable')
+    expect(bodyNoFilter.stale).toBe(false)
   })
 })

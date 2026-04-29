@@ -16,43 +16,70 @@ import { logger } from '../logger.ts'
 
 const app = new Hono()
 
-// Stale-on-error cache for snapshot
-let _lastSnapshot: unknown = null
-let _lastSnapshotAt = 0
+// Stale-on-error cache for snapshot, keyed by normalized request parameters
+const _snapshotCache = new Map<string, { snapshot: unknown; at: number }>()
 const SNAPSHOT_STALE_MS = 60_000
+
+/** Clears the stale snapshot cache. Intended for use in tests only. */
+export function clearSnapshotCache(): void {
+  _snapshotCache.clear()
+}
+
+function snapshotCacheKey(opts: Record<string, string | undefined>): string {
+  const entries = Object.entries(opts)
+    .filter(([, v]) => v !== undefined)
+    .sort(([a], [b]) => a.localeCompare(b))
+  return JSON.stringify(Object.fromEntries(entries))
+}
 
 app.get('/snapshot', async (c) => {
   const start = Date.now()
-  try {
-    const rawAcknowledged = c.req.query('acknowledged')
-    const rawAttentionAtLeast = c.req.query('attention_at_least')
-    const rawPreset = c.req.query('preset')
-    const rawPriorityAtLeast = c.req.query('priority_at_least')
-    const rawSort = c.req.query('sort')
-    const rawSeverityAtLeast = c.req.query('severity_at_least')
-    const rawView = c.req.query('view')
 
-    const result = await canopy.getSnapshot({
-      acknowledged: rawAcknowledged && ALLOWED_ACKNOWLEDGED.has(rawAcknowledged) ? rawAcknowledged : undefined,
-      attentionAtLeast: rawAttentionAtLeast && ALLOWED_ATTENTION_LEVELS.has(rawAttentionAtLeast) ? rawAttentionAtLeast : undefined,
-      preset: rawPreset && ALLOWED_PRESETS.has(rawPreset) ? rawPreset : undefined,
-      priorityAtLeast: rawPriorityAtLeast && ALLOWED_PRIORITIES.has(rawPriorityAtLeast) ? rawPriorityAtLeast : undefined,
-      projectRoot: c.req.query('project') || undefined,
-      severityAtLeast: rawSeverityAtLeast && ALLOWED_SEVERITIES.has(rawSeverityAtLeast) ? rawSeverityAtLeast : undefined,
-      sort: rawSort && ALLOWED_SORTS.has(rawSort) ? rawSort : undefined,
-      view: rawView && ALLOWED_VIEWS.has(rawView) ? rawView : undefined,
-    })
+  const rawAcknowledged = c.req.query('acknowledged')
+  const rawAttentionAtLeast = c.req.query('attention_at_least')
+  const rawPreset = c.req.query('preset')
+  const rawPriorityAtLeast = c.req.query('priority_at_least')
+  const rawSort = c.req.query('sort')
+  const rawSeverityAtLeast = c.req.query('severity_at_least')
+  const rawView = c.req.query('view')
+  const rawProject = c.req.query('project') || undefined
+
+  const snapshotOpts = {
+    acknowledged: rawAcknowledged && ALLOWED_ACKNOWLEDGED.has(rawAcknowledged) ? rawAcknowledged : undefined,
+    attentionAtLeast: rawAttentionAtLeast && ALLOWED_ATTENTION_LEVELS.has(rawAttentionAtLeast) ? rawAttentionAtLeast : undefined,
+    preset: rawPreset && ALLOWED_PRESETS.has(rawPreset) ? rawPreset : undefined,
+    priorityAtLeast: rawPriorityAtLeast && ALLOWED_PRIORITIES.has(rawPriorityAtLeast) ? rawPriorityAtLeast : undefined,
+    projectRoot: rawProject,
+    severityAtLeast: rawSeverityAtLeast && ALLOWED_SEVERITIES.has(rawSeverityAtLeast) ? rawSeverityAtLeast : undefined,
+    sort: rawSort && ALLOWED_SORTS.has(rawSort) ? rawSort : undefined,
+    view: rawView && ALLOWED_VIEWS.has(rawView) ? rawView : undefined,
+  }
+
+  // Derive cache key from the normalized query parameters
+  const cacheKey = snapshotCacheKey({
+    acknowledged: snapshotOpts.acknowledged,
+    attentionAtLeast: snapshotOpts.attentionAtLeast,
+    preset: snapshotOpts.preset,
+    priorityAtLeast: snapshotOpts.priorityAtLeast,
+    project: snapshotOpts.projectRoot,
+    severityAtLeast: snapshotOpts.severityAtLeast,
+    sort: snapshotOpts.sort,
+    view: snapshotOpts.view,
+  })
+
+  try {
+    const result = await canopy.getSnapshot(snapshotOpts)
 
     const duration_ms = Date.now() - start
     logger.info({ duration_ms }, 'canopy snapshot fetched')
-    _lastSnapshot = result
-    _lastSnapshotAt = Date.now()
+    _snapshotCache.set(cacheKey, { snapshot: result, at: Date.now() })
     return c.json(result)
   } catch (_err) {
     const duration_ms = Date.now() - start
     logger.error({ duration_ms, error: _err instanceof Error ? _err.message : String(_err) }, 'canopy snapshot failed')
-    if (_lastSnapshot && Date.now() - _lastSnapshotAt < SNAPSHOT_STALE_MS) {
-      return c.json({ ...(_lastSnapshot as object), stale: true }, 200)
+    const cached = _snapshotCache.get(cacheKey)
+    if (cached && Date.now() - cached.at < SNAPSHOT_STALE_MS) {
+      return c.json({ ...(cached.snapshot as object), stale: true }, 200)
     }
     return c.json({ error: 'Canopy unavailable', stale: false }, 503)
   }
