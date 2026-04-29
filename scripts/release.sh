@@ -56,11 +56,11 @@ info "Updated package.json"
 
 info "Running quality checks..."
 
-npx @biomejs/biome check . || die "biome check failed — run 'npx @biomejs/biome check --write .' first"
+npm exec --offline -- biome check . || die "biome check failed — run 'npm run lint' first"
 info "Lint passed"
 
-npx tsc --noEmit || die "TypeScript type check failed"
-npx tsc --noEmit -p server/tsconfig.json || die "Server TypeScript type check failed"
+npm exec --offline -- tsc --noEmit || die "TypeScript type check failed"
+npm exec --offline -- tsc --noEmit -p server/tsconfig.json || die "Server TypeScript type check failed"
 info "Type check passed"
 
 npm run build || die "Build failed"

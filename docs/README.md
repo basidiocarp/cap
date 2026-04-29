@@ -14,6 +14,8 @@ Use this directory for repo-local Cap documentation.
   Cap-specific backlog and near-term work.
 - [design-choices.md](/Users/williamnewton/projects/basidiocarp/cap/docs/design-choices.md)
   UI and implementation tradeoffs.
+- [node-supply-chain-policy.md](/Users/williamnewton/projects/basidiocarp/cap/docs/node-supply-chain-policy.md)
+  Install commands, npx policy, native dependency allowlist, and release gate rules.
 
 ## Planning
 
