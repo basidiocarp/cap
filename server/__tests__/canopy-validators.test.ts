@@ -257,6 +257,47 @@ describe('Task action validators', () => {
       }
     })
 
+    // All kinds defined in septa/evidence-ref-v1.schema.json must be accepted by Cap.
+    // This list must be updated manually when the septa schema adds new source_kind values.
+    // Update both this constant and ALLOWED_EVIDENCE_SOURCE_KINDS in canopy-validators.ts.
+    const SEPTA_EVIDENCE_SOURCE_KINDS = [
+      'hyphae_session',
+      'hyphae_recall',
+      'hyphae_outcome',
+      'cortina_event',
+      'mycelium_command',
+      'mycelium_explain',
+      'rhizome_impact',
+      'rhizome_export',
+      'manual_note',
+      'script_verification',
+    ] as const
+
+    it.each(SEPTA_EVIDENCE_SOURCE_KINDS)('accepts septa-defined evidence source kind: %s', (kind) => {
+      const result = validateTaskAction({
+        action: 'attach_evidence',
+        changed_by: 'agent-1',
+        evidence_label: 'label',
+        evidence_source_kind: kind,
+        evidence_source_ref: 'ref-123',
+      })
+      expect(result.ok).toBe(true)
+      if (result.ok) {
+        expect(result.data.evidenceSourceKind).toBe(kind)
+      }
+    })
+
+    it('rejects unknown evidence source kind not in septa schema', () => {
+      const result = validateTaskAction({
+        action: 'attach_evidence',
+        changed_by: 'agent-1',
+        evidence_label: 'label',
+        evidence_source_kind: 'unknown_source',
+        evidence_source_ref: 'ref-123',
+      })
+      expect(result).toEqual({ error: 'attach_evidence requires a valid evidence_source_kind', ok: false })
+    })
+
     it('rejects create_follow_up_task without follow_up_title', () => {
       const result = validateTaskAction({ action: 'create_follow_up_task', changed_by: 'agent-1' })
       expect(result).toEqual({ error: 'create_follow_up_task requires a follow_up_title', ok: false })

@@ -91,3 +91,91 @@ describe('getAnnulusStatus', () => {
     expect(result.reports[0].degraded_capabilities).toEqual(['memory', 'search'])
   })
 })
+
+// This tests the `annulus status --json` output shape.
+// The septa `annulus-statusline-v1` schema covers the separate `annulus statusline --json` surface
+// used by the statusline hook, not this route.
+describe('annulus status --json output shape', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    runCliMock.mockReset()
+  })
+
+  it('parses the full real-world status output shape with schema and version fields', async () => {
+    // Fixture reflecting the real `annulus status --json` output shape:
+    // top-level object with schema, version, and reports array.
+    const fixture = {
+      reports: [
+        { available: true, degraded_capabilities: [], tier: 'tier1' as const, tool: 'mycelium' },
+        { available: true, degraded_capabilities: [], tier: 'tier1' as const, tool: 'hyphae' },
+        { available: false, degraded_capabilities: ['impact'], tier: 'tier2' as const, tool: 'rhizome' },
+        { available: true, degraded_capabilities: ['statusline'], tier: 'tier3' as const, tool: 'annulus' },
+      ],
+      schema: 'annulus-status-v1',
+      version: '1',
+    }
+
+    runCliMock.mockResolvedValue(JSON.stringify(fixture))
+
+    const { getAnnulusStatus } = await import('../annulus.ts')
+    const result = await getAnnulusStatus()
+
+    expect(result.available).toBe(true)
+    expect(result.reports).toHaveLength(4)
+    expect(result.reports[0]).toEqual({ available: true, degraded_capabilities: [], tier: 'tier1', tool: 'mycelium' })
+    expect(result.reports[1]).toEqual({ available: true, degraded_capabilities: [], tier: 'tier1', tool: 'hyphae' })
+    expect(result.reports[2]).toEqual({ available: false, degraded_capabilities: ['impact'], tier: 'tier2', tool: 'rhizome' })
+    expect(result.reports[3]).toEqual({ available: true, degraded_capabilities: ['statusline'], tier: 'tier3', tool: 'annulus' })
+  })
+
+  it('returns available:true even when some reports are unavailable', async () => {
+    const fixture = {
+      reports: [
+        { available: false, degraded_capabilities: ['search', 'recall'], tier: 'tier1' as const, tool: 'hyphae' },
+        { available: false, degraded_capabilities: [], tier: 'tier2' as const, tool: 'rhizome' },
+      ],
+      schema: 'annulus-status-v1',
+      version: '1',
+    }
+
+    runCliMock.mockResolvedValue(JSON.stringify(fixture))
+
+    const { getAnnulusStatus } = await import('../annulus.ts')
+    const result = await getAnnulusStatus()
+
+    // available:true means the annulus CLI itself responded; individual tool
+    // availability is carried in each report's own available field.
+    expect(result.available).toBe(true)
+    expect(result.reports).toHaveLength(2)
+    expect(result.reports[0].available).toBe(false)
+    expect(result.reports[0].degraded_capabilities).toEqual(['search', 'recall'])
+  })
+
+  it('returns available:false when reports field is missing', async () => {
+    runCliMock.mockResolvedValue(JSON.stringify({ schema: 'annulus-status-v1', version: '1' }))
+
+    const { getAnnulusStatus } = await import('../annulus.ts')
+    const result = await getAnnulusStatus()
+
+    expect(result).toEqual({ available: false, reports: [] })
+  })
+
+  it('accepts all three tier values in report entries', async () => {
+    const fixture = {
+      reports: [
+        { available: true, degraded_capabilities: [], tier: 'tier1' as const, tool: 'a' },
+        { available: true, degraded_capabilities: [], tier: 'tier2' as const, tool: 'b' },
+        { available: true, degraded_capabilities: [], tier: 'tier3' as const, tool: 'c' },
+      ],
+      schema: 'annulus-status-v1',
+      version: '1',
+    }
+
+    runCliMock.mockResolvedValue(JSON.stringify(fixture))
+
+    const { getAnnulusStatus } = await import('../annulus.ts')
+    const result = await getAnnulusStatus()
+
+    expect(result.reports.map((r) => r.tier)).toEqual(['tier1', 'tier2', 'tier3'])
+  })
+})

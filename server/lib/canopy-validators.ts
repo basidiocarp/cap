@@ -155,6 +155,7 @@ export const ALLOWED_EVIDENCE_SOURCE_KINDS = new Set([
   'rhizome_impact',
   'rhizome_export',
   'manual_note',
+  'script_verification',
 ])
 
 /**
