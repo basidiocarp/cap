@@ -86,7 +86,7 @@ function isGainProjectStats(value: unknown): value is GainProjectStats {
   )
 }
 
-function isGainCliOutput(value: unknown): value is GainCliOutput {
+export function isGainCliOutput(value: unknown): value is GainCliOutput {
   const record = asRecord(value)
   return (
     !!record &&
@@ -96,7 +96,9 @@ function isGainCliOutput(value: unknown): value is GainCliOutput {
     record.by_command.every(isGainCommandStats) &&
     (record.daily === undefined || (Array.isArray(record.daily) && record.daily.every(isGainDailyStats))) &&
     (record.history === undefined || (Array.isArray(record.history) && record.history.every(isGainHistoryEntry))) &&
-    (record.by_project === undefined || (Array.isArray(record.by_project) && record.by_project.every(isGainProjectStats)))
+    (record.by_project === undefined || (Array.isArray(record.by_project) && record.by_project.every(isGainProjectStats))) &&
+    (record.weekly === undefined || (Array.isArray(record.weekly) && record.weekly.every(isGainDailyStats))) &&
+    (record.monthly === undefined || (Array.isArray(record.monthly) && record.monthly.every(isGainDailyStats)))
   )
 }
 
