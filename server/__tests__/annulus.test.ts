@@ -178,4 +178,57 @@ describe('annulus status --json output shape', () => {
 
     expect(result.reports.map((r) => r.tier)).toEqual(['tier1', 'tier2', 'tier3'])
   })
+
+  it('returns available:false when schema is wrong', async () => {
+    runCliMock.mockResolvedValue(
+      JSON.stringify({
+        reports: [{ available: true, degraded_capabilities: [], tier: 'tier1', tool: 'mycelium' }],
+        schema: 'wrong-schema-name',
+        version: '1',
+      })
+    )
+
+    const { getAnnulusStatus } = await import('../annulus.ts')
+    const result = await getAnnulusStatus()
+
+    expect(result).toEqual({ available: false, reports: [] })
+  })
+
+  it('returns available:false when schema is missing', async () => {
+    runCliMock.mockResolvedValue(
+      JSON.stringify({
+        reports: [{ available: true, degraded_capabilities: [], tier: 'tier1', tool: 'mycelium' }],
+        version: '1',
+      })
+    )
+
+    const { getAnnulusStatus } = await import('../annulus.ts')
+    const result = await getAnnulusStatus()
+
+    expect(result).toEqual({ available: false, reports: [] })
+  })
+
+  it('returns available:false when version is wrong', async () => {
+    runCliMock.mockResolvedValue(
+      JSON.stringify({
+        reports: [{ available: true, degraded_capabilities: [], tier: 'tier1', tool: 'mycelium' }],
+        schema: 'annulus-status-v1',
+        version: '2',
+      })
+    )
+
+    const { getAnnulusStatus } = await import('../annulus.ts')
+    const result = await getAnnulusStatus()
+
+    expect(result).toEqual({ available: false, reports: [] })
+  })
+
+  it('accepts empty reports array', async () => {
+    runCliMock.mockResolvedValue(JSON.stringify({ reports: [], schema: 'annulus-status-v1', version: '1' }))
+
+    const { getAnnulusStatus } = await import('../annulus.ts')
+    const result = await getAnnulusStatus()
+
+    expect(result).toEqual({ available: true, reports: [] })
+  })
 })

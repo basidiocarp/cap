@@ -53,6 +53,12 @@ function parseAnnulusOutput(stdout: string): AnnulusStatusResult {
   }
 
   const payload = parsed as Record<string, unknown>
+  if (payload.schema !== 'annulus-status-v1') {
+    throw new Error(`annulus status --json schema mismatch: expected annulus-status-v1, got ${payload.schema}`)
+  }
+  if (payload.version !== '1') {
+    throw new Error(`annulus status --json version mismatch: expected "1", got ${payload.version}`)
+  }
   if (!Array.isArray(payload.reports)) {
     throw new Error('annulus status --json missing reports array')
   }
