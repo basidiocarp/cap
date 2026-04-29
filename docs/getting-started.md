@@ -41,11 +41,11 @@ Dashboard shows ecosystem health badges (Hyphae ✓/✗, Mycelium ✓/✗, Rhizo
 
 Memories is a browse-first interface. Start with topic cards showing memory count and average weight per topic. Click a topic to see all memories in a table with summary, importance level, weight, keywords, and age. Search memories by FTS (full-text search) or click the "Memories" link from any topic. Click a memory row to open a detail modal showing raw excerpt, topic, weight progress, access count, keywords, created/updated/accessed dates, and related memory IDs.
 
-Memoirs is a concept graph explorer. It lists all knowledge graphs and allows searching across all concepts. Click a memoir to explore its concept graph with interactive visualization. Use the depth slider to control BFS traversal depth (1–5 hops). Node colors represent concept kinds (function, class, interface, module, other). Edge colors show relation types (calls, contains, implements, imports). Click a concept node to inspect it with its full neighborhood.
+Memoirs is a concept graph explorer. It lists all knowledge graphs and allows searching across all concepts. Click a memoir to explore its concept graph with interactive visualization. Use the depth slider to control BFS traversal depth (1–4 hops). Node colors represent concept kinds (function, class, interface, module, other). Edge colors show relation types (calls, contains, implements, imports). Click a concept node to inspect it with its full neighborhood.
 
 Analytics is a multi-tab dashboard covering token savings trends, command history, memory health metrics, code intelligence coverage, ecosystem status, telemetry events, and usage/cost analysis. The Token Savings tab shows total tokens saved and per-command breakdown. Command History displays executed commands and their results. Memory Health displays topic health, weight distribution, and consolidation recommendations. Code Intelligence lists indexed languages and symbol counts. Ecosystem shows ecosystem tool status and integration health. Telemetry shows event frequency. Usage/Cost breaks down sessions and API call costs.
 
-Code Explorer is a file tree browser with symbol outline. Navigate the project file tree on the left; click a file to show its symbols (functions, classes, types, constants) on the right. Click a symbol to jump to it with syntax highlighting. The Tests and Annotations tabs show test definitions and code comments/annotations. Use "Find References" to see all usages of a selected symbol across the project.
+Code Explorer is a file tree browser with symbol outline. Navigate the project file tree on the left; click a file to show its symbols (functions, classes, types, constants) on the right. Click a symbol to jump to it in a plain code block view. The Tests and Annotations tabs show test definitions and code comments/annotations. Use "Find References" to see all usages of a selected symbol across the project.
 
 Symbol Search is a global cross-project symbol search. Type a symbol name (function, class, type, constant) and see matches across the entire codebase. Results show file path, line number, and symbol kind. Click a result to open the Code Explorer at that symbol's location.
 
@@ -58,7 +58,7 @@ Settings handles configuration and system management. Each tool card shows the r
 - `Env override`: an environment variable selected this path
 - `Platform default`: Cap is using the current OS default path because no override file was found
 
-Mycelium shows config path and integration toggles. Hyphae shows config path, database path, size, and pruning options (set a weight threshold to delete old, fading memories). Rhizome shows config path, auto-export state, and language coverage. LSP Manager lets you install/uninstall language servers and view their status and version.
+Mycelium shows config path and integration toggles. Hyphae shows config path, database path, size, and pruning options (set a weight threshold to delete old, fading memories). Rhizome shows config path, auto-export state, and language coverage. LSP Manager lets you install language servers and view their status and version.
 
 ## Troubleshooting
 
@@ -92,7 +92,7 @@ Start in dev mode to get hot reloads:
 npm run dev:all    # Frontend and backend with file watching
 ```
 
-Frontend changes auto-reload in the browser. Backend changes require a manual restart.
+Frontend changes auto-reload in the browser. Backend changes auto-restart via `tsx watch` when running `dev:server` or `dev:all`.
 
 Build for production:
 
@@ -119,6 +119,12 @@ npm run lint       # Biome check and auto-fix
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `3001` | Backend server port |
+| `CAP_HOST` | `127.0.0.1` | Server bind address. Non-loopback requires `CAP_API_KEY`. |
+| `CAP_API_KEY` | unset | Bearer token for API auth. Required when binding to a non-loopback address. |
+| `CAP_ALLOW_UNAUTHENTICATED` | unset | Set to `1` to disable auth (dev/test only). Logs a warning. |
+| `CORS_ORIGIN` | `http://localhost:5173` | Allowed frontend origin for CORS. |
+| `CAP_WEBHOOK_SECRET` | unset | HMAC secret for `/api/watchers/webhook`. Required unless `CAP_ALLOW_UNAUTHENTICATED=1`. |
+| `CAP_GITHUB_SECRET` | unset | HMAC secret for `/api/watchers/github`. Required unless `CAP_ALLOW_UNAUTHENTICATED=1`. |
 | `HYPHAE_DB` | `~/.local/share/hyphae/hyphae.db` | Path to Hyphae database |
 | `HYPHAE_BIN` | `hyphae` | Hyphae CLI binary (must be in PATH) |
 | `MYCELIUM_BIN` | `mycelium` | Mycelium CLI binary (must be in PATH) |
@@ -126,6 +132,24 @@ npm run lint       # Biome check and auto-fix
 | `RHIZOME_PROJECT` | `process.cwd()` | Project root for Rhizome analysis |
 | `NODE_ENV` | — | Set to `production` for prod-style logging |
 | `LOG_LEVEL` | `debug` or `info` | Pino log level |
+
+### Auth and local-dev mode
+
+The default bind address (`CAP_HOST=127.0.0.1`) with no `CAP_API_KEY` is the local-dev pass-through: all routes are open and no token is required. This is intentional and safe on loopback.
+
+If you bind to a non-loopback address (e.g. `CAP_HOST=0.0.0.0` for LAN access), set `CAP_API_KEY` or Cap will refuse all API requests with a `503` to prevent unauthenticated network exposure:
+
+```bash
+CAP_HOST=0.0.0.0 CAP_API_KEY=my-secret npm run dev:server
+```
+
+For automated tests or local setups where you want to skip auth entirely:
+
+```bash
+CAP_ALLOW_UNAUTHENTICATED=1 npm run dev:server
+```
+
+This logs a visible warning on startup. Do not use in production.
 
 Example:
 
