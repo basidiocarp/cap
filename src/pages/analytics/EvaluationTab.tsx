@@ -82,24 +82,17 @@ export function EvaluationTab({ data }: { data: EvaluationResult | null }) {
       <SectionCard title='Period Configuration'>
         <Stack gap='sm'>
           <Grid>
-            <Grid.Col span={{ base: 12, md: 4 }}>
+            <Grid.Col span={{ base: 12, md: 6 }}>
               <KpiCard
                 accent='mycelium.7'
                 label='Evaluation Window'
                 value={`${data.days} days`}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 4 }}>
+            <Grid.Col span={{ base: 12, md: 6 }}>
               <KpiCard
                 accent='mycelium.6'
-                label='Previous Period'
-                value={`${data.half_days} days`}
-              />
-            </Grid.Col>
-            <Grid.Col span={{ base: 12, md: 4 }}>
-              <KpiCard
-                accent='mycelium.6'
-                label='Recent Period'
+                label='Each Half-Period'
                 value={`${data.half_days} days`}
               />
             </Grid.Col>

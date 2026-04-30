@@ -43,8 +43,6 @@ export function SettingsPage() {
     <Stack>
       <Title order={2}>Settings</Title>
 
-      <ErrorAlert error={error} />
-
       <Alert
         color='gray'
         title={toolGuidance.title}

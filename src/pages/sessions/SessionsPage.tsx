@@ -35,18 +35,16 @@ export function SessionsPage() {
     return <PageLoader />
   }
 
-  if (timelineQuery.error) {
-    return (
-      <ErrorAlert
-        error={timelineQuery.error}
-        title='Failed to load session timeline'
-      />
-    )
-  }
-
   return (
     <Stack gap='lg'>
       <Title order={2}>Sessions Timeline</Title>
+
+      {timelineQuery.error ? (
+        <ErrorAlert
+          error={timelineQuery.error}
+          title='Failed to load session timeline'
+        />
+      ) : null}
 
       <ProjectContextSummary
         activeProject={projectQuery.data?.active}

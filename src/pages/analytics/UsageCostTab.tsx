@@ -53,12 +53,9 @@ function summarizeUsageHistory(sessions: SessionUsage[] | null) {
 export function UsageCostTab({ aggregate, sessions, trend }: Props) {
   if (!aggregate) {
     return (
-      <Text
-        c='dimmed'
-        size='sm'
-      >
-        No usage data available. Session transcripts will be parsed when available.
-      </Text>
+      <EmptyState>
+        No usage data yet. Session cost data appears after Claude Code or Codex session transcripts are parsed.
+      </EmptyState>
     )
   }
 

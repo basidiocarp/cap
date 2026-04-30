@@ -1,6 +1,7 @@
 import { Stack, Title } from '@mantine/core'
 import { useState } from 'react'
 
+import { ErrorAlert } from '../../components/ErrorAlert'
 import { PageLoader } from '../../components/PageLoader'
 import {
   useCommandHistory,
@@ -31,23 +32,20 @@ export function AnalyticsPage() {
 
   const { data: ecosystemData = null } = useEcosystemStatus(isEcosystemTabActive)
   const { data: evaluationData = null } = useEvaluation(14, isEvaluationTabActive)
-  const { data: hyphaeData = null, isLoading: hyphaeLoading } = useHyphaeAnalytics()
-  const { data: myceliumData = null, isLoading: myceliumLoading } = useMyceliumAnalytics()
-  const { data: rhizomeData = null, isLoading: rhizomeLoading } = useRhizomeAnalytics()
-  const { data: telemetryData = null, isLoading: telemetryLoading } = useTelemetry(isTelemetryTabActive)
-  const { data: usageAggregate = null, isLoading: usageAggregateLoading } = useUsageAggregate(isUsageTabActive)
-  const { data: usageTrend = null, isLoading: usageTrendLoading } = useUsageTrend(30, isUsageTabActive)
-  const { data: usageSessions = null, isLoading: usageSessionsLoading } = useUsageSessions(20, isUsageTabActive)
+  const { data: hyphaeData = null, error: hyphaeError, isLoading: hyphaeLoading } = useHyphaeAnalytics()
+  const { data: myceliumData = null, error: myceliumError, isLoading: myceliumLoading } = useMyceliumAnalytics()
+  const { data: rhizomeData = null, error: rhizomeError, isLoading: rhizomeLoading } = useRhizomeAnalytics()
+  const { data: telemetryData = null } = useTelemetry(isTelemetryTabActive)
+  const { data: usageAggregate = null } = useUsageAggregate(isUsageTabActive)
+  const { data: usageTrend = null } = useUsageTrend(30, isUsageTabActive)
+  const { data: usageSessions = null } = useUsageSessions(20, isUsageTabActive)
   const { data: commandHistory = null } = useCommandHistory(50, isCommandHistoryTabActive)
 
-  const loading =
-    hyphaeLoading ||
-    myceliumLoading ||
-    rhizomeLoading ||
-    telemetryLoading ||
-    usageAggregateLoading ||
-    usageTrendLoading ||
-    usageSessionsLoading
+  // Only the three always-on queries gate the summary cards spinner.
+  // Tab-scoped queries (telemetry, usage, etc.) manage their own loading within each tab.
+  const loading = hyphaeLoading || myceliumLoading || rhizomeLoading
+
+  const dataError = hyphaeError ?? myceliumError ?? rhizomeError
 
   const totalTokensSaved = myceliumData ? myceliumData.total_stats.total_tokens_saved : null
   const memoryUtilization = hyphaeData ? Math.round(hyphaeData.memory_utilization.rate * 100) : null
@@ -58,6 +56,8 @@ export function AnalyticsPage() {
       <Title order={2}>Analytics</Title>
 
       <AnalyticsHeader />
+
+      {dataError ? <ErrorAlert error={dataError} title='Analytics data partially unavailable' /> : null}
 
       {loading && <PageLoader mt='xl' />}
 

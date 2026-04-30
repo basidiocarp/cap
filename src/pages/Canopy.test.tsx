@@ -1654,12 +1654,12 @@ const useCanopySnapshotMock = vi.fn(
 const taskActionMutateMock = vi.fn()
 const handoffActionMutateMock = vi.fn()
 const useCanopyTaskActionMock = vi.fn(() => ({
-  error: null,
+  error: null as Error | null,
   isPending: false,
   mutate: taskActionMutateMock,
 }))
 const useCanopyHandoffActionMock = vi.fn(() => ({
-  error: null,
+  error: null as Error | null,
   isPending: false,
   mutate: handoffActionMutateMock,
 }))

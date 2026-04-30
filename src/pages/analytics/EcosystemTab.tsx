@@ -142,17 +142,6 @@ export function EcosystemTab({ data }: { data: EcosystemStatus | null }) {
         </Stack>
       </SectionCard>
 
-      <SectionCard title='Segment Context Usage'>
-        <Stack gap='sm'>
-          <Text
-            c='dimmed'
-            size='sm'
-          >
-            Context usage monitoring for active segments is enabled through the ecosystem health checks. This provides real-time visibility
-            into how context is being consumed across system segments.
-          </Text>
-        </Stack>
-      </SectionCard>
     </Stack>
   )
 }

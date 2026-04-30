@@ -13,25 +13,24 @@ export function LessonsPage() {
     return <PageLoader />
   }
 
-  if (lessonsQuery.error) {
-    return (
-      <ErrorAlert
-        error={lessonsQuery.error}
-        title='Failed to load lessons'
-      />
-    )
-  }
-
   const lessons = lessonsQuery.data ?? []
   const correctionLessons = lessons.filter((lesson) => lesson.category === 'corrections')
   const errorLessons = lessons.filter((lesson) => lesson.category === 'errors')
   const testLessons = lessons.filter((lesson) => lesson.category === 'tests')
+  const hasKnownCategories = correctionLessons.length > 0 || errorLessons.length > 0 || testLessons.length > 0
 
   return (
     <Stack gap='lg'>
       <Title order={2}>Lessons</Title>
 
-      {lessons.length === 0 ? (
+      {lessonsQuery.error ? (
+        <ErrorAlert
+          error={lessonsQuery.error}
+          title='Failed to load lessons'
+        />
+      ) : null}
+
+      {!lessonsQuery.error && lessons.length === 0 ? (
         <SectionCard title='Extracted Lessons'>
           <Stack gap='sm'>
             <Text
@@ -42,7 +41,7 @@ export function LessonsPage() {
             </Text>
           </Stack>
         </SectionCard>
-      ) : (
+      ) : hasKnownCategories ? (
         <>
           <LessonSection
             description='Patterns from self-corrections and iterative refinements'
@@ -60,7 +59,16 @@ export function LessonsPage() {
             title='Tests Fixed'
           />
         </>
-      )}
+      ) : lessons.length > 0 ? (
+        <SectionCard title='Extracted Lessons'>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
+            {lessons.length} lesson{lessons.length !== 1 ? 's' : ''} recorded — category breakdown not available for this data.
+          </Text>
+        </SectionCard>
+      ) : null}
     </Stack>
   )
 }

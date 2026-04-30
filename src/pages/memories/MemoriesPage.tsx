@@ -63,9 +63,12 @@ export function MemoriesPage() {
         />
       </Stack>
 
-      <ErrorAlert error={error} />
+      <ErrorAlert
+        error={error}
+        title='Memory search failed'
+      />
 
-      {showBrowseView ? (
+      {showBrowseView && !loading ? (
         <MemoryBrowseView
           onTopicClick={handleTopicClick}
           topics={topics}

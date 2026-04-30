@@ -7,6 +7,7 @@ export const myceliumKeys = {
   commandHistory: (limit?: number, project?: string) => ['mycelium', 'commandHistory', limit, project] as const,
   gain: () => ['mycelium', 'gain'] as const,
   gainHistory: () => ['mycelium', 'gainHistory'] as const,
+  gainProjects: () => ['mycelium', 'gain', 'projects'] as const,
 }
 
 export function useGain() {

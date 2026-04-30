@@ -1,5 +1,5 @@
 import { Button, Group, Stack, Text, Title } from '@mantine/core'
-import { IconArrowRight, IconRefresh } from '@tabler/icons-react'
+import { IconArrowLeft, IconRefresh } from '@tabler/icons-react'
 import { Link } from 'react-router-dom'
 
 import type { OnboardingAction } from '../lib/onboarding'
@@ -87,7 +87,7 @@ export function Onboard() {
         <Group>
           <Button
             component={Link}
-            leftSection={<IconArrowRight size={14} />}
+            leftSection={<IconArrowLeft size={14} />}
             to='/status'
             variant='subtle'
           >

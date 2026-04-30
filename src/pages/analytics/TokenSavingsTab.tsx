@@ -8,6 +8,7 @@ import { ActionEmptyState } from '../../components/ActionEmptyState'
 import { KpiCard } from '../../components/KpiCard'
 import { SectionCard } from '../../components/SectionCard'
 import { myceliumApi } from '../../lib/api/mycelium'
+import { myceliumKeys } from '../../lib/queries'
 import { ChartBox } from './ChartBox'
 
 function shortenProjectPath(path: string, maxComponents: number = 2): string {
@@ -21,7 +22,7 @@ export function TokenSavingsTab({ data }: { data: MyceliumAnalytics | null }) {
   const { data: projectsGain } = useQuery({
     enabled: !!data,
     queryFn: () => myceliumApi.gainProjects(),
-    queryKey: ['mycelium', 'gain', 'projects'],
+    queryKey: myceliumKeys.gainProjects(),
   })
 
   if (!data) {
