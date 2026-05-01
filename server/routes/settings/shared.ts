@@ -3,6 +3,8 @@ import { promisify } from 'node:util'
 
 import { createCliRunner } from '../../lib/cli.ts'
 import { HYPHAE_BIN } from '../../lib/config.ts'
+import { callLocalService } from '../../lib/local-service.ts'
+import { logger } from '../../logger.ts'
 
 const runHyphae = createCliRunner(HYPHAE_BIN, 'hyphae')
 const exec = promisify(execFile)
@@ -134,11 +136,23 @@ export function parseStipeInitPlan(raw: string): unknown {
 }
 
 export async function runStipeDoctorReport<T = unknown>(): Promise<T> {
+  try {
+    const result = await callLocalService('stipe', 'stipe_doctor', {})
+    if (result) return parseStipeDoctorReport(result) as T
+  } catch (err) {
+    logger.debug({ err }, 'stipe socket unavailable for doctor, falling back to CLI')
+  }
   const output = await runStipe(['doctor', '--json'])
   return parseStipeDoctorReport(output) as T
 }
 
 export async function runStipeInitPlan<T = unknown>(): Promise<T> {
+  try {
+    const result = await callLocalService('stipe', 'stipe_init_plan', {})
+    if (result) return parseStipeInitPlan(result) as T
+  } catch (err) {
+    logger.debug({ err }, 'stipe socket unavailable for init plan, falling back to CLI')
+  }
   const output = await runStipe(['init', '--dry-run', '--json'])
   return parseStipeInitPlan(output) as T
 }

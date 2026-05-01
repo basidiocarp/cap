@@ -9,6 +9,7 @@ import type {
 } from './types.ts'
 import { createCliRunner } from '../lib/cli.ts'
 import { MYCELIUM_BIN } from '../lib/config.ts'
+import { callLocalService } from '../lib/local-service.ts'
 import { logger } from '../logger.ts'
 
 const run = createCliRunner(MYCELIUM_BIN, 'mycelium')
@@ -117,6 +118,16 @@ export async function getGain(
   format: 'json' | 'text' = 'json',
   options?: { projectPath?: string }
 ): Promise<GainCliOutput | GainTextResult> {
+  if (format === 'json') {
+    try {
+      const params: Record<string, unknown> = { format: 'json' }
+      if (options?.projectPath?.trim()) params.project_path = options.projectPath.trim()
+      const raw = await callLocalService('mycelium', 'mycelium_gain', params)
+      if (raw) return parseGainOutput(raw)
+    } catch (err) {
+      logger.debug({ err }, 'mycelium socket unavailable for getGain, falling back to CLI')
+    }
+  }
   const args = ['gain', '--format', format]
   if (options?.projectPath?.trim()) {
     args.splice(1, 0, '--project-path', options.projectPath.trim())
@@ -130,17 +141,36 @@ export async function getGainHistory(
   format: 'json' | 'text' = 'json',
   options: { limit?: number; projectPath?: string } = {}
 ): Promise<GainCliOutput | GainTextResult> {
+  if (format === 'json') {
+    try {
+      const params: Record<string, unknown> = {
+        format: 'json',
+        history: true,
+        limit: options.limit ?? 50,
+      }
+      if (options.projectPath?.trim()) params.project_path = options.projectPath.trim()
+      const raw = await callLocalService('mycelium', 'mycelium_gain', params)
+      if (raw) return parseGainOutput(raw)
+    } catch (err) {
+      logger.debug({ err }, 'mycelium socket unavailable for getGainHistory, falling back to CLI')
+    }
+  }
   const args = ['gain', '--history', '--limit', String(options.limit ?? 50), '--format', format]
   if (options.projectPath?.trim()) {
     args.splice(1, 0, '--project-path', options.projectPath.trim())
   }
-
   const raw = await run(args)
   if (format === 'json') return parseGainOutput(raw)
   return { raw }
 }
 
 export async function getDailyGainOutput(): Promise<GainCliOutput | null> {
+  try {
+    const raw = await callLocalService('mycelium', 'mycelium_gain', { daily: true, format: 'json' })
+    if (raw) return parseGainOutput(raw)
+  } catch (err) {
+    logger.debug({ err }, 'mycelium socket unavailable for getDailyGainOutput, falling back to CLI')
+  }
   try {
     const raw = await run(['gain', '--daily', '--format', 'json'])
     return parseGainOutput(raw)
@@ -151,6 +181,12 @@ export async function getDailyGainOutput(): Promise<GainCliOutput | null> {
 }
 
 export async function getProjectsGain(): Promise<GainProjectStats[]> {
+  try {
+    const raw = await callLocalService('mycelium', 'mycelium_gain', { projects: true, format: 'json' })
+    if (raw) return parseGainOutput(raw).by_project ?? []
+  } catch (err) {
+    logger.debug({ err }, 'mycelium socket unavailable for getProjectsGain, falling back to CLI')
+  }
   try {
     const raw = await run(['gain', '--projects', '--format', 'json'])
     const parsed = parseGainOutput(raw)
