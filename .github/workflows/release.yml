@@ -16,6 +16,8 @@ jobs:
   build:
     name: Build release assets
     runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ""
     steps:
       - uses: actions/checkout@v6.0.2
 

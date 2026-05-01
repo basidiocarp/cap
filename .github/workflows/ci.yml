@@ -16,6 +16,8 @@ concurrency:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ""
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0
@@ -27,6 +29,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ""
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0
@@ -38,6 +42,8 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ""
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: actions/setup-node@v6.3.0
