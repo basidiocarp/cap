@@ -20,7 +20,7 @@ jobs:
       NODE_AUTH_TOKEN: ""
     steps:
       - uses: actions/checkout@v6.0.2
-      - uses: actions/setup-node@v6.3.0
+      - uses: actions/setup-node@v6.4.0
         with:
           node-version: 24
           cache: npm
@@ -33,7 +33,7 @@ jobs:
       NODE_AUTH_TOKEN: ""
     steps:
       - uses: actions/checkout@v6.0.2
-      - uses: actions/setup-node@v6.3.0
+      - uses: actions/setup-node@v6.4.0
         with:
           node-version: 24
           cache: npm
@@ -46,7 +46,7 @@ jobs:
       NODE_AUTH_TOKEN: ""
     steps:
       - uses: actions/checkout@v6.0.2
-      - uses: actions/setup-node@v6.3.0
+      - uses: actions/setup-node@v6.4.0
         with:
           node-version: 24
           cache: npm
