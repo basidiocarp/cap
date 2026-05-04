@@ -18,6 +18,7 @@ import {
 } from './lib/canopy-validators.ts'
 import { createCliRunner } from './lib/cli.ts'
 import { CANOPY_BIN, CANOPY_DB } from './lib/config.ts'
+import { callLocalService } from './lib/local-service.ts'
 import { logger } from './logger.ts'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -209,9 +210,7 @@ export async function getSnapshot<T = unknown>(options?: {
   sort?: string
   view?: string
 }): Promise<T> {
-  const args = ['api', 'snapshot']
-  if (options?.projectRoot) args.push('--project-root', options.projectRoot)
-
+  // Validate and normalize options
   const view = options?.view && ALLOWED_VIEWS.has(options.view) ? options.view : undefined
   const sort = options?.sort && ALLOWED_SORTS.has(options.sort) ? options.sort : undefined
   const preset = options?.preset && ALLOWED_PRESETS.has(options.preset) ? options.preset : undefined
@@ -220,6 +219,32 @@ export async function getSnapshot<T = unknown>(options?: {
   const attentionAtLeast =
     options?.attentionAtLeast && ALLOWED_ATTENTION_LEVELS.has(options.attentionAtLeast) ? options.attentionAtLeast : undefined
   const acknowledged = options?.acknowledged && ALLOWED_ACKNOWLEDGED.has(options.acknowledged) ? options.acknowledged : undefined
+
+  // Try socket first
+  try {
+    const socketParams: Record<string, unknown> = {}
+    if (options?.projectRoot) socketParams.project_root = options.projectRoot
+    if (preset && preset !== 'default') socketParams.preset = preset
+    if (view && view !== 'all') socketParams.view = view
+    if (sort && sort !== 'status') socketParams.sort = sort
+    if (priorityAtLeast) socketParams.priority_at_least = priorityAtLeast
+    if (severityAtLeast) socketParams.severity_at_least = severityAtLeast
+    if (attentionAtLeast) socketParams.attention_at_least = attentionAtLeast
+    if (acknowledged) socketParams.acknowledged = acknowledged === 'true' // ALLOWED_ACKNOWLEDGED only contains "true" and "false"; boolean conversion is safe
+
+    const result = await callLocalService('canopy', 'canopy_snapshot', socketParams)
+    if (result) {
+      const parsed = parseJson<T>(result, 'canopy snapshot')
+      validateCanopySnapshot(parsed)
+      return parsed
+    }
+  } catch (err) {
+    logger.debug({ err }, 'canopy socket unavailable for snapshot, falling back to CLI')
+  }
+
+  // Fall back to CLI
+  const args = ['api', 'snapshot']
+  if (options?.projectRoot) args.push('--project-root', options.projectRoot)
 
   if (preset && preset !== 'default') args.push('--preset', preset)
   if (view && view !== 'all') args.push('--view', view)
@@ -236,6 +261,19 @@ export async function getSnapshot<T = unknown>(options?: {
 }
 
 export async function getTaskDetail<T = unknown>(taskId: string): Promise<T> {
+  // Try socket first
+  try {
+    const result = await callLocalService('canopy', 'canopy_task', { task_id: taskId })
+    if (result) {
+      const parsed = parseJson<T>(result, 'canopy task')
+      validateCanopyTaskDetail(parsed)
+      return parsed
+    }
+  } catch (err) {
+    logger.debug({ err }, 'canopy socket unavailable for task detail, falling back to CLI')
+  }
+
+  // Fall back to CLI
   const raw = await run(['api', 'task', '--task-id', taskId])
   const parsed = parseJson<T>(raw, 'canopy api task')
   validateCanopyTaskDetail(parsed)
@@ -437,13 +475,29 @@ export async function applyHandoffAction<T = unknown>(
 
 export async function getAgents<T = unknown>(options?: { projectRoot?: string }): Promise<T[]> {
   try {
+    // Try socket first
+    try {
+      const socketParams: Record<string, unknown> = {}
+      if (options?.projectRoot) socketParams.project_root = options.projectRoot
+
+      const result = await callLocalService('canopy', 'canopy_agents', socketParams)
+      if (result) {
+        const parsed = parseJson<T[]>(result, 'canopy agents')
+        return Array.isArray(parsed) ? parsed : []
+      }
+    } catch (err) {
+      logger.debug({ err }, 'canopy socket unavailable for agents, falling back to CLI')
+    }
+
+    // Fall back to CLI
     const args = ['agent', 'list', '--format', 'json']
     if (options?.projectRoot) args.push('--project-root', options.projectRoot)
 
     const raw = await run(args)
     const parsed = parseJson<T[]>(raw, 'canopy agent list')
     return Array.isArray(parsed) ? parsed : []
-  } catch {
+  } catch (err) {
+    logger.warn({ err }, 'canopy agent list failed; returning empty list')
     return []
   }
 }
