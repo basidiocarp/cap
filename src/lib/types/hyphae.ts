@@ -146,9 +146,10 @@ export interface EvaluationResult {
 }
 
 export interface MemoirGraphNode {
+  community_id: string | null
+  definition: string
   id: string
   label: string
-  definition: string
   memoir_id: string
 }
 

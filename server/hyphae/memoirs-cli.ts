@@ -21,6 +21,7 @@ interface Memoir {
 }
 
 interface Concept {
+  community_id: string | null
   confidence: number
   created_at: string
   definition: string
@@ -71,6 +72,7 @@ interface RawLabel {
 }
 
 interface RawConcept {
+  community_id: string | null
   confidence: number
   created_at: string
   definition: string
@@ -189,7 +191,8 @@ function isRawConcept(value: unknown): value is RawConcept {
     typeof concept.created_at === 'string' &&
     typeof concept.updated_at === 'string' &&
     Array.isArray(concept.source_memory_ids) &&
-    concept.source_memory_ids.every((value) => typeof value === 'string')
+    concept.source_memory_ids.every((value) => typeof value === 'string') &&
+    (concept.community_id === undefined || concept.community_id === null || typeof concept.community_id === 'string')
   )
 }
 
@@ -265,6 +268,7 @@ function matchesMemoirFilter(concept: RawConcept, query?: string | null): boolea
 
 function toConcept(concept: RawConcept): Concept {
   return {
+    community_id: concept.community_id ?? null,
     confidence: concept.confidence,
     created_at: concept.created_at,
     definition: concept.definition,

@@ -119,6 +119,7 @@ describe('Hyphae memoir CLI consumer', () => {
     expect(result).toEqual({
       concepts: [
         {
+          community_id: null,
           confidence: 0.9,
           created_at: '2026-03-24T00:00:00Z',
           definition: 'Router task helper',
@@ -131,6 +132,7 @@ describe('Hyphae memoir CLI consumer', () => {
           updated_at: '2026-03-24T00:00:00Z',
         },
         {
+          community_id: null,
           confidence: 0.4,
           created_at: '2026-03-24T00:00:00Z',
           definition: 'Contains router context',
@@ -294,6 +296,7 @@ describe('Hyphae memoir CLI consumer', () => {
     ])
     expect(result).toEqual({
       concept: {
+        community_id: null,
         confidence: 0.9,
         created_at: '2026-03-24T00:00:00Z',
         definition: 'Collect request context',
@@ -308,6 +311,7 @@ describe('Hyphae memoir CLI consumer', () => {
       neighbors: [
         {
           concept: {
+            community_id: null,
             confidence: 0.82,
             created_at: '2026-03-24T00:00:00Z',
             definition: 'Loads sessions',
@@ -331,6 +335,7 @@ describe('Hyphae memoir CLI consumer', () => {
         },
         {
           concept: {
+            community_id: null,
             confidence: 0.8,
             created_at: '2026-03-24T00:00:00Z',
             definition: 'Builds timeline',

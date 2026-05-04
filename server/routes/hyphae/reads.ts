@@ -147,6 +147,7 @@ app.get('/memoirs/:name/graph', async (c) => {
     const inspections = await Promise.all(detail.concepts.map((concept) => hyphae.memoirInspect(name, concept.name, 1)))
 
     const nodes = detail.concepts.map((concept) => ({
+      community_id: concept.community_id,
       definition: concept.definition,
       id: concept.id,
       label: concept.name,

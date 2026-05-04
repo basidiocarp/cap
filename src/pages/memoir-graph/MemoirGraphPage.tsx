@@ -7,6 +7,17 @@ import type { MemoirGraphNode } from '../../lib/types/hyphae'
 import { hyphaeApi } from '../../lib/api'
 import { useMemoirGraphStore } from '../../stores/memoir-graph-store'
 
+const COMMUNITY_COLORS = ['#4dabf7', '#ff6b6b', '#69db7c', '#ffd43b', '#cc5de8', '#ff922b', '#20c997', '#f783ac']
+
+function communityColor(communityId: string | null | undefined): string {
+  if (!communityId) return '#adb5bd'
+  const match = communityId.match(/^community_(\d+)$/)
+  if (match) return COMMUNITY_COLORS[parseInt(match[1], 10) % COMMUNITY_COLORS.length]
+  let hash = 0
+  for (let i = 0; i < communityId.length; i++) hash = (hash << 5) - hash + communityId.charCodeAt(i)
+  return COMMUNITY_COLORS[Math.abs(hash) % COMMUNITY_COLORS.length]
+}
+
 interface MemoirGraphPageProps {
   memoirNames: string[]
 }
@@ -72,6 +83,7 @@ export function MemoirGraphPage({ memoirNames }: MemoirGraphPageProps) {
             <ForceGraph2D<MemoirGraphNode>
               graphData={{ links: edges.map((e) => ({ ...e })), nodes: nodes.map((n) => ({ ...n })) }}
               linkLabel='label'
+              nodeColor={(node) => communityColor(node.community_id)}
               nodeLabel='label'
               onNodeClick={handleNodeClick}
               width={width}
