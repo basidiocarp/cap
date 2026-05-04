@@ -144,3 +144,22 @@ export interface EvaluationResult {
   recall_non_zero_rate: string | null
   recall_avg_effectiveness: string | null
 }
+
+export interface MemoirGraphNode {
+  id: string
+  label: string
+  definition: string
+  memoir_id: string
+}
+
+export interface MemoirGraphEdge {
+  id: string
+  source: string
+  target: string
+  label: string
+}
+
+export interface MemoirGraphData {
+  nodes: MemoirGraphNode[]
+  edges: MemoirGraphEdge[]
+}

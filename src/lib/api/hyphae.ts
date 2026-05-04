@@ -9,6 +9,7 @@ import type {
   Lesson,
   Memoir,
   MemoirDetail,
+  MemoirGraphData,
   Memory,
   SessionRecord,
   SessionTimelineRecord,
@@ -39,6 +40,7 @@ export const hyphaeApi = {
       offset: options?.offset ? String(options.offset) : '',
       q: options?.q ?? '',
     }),
+  memoirGraph: (name: string) => get<MemoirGraphData>(`/hyphae/memoirs/${encodeURIComponent(name)}/graph`),
   memoirInspect: (memoir: string, concept: string, depth?: number) =>
     get<ConceptInspection>(`/hyphae/memoirs/${encodeURIComponent(memoir)}/inspect/${encodeURIComponent(concept)}`, {
       depth: depth ? String(depth) : '',

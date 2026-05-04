@@ -11,6 +11,7 @@ const Canopy = lazy(() => import('./pages/Canopy').then((m) => ({ default: m.Can
 const CodeExplorer = lazy(() => import('./pages/CodeExplorer').then((m) => ({ default: m.CodeExplorer })))
 const Diagnostics = lazy(() => import('./pages/Diagnostics').then((m) => ({ default: m.Diagnostics })))
 const Lessons = lazy(() => import('./pages/Lessons').then((m) => ({ default: m.Lessons })))
+const MemoirGraph = lazy(() => import('./pages/MemoirGraph').then((m) => ({ default: m.MemoirGraph })))
 const Onboard = lazy(() => import('./pages/Onboard').then((m) => ({ default: m.Onboard })))
 const Memoirs = lazy(() => import('./pages/Memoirs').then((m) => ({ default: m.Memoirs })))
 const Memories = lazy(() => import('./pages/Memories').then((m) => ({ default: m.Memories })))
@@ -39,6 +40,10 @@ export function App() {
             <Route
               element={<Memoirs />}
               path='memoirs'
+            />
+            <Route
+              element={<MemoirGraph />}
+              path='memoir-graph'
             />
             <Route
               element={<Sessions />}

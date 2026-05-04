@@ -138,6 +138,44 @@ app.get('/memoirs/:name/search', async (c) => {
   }
 })
 
+app.get('/memoirs/:name/graph', async (c) => {
+  try {
+    const name = c.req.param('name')
+    const detail = await hyphae.memoirShow(name, { limit: 500 })
+    if (!detail) return c.json({ error: 'Memoir not found' }, 404)
+
+    const inspections = await Promise.all(detail.concepts.map((concept) => hyphae.memoirInspect(name, concept.name, 1)))
+
+    const nodes = detail.concepts.map((concept) => ({
+      definition: concept.definition,
+      id: concept.id,
+      label: concept.name,
+      memoir_id: detail.memoir.id,
+    }))
+
+    const seenLinkIds = new Set<string>()
+    const edges: Array<{ id: string; label: string; source: string; target: string }> = []
+    for (const inspection of inspections) {
+      if (!inspection) continue
+      for (const neighbor of inspection.neighbors) {
+        if (!seenLinkIds.has(neighbor.link.id)) {
+          seenLinkIds.add(neighbor.link.id)
+          edges.push({
+            id: neighbor.link.id,
+            label: neighbor.link.relation,
+            source: neighbor.link.source_id,
+            target: neighbor.link.target_id,
+          })
+        }
+      }
+    }
+
+    return c.json({ edges, nodes })
+  } catch {
+    return c.json({ error: 'Memoir graph unavailable' }, 502)
+  }
+})
+
 app.get('/sessions', async (c) => {
   const clampedLimit = clampParam(c.req.query('limit'), 20, 200)
   const project = c.req.query('project') ?? undefined
