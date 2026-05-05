@@ -1,5 +1,6 @@
 export interface GainProjectStats {
   project_path: string
+  project_name: string
   commands: number
   saved_tokens: number
   avg_savings_pct: number

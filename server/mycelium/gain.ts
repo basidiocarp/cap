@@ -80,6 +80,7 @@ function isGainProjectStats(value: unknown): value is GainProjectStats {
   return (
     !!record &&
     typeof record.project_path === 'string' &&
+    typeof record.project_name === 'string' &&
     typeof record.commands === 'number' &&
     typeof record.saved_tokens === 'number' &&
     typeof record.avg_savings_pct === 'number' &&
@@ -182,7 +183,7 @@ export async function getDailyGainOutput(): Promise<GainCliOutput | null> {
 
 export async function getProjectsGain(): Promise<GainProjectStats[]> {
   try {
-    const raw = await callLocalService('mycelium', 'mycelium_gain', { projects: true, format: 'json' })
+    const raw = await callLocalService('mycelium', 'mycelium_gain', { format: 'json', projects: true })
     if (raw) return parseGainOutput(raw).by_project ?? []
   } catch (err) {
     logger.debug({ err }, 'mycelium socket unavailable for getProjectsGain, falling back to CLI')
