@@ -1,6 +1,7 @@
 import type {
   CanopyAgent,
   CanopyHandoffActionInput,
+  CanopyKnownFactsResponse,
   CanopyNotification,
   CanopySnapshot,
   CanopySnapshotPreset,
@@ -15,6 +16,12 @@ export const canopyApi = {
   agents: (options?: { project?: string }) =>
     get<CanopyAgent[]>('/canopy/agents', {
       project: options?.project ?? '',
+    }),
+  facts: (options?: { keys?: string[]; scope?: string; taskId?: string }) =>
+    get<CanopyKnownFactsResponse>('/canopy/facts', {
+      keys: options?.keys?.join(',') ?? '',
+      scope: options?.scope ?? '',
+      task_id: options?.taskId ?? '',
     }),
   handoffAction: (handoffId: string, body: CanopyHandoffActionInput) =>
     post(`/canopy/handoffs/${encodeURIComponent(handoffId)}/actions`, body),

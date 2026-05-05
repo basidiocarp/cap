@@ -5,12 +5,13 @@ import { EmptyState } from '../../components/EmptyState'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { PageLoader } from '../../components/PageLoader'
 import { SectionCard } from '../../components/SectionCard'
-import { useCanopyAgents } from '../../lib/queries'
+import { useCanopyAgents, useCanopyKnownFacts } from '../../lib/queries'
 import { CanopyAgentsPanel } from './CanopyAgentsPanel'
 import { CanopyFilterPanel } from './CanopyFilterPanel'
 import { CanopyQueuesSection } from './CanopyQueuesSection'
 import { CanopySavedViewsSection } from './CanopySavedViewsSection'
 import { CanopySnapshotBadges, CanopySummaryMetrics, CanopyTaskBoard } from './CanopySnapshotSections'
+import { KnownFactsPanel } from './KnownFactsPanel'
 import { TaskDetailModal } from './TaskDetailModal'
 import { useCanopyPageState } from './useCanopyPageState'
 
@@ -75,6 +76,7 @@ export function CanopyPage() {
   } = useCanopyPageState()
 
   const agentsQuery = useCanopyAgents(activeProject ?? undefined)
+  const knownFactsQuery = useCanopyKnownFacts()
 
   if (snapshotQuery.isLoading) {
     return <PageLoader />
@@ -166,6 +168,12 @@ export function CanopyPage() {
       {agentsQuery.data && agentsQuery.data.length > 0 && (
         <SectionCard title='Active agents'>
           <CanopyAgentsPanel agents={agentsQuery.data} />
+        </SectionCard>
+      )}
+
+      {knownFactsQuery.data && (
+        <SectionCard title={`Known facts (${knownFactsQuery.data.count})`}>
+          <KnownFactsPanel facts={knownFactsQuery.data.facts} />
         </SectionCard>
       )}
 

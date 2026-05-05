@@ -1670,6 +1670,10 @@ vi.mock('../lib/queries', () => ({
     isLoading: false,
   }),
   useCanopyHandoffAction: () => useCanopyHandoffActionMock(),
+  useCanopyKnownFacts: () => ({
+    data: { count: 0, facts: [] },
+    isLoading: false,
+  }),
   useCanopySnapshot: (options?: {
     acknowledged?: string
     preset?: string

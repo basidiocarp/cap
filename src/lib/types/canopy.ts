@@ -661,3 +661,25 @@ export interface CanopyNotification {
   seen: boolean
   created_at: string
 }
+
+// Known-facts registry (H-09/H-10)
+export type CanopyFactScope = 'project' | 'task' | 'file'
+export type CanopyFactType = 'decision' | 'constraint' | 'error_resolution' | 'invariant' | 'other'
+
+export interface CanopyKnownFact {
+  fact_id: string
+  key: string
+  fact_type: CanopyFactType
+  scope: CanopyFactScope
+  summary: string
+  hyphae_id: string | null
+  established_by: string
+  task_id: string | null
+  confidence: number
+  established_at: string
+}
+
+export interface CanopyKnownFactsResponse {
+  count: number
+  facts: CanopyKnownFact[]
+}

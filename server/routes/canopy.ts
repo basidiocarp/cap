@@ -72,7 +72,7 @@ app.get('/snapshot', async (c) => {
 
     const duration_ms = Date.now() - start
     logger.info({ duration_ms }, 'canopy snapshot fetched')
-    _snapshotCache.set(cacheKey, { snapshot: result, at: Date.now() })
+    _snapshotCache.set(cacheKey, { at: Date.now(), snapshot: result })
     return c.json(result)
   } catch (_err) {
     const duration_ms = Date.now() - start
@@ -128,6 +128,18 @@ app.get('/agents', async (c) => {
     return c.json(await canopy.getAgents({ projectRoot: c.req.query('project') || undefined }))
   } catch (err) {
     return c.json({ error: err instanceof Error ? err.message : 'Failed to get Canopy agents' }, 500)
+  }
+})
+
+app.get('/facts', async (c) => {
+  try {
+    const rawKeys = c.req.query('keys')
+    const keys = rawKeys ? rawKeys.split(',').filter(Boolean) : undefined
+    const scope = c.req.query('scope') || undefined
+    const taskId = c.req.query('task_id') || undefined
+    return c.json(await canopy.getKnownFacts({ keys, scope, taskId }))
+  } catch (err) {
+    return c.json({ error: err instanceof Error ? err.message : 'Failed to get known facts' }, 500)
   }
 })
 

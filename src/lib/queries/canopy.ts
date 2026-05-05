@@ -5,6 +5,8 @@ import { canopyApi } from '../api'
 
 export const canopyKeys = {
   agents: (options?: { project?: string }) => ['canopy', 'agents', options?.project] as const,
+  facts: (options?: { keys?: string[]; scope?: string; taskId?: string }) =>
+    ['canopy', 'facts', options?.scope, options?.taskId, options?.keys?.join(',')] as const,
   notifications: () => ['canopy', 'notifications'] as const,
   snapshot: (options?: {
     acknowledged?: string
@@ -105,6 +107,13 @@ export function useCanopyAgents(project?: string) {
   return useQuery({
     queryFn: () => canopyApi.agents({ project }),
     queryKey: canopyKeys.agents({ project }),
+  })
+}
+
+export function useCanopyKnownFacts(options?: { keys?: string[]; scope?: string; taskId?: string }) {
+  return useQuery({
+    queryFn: () => canopyApi.facts(options),
+    queryKey: canopyKeys.facts(options),
   })
 }
 

@@ -473,6 +473,78 @@ export async function applyHandoffAction<T = unknown>(
   return parseJson<T>(raw, 'canopy handoff action')
 }
 
+export interface KnownFactRow {
+  fact_id: string
+  key: string
+  fact_type: string
+  scope: string
+  summary: string
+  hyphae_id: string | null
+  established_by: string
+  task_id: string | null
+  confidence: number
+  established_at: string
+}
+
+export async function getKnownFacts(options?: {
+  keys?: string[]
+  scope?: string
+  taskId?: string
+}): Promise<{ count: number; facts: KnownFactRow[] }> {
+  // Try socket first (routes through canopy MCP dispatch)
+  try {
+    const socketParams: Record<string, unknown> = {}
+    if (options?.keys?.length) socketParams.keys = options.keys
+    if (options?.scope) socketParams.scope = options.scope
+    if (options?.taskId) socketParams.task_id = options.taskId
+
+    const result = await callLocalService('canopy', 'canopy_get_known_facts', socketParams)
+    if (result) {
+      const parsed = parseJson<{ count: number; facts: KnownFactRow[] }>(result, 'known facts')
+      if (parsed && Array.isArray(parsed.facts)) return parsed
+    }
+  } catch (err) {
+    logger.debug({ err }, 'canopy socket unavailable for known facts, falling back to direct DB read')
+  }
+
+  // Fall back to direct DB read
+  try {
+    const db = openReadOnly()
+    try {
+      let sql = `
+        SELECT fact_id, key, fact_type, scope, summary, hyphae_id,
+               established_by, task_id, confidence, established_at
+        FROM known_facts
+        WHERE 1=1
+      `
+      const params: (string | number)[] = []
+
+      if (options?.scope) {
+        sql += ` AND scope = ?`
+        params.push(options.scope)
+      }
+      if (options?.taskId) {
+        sql += ` AND task_id = ?`
+        params.push(options.taskId)
+      }
+      if (options?.keys?.length) {
+        sql += ` AND key IN (${options.keys.map(() => '?').join(',')})`
+        params.push(...options.keys)
+      }
+
+      sql += ' ORDER BY established_at DESC'
+
+      const facts = db.prepare(sql).all(...params) as KnownFactRow[]
+      return { count: facts.length, facts }
+    } finally {
+      db.close()
+    }
+  } catch (err) {
+    logger.warn({ err }, 'known facts DB read failed; returning empty list')
+    return { count: 0, facts: [] }
+  }
+}
+
 export async function getAgents<T = unknown>(options?: { projectRoot?: string }): Promise<T[]> {
   try {
     // Try socket first
