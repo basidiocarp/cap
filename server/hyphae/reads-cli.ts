@@ -1,6 +1,7 @@
 import type { HealthResult, MemoryRow, StatsResult, TopicSummary } from '../types.ts'
 import { createCliRunner } from '../lib/cli.ts'
 import { HYPHAE_BIN } from '../lib/config.ts'
+import { callLocalService } from '../lib/local-service.ts'
 import { logger } from '../logger.ts'
 
 const runCli = createCliRunner(HYPHAE_BIN, 'hyphae')
@@ -335,6 +336,23 @@ function compareSourcesByLastIngestedDesc(left: IngestionSource, right: Ingestio
 }
 
 export async function getStatsFromCli(): Promise<StatsResult> {
+  try {
+    const raw = await callLocalService('hyphae', 'cap_stats', { include_invalidated: true })
+    if (raw) {
+      const payload = parseJson(raw, isRawStatsPayload, 'stats')
+      if ((payload as { schema_version?: string }).schema_version === STATS_SCHEMA_VERSION) {
+        return {
+          avg_weight: payload.avg_weight,
+          newest: payload.newest_memory,
+          oldest: payload.oldest_memory,
+          total_memories: payload.total_memories,
+          total_topics: payload.total_topics,
+        }
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for getStatsFromCli, falling back to CLI')
+  }
   const stdout = await runReadsCli(['--all-projects', 'stats', '--include-invalidated', '--json'], 'stats')
   const payload = parseJson(stdout, isRawStatsPayload, 'stats')
   if ((payload as { schema_version?: string }).schema_version !== STATS_SCHEMA_VERSION) {
@@ -350,6 +368,25 @@ export async function getStatsFromCli(): Promise<StatsResult> {
 }
 
 export async function getTopicsFromCli(): Promise<TopicSummary[]> {
+  try {
+    const raw = await callLocalService('hyphae', 'cap_topics', { include_invalidated: true })
+    if (raw) {
+      const payload = parseJson(raw, isRawTopicsPayload, 'topics')
+      if ((payload as { schema_version?: string }).schema_version === TOPICS_SCHEMA_VERSION) {
+        return payload.topics
+          .map((topic) => ({
+            avg_weight: topic.avg_weight,
+            count: topic.count,
+            newest: topic.newest ?? '',
+            oldest: topic.oldest ?? '',
+            topic: topic.topic,
+          }))
+          .sort(compareTopicsByCountDesc)
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for getTopicsFromCli, falling back to CLI')
+  }
   const stdout = await runReadsCli(['--all-projects', 'topics', '--include-invalidated', '--json'], 'topics')
   const payload = parseJson(stdout, isRawTopicsPayload, 'topics')
   if ((payload as { schema_version?: string }).schema_version !== TOPICS_SCHEMA_VERSION) {
@@ -367,6 +404,21 @@ export async function getTopicsFromCli(): Promise<TopicSummary[]> {
 }
 
 export async function recallFromCli(query: string, topic?: string, limit = 20): Promise<MemoryRow[]> {
+  try {
+    const params: Record<string, unknown> = { query, limit, include_invalidated: true }
+    if (topic) {
+      params.topic = topic
+    }
+    const raw = await callLocalService('hyphae', 'cap_search', params)
+    if (raw) {
+      const payload = parseJson(raw, isRawSearchPayload, 'search')
+      if ((payload as { schema_version?: string }).schema_version === SEARCH_SCHEMA_VERSION) {
+        return payload.results.map(toMemoryRow)
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for recallFromCli, falling back to CLI')
+  }
   const args = [
     '--all-projects',
     'search',
@@ -391,6 +443,20 @@ export async function recallFromCli(query: string, topic?: string, limit = 20): 
 }
 
 export async function searchGlobalFromCli(query: string, limit = 20): Promise<Array<MemoryRow & { project?: string }>> {
+  try {
+    const raw = await callLocalService('hyphae', 'cap_search_all', { query, limit, include_invalidated: true })
+    if (raw) {
+      const payload = parseJson(raw, isRawSearchPayload, 'search')
+      if ((payload as { schema_version?: string }).schema_version === SEARCH_SCHEMA_VERSION) {
+        return payload.results.map((memory) => ({
+          ...toMemoryRow(memory),
+          project: memory.project ?? undefined,
+        }))
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for searchGlobalFromCli, falling back to CLI')
+  }
   const stdout = await runReadsCli(
     ['--all-projects', 'search', '--query', query, '--limit', String(limit), '--include-invalidated', '--order', 'weight', '--json'],
     'search'
@@ -437,6 +503,32 @@ export async function getMemoriesByTopicFromCli(topic: string, limit = 50): Prom
 }
 
 export async function getHealthFromCli(topic?: string): Promise<HealthResult[]> {
+  try {
+    const params: Record<string, unknown> = { include_invalidated: true }
+    if (topic) {
+      params.topic = topic
+    }
+    const raw = await callLocalService('hyphae', 'cap_health', params)
+    if (raw) {
+      const payload = parseJson(raw, isRawHealthPayload, 'health')
+      if ((payload as { schema_version?: string }).schema_version === HEALTH_SCHEMA_VERSION) {
+        return payload.topics
+          .map((entry) => ({
+            avg_weight: entry.avg_weight,
+            count: entry.entry_count,
+            critical_count: entry.critical_count,
+            high_count: entry.high_count,
+            low_count: entry.low_count,
+            low_weight_count: entry.low_weight_count,
+            medium_count: entry.medium_count,
+            topic: entry.topic,
+          }))
+          .sort(compareHealthByCountDesc)
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for getHealthFromCli, falling back to CLI')
+  }
   const args = ['--all-projects', 'health', '--include-invalidated', '--json']
   if (topic) {
     args.push('--topic', topic)

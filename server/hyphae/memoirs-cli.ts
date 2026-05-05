@@ -1,5 +1,6 @@
 import { createCliRunner } from '../lib/cli.ts'
 import { HYPHAE_BIN } from '../lib/config.ts'
+import { callLocalService } from '../lib/local-service.ts'
 import { logger } from '../logger.ts'
 
 const runCli = createCliRunner(HYPHAE_BIN, 'hyphae')
@@ -409,6 +410,17 @@ function rebuildNeighbors(payload: RawMemoirInspectPayload): ConceptInspection['
 
 async function loadMemoirShowPage(memoirName: string, offset: number, limit: number): Promise<RawMemoirShowPayload | null> {
   try {
+    const raw = await callLocalService('hyphae', 'cap_memoir_show', { memoir: memoirName, offset, limit })
+    if (raw) {
+      const payload = parseJson(raw, isMemoirShowPayload, 'memoir show')
+      if ((payload as { schema_version?: string }).schema_version === MEMOIR_SHOW_SCHEMA_VERSION) {
+        return payload
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for loadMemoirShowPage, falling back to CLI')
+  }
+  try {
     const stdout = await runMemoirCli(['show', memoirName, '--json', '--limit', String(limit), '--offset', String(offset)], 'memoir show')
     const payload = parseJson(stdout, isMemoirShowPayload, 'memoir show')
     if ((payload as { schema_version?: string }).schema_version !== MEMOIR_SHOW_SCHEMA_VERSION) {
@@ -430,6 +442,17 @@ async function loadMemoirSearchPage(
   limit: number
 ): Promise<RawMemoirSearchPayload | null> {
   try {
+    const raw = await callLocalService('hyphae', 'cap_memoir_search', { memoir: memoirName, query, offset, limit })
+    if (raw) {
+      const payload = parseJson(raw, isMemoirSearchPayload, 'memoir search')
+      if ((payload as { schema_version?: string }).schema_version === MEMOIR_SEARCH_SCHEMA_VERSION) {
+        return payload
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for loadMemoirSearchPage, falling back to CLI')
+  }
+  try {
     const stdout = await runMemoirCli(
       ['search', query, '--memoir', memoirName, '--limit', String(limit), '--offset', String(offset), '--json'],
       'memoir search'
@@ -448,6 +471,17 @@ async function loadMemoirSearchPage(
 }
 
 async function loadSearchAllPage(query: string, offset: number, limit: number): Promise<RawMemoirSearchAllPayload> {
+  try {
+    const raw = await callLocalService('hyphae', 'cap_memoir_search_all', { query, offset, limit })
+    if (raw) {
+      const payload = parseJson(raw, isMemoirSearchAllPayload, 'memoir search-all')
+      if ((payload as { schema_version?: string }).schema_version === MEMOIR_SEARCH_ALL_SCHEMA_VERSION) {
+        return payload
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for loadSearchAllPage, falling back to CLI')
+  }
   const stdout = await runMemoirCli(
     ['search-all', query, '--limit', String(limit), '--offset', String(offset), '--json'],
     'memoir search-all'
@@ -460,6 +494,17 @@ async function loadSearchAllPage(query: string, offset: number, limit: number): 
 }
 
 export async function memoirList(): Promise<Memoir[]> {
+  try {
+    const raw = await callLocalService('hyphae', 'cap_memoir_list', {})
+    if (raw) {
+      const payload = parseJson(raw, isMemoirListPayload, 'memoir list')
+      if ((payload as { schema_version?: string }).schema_version === MEMOIR_LIST_SCHEMA_VERSION) {
+        return payload.memoirs.map((entry) => entry.memoir).sort(compareMemoirsByUpdatedAtDesc)
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for memoirList, falling back to CLI')
+  }
   const stdout = await runMemoirCli(['list', '--json'], 'memoir list')
   const payload = parseJson(stdout, isMemoirListPayload, 'memoir list')
   if ((payload as { schema_version?: string }).schema_version !== MEMOIR_LIST_SCHEMA_VERSION) {
@@ -522,6 +567,20 @@ export async function memoirSearchAll(query: string): Promise<Concept[]> {
 }
 
 export async function memoirInspect(memoirName: string, conceptName: string, depth = 2): Promise<ConceptInspection | null> {
+  try {
+    const raw = await callLocalService('hyphae', 'cap_memoir_inspect', { memoir_id: memoirName, concept: conceptName, depth })
+    if (raw) {
+      const payload = parseJson(raw, isMemoirInspectPayload, 'memoir inspect')
+      if ((payload as { schema_version?: string }).schema_version === MEMOIR_INSPECT_SCHEMA_VERSION) {
+        return {
+          concept: toConcept(payload.concept),
+          neighbors: rebuildNeighbors(payload),
+        }
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for memoirInspect, falling back to CLI')
+  }
   const args = ['inspect', memoirName, '--concept', conceptName, '--depth', String(depth), '--json']
 
   try {

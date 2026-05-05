@@ -1,6 +1,7 @@
 import type { SessionTimelineDetailEvent, SessionTimelineDetailEventType } from '../types.ts'
 import { createCliRunner } from '../lib/cli.ts'
 import { HYPHAE_BIN } from '../lib/config.ts'
+import { callLocalService } from '../lib/local-service.ts'
 import { logger } from '../logger.ts'
 
 const runCli = createCliRunner(HYPHAE_BIN, 'hyphae')
@@ -147,6 +148,15 @@ function parseTimelineRecordEvents(stdout: string, sessionId: string): SessionTi
 }
 
 export async function getSessionTimelineEventsFromCli(sessionId: string): Promise<SessionTimelineDetailEvent[]> {
+  try {
+    const raw = await callLocalService('hyphae', 'cap_session_timeline', { session_id: sessionId })
+    if (raw) {
+      return parseTimelineRecordEvents(raw, sessionId)
+    }
+  } catch (err) {
+    if (err instanceof HyphaeSessionTimelineDetailCliError) throw err
+    logger.debug({ err }, 'hyphae socket unavailable for getSessionTimelineEventsFromCli, falling back to CLI')
+  }
   try {
     const stdout = await runCli(['session', 'timeline', '--session-id', sessionId, '--format', 'json'])
     return parseTimelineRecordEvents(stdout, sessionId)

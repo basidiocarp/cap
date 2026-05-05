@@ -1,6 +1,7 @@
 import type { SessionRecord } from '../types.ts'
 import { createCliRunner } from '../lib/cli.ts'
 import { HYPHAE_BIN } from '../lib/config.ts'
+import { callLocalService } from '../lib/local-service.ts'
 import { logger } from '../logger.ts'
 
 const runCli = createCliRunner(HYPHAE_BIN, 'hyphae')
@@ -68,6 +69,39 @@ function parseSessionList(stdout: string): SessionRecord[] {
 }
 
 export async function getSessionListFromCli(options: SessionCliQuery = {}, limit = 20): Promise<SessionRecord[]> {
+  try {
+    const params: Record<string, unknown> = { limit }
+    if (options.project) {
+      params.project = options.project
+    }
+    if (options.projectRoot) {
+      params.project_root = options.projectRoot
+    }
+    if (options.worktreeId) {
+      params.worktree_id = options.worktreeId
+    }
+    if (options.scope) {
+      params.scope = options.scope
+    }
+    const raw = await callLocalService('hyphae', 'cap_session_list', params)
+    if (raw) {
+      const parsed = JSON.parse(raw) as { schema_version?: string; sessions?: unknown } | unknown
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        'schema_version' in parsed &&
+        (parsed as { schema_version?: string }).schema_version === SESSION_LIST_SCHEMA_VERSION &&
+        'sessions' in parsed
+      ) {
+        const sessions = (parsed as { sessions?: unknown }).sessions
+        if (Array.isArray(sessions) && sessions.every(isSessionRecord)) {
+          return sessions
+        }
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for getSessionListFromCli, falling back to CLI')
+  }
   const args = ['session', 'list']
   if (options.project) {
     args.push('--project', options.project)

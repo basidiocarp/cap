@@ -1,6 +1,7 @@
 import type { Lesson } from '../types.ts'
 import { createCliRunner } from '../lib/cli.ts'
 import { HYPHAE_BIN } from '../lib/config.ts'
+import { callLocalService } from '../lib/local-service.ts'
 import { logger } from '../logger.ts'
 
 const LESSON_LIMIT = 50
@@ -76,5 +77,25 @@ async function runLessonsCli(): Promise<Lesson[]> {
 }
 
 export async function getLessons(): Promise<Lesson[]> {
+  try {
+    const raw = await callLocalService('hyphae', 'cap_lessons', {})
+    if (raw) {
+      const parsed = JSON.parse(raw) as unknown
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        'schema_version' in parsed &&
+        (parsed as { schema_version?: string }).schema_version === LESSONS_SCHEMA_VERSION &&
+        'lessons' in parsed
+      ) {
+        const lessons = (parsed as { lessons?: unknown }).lessons
+        if (Array.isArray(lessons) && lessons.every(isLesson)) {
+          return lessons
+        }
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for getLessons, falling back to CLI')
+  }
   return runLessonsCli()
 }

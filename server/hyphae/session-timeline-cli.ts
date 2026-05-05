@@ -2,6 +2,7 @@ import type { SessionTimelineRecord } from '../types.ts'
 import type { SessionCliQuery } from './session-list-cli.ts'
 import { createCliRunner } from '../lib/cli.ts'
 import { HYPHAE_BIN } from '../lib/config.ts'
+import { callLocalService } from '../lib/local-service.ts'
 import { logger } from '../logger.ts'
 
 const runCli = createCliRunner(HYPHAE_BIN, 'hyphae')
@@ -84,6 +85,39 @@ function parseSessionTimeline(stdout: string): SessionTimelineRecord[] {
 }
 
 export async function getSessionTimelineFromCli(options: SessionCliQuery = {}, limit = 20): Promise<SessionTimelineRecord[]> {
+  try {
+    const params: Record<string, unknown> = { limit }
+    if (options.project) {
+      params.project = options.project
+    }
+    if (options.projectRoot) {
+      params.project_root = options.projectRoot
+    }
+    if (options.worktreeId) {
+      params.worktree_id = options.worktreeId
+    }
+    if (options.scope) {
+      params.scope = options.scope
+    }
+    const raw = await callLocalService('hyphae', 'cap_session_timeline', params)
+    if (raw) {
+      const parsed = JSON.parse(raw) as { schema_version?: string; timeline?: unknown } | unknown
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        'schema_version' in parsed &&
+        (parsed as { schema_version?: string }).schema_version === SESSION_TIMELINE_SCHEMA_VERSION &&
+        'timeline' in parsed
+      ) {
+        const timeline = (parsed as { timeline?: unknown }).timeline
+        if (Array.isArray(timeline) && timeline.every(isSessionTimelineRecord)) {
+          return timeline
+        }
+      }
+    }
+  } catch (err) {
+    logger.debug({ err }, 'hyphae socket unavailable for getSessionTimelineFromCli, falling back to CLI')
+  }
   const args = ['session', 'timeline']
   if (options.project) {
     args.push('--project', options.project)
