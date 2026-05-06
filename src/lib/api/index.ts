@@ -1,5 +1,7 @@
 export { annulusApi } from './annulus'
 export { canopyApi } from './canopy'
+export { diffApi } from './diff'
+export type { DiffResponse } from './diff'
 export { hyphaeApi } from './hyphae'
 export { lspApi } from './lsp'
 export { myceliumApi } from './mycelium'

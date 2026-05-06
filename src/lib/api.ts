@@ -131,9 +131,11 @@ export type {
   UsageAggregate,
   UsageTrend,
 } from './types'
+export type { DiffResponse } from './api/index'
 export {
   annulusApi,
   canopyApi,
+  diffApi,
   hyphaeApi,
   lspApi,
   myceliumApi,

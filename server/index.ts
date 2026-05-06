@@ -19,6 +19,7 @@ import settingsRoutes from './routes/settings.ts'
 import statusRoutes from './routes/status.ts'
 import telemetryRoutes from './routes/telemetry.ts'
 import usageRoutes from './routes/usage.ts'
+import diffRoutes from './routes/diff.ts'
 import metricsRoutes from './routes/metrics.ts'
 import observerRoutes from './routes/observer.ts'
 import statsRoutes from './routes/stats.ts'
@@ -125,6 +126,7 @@ export function createApp(boundHost = process.env.CAP_HOST ?? '127.0.0.1'): Hono
   })
 
   app.route('/api/canopy', canopyRoutes)
+  app.route('/api/diff', diffRoutes)
   app.route('/api/cost', costsRoutes)
   app.route('/api/ecosystem', ecosystemRoutes)
   app.route('/api/hyphae', hyphaeRoutes)

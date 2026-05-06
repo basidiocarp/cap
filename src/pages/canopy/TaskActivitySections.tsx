@@ -2,6 +2,7 @@ import type { CanopyTaskDetail } from '../../lib/api'
 import { TaskAgentAttentionSection } from './activity/TaskAgentAttentionSection'
 import { TaskAssignmentsSection } from './activity/TaskAssignmentsSection'
 import { TaskCouncilSection } from './activity/TaskCouncilSection'
+import { TaskDiffReviewSection } from './activity/TaskDiffReviewSection'
 import { TaskEvidenceSection } from './activity/TaskEvidenceSection'
 import { TaskHandoffsSection } from './activity/TaskHandoffsSection'
 import { TaskHeartbeatsSection } from './activity/TaskHeartbeatsSection'
@@ -31,6 +32,7 @@ export function TaskActivitySections({
       />
       <TaskCouncilSection detail={detail} />
       <TaskEvidenceSection evidence={detail.evidence} />
+      <TaskDiffReviewSection taskId={detail.task.task_id} />
     </>
   )
 }
