@@ -126,6 +126,7 @@ export const ALLOWED_TASK_ACTIONS = new Set([
   'attach_evidence',
   'create_follow_up_task',
   'link_task_dependency',
+  'attach_review_annotation',
 ])
 export const ALLOWED_TASK_RELATIONSHIP_ROLES = new Set(['blocks', 'blocked_by'])
 export const ALLOWED_HANDOFF_ACTIONS = new Set([
@@ -195,6 +196,12 @@ export interface TaskActionBody {
   related_symbol?: string
   relationship_role?: string
   requested_action?: string
+  review_annotation_file_path?: string
+  review_annotation_start_line?: number
+  review_annotation_end_line?: number
+  review_annotation_action?: string
+  review_annotation_comment?: string
+  review_annotation_anchor_hash?: string
   severity?: string
   to_agent_id?: string
   verification_state?: string
@@ -246,6 +253,12 @@ export interface ValidatedTaskAction {
   relatedTaskId?: string
   relationshipRole?: string
   requestedAction?: string
+  reviewAnnotationAction?: string
+  reviewAnnotationAnchorHash?: string
+  reviewAnnotationComment?: string
+  reviewAnnotationEndLine?: number
+  reviewAnnotationFilePath?: string
+  reviewAnnotationStartLine?: number
   reviewDueAt?: string
   severity?: string
   toAgentId?: string
@@ -373,6 +386,22 @@ export function validateTaskAction(body: unknown): ValidationResult<ValidatedTas
     return { error: `${b.action} requires a related_task_id`, ok: false }
   }
 
+  if (b.action === 'attach_review_annotation') {
+    if (!b.review_annotation_file_path?.trim()) {
+      return { error: 'attach_review_annotation requires a review_annotation_file_path', ok: false }
+    }
+    if (b.review_annotation_start_line == null || b.review_annotation_end_line == null) {
+      return { error: 'attach_review_annotation requires review_annotation_start_line and review_annotation_end_line', ok: false }
+    }
+    const validAnnotationActions = new Set(['approve', 'reject', 'revise'])
+    if (!b.review_annotation_action || !validAnnotationActions.has(b.review_annotation_action)) {
+      return { error: 'attach_review_annotation requires a valid review_annotation_action (approve, reject, revise)', ok: false }
+    }
+    if (!b.review_annotation_anchor_hash?.trim()) {
+      return { error: 'attach_review_annotation requires a review_annotation_anchor_hash', ok: false }
+    }
+  }
+
   // All validations passed; return validated and canonicalized action
   return {
     data: {
@@ -409,6 +438,15 @@ export function validateTaskAction(body: unknown): ValidationResult<ValidatedTas
       relatedTaskId: b.related_task_id,
       relationshipRole: b.relationship_role && ALLOWED_TASK_RELATIONSHIP_ROLES.has(b.relationship_role) ? b.relationship_role : undefined,
       requestedAction: b.requested_action,
+      reviewAnnotationAction:
+        b.review_annotation_action && new Set(['approve', 'reject', 'revise']).has(b.review_annotation_action)
+          ? b.review_annotation_action
+          : undefined,
+      reviewAnnotationAnchorHash: b.review_annotation_anchor_hash,
+      reviewAnnotationComment: b.review_annotation_comment,
+      reviewAnnotationEndLine: b.review_annotation_end_line,
+      reviewAnnotationFilePath: b.review_annotation_file_path,
+      reviewAnnotationStartLine: b.review_annotation_start_line,
       reviewDueAt: b.review_due_at,
       severity: b.severity,
       toAgentId: b.to_agent_id,

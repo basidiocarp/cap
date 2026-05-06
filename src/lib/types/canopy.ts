@@ -68,6 +68,7 @@ export type CanopyEvidenceSourceKind =
   | 'rhizome_impact'
   | 'rhizome_export'
   | 'manual_note'
+  | 'review_annotation'
 export type CanopyTaskEventType =
   | 'created'
   | 'assigned'
@@ -83,6 +84,7 @@ export type CanopyTaskEventType =
   | 'council_message_posted'
   | 'evidence_attached'
   | 'follow_up_task_created'
+  | 'review_annotation_added'
 export type CanopyExecutionActionKind = 'claim_task' | 'start_task' | 'resume_task' | 'pause_task' | 'yield_task' | 'complete_task'
 export type CanopyTaskAttentionReason =
   | 'blocked'
@@ -163,6 +165,7 @@ export type CanopyOperatorActionKind =
   | 'complete_handoff'
   | 'follow_up_handoff'
   | 'expire_handoff'
+  | 'attach_review_annotation'
 export type CanopyOperatorActionTargetKind = 'task' | 'handoff'
 export type CanopyTaskRelationshipKind = 'follow_up' | 'blocks'
 export type CanopyTaskRelationshipRole = 'follow_up_parent' | 'follow_up_child' | 'blocks' | 'blocked_by'
@@ -532,6 +535,21 @@ export interface ToolAdoptionScore {
   details: ToolAdoptionDetail[]
 }
 
+export type CanopyReviewAnnotationAction = 'approve' | 'reject' | 'revise'
+
+export interface CanopyReviewAnnotation {
+  annotation_id: string
+  task_id: string
+  file_path: string
+  start_line: number
+  end_line: number
+  action: CanopyReviewAnnotationAction
+  comment: string
+  anchor_hash: string
+  operator_id: string
+  created_at: string
+}
+
 export interface CanopyTaskDetail {
   schema_version?: '1.0'
   allowed_actions: CanopyOperatorAction[]
@@ -556,6 +574,7 @@ export interface CanopyTaskDetail {
   relationship_summary: CanopyTaskRelationshipSummary
   sla_summary: CanopyTaskSlaSummary
   task: CanopyTask
+  review_annotations?: CanopyReviewAnnotation[]
   tool_adoption_score?: ToolAdoptionScore
 }
 
@@ -593,6 +612,7 @@ export interface CanopyTaskActionInput {
     | 'attach_evidence'
     | 'create_follow_up_task'
     | 'link_task_dependency'
+    | 'attach_review_annotation'
   >
   acting_agent_id?: string
   author_agent_id?: string
@@ -626,6 +646,12 @@ export interface CanopyTaskActionInput {
   related_symbol?: string
   relationship_role?: Extract<CanopyTaskRelationshipRole, 'blocks' | 'blocked_by'>
   requested_action?: string
+  review_annotation_file_path?: string
+  review_annotation_start_line?: number
+  review_annotation_end_line?: number
+  review_annotation_action?: 'approve' | 'reject' | 'revise'
+  review_annotation_comment?: string
+  review_annotation_anchor_hash?: string
   severity?: CanopyTaskSeverity
   to_agent_id?: string
   verification_state?: Exclude<CanopyVerificationState, 'unknown'>

@@ -316,6 +316,12 @@ export async function applyTaskAction<T = unknown>(
     relatedSymbol?: string
     relationshipRole?: string
     requestedAction?: string
+    reviewAnnotationAction?: string
+    reviewAnnotationAnchorHash?: string
+    reviewAnnotationComment?: string
+    reviewAnnotationEndLine?: number
+    reviewAnnotationFilePath?: string
+    reviewAnnotationStartLine?: number
     severity?: string
     toAgentId?: string
     verificationState?: string
@@ -403,6 +409,22 @@ export async function applyTaskAction<T = unknown>(
     throw new Error(`${input.action} requires a related_task_id`)
   }
 
+  if (input.action === 'attach_review_annotation') {
+    if (!input.reviewAnnotationFilePath?.trim()) {
+      throw new Error('attach_review_annotation requires a review_annotation_file_path')
+    }
+    if (input.reviewAnnotationStartLine == null || input.reviewAnnotationEndLine == null) {
+      throw new Error('attach_review_annotation requires review_annotation_start_line and review_annotation_end_line')
+    }
+    const validAnnotationActions = new Set(['approve', 'reject', 'revise'])
+    if (!input.reviewAnnotationAction || !validAnnotationActions.has(input.reviewAnnotationAction)) {
+      throw new Error('attach_review_annotation requires a valid review_annotation_action (approve, reject, revise)')
+    }
+    if (!input.reviewAnnotationAnchorHash?.trim()) {
+      throw new Error('attach_review_annotation requires a review_annotation_anchor_hash')
+    }
+  }
+
   const args = ['task', 'action', '--task-id', taskId, '--action', input.action, '--changed-by', input.changedBy]
   if (input.actingAgentId) args.push('--acting-agent-id', input.actingAgentId)
   if (input.assignedTo) args.push('--assigned-to', input.assignedTo)
@@ -444,6 +466,15 @@ export async function applyTaskAction<T = unknown>(
   if (input.relatedFile) args.push('--related-file', input.relatedFile)
   if (input.followUpTitle) args.push('--follow-up-title', input.followUpTitle)
   if (input.followUpDescription) args.push('--follow-up-description', input.followUpDescription)
+  if (input.reviewAnnotationFilePath) args.push('--review-annotation-file-path', input.reviewAnnotationFilePath)
+  if (input.reviewAnnotationStartLine != null) args.push('--review-annotation-start-line', String(input.reviewAnnotationStartLine))
+  if (input.reviewAnnotationEndLine != null) args.push('--review-annotation-end-line', String(input.reviewAnnotationEndLine))
+  const ALLOWED_ANNOTATION_ACTIONS = new Set(['approve', 'reject', 'revise'])
+  if (input.reviewAnnotationAction && ALLOWED_ANNOTATION_ACTIONS.has(input.reviewAnnotationAction)) {
+    args.push('--review-annotation-action', input.reviewAnnotationAction)
+  }
+  if (input.reviewAnnotationComment) args.push('--review-annotation-comment', input.reviewAnnotationComment)
+  if (input.reviewAnnotationAnchorHash) args.push('--review-annotation-anchor-hash', input.reviewAnnotationAnchorHash)
 
   const raw = await run(args)
   return parseJson<T>(raw, 'canopy task action')

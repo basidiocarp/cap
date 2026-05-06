@@ -5,8 +5,11 @@ import type { ParsedDiff } from '../../../lib/diff-parser'
 import type { ReviewAnnotation } from '../../../store/annotations'
 import { diffApi } from '../../../lib/api'
 import { parseDiff } from '../../../lib/diff-parser'
+import { useCanopyTaskAction } from '../../../lib/queries/canopy'
 import { useAnnotationStore } from '../../../store/annotations'
 import { InlineDiffViewer } from '../InlineDiffViewer'
+
+const TASK_OPERATOR_ACTOR = 'operator'
 
 export function TaskDiffReviewSection({ taskId }: { taskId: string }) {
   const [file, setFile] = useState('')
@@ -18,6 +21,7 @@ export function TaskDiffReviewSection({ taskId }: { taskId: string }) {
   const addAnnotation = useAnnotationStore((s) => s.addAnnotation)
   const getTaskAnnotations = useAnnotationStore((s) => s.getTaskAnnotations)
   const taskAnnotations = getTaskAnnotations(taskId)
+  const taskActionMutation = useCanopyTaskAction()
 
   const loadDiff = async () => {
     if (!file.trim()) return
@@ -34,10 +38,22 @@ export function TaskDiffReviewSection({ taskId }: { taskId: string }) {
   }
 
   const handleAnnotate = (annotation: Omit<ReviewAnnotation, 'id' | 'createdAt' | 'taskId'>) => {
+    const id = crypto.randomUUID()
     addAnnotation({
       ...annotation,
       createdAt: new Date().toISOString(),
-      id: crypto.randomUUID(),
+      id,
+      taskId,
+    })
+    taskActionMutation.mutate({
+      action: 'attach_review_annotation',
+      changed_by: TASK_OPERATOR_ACTOR,
+      review_annotation_action: annotation.action,
+      review_annotation_anchor_hash: annotation.anchorHash,
+      review_annotation_comment: annotation.comment,
+      review_annotation_end_line: annotation.endLine,
+      review_annotation_file_path: annotation.filePath,
+      review_annotation_start_line: annotation.startLine,
       taskId,
     })
   }
@@ -55,7 +71,9 @@ export function TaskDiffReviewSection({ taskId }: { taskId: string }) {
             flex={1}
             label='File path'
             onChange={(e) => setFile(e.currentTarget.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') void loadDiff() }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void loadDiff()
+            }}
             placeholder='src/main.rs'
             size='xs'
             value={file}
@@ -76,6 +94,28 @@ export function TaskDiffReviewSection({ taskId }: { taskId: string }) {
             Load diff
           </Button>
         </Group>
+
+        {taskActionMutation.isPending ? (
+          <Alert
+            color='blue'
+            title='Saving annotation…'
+            variant='light'
+          >
+            Sending annotation to canopy.
+          </Alert>
+        ) : null}
+
+        {taskActionMutation.isError ? (
+          <Alert
+            color='orange'
+            title='Canopy write failed'
+            variant='light'
+          >
+            {taskActionMutation.error instanceof Error
+              ? taskActionMutation.error.message
+              : 'Annotation saved locally but not persisted to canopy.'}
+          </Alert>
+        ) : null}
 
         {error ? (
           <Alert
