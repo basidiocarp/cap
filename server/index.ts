@@ -4,6 +4,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
 import { CAP_HOST, CORS_ORIGIN } from './lib/config.ts'
+import { incrementRouteCounter } from './lib/counters.ts'
 import { registry } from './lib/rhizome-registry.ts'
 import { logger } from './logger.ts'
 import canopyRoutes from './routes/canopy.ts'
@@ -18,6 +19,9 @@ import settingsRoutes from './routes/settings.ts'
 import statusRoutes from './routes/status.ts'
 import telemetryRoutes from './routes/telemetry.ts'
 import usageRoutes from './routes/usage.ts'
+import metricsRoutes from './routes/metrics.ts'
+import observerRoutes from './routes/observer.ts'
+import statsRoutes from './routes/stats.ts'
 import watcherRoutes from './routes/watchers.ts'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -108,6 +112,8 @@ export function createApp(boundHost = process.env.CAP_HOST ?? '127.0.0.1'): Hono
     await next()
     const ms = Date.now() - start
     logger.info({ method: c.req.method, ms, path: c.req.path, status: c.res.status }, `${c.req.method} ${c.req.path}`)
+    const routePrefix = '/' + c.req.path.split('/').slice(1, 3).join('/')
+    incrementRouteCounter(routePrefix)
   })
 
   app.use('*', cors({ origin: CORS_ORIGIN }))
@@ -127,6 +133,9 @@ export function createApp(boundHost = process.env.CAP_HOST ?? '127.0.0.1'): Hono
   app.route('/api/sessions', sessionsRoutes)
   app.route('/api/rhizome', rhizomeRoutes)
   app.route('/api/settings', settingsRoutes)
+  app.route('/api/metrics', metricsRoutes)
+  app.route('/api/observer', observerRoutes)
+  app.route('/api/stats', statsRoutes)
   app.route('/api/status', statusRoutes)
   app.route('/api/telemetry', telemetryRoutes)
   app.route('/api/usage', usageRoutes)
