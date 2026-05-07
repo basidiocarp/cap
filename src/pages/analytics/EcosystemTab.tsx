@@ -141,7 +141,6 @@ export function EcosystemTab({ data }: { data: EcosystemStatus | null }) {
           </Group>
         </Stack>
       </SectionCard>
-
     </Stack>
   )
 }

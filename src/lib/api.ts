@@ -1,3 +1,4 @@
+export type { DiffResponse } from './api/index'
 export type {
   StipeDoctorCheck,
   StipeDoctorReport,
@@ -131,7 +132,6 @@ export type {
   UsageAggregate,
   UsageTrend,
 } from './types'
-export type { DiffResponse } from './api/index'
 export {
   annulusApi,
   canopyApi,

@@ -13,7 +13,14 @@ interface Props {
   taskId: string
 }
 
-export function TaskCloseActionsSection({ allowedKinds, closeoutSummary, isPending, setCloseoutSummary, taskActionMutation, taskId }: Props) {
+export function TaskCloseActionsSection({
+  allowedKinds,
+  closeoutSummary,
+  isPending,
+  setCloseoutSummary,
+  taskActionMutation,
+  taskId,
+}: Props) {
   if (!allowedKinds.has('close_task')) return null
 
   return (

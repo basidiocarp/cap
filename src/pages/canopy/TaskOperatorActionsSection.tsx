@@ -2,7 +2,6 @@ import { Stack } from '@mantine/core'
 
 import type { CanopyAgentRegistration, CanopyTaskDetail } from '../../lib/api'
 import { ErrorAlert } from '../../components/ErrorAlert'
-import { useTaskActionState } from './useTaskActionState'
 import { TaskAssignmentActionsSection } from './TaskAssignmentActionsSection'
 import { TaskCloseActionsSection } from './TaskCloseActionsSection'
 import { TaskDeadlineActionsSection } from './TaskDeadlineActionsSection'
@@ -11,6 +10,7 @@ import { TaskLifecycleActionsGroup } from './TaskLifecycleActionsGroup'
 import { TaskMetadataActionsSection } from './TaskMetadataActionsSection'
 import { TaskOpenHandoffActions } from './TaskOpenHandoffActions'
 import { TaskReviewActionsSection } from './TaskReviewActionsSection'
+import { useTaskActionState } from './useTaskActionState'
 
 export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyTaskDetail; agents: CanopyAgentRegistration[] }) {
   const {
@@ -162,8 +162,8 @@ export function TaskOperatorActionsSection({ detail, agents }: { detail: CanopyT
       />
 
       <TaskOpenHandoffActions
-        handoffActionsById={handoffActionsById}
         handoffActionMutation={handoffActionMutation}
+        handoffActionsById={handoffActionsById}
         handoffNotes={handoffNotes}
         isPending={isPending}
         openHandoffs={openHandoffs}

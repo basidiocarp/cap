@@ -8,6 +8,7 @@ import { useHostCoverageStore } from '../store/host-coverage'
 import { LanguageServersCard } from './status/LanguageServersCard'
 import { LifecycleAdaptersCard } from './status/LifecycleAdaptersCard'
 import { StatusArchitectureCard } from './status/StatusArchitectureCard'
+import { StatusCustomizationCard } from './status/StatusCustomizationCard'
 import { StatusGettingStartedCard } from './status/StatusGettingStartedCard'
 import { StatusHeader } from './status/StatusHeader'
 import { StatusOverviewGrid } from './status/StatusOverviewGrid'
@@ -56,6 +57,8 @@ export function Status() {
           <LanguageServersCard status={status} />
 
           <LifecycleAdaptersCard status={status} />
+
+          <StatusCustomizationCard />
         </>
       )}
     </Stack>

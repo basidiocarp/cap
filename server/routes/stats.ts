@@ -2,8 +2,8 @@ import { Hono } from 'hono'
 
 import * as hyphae from '../hyphae.ts'
 import { getSessions } from '../hyphae.ts'
-import { getGain } from '../mycelium.ts'
 import { isGainCliOutput } from '../mycelium/gain.ts'
+import { getGain } from '../mycelium.ts'
 
 const app = new Hono()
 

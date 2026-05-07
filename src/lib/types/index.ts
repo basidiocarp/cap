@@ -1,4 +1,4 @@
-export type { AnnulusStatus, AnnulusToolReport } from './annulus'
+export type { AnnulusStatus, AnnulusToolReport, ResolvedStatusCustomization, StatusMetadata, StatusSegment, StatusTheme } from './annulus'
 export type {
   CanopyAgent,
   CanopyAgentAttention,

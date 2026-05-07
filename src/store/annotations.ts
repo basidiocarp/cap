@@ -23,11 +23,11 @@ interface AnnotationStore {
 export const useAnnotationStore = create<AnnotationStore>()(
   persist(
     (set, get) => ({
-      annotations: [],
       addAnnotation: (annotation) =>
         set((state) => ({
           annotations: [...state.annotations, annotation],
         })),
+      annotations: [],
       getTaskAnnotations: (taskId) => get().annotations.filter((a) => a.taskId === taskId),
       removeAnnotation: (id) =>
         set((state) => ({

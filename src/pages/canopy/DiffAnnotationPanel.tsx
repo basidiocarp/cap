@@ -42,7 +42,8 @@ export function DiffAnnotationPanel({ anchorHash, endLine, filePath, lineContent
           size='xs'
           truncate
         >
-          {filePath}:{startLine}{startLine !== endLine ? `–${endLine}` : ''}
+          {filePath}:{startLine}
+          {startLine !== endLine ? `–${endLine}` : ''}
         </Text>
         <Text
           c='dimmed'
@@ -56,7 +57,9 @@ export function DiffAnnotationPanel({ anchorHash, endLine, filePath, lineContent
           <Select
             data={ACTION_OPTIONS}
             label='Action'
-            onChange={(v) => { if (v) setAction(v as ReviewAnnotation['action']) }}
+            onChange={(v) => {
+              if (v) setAction(v as ReviewAnnotation['action'])
+            }}
             size='xs'
             value={action}
             w={120}
@@ -71,8 +74,17 @@ export function DiffAnnotationPanel({ anchorHash, endLine, filePath, lineContent
           size='xs'
           value={comment}
         />
-        <Group gap='xs' justify='flex-end'>
-          <Button onClick={onCancel} size='xs' variant='subtle'>Cancel</Button>
+        <Group
+          gap='xs'
+          justify='flex-end'
+        >
+          <Button
+            onClick={onCancel}
+            size='xs'
+            variant='subtle'
+          >
+            Cancel
+          </Button>
           <Button
             color={action === 'approve' ? 'teal' : action === 'reject' ? 'red' : 'orange'}
             disabled={action !== 'approve' && !comment.trim()}

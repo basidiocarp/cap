@@ -57,7 +57,12 @@ export function AnalyticsPage() {
 
       <AnalyticsHeader />
 
-      {dataError ? <ErrorAlert error={dataError} title='Analytics data partially unavailable' /> : null}
+      {dataError ? (
+        <ErrorAlert
+          error={dataError}
+          title='Analytics data partially unavailable'
+        />
+      ) : null}
 
       {loading && <PageLoader mt='xl' />}
 

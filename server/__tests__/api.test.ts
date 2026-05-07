@@ -424,6 +424,7 @@ describe('API Routes', () => {
     it('forwards search-all requests to the Hyphae memoir CLI surface', async () => {
       const memoirSearchAllSpy = vi.spyOn(hyphae, 'memoirSearchAll').mockResolvedValue([
         {
+          community_id: null,
           confidence: 0.95,
           created_at: '2026-03-24T00:00:00Z',
           definition: 'Routes context requests',
@@ -432,7 +433,6 @@ describe('API Routes', () => {
           memoir_id: 'memoir-1',
           name: 'gather_context',
           revision: 2,
-          community_id: null,
           source_memory_ids: '[]',
           updated_at: '2026-03-24T00:00:00Z',
         },
@@ -469,6 +469,7 @@ describe('API Routes', () => {
     it('forwards memoir search requests to the Hyphae memoir CLI surface', async () => {
       const memoirSearchSpy = vi.spyOn(hyphae, 'memoirSearch').mockResolvedValue([
         {
+          community_id: null,
           confidence: 0.9,
           created_at: '2026-03-24T00:00:00Z',
           definition: 'Routes session timeline requests',
@@ -477,7 +478,6 @@ describe('API Routes', () => {
           memoir_id: 'memoir-1',
           name: 'timeline',
           revision: 1,
-          community_id: null,
           source_memory_ids: '[]',
           updated_at: '2026-03-24T00:00:00Z',
         },
@@ -514,6 +514,7 @@ describe('API Routes', () => {
     it('forwards memoir inspect requests to the Hyphae memoir CLI surface', async () => {
       const memoirInspectSpy = vi.spyOn(hyphae, 'memoirInspect').mockResolvedValue({
         concept: {
+          community_id: null,
           confidence: 0.9,
           created_at: '2026-03-24T00:00:00Z',
           definition: 'Collect request context',
@@ -522,13 +523,13 @@ describe('API Routes', () => {
           memoir_id: 'memoir-1',
           name: 'gather_context',
           revision: 1,
-          community_id: null,
           source_memory_ids: '[]',
           updated_at: '2026-03-24T00:00:00Z',
         },
         neighbors: [
           {
             concept: {
+              community_id: null,
               confidence: 0.8,
               created_at: '2026-03-24T00:00:00Z',
               definition: 'Loads project sessions',
@@ -537,8 +538,7 @@ describe('API Routes', () => {
               memoir_id: 'memoir-1',
               name: 'session_list',
               revision: 1,
-              community_id: null,
-          source_memory_ids: '[]',
+              source_memory_ids: '[]',
               updated_at: '2026-03-24T00:00:00Z',
             },
             direction: 'outgoing',

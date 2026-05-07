@@ -405,7 +405,7 @@ export async function getTopicsFromCli(): Promise<TopicSummary[]> {
 
 export async function recallFromCli(query: string, topic?: string, limit = 20): Promise<MemoryRow[]> {
   try {
-    const params: Record<string, unknown> = { query, limit, include_invalidated: true }
+    const params: Record<string, unknown> = { include_invalidated: true, limit, query }
     if (topic) {
       params.topic = topic
     }
@@ -444,7 +444,7 @@ export async function recallFromCli(query: string, topic?: string, limit = 20): 
 
 export async function searchGlobalFromCli(query: string, limit = 20): Promise<Array<MemoryRow & { project?: string }>> {
   try {
-    const raw = await callLocalService('hyphae', 'cap_search_all', { query, limit, include_invalidated: true })
+    const raw = await callLocalService('hyphae', 'cap_search_all', { include_invalidated: true, limit, query })
     if (raw) {
       const payload = parseJson(raw, isRawSearchPayload, 'search')
       if ((payload as { schema_version?: string }).schema_version === SEARCH_SCHEMA_VERSION) {

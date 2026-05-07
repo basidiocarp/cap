@@ -410,7 +410,7 @@ function rebuildNeighbors(payload: RawMemoirInspectPayload): ConceptInspection['
 
 async function loadMemoirShowPage(memoirName: string, offset: number, limit: number): Promise<RawMemoirShowPayload | null> {
   try {
-    const raw = await callLocalService('hyphae', 'cap_memoir_show', { memoir: memoirName, offset, limit })
+    const raw = await callLocalService('hyphae', 'cap_memoir_show', { limit, memoir: memoirName, offset })
     if (raw) {
       const payload = parseJson(raw, isMemoirShowPayload, 'memoir show')
       if ((payload as { schema_version?: string }).schema_version === MEMOIR_SHOW_SCHEMA_VERSION) {
@@ -442,7 +442,7 @@ async function loadMemoirSearchPage(
   limit: number
 ): Promise<RawMemoirSearchPayload | null> {
   try {
-    const raw = await callLocalService('hyphae', 'cap_memoir_search', { memoir: memoirName, query, offset, limit })
+    const raw = await callLocalService('hyphae', 'cap_memoir_search', { limit, memoir: memoirName, offset, query })
     if (raw) {
       const payload = parseJson(raw, isMemoirSearchPayload, 'memoir search')
       if ((payload as { schema_version?: string }).schema_version === MEMOIR_SEARCH_SCHEMA_VERSION) {
@@ -472,7 +472,7 @@ async function loadMemoirSearchPage(
 
 async function loadSearchAllPage(query: string, offset: number, limit: number): Promise<RawMemoirSearchAllPayload> {
   try {
-    const raw = await callLocalService('hyphae', 'cap_memoir_search_all', { query, offset, limit })
+    const raw = await callLocalService('hyphae', 'cap_memoir_search_all', { limit, offset, query })
     if (raw) {
       const payload = parseJson(raw, isMemoirSearchAllPayload, 'memoir search-all')
       if ((payload as { schema_version?: string }).schema_version === MEMOIR_SEARCH_ALL_SCHEMA_VERSION) {
@@ -568,7 +568,7 @@ export async function memoirSearchAll(query: string): Promise<Concept[]> {
 
 export async function memoirInspect(memoirName: string, conceptName: string, depth = 2): Promise<ConceptInspection | null> {
   try {
-    const raw = await callLocalService('hyphae', 'cap_memoir_inspect', { memoir_id: memoirName, concept: conceptName, depth })
+    const raw = await callLocalService('hyphae', 'cap_memoir_inspect', { concept: conceptName, depth, memoir_id: memoirName })
     if (raw) {
       const payload = parseJson(raw, isMemoirInspectPayload, 'memoir inspect')
       if ((payload as { schema_version?: string }).schema_version === MEMOIR_INSPECT_SCHEMA_VERSION) {

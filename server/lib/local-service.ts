@@ -28,11 +28,7 @@ async function readSocketPath(tool: string): Promise<string | null> {
 // Sends a single JSON-RPC 2.0 request over a unix socket and returns the result
 // as a JSON string. Returns null if the endpoint is not available. Throws on
 // socket errors or RPC-level errors.
-export async function callLocalService(
-  tool: string,
-  method: string,
-  params: Record<string, unknown>
-): Promise<string | null> {
+export async function callLocalService(tool: string, method: string, params: Record<string, unknown>): Promise<string | null> {
   const socketPath = await readSocketPath(tool)
   if (!socketPath) {
     logger.debug({ tool }, 'No local service endpoint — will fall back to CLI')
@@ -67,8 +63,7 @@ export async function callLocalService(
           resolve(null)
           return
         }
-        const resultStr =
-          typeof response.result === 'string' ? response.result : JSON.stringify(response.result)
+        const resultStr = typeof response.result === 'string' ? response.result : JSON.stringify(response.result)
         resolve(resultStr)
       } catch (err) {
         reject(err)
