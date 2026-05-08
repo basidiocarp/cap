@@ -1,0 +1,34 @@
+:root {
+  /* Color - Surface */
+  --color-surface: var(--mantine-color-dark-7);
+  --color-surface-raised: var(--mantine-color-dark-6);
+
+  /* Color - Text */
+  --color-text-primary: var(--mantine-color-gray-1);
+  --color-text-muted: var(--mantine-color-gray-5);
+
+  /* Color - Border & Accent */
+  --color-border: var(--mantine-color-dark-4);
+  --color-accent: var(--mantine-color-mycelium-6);
+
+  /* Spacing */
+  --spacing-xs: var(--mantine-spacing-xs);
+  --spacing-sm: var(--mantine-spacing-sm);
+  --spacing-md: var(--mantine-spacing-md);
+  --spacing-lg: var(--mantine-spacing-lg);
+  --spacing-xl: var(--mantine-spacing-xl);
+
+  /* Radius */
+  --radius-sm: var(--mantine-radius-sm);
+  --radius-md: var(--mantine-radius-md);
+  --radius-lg: var(--mantine-radius-lg);
+}
+
+/* Light mode overrides */
+[data-mantine-color-scheme="light"] {
+  --color-surface: var(--mantine-color-gray-0);
+  --color-surface-raised: var(--mantine-color-white);
+  --color-text-primary: var(--mantine-color-dark-9);
+  --color-text-muted: var(--mantine-color-gray-6);
+  --color-border: var(--mantine-color-gray-3);
+}

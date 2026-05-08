@@ -232,3 +232,159 @@ describe('annulus status --json output shape', () => {
     expect(result).toEqual({ available: true, reports: [] })
   })
 })
+
+describe('getAnnulusConfigExport', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    runCliMock.mockReset()
+  })
+
+  it('returns valid customization payload with schema 1.0, segments, theme, and metadata', async () => {
+    runCliMock.mockResolvedValue(
+      JSON.stringify({
+        schema_version: '1.0',
+        segments: [
+          { id: 'ccstatusline', enabled: true },
+          { id: 'ccusage', enabled: false },
+        ],
+        theme: { color_mode: 'auto', separator: ' | ' },
+        metadata: {
+          created_at: '2024-01-15T10:30:00Z',
+          version: '1.2.0',
+          preset_name: 'default',
+        },
+      })
+    )
+
+    const { getAnnulusConfigExport } = await import('../annulus.ts')
+    const result = await getAnnulusConfigExport()
+
+    expect(result).not.toBeNull()
+    expect(result?.schema_version).toBe('1.0')
+    expect(result?.segments).toHaveLength(2)
+    expect(result?.segments[0]).toEqual({ id: 'ccstatusline', enabled: true })
+    expect(result?.segments[1]).toEqual({ id: 'ccusage', enabled: false })
+    expect(result?.theme).toEqual({ color_mode: 'auto', separator: ' | ' })
+    expect(result?.metadata).toEqual({
+      created_at: '2024-01-15T10:30:00Z',
+      version: '1.2.0',
+      preset_name: 'default',
+    })
+  })
+
+  it('returns null when CLI throws', async () => {
+    runCliMock.mockRejectedValue(new Error('not found'))
+
+    const { getAnnulusConfigExport } = await import('../annulus.ts')
+    const result = await getAnnulusConfigExport()
+
+    expect(result).toBeNull()
+  })
+
+  it('returns null when output is not JSON', async () => {
+    runCliMock.mockResolvedValue('not json')
+
+    const { getAnnulusConfigExport } = await import('../annulus.ts')
+    const result = await getAnnulusConfigExport()
+
+    expect(result).toBeNull()
+  })
+
+  it('returns null when schema_version is wrong', async () => {
+    runCliMock.mockResolvedValue(
+      JSON.stringify({
+        schema_version: '2.0',
+        segments: [{ id: 'test', enabled: true }],
+        theme: { color_mode: 'auto', separator: ' | ' },
+      })
+    )
+
+    const { getAnnulusConfigExport } = await import('../annulus.ts')
+    const result = await getAnnulusConfigExport()
+
+    expect(result).toBeNull()
+  })
+
+  it('returns null when segments array is missing', async () => {
+    runCliMock.mockResolvedValue(
+      JSON.stringify({
+        schema_version: '1.0',
+        theme: { color_mode: 'auto', separator: ' | ' },
+      })
+    )
+
+    const { getAnnulusConfigExport } = await import('../annulus.ts')
+    const result = await getAnnulusConfigExport()
+
+    expect(result).toBeNull()
+  })
+
+  it('returns null when theme is missing', async () => {
+    runCliMock.mockResolvedValue(
+      JSON.stringify({
+        schema_version: '1.0',
+        segments: [{ id: 'test', enabled: true }],
+      })
+    )
+
+    const { getAnnulusConfigExport } = await import('../annulus.ts')
+    const result = await getAnnulusConfigExport()
+
+    expect(result).toBeNull()
+  })
+
+  it('returns null when theme.color_mode is invalid', async () => {
+    runCliMock.mockResolvedValue(
+      JSON.stringify({
+        schema_version: '1.0',
+        segments: [{ id: 'test', enabled: true }],
+        theme: { color_mode: 'never_valid', separator: ' | ' },
+      })
+    )
+
+    const { getAnnulusConfigExport } = await import('../annulus.ts')
+    const result = await getAnnulusConfigExport()
+
+    expect(result).toBeNull()
+  })
+
+  it('skips malformed segment entries but keeps valid ones', async () => {
+    runCliMock.mockResolvedValue(
+      JSON.stringify({
+        schema_version: '1.0',
+        segments: [
+          { missing_id: 'test', enabled: true },
+          { id: 'valid-segment', missing_enabled: true },
+          { id: 'good-segment', enabled: true },
+        ],
+        theme: { color_mode: 'auto', separator: ' | ' },
+      })
+    )
+
+    const { getAnnulusConfigExport } = await import('../annulus.ts')
+    const result = await getAnnulusConfigExport()
+
+    expect(result).not.toBeNull()
+    expect(result?.segments).toHaveLength(1)
+    expect(result?.segments[0]).toEqual({ id: 'good-segment', enabled: true })
+  })
+
+  it('returns successfully with undefined metadata when metadata field is absent', async () => {
+    runCliMock.mockResolvedValue(
+      JSON.stringify({
+        schema_version: '1.0',
+        segments: [{ id: 'test', enabled: true }],
+        theme: { color_mode: 'auto', separator: ' | ' },
+      })
+    )
+
+    const { getAnnulusConfigExport } = await import('../annulus.ts')
+    const result = await getAnnulusConfigExport()
+
+    expect(result).not.toBeNull()
+    expect(result?.schema_version).toBe('1.0')
+    expect(result?.segments).toHaveLength(1)
+    expect(result?.theme).toEqual({ color_mode: 'auto', separator: ' | ' })
+    expect(result?.metadata).toBeUndefined()
+  })
+})

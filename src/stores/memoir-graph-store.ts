@@ -15,6 +15,7 @@ interface MemoirGraphState {
   setSelectedMemoirName: (name: string | null) => void
 }
 
+// STATE-VIOLATION: stores server-derived data — migrate to TanStack Query
 export const useMemoirGraphStore = create<MemoirGraphState>((set) => ({
   currentNodeId: null,
   edges: [],

@@ -19,7 +19,13 @@ export function SectionCard({
       shadow='sm'
       withBorder
       {...rest}
-      styles={{ root: { overflow: 'visible' } }}
+      data-testid='section-card'
+      styles={{
+        root: {
+          overflow: 'visible',
+          backgroundColor: 'var(--color-surface-raised)',
+        },
+      }}
     >
       {title && (
         <Title
