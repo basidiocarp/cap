@@ -16,8 +16,8 @@ import {
   IconSearch,
   IconSettings,
 } from '@tabler/icons-react'
+import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { useId } from 'react'
-import { Outlet, NavLink as RouterNavLink, useLocation } from 'react-router-dom'
 
 import { ActivityRail } from './ActivityRail'
 import { BrandMark } from './BrandMark'
@@ -67,7 +67,7 @@ const NAV_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
 export function AppLayout() {
   const [opened, { toggle }] = useDisclosure()
   const navbarId = useId()
-  const location = useLocation()
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
 
   return (
     <AppShell
@@ -133,8 +133,8 @@ export function AppLayout() {
               </Text>
               {section.items.map((item) => (
                 <NavLink
-                  active={item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)}
-                  component={RouterNavLink}
+                  active={item.path === '/' ? pathname === '/' : pathname.startsWith(item.path)}
+                  component={Link}
                   key={item.path}
                   label={item.label}
                   leftSection={item.alert ? <Indicator color='red' size={6}><item.icon size={18} /></Indicator> : <item.icon size={18} />}

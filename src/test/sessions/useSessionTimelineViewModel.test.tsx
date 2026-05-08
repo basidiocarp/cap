@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { RouterContextProvider, createMemoryHistory, createRootRoute, createRouter, parseSearchWith, stringifySearchWith } from '@tanstack/react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { CommandHistory, EcosystemStatus, ProjectInfo, RhizomeStatus, SessionTimelineRecord } from '../../lib/api'
@@ -119,7 +119,13 @@ vi.mock('../../lib/stipe-actions', () => ({
 
 function createWrapper(route = '/sessions') {
   return function Wrapper({ children }: { children: ReactNode }) {
-    return <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+    const router = createRouter({
+      history: createMemoryHistory({ initialEntries: [route] }),
+      parseSearch: parseSearchWith((v) => v),
+      routeTree: createRootRoute(),
+      stringifySearch: stringifySearchWith((v) => v),
+    })
+    return <RouterContextProvider router={router}>{children}</RouterContextProvider>
   }
 }
 

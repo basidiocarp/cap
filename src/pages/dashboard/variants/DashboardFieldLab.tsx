@@ -1,6 +1,6 @@
 import { Badge, Card, Grid, Group, Table, Stack, Text, TextInput, ThemeIcon, UnstyledButton } from '@mantine/core'
 import { IconBrain, IconChartBar, IconCommand, IconGraph, IconHeartbeat } from '@tabler/icons-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@tanstack/react-router'
 
 import type { DashboardVariantProps } from './DashboardOperator'
 import { AnomalyList, type Anomaly } from '../../../components/AnomalyList'
@@ -33,25 +33,25 @@ export function DashboardFieldLab({
       label: 'Search memories',
       icon: IconBrain,
       color: 'mycelium',
-      onClick: () => navigate('/memories'),
+      onClick: () => navigate({ to: '/memories' }),
     },
     {
       label: 'View memoir graph',
       icon: IconGraph,
       color: 'spore',
-      onClick: () => navigate('/memoir-graph'),
+      onClick: () => navigate({ to: '/memoir-graph' }),
     },
     {
       label: 'Run analytics',
       icon: IconChartBar,
       color: 'fruiting',
-      onClick: () => navigate('/analytics'),
+      onClick: () => navigate({ to: '/analytics' }),
     },
     {
       label: 'Check status',
       icon: IconHeartbeat,
       color: 'substrate',
-      onClick: () => navigate('/status'),
+      onClick: () => navigate({ to: '/status' }),
     },
   ]
 

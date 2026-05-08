@@ -1,5 +1,5 @@
 import { Badge, Button, Grid, Group, Loader, Stack, Text, Title } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import { EmptyState } from '../../components/EmptyState'
 import { ErrorAlert } from '../../components/ErrorAlert'

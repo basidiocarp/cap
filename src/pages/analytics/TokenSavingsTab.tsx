@@ -1,7 +1,7 @@
 import { BarChart, LineChart } from '@mantine/charts'
 import { Alert, Button, Grid, Stack, Table, Text } from '@mantine/core'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { MyceliumAnalytics } from '../../lib/api'
 import { ActionEmptyState } from '../../components/ActionEmptyState'

@@ -1,5 +1,5 @@
 import { Alert, List, Text } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 export function DiagnosticsUnavailableAlert() {
   return (

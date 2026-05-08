@@ -1,6 +1,6 @@
 import { BarChart } from '@mantine/charts'
 import { Alert, Badge, Button, Grid, Group, Stack, Table, Text } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { RhizomeAnalytics } from '../../lib/api'
 import { ActionEmptyState } from '../../components/ActionEmptyState'

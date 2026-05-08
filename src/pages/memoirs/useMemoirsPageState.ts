@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams } from '../../lib/search-params'
 
 import { useMemoir, useMemoirInspect, useMemoirs } from '../../lib/queries'
 import { DEFAULT_MEMOIR_PAGE, readMemoirUrlState, writeMemoirUrlState } from './memoir-url-state'

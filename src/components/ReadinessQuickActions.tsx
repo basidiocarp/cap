@@ -1,6 +1,6 @@
 import { Button, Group } from '@mantine/core'
 import { IconPlayerPlay, IconRefresh } from '@tabler/icons-react'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { ReadinessQuickAction } from '../lib/readiness'
 

@@ -1,6 +1,6 @@
 import { useDebouncedValue } from '@mantine/hooks'
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams } from '../../lib/search-params'
 
 import type { Memory } from '../../lib/api'
 import type { ReviewFilter } from './memory-utils'

@@ -1,5 +1,5 @@
 import { Badge, Button, Table, Text } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import { ActionEmptyState } from '../../components/ActionEmptyState'
 import { PageLoader } from '../../components/PageLoader'

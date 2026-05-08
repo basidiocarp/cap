@@ -1,6 +1,6 @@
 import { BarChart, LineChart } from '@mantine/charts'
 import { Alert, Badge, Button, Grid, Stack, Table, Text } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { AggregateTelemetry } from '../../lib/types'
 import { ActionEmptyState } from '../../components/ActionEmptyState'

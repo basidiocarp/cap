@@ -1,5 +1,5 @@
 import { Table, Text } from '@mantine/core'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@tanstack/react-router'
 
 import type { TopicSummary } from '../../lib/api'
 import { EmptyState } from '../../components/EmptyState'
@@ -29,7 +29,7 @@ export function TopicsSection({ topics }: { topics: TopicSummary[] }) {
                   <Text
                     component='button'
                     fw={500}
-                    onClick={() => navigate(`/memories?topic=${encodeURIComponent(topic.topic)}`)}
+                    onClick={() => navigate({ to: `/memories?topic=${encodeURIComponent(topic.topic)}` })}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                     variant='link'
                   >

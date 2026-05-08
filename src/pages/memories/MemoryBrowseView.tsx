@@ -1,5 +1,5 @@
 import { Badge, Button, Card, Group, Progress, SimpleGrid, Text, Tooltip, UnstyledButton } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { TopicSummary } from '../../lib/api'
 import { ActionEmptyState } from '../../components/ActionEmptyState'

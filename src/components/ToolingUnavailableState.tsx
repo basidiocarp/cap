@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import { ActionEmptyState } from './ActionEmptyState'
 

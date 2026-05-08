@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useLocation } from 'react-router-dom'
+import { useRouterState } from '@tanstack/react-router'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createRhizomeSymbol, createSymbolDefinition } from '../test/fixtures'
@@ -94,8 +94,8 @@ vi.mock('./code-explorer/SymbolTable', () => ({
 }))
 
 function LocationProbe() {
-  const location = useLocation()
-  return <div data-testid='location-search'>{location.search}</div>
+  const location = useRouterState({ select: (s) => s.location })
+  return <div data-testid='location-search'>{location.searchStr}</div>
 }
 
 describe('CodeExplorer page', () => {

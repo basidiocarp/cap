@@ -1,5 +1,5 @@
 import { Badge, Group, Stack, Text } from '@mantine/core'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@tanstack/react-router'
 
 import type { DiagnosticItem } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'
@@ -69,8 +69,8 @@ export function DiagnosticsFileSection({ file, items }: { file: string; items: D
               <Group
                 gap='sm'
                 key={`${item.file}:${item.line}:${item.column}:${item.severity}:${item.message}`}
-                onClick={() => navigate(`/code?file=${encodeURIComponent(item.file)}&line=${item.line}`)}
-                onKeyDown={onActivate(() => navigate(`/code?file=${encodeURIComponent(item.file)}&line=${item.line}`))}
+                onClick={() => navigate({ to: `/code?file=${encodeURIComponent(item.file)}&line=${item.line}` })}
+                onKeyDown={onActivate(() => navigate({ to: `/code?file=${encodeURIComponent(item.file)}&line=${item.line}` }))}
                 style={{ cursor: 'pointer' }}
                 tabIndex={0}
                 wrap='nowrap'

@@ -149,13 +149,13 @@ export function createApp(boundHost = process.env.CAP_HOST ?? '127.0.0.1'): Hono
   return app
 }
 
+let httpServer: { close: (cb?: (err?: Error) => void) => void } | undefined
+
 export function startServer() {
   const port = Number(process.env.PORT ?? 3001)
   const host = CAP_HOST
   const authMode = isUnauthenticatedDevMode() ? 'explicit-unauthenticated-dev' : 'protected'
 
-  // Create the app with the resolved host so auth middleware closes over the
-  // startup value rather than reading env at request time.
   const app = createApp(host)
 
   logger.info({ apiKeyConfigured: !!getApiKey(), authMode, host, port }, 'Cap server started')
@@ -165,7 +165,7 @@ export function startServer() {
       'CAP_HOST is set beyond localhost but CAP_API_KEY is not configured — ' + 'all write routes are accessible without authentication'
     )
   }
-  serve({ fetch: app.fetch, hostname: host, port })
+  httpServer = serve({ fetch: app.fetch, hostname: host, port })
 }
 
 if (!process.env.VITEST) {
@@ -175,7 +175,21 @@ if (!process.env.VITEST) {
 function shutdown() {
   logger.info('Shutting down')
   registry.destroyAll()
-  process.exit(0)
+
+  if (httpServer) {
+    httpServer.close((err) => {
+      if (err) logger.error({ err }, 'Error closing server')
+      else logger.info('Server closed')
+      process.exit(0)
+    })
+    // Force exit after 5 s if requests are still in flight
+    setTimeout(() => {
+      logger.warn('Shutdown timed out — force exiting')
+      process.exit(1)
+    }, 5_000).unref()
+  } else {
+    process.exit(0)
+  }
 }
 
 process.on('SIGINT', shutdown)

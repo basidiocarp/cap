@@ -1,6 +1,6 @@
 import { Button, Group, Stack, Text, Title } from '@mantine/core'
 import { IconArrowLeft, IconRefresh } from '@tabler/icons-react'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { OnboardingAction } from '../lib/onboarding'
 import { ErrorAlert } from '../components/ErrorAlert'

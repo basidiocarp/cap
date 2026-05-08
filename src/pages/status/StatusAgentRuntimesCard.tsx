@@ -1,5 +1,5 @@
 import { Badge, Button, Card, Group, Stack, Text } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { EcosystemStatus } from '../../lib/api'
 import { ResolvedPathDetails } from '../../components/ResolvedPathDetails'

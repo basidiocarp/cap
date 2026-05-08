@@ -1,5 +1,5 @@
 import { Badge, Group, ScrollArea, Table, Text } from '@mantine/core'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from '@tanstack/react-router'
 
 import type { SearchResult } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'
@@ -60,8 +60,8 @@ export function SymbolSearchResults({ query, results }: { query: string; results
               {results.map((result) => (
                 <Table.Tr
                   key={`${result.file}:${result.line}:${result.name}`}
-                  onClick={() => navigate(codeExplorerHref({ file: result.file, symbol: result.name }))}
-                  onKeyDown={onActivate(() => navigate(codeExplorerHref({ file: result.file, symbol: result.name })))}
+                  onClick={() => navigate({ to: codeExplorerHref({ file: result.file, symbol: result.name }) })}
+                  onKeyDown={onActivate(() => navigate({ to: codeExplorerHref({ file: result.file, symbol: result.name }) }))}
                   style={{ cursor: 'pointer' }}
                   tabIndex={0}
                 >

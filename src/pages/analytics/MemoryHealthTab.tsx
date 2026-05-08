@@ -1,6 +1,6 @@
 import { BarChart } from '@mantine/charts'
 import { Alert, Button, Grid, Group, RingProgress, Stack, Table, Text, Title } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { HyphaeAnalytics } from '../../lib/api'
 import { ActionEmptyState } from '../../components/ActionEmptyState'

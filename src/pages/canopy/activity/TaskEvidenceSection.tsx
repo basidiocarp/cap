@@ -1,5 +1,5 @@
 import { Badge, Button, Divider, Group, Stack, Text } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { CanopyTaskDetail } from '../../../lib/api'
 import { EmptyState } from '../../../components/EmptyState'

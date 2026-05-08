@@ -1,5 +1,5 @@
 import { Alert, Badge, Button, Group, Progress, Stack, Table, Text } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { CommandHistory, CommandHistoryEntry } from '../../lib/api'
 import { ActionEmptyState } from '../../components/ActionEmptyState'

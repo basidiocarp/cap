@@ -1,13 +1,15 @@
 import type { ReactElement, ReactNode } from 'react'
 import { MantineProvider } from '@mantine/core'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RouterContextProvider, createMemoryHistory, createRootRoute, createRouter, parseSearchWith, stringifySearchWith } from '@tanstack/react-router'
 import { render } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
 
 interface RenderWithProvidersOptions {
   route?: string
 }
 
+// RouterContextProvider places the router in context synchronously (no async load),
+// so components that use useNavigate / useRouterState can render immediately in tests.
 function Providers({ children, route = '/' }: { children: ReactNode; route?: string }) {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -16,12 +18,19 @@ function Providers({ children, route = '/' }: { children: ReactNode; route?: str
     },
   })
 
+  const router = createRouter({
+    history: createMemoryHistory({ initialEntries: [route] }),
+    parseSearch: parseSearchWith((v) => v),
+    routeTree: createRootRoute(),
+    stringifySearch: stringifySearchWith((v) => v),
+  })
+
   return (
-    <MemoryRouter initialEntries={[route]}>
+    <RouterContextProvider router={router}>
       <QueryClientProvider client={queryClient}>
         <MantineProvider>{children}</MantineProvider>
       </QueryClientProvider>
-    </MemoryRouter>
+    </RouterContextProvider>
   )
 }
 

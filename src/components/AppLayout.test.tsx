@@ -1,29 +1,15 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Route, Routes } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
-import { renderWithProviders } from '../test/render'
 import { AppLayout } from './AppLayout'
+import { renderWithProviders } from '../test/render'
 
 describe('AppLayout', () => {
   it('lets keyboard users toggle the mobile nav with a real button', async () => {
     const user = userEvent.setup()
 
-    renderWithProviders(
-      <Routes>
-        <Route
-          element={<AppLayout />}
-          path='/'
-        >
-          <Route
-            element={<div>Home</div>}
-            index
-          />
-        </Route>
-      </Routes>,
-      { route: '/' }
-    )
+    renderWithProviders(<AppLayout />, { route: '/' })
 
     const toggleButton = screen.getByRole('button', { name: 'Toggle mobile navigation' })
     const controlsId = toggleButton.getAttribute('aria-controls')

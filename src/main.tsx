@@ -1,51 +1,30 @@
-import '@fontsource-variable/inter/index.css'
-import '@fontsource-variable/jetbrains-mono/index.css'
 import '@mantine/core/styles.css'
-import '@mantine/charts/styles.css'
 import '@mantine/notifications/styles.css'
+import '@fontsource-variable/inter/index.css'
 
-import { MantineProvider } from '@mantine/core'
+import { MantineProvider, mergeThemeOverrides } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { StrictMode, useMemo } from 'react'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { RouterProvider } from '@tanstack/react-router'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
 
-import { App } from './App'
-import { theme, mergeThemeOverrides } from './theme'
+import { queryClient } from './lib/queryClient'
+import { router } from './router'
 import { useDashboardVariantStore } from './stores/dashboard-variant-store'
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-      staleTime: 30_000,
-    },
-  },
-})
+import { theme } from './theme'
 
 function ThemedApp() {
-  const accentColor = useDashboardVariantStore((state) => state.accentColor)
-  const dynamicTheme = useMemo(
-    () => mergeThemeOverrides(theme, { primaryColor: accentColor }),
-    [accentColor],
-  )
-
+  const accentColor = useDashboardVariantStore((s) => s.accentColor)
+  const dynamicTheme = mergeThemeOverrides(theme, { primaryColor: accentColor })
   return (
-    <MantineProvider
-      defaultColorScheme='dark'
-      theme={dynamicTheme}
-    >
+    <MantineProvider defaultColorScheme='dark' theme={dynamicTheme}>
       <Notifications />
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <RouterProvider router={router} />
     </MantineProvider>
   )
 }
 
-// biome-ignore lint/style/noNonNullAssertion: root element guaranteed by index.html
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>

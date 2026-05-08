@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams } from '../../lib/search-params'
 
 import { useEcosystemStatusController } from '../../lib/ecosystem-status'
 import { useCommandHistory, useProjectContextController, useRhizomeStatus, useSessionTimeline } from '../../lib/queries'

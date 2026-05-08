@@ -1,6 +1,6 @@
 import { Button, Group, Text, Title } from '@mantine/core'
 import { IconAlertCircle, IconRefresh } from '@tabler/icons-react'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import { canopyHref, sessionsHref } from '../../lib/routes'
 

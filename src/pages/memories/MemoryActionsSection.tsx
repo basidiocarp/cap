@@ -1,7 +1,7 @@
 import type { UseMutationResult } from '@tanstack/react-query'
 import { Alert, Badge, Button, Group, Select, Stack, Text, Textarea } from '@mantine/core'
 import { IconAlertCircle, IconTrash } from '@tabler/icons-react'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { Memory } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'

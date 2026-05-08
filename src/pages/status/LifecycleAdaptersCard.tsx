@@ -1,6 +1,6 @@
 import { Alert, Badge, Button, Card, Group, Stack, Table, Text } from '@mantine/core'
 import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { EcosystemStatus } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'

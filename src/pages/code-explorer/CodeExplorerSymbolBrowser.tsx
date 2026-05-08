@@ -1,5 +1,5 @@
 import { Badge, Button, Group, Loader, SegmentedControl, Stack, Text, TextInput, Title } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { RhizomeSymbol, SymbolDefinition } from '../../lib/api'
 import { EmptyState } from '../../components/EmptyState'

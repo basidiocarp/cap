@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams } from '../../lib/search-params'
 
 import type { CanopySavedView, CanopySearchParamUpdates } from './canopy-filters'
 import { useCanopySnapshot, useCanopyTaskDetail, useProjectContextController } from '../../lib/queries'
@@ -97,7 +97,7 @@ export function useCanopyPageState() {
   )
   const groupedTasks = useMemo(() => groupTasksByStatus(filteredTasks), [filteredTasks])
 
-  const updateSearchParams = (updates: CanopySearchParamUpdates, options?: { replace?: boolean }) => {
+  const updateSearchParams = (updates: CanopySearchParamUpdates) => {
     const next = new URLSearchParams(searchParams)
 
     if ('preset' in updates) {
@@ -112,7 +112,7 @@ export function useCanopyPageState() {
       }
     }
 
-    setSearchParams(next, { replace: options?.replace ?? true })
+    setSearchParams(next)
   }
 
   const openPreset = (preset: CanopySavedView) =>
@@ -131,7 +131,7 @@ export function useCanopyPageState() {
     acknowledgedFilter,
     activeProject,
     availableAgents,
-    closeTask: () => updateSearchParams({ task: null }, { replace: false }),
+    closeTask: () => updateSearchParams({ task: null }),
     deadlineSummaryByTaskId,
     detailQuery,
     executionSummaryByTaskId,
@@ -147,7 +147,7 @@ export function useCanopyPageState() {
     modalOpen,
     openQueuePreset: openPreset,
     openSavedView: openPreset,
-    openTask: (taskId: string) => updateSearchParams({ task: taskId }, { replace: false }),
+    openTask: (taskId: string) => updateSearchParams({ task: taskId }),
     operatorActionsByTaskId,
     ownershipByTaskId,
     priorityFilter,

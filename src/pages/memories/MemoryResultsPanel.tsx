@@ -1,5 +1,5 @@
 import { Badge, Button, Group, Text } from '@mantine/core'
-import { Link } from 'react-router-dom'
+import { Link } from '@tanstack/react-router'
 
 import type { Memory } from '../../lib/api'
 import { ActionEmptyState } from '../../components/ActionEmptyState'
