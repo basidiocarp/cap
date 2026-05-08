@@ -6,6 +6,7 @@ import { PageLoader } from '../../components/PageLoader'
 import { ToolingUnavailableState } from '../../components/ToolingUnavailableState'
 import { getToolSettingsGuidance } from '../../lib/host-guidance'
 import { useSettings } from '../../lib/queries'
+import { DashboardVariantCard } from './DashboardVariantCard'
 import { HyphaeSettingsCard } from './HyphaeSettingsCard'
 import { LspManager } from './LspManager'
 import { ModeSelector } from './ModeSelector'
@@ -71,6 +72,8 @@ export function SettingsPage() {
           value='config'
         >
           <Stack>
+            <DashboardVariantCard />
+
             <ModeSelector />
 
             <Grid>

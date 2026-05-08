@@ -1,4 +1,4 @@
-import { Badge, Grid, Group, Stack, Title } from '@mantine/core'
+import { Stack, Title } from '@mantine/core'
 import { useQueries } from '@tanstack/react-query'
 
 import type { GainResult, HealthResult, Stats, TopicSummary } from '../../lib/api'
@@ -8,10 +8,10 @@ import { ErrorAlert } from '../../components/ErrorAlert'
 import { PageLoader } from '../../components/PageLoader'
 import { hyphaeApi, myceliumApi } from '../../lib/api'
 import { hyphaeKeys, myceliumKeys, useEcosystemStatus } from '../../lib/queries'
-import { DashboardKpis } from './DashboardKpis'
-import { MemoryHealthSection } from './MemoryHealthSection'
-import { QuickContextSection } from './QuickContextSection'
-import { TopicsSection } from './TopicsSection'
+import { useDashboardVariantStore } from '../../stores/dashboard-variant-store'
+import { DashboardConfident } from './variants/DashboardConfident'
+import { DashboardFieldLab } from './variants/DashboardFieldLab'
+import { DashboardOperator } from './variants/DashboardOperator'
 
 export function DashboardPage() {
   const [statsQuery, topicsQuery, healthQuery, gainQuery] = useQueries({
@@ -24,6 +24,7 @@ export function DashboardPage() {
   })
 
   const { data: ecosystemStatus } = useEcosystemStatus()
+  const { variant } = useDashboardVariantStore()
 
   const loading = statsQuery.isLoading || topicsQuery.isLoading || healthQuery.isLoading || gainQuery.isLoading
 
@@ -36,34 +37,14 @@ export function DashboardPage() {
     return <PageLoader />
   }
 
+  const VariantComponent =
+    variant === 'confident' ? DashboardConfident : variant === 'fieldlab' ? DashboardFieldLab : DashboardOperator
+
   return (
     <Stack>
       <Title order={2}>Dashboard</Title>
 
       <EcosystemStatusPanel />
-
-      {ecosystemStatus && (
-        <Group gap='xs'>
-          <Badge
-            color={ecosystemStatus.mycelium.available ? 'mycelium' : 'red'}
-            variant='light'
-          >
-            Mycelium {ecosystemStatus.mycelium.available ? '✓' : '✗'}
-          </Badge>
-          <Badge
-            color={ecosystemStatus.hyphae.available ? 'substrate' : 'red'}
-            variant='light'
-          >
-            Hyphae {ecosystemStatus.hyphae.available ? '✓' : '✗'}
-          </Badge>
-          <Badge
-            color={ecosystemStatus.rhizome.available ? 'fruiting' : 'red'}
-            variant='light'
-          >
-            Rhizome {ecosystemStatus.rhizome.available ? '✓' : '✗'}
-          </Badge>
-        </Group>
-      )}
 
       <ErrorAlert
         error={statsQuery.error}
@@ -73,35 +54,26 @@ export function DashboardPage() {
         error={gainQuery.error}
         title='Failed to load savings data'
       />
+      <ErrorAlert
+        error={topicsQuery.error}
+        title='Failed to load topics'
+      />
+      <ErrorAlert
+        error={healthQuery.error}
+        title='Failed to load health status'
+      />
 
       {!statsQuery.error && !stats && <EmptyState>No analytics data available yet.</EmptyState>}
 
       {stats && (
-        <DashboardKpis
+        <VariantComponent
+          ecosystemStatus={ecosystemStatus}
           gain={gain}
+          health={health}
           stats={stats}
+          topics={topics}
         />
       )}
-
-      <QuickContextSection />
-
-      <Grid>
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <ErrorAlert
-            error={topicsQuery.error}
-            title='Failed to load topics'
-          />
-          <TopicsSection topics={topics} />
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <ErrorAlert
-            error={healthQuery.error}
-            title='Failed to load health status'
-          />
-          <MemoryHealthSection health={health} />
-        </Grid.Col>
-      </Grid>
     </Stack>
   )
 }

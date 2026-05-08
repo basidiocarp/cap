@@ -4,6 +4,7 @@ import { Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/AppLayout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { PageLoader } from './components/PageLoader'
+import { TweaksPanel } from './components/TweaksPanel'
 import { Dashboard } from './pages/Dashboard'
 
 const Analytics = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.Analytics })))
@@ -87,6 +88,7 @@ export function App() {
             />
           </Route>
         </Routes>
+        {import.meta.env.DEV && <TweaksPanel />}
       </Suspense>
     </ErrorBoundary>
   )
