@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import Database from 'better-sqlite3'
 
 import {
@@ -66,10 +67,12 @@ export const CANOPY_NOTIFICATION_EVENT_TYPES = new Set([
 // ─────────────────────────────────────────────────────────────────────────────
 
 function openReadOnly(): Database.Database {
+  if (!existsSync(CANOPY_DB)) throw new Error(`no such file: ${CANOPY_DB}`)
   return new Database(CANOPY_DB, { fileMustExist: true, readonly: true })
 }
 
 function openReadWrite(): Database.Database {
+  if (!existsSync(CANOPY_DB)) throw new Error(`no such file: ${CANOPY_DB}`)
   return new Database(CANOPY_DB, { fileMustExist: true })
 }
 
