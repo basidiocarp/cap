@@ -1,6 +1,8 @@
 import { Badge, Grid, Group, Progress, SimpleGrid, Stack, Table, Text } from '@mantine/core'
 
-import type { EcosystemStatus, GainResult, HealthResult, Stats, TopicSummary } from '../../../lib/api'
+import type { EcosystemStatus, GainResult, HealthResult, SessionRecord, Stats, TopicSummary } from '../../../lib/api'
+import { AnomalyList, type Anomaly } from '../../../components/AnomalyList'
+import { HealthStrip } from '../../../components/HealthStrip'
 import { KpiCard } from '../../../components/KpiCard'
 import { SectionCard } from '../../../components/SectionCard'
 
@@ -10,6 +12,7 @@ export interface DashboardVariantProps {
   health: HealthResult[]
   gain: GainResult | undefined
   ecosystemStatus: EcosystemStatus | undefined
+  sessions: SessionRecord[]
 }
 
 export function DashboardOperator({
@@ -18,14 +21,33 @@ export function DashboardOperator({
   topics,
   health,
   ecosystemStatus,
+  sessions,
 }: DashboardVariantProps) {
   const avgSavingsPct = gain?.avg_savings_pct ?? gain?.summary?.avg_savings_pct ?? null
 
+  const toolsStatus = [
+    { name: 'mycelium', status: 'up' as const },
+    { name: 'hyphae', status: 'up' as const },
+    { name: 'rhizome', status: 'up' as const },
+  ]
+
+  const PLACEHOLDER_ANOMALIES: Anomaly[] = [
+    { id: '1', severity: 'warn', title: 'Hyphae index stale', detail: 'Last indexed 4 hours ago — search recall may be degraded.' },
+  ]
+
+  const sparkData = Array.from({ length: 7 }, (_, i) => Math.max(0, (avgSavingsPct ?? 0) * (0.7 + i * 0.05)))
+
   return (
     <Stack gap='sm'>
+      {/* Health Strip */}
+      <HealthStrip tools={toolsStatus} tokensSaved={gain?.summary?.total_saved ?? undefined} />
+
+      {/* Anomaly List */}
+      <AnomalyList anomalies={PLACEHOLDER_ANOMALIES} />
+
       {/* Row 1: KPI Tiles */}
       <SimpleGrid cols={{ base: 2, sm: 4 }} spacing='xs'>
-        <KpiCard accent='mycelium.7' label='Memories' value={String(stats.total_memories)} />
+        <KpiCard accent='mycelium.7' label='Memories' value={String(stats.total_memories)} sparkData={sparkData} />
         <KpiCard accent='spore.6' label='Topics' value={String(stats.total_topics)} />
         <KpiCard accent='substrate.6' label='Avg Weight' value={stats.avg_weight?.toFixed(3) ?? '—'} />
         <KpiCard accent='fruiting.6' label='Token Savings' value={avgSavingsPct !== null ? `${avgSavingsPct.toFixed(1)}%` : '—'} />
@@ -131,6 +153,42 @@ export function DashboardOperator({
           </Badge>
         </Group>
       )}
+
+      {/* Row 4: Recent Sessions */}
+      <SectionCard title='Recent Sessions'>
+        {sessions.length > 0 ? (
+          <Table striped>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Session</Table.Th>
+                <Table.Th style={{ width: '100px' }}>Tokens</Table.Th>
+                <Table.Th style={{ width: '80px' }}>Status</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {sessions.slice(0, 5).map((session) => (
+                <Table.Tr key={session.id}>
+                  <Table.Td>
+                    <Text size='sm'>{session.id.slice(0, 8)}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size='sm'>—</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge color={session.status === 'completed' ? 'mycelium' : 'gray'} size='xs' variant='light'>
+                      {session.status}
+                    </Badge>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        ) : (
+          <Text c='dimmed' size='sm'>
+            No sessions yet
+          </Text>
+        )}
+      </SectionCard>
     </Stack>
   )
 }

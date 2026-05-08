@@ -3,6 +3,8 @@ import { IconBrain, IconChartBar, IconCommand, IconGraph, IconHeartbeat } from '
 import { useNavigate } from 'react-router-dom'
 
 import type { DashboardVariantProps } from './DashboardOperator'
+import { AnomalyList, type Anomaly } from '../../../components/AnomalyList'
+import { HealthStrip } from '../../../components/HealthStrip'
 import { SectionCard } from '../../../components/SectionCard'
 
 export function DashboardFieldLab({
@@ -11,9 +13,20 @@ export function DashboardFieldLab({
   topics,
   health,
   ecosystemStatus,
+  sessions,
 }: DashboardVariantProps) {
   const navigate = useNavigate()
   const avgSavingsPct = gain?.avg_savings_pct ?? gain?.summary?.avg_savings_pct ?? null
+
+  const toolsStatus = [
+    { name: 'mycelium', status: 'up' as const },
+    { name: 'hyphae', status: 'up' as const },
+    { name: 'rhizome', status: 'up' as const },
+  ]
+
+  const PLACEHOLDER_ANOMALIES: Anomaly[] = [
+    { id: '1', severity: 'warn', title: 'Hyphae index stale', detail: 'Last indexed 4 hours ago — search recall may be degraded.' },
+  ]
 
   const quickActions = [
     {
@@ -44,6 +57,12 @@ export function DashboardFieldLab({
 
   return (
     <Stack gap='md'>
+      {/* Health Strip */}
+      <HealthStrip tools={toolsStatus} tokensSaved={gain?.summary?.total_saved ?? undefined} />
+
+      {/* Anomaly List */}
+      <AnomalyList anomalies={PLACEHOLDER_ANOMALIES} />
+
       {/* Command Bar */}
       <TextInput
         leftSection={<IconCommand size={16} />}
@@ -184,6 +203,42 @@ export function DashboardFieldLab({
           </Badge>
         </Group>
       )}
+
+      {/* Recent Sessions */}
+      <SectionCard title='Recent Sessions'>
+        {sessions.length > 0 ? (
+          <Table striped>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Session</Table.Th>
+                <Table.Th style={{ width: '100px' }}>Tokens</Table.Th>
+                <Table.Th style={{ width: '80px' }}>Status</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {sessions.slice(0, 5).map((session) => (
+                <Table.Tr key={session.id}>
+                  <Table.Td>
+                    <Text size='sm'>{session.id.slice(0, 8)}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text size='sm'>—</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge color={session.status === 'completed' ? 'mycelium' : 'gray'} size='xs' variant='light'>
+                      {session.status}
+                    </Badge>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        ) : (
+          <Text c='dimmed' size='sm'>
+            No sessions yet
+          </Text>
+        )}
+      </SectionCard>
     </Stack>
   )
 }
