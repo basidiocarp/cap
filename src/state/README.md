@@ -49,6 +49,7 @@ const useGraphData = () => {
 - **`src/store/annotations.ts`** — ReviewAnnotation list; review comment UI state, client-only ephemeral data
 - **`src/store/host-coverage.ts`** — HostCoverageMode UI view preference, client-only; persisted to localStorage
 - **`src/stores/dashboard-variant-store.ts`** — DashboardVariant UI preference ('operator', 'confident', 'fieldlab'), client-only; persisted to localStorage
+- **`src/stores/memoir-graph-store.ts`** — currentNodeId and selectedMemoirName; UI selection state only
 
 ### ⚠️ Mixed / Migration Target
 
@@ -58,11 +59,6 @@ const useGraphData = () => {
   - Status: review for migration if project data becomes a query result
 
 ### ❌ Violation / High-Priority Migration
-
-- **`src/stores/memoir-graph-store.ts`** — stores `nodes` and `edges` arrays that are fetched from Hyphae API
-  - Problem: bypasses TanStack Query's cache and creates stale-data bugs
-  - Migration: move graph data to TanStack Query (new hook: `useMemoir` or similar in `src/lib/queries/hyphae.ts`)
-  - Keep in Zustand: UI-only state like `currentNodeId`, `selectedMemoirName`
 
 ## Detecting Violations
 

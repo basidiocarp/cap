@@ -10,6 +10,7 @@ export const hyphaeKeys = {
   lessons: () => ['hyphae', 'lessons'] as const,
   memoir: (name: string, options?: { limit?: number; offset?: number; q?: string }) =>
     ['hyphae', 'memoir', name, options?.limit, options?.offset, options?.q] as const,
+  memoirGraph: (name: string) => ['hyphae', 'memoirGraph', name] as const,
   memoirInspect: (memoir: string, concept: string, depth?: number) => ['hyphae', 'memoir', memoir, 'inspect', concept, depth] as const,
   memoirSearch: (memoir: string, q: string) => ['hyphae', 'memoir', memoir, 'search', q] as const,
   memoirSearchAll: (q: string) => ['hyphae', 'memoirSearchAll', q] as const,
@@ -63,6 +64,14 @@ export function useTopicMemories(topic: string, limit?: number) {
 
 export function useMemoirs() {
   return useQuery({ queryFn: () => hyphaeApi.memoirs(), queryKey: hyphaeKeys.memoirs() })
+}
+
+export function useMemoirGraph(name: string) {
+  return useQuery({
+    enabled: !!name,
+    queryFn: () => hyphaeApi.memoirGraph(name),
+    queryKey: hyphaeKeys.memoirGraph(name),
+  })
 }
 
 export function useMemory(id: string) {

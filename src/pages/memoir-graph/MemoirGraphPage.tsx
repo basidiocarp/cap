@@ -1,10 +1,13 @@
 import type { NodeObject } from 'react-force-graph-2d'
-import { Select, Stack, Text } from '@mantine/core'
-import { useEffect, useRef, useState } from 'react'
+import { Badge, Group, Loader, Select, Stack, Text, TextInput, Title } from '@mantine/core'
+import { IconSearch } from '@tabler/icons-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
 
-import type { MemoirGraphNode } from '../../lib/types/hyphae'
-import { hyphaeApi } from '../../lib/api'
+import type { MemoirGraphEdge, MemoirGraphNode } from '../../lib/types/hyphae'
+import { ErrorAlert } from '../../components/ErrorAlert'
+import { SectionCard } from '../../components/SectionCard'
+import { useMemoirGraph } from '../../lib/queries'
 import { useMemoirGraphStore } from '../../stores/memoir-graph-store'
 
 const COMMUNITY_COLORS = ['#4dabf7', '#ff6b6b', '#69db7c', '#ffd43b', '#cc5de8', '#ff922b', '#20c997', '#f783ac']
@@ -23,13 +26,13 @@ interface MemoirGraphPageProps {
 }
 
 export function MemoirGraphPage({ memoirNames }: MemoirGraphPageProps) {
-  const { currentNodeId, edges, nodes, nodesMapping, selectedMemoirName, setCurrentNodeId, setGraphData, setSelectedMemoirName } =
-    useMemoirGraphStore()
-
-  const [error, setError] = useState<string | null>(null)
+  const { currentNodeId, selectedMemoirName, setCurrentNodeId, setSelectedMemoirName } = useMemoirGraphStore()
+  const graphQuery = useMemoirGraph(selectedMemoirName ?? '')
+  const [filter, setFilter] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(600)
 
+  // ResizeObserver for container width
   useEffect(() => {
     if (!containerRef.current) return
     const observer = new ResizeObserver((entries) => {
@@ -39,79 +42,120 @@ export function MemoirGraphPage({ memoirNames }: MemoirGraphPageProps) {
     return () => observer.disconnect()
   }, [])
 
-  useEffect(() => {
-    if (!selectedMemoirName) return
-    setError(null)
-    hyphaeApi
-      .memoirGraph(selectedMemoirName)
-      .then(({ nodes: graphNodes, edges: graphEdges }) => setGraphData(graphNodes, graphEdges))
-      .catch(() => setError('Failed to load memoir graph'))
-  }, [selectedMemoirName, setGraphData])
+  // Filter nodes by label
+  const filteredNodes = useMemo(() => {
+    const nodes = graphQuery.data?.nodes ?? []
+    if (!filter) return nodes
+    const lowerFilter = filter.toLowerCase()
+    return nodes.filter((node) => node.label.toLowerCase().includes(lowerFilter))
+  }, [graphQuery.data?.nodes, filter])
 
-  const currentNode = currentNodeId ? nodesMapping.get(currentNodeId) : null
+  // Filter edges to only include those where both source and target are in filtered nodes
+  const filteredNodeIds = useMemo(() => new Set(filteredNodes.map((n) => n.id)), [filteredNodes])
+  const filteredEdges = useMemo(() => {
+    const edges = graphQuery.data?.edges ?? []
+    return edges.filter((edge) => filteredNodeIds.has(edge.source) && filteredNodeIds.has(edge.target))
+  }, [graphQuery.data?.edges, filteredNodeIds])
+
+  // Get current node from data
+  const currentNode = useMemo(() => {
+    if (!currentNodeId) return null
+    return graphQuery.data?.nodes.find((n) => n.id === currentNodeId) ?? null
+  }, [currentNodeId, graphQuery.data?.nodes])
+
+  // Get related edges for current node
+  const relatedEdges = useMemo(() => {
+    if (!currentNode) return []
+    return (graphQuery.data?.edges ?? []).filter((edge) => edge.source === currentNode.id || edge.target === currentNode.id)
+  }, [currentNode, graphQuery.data?.edges])
+
+  const getOtherNodeLabel = (edge: MemoirGraphEdge): string => {
+    const otherNodeId = edge.source === currentNode?.id ? edge.target : edge.source
+    return (graphQuery.data?.nodes ?? []).find((n) => n.id === otherNodeId)?.label ?? '?'
+  }
 
   const handleNodeClick = (node: NodeObject<MemoirGraphNode>) => {
     if (node.id) setCurrentNodeId(String(node.id))
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ borderBottom: '1px solid var(--mantine-color-default-border)', padding: '8px 16px' }}>
+    <Stack gap="md" h="100%" p="md">
+      <Title order={2}>Memoir Graph</Title>
+
+      <Group gap="md" wrap="nowrap">
         <Select
           data={memoirNames}
           onChange={(value) => setSelectedMemoirName(value)}
-          placeholder='Select a memoir…'
+          placeholder="Select a memoir…"
+          searchable
           style={{ minWidth: 200 }}
           value={selectedMemoirName}
         />
-      </div>
-      {error && (
-        <Text
-          c='red'
-          p='md'
-          size='sm'
-        >
-          {error}
+        {selectedMemoirName && (
+          <TextInput
+            leftSection={<IconSearch size={14} />}
+            onChange={(e) => setFilter(e.currentTarget.value)}
+            placeholder="Filter concepts…"
+            value={filter}
+            style={{ flex: 1 }}
+          />
+        )}
+      </Group>
+
+      <ErrorAlert error={graphQuery.error} title="Failed to load graph" />
+
+      {graphQuery.isLoading && <Loader size="sm" />}
+
+      {!selectedMemoirName && (
+        <Text c="dimmed" size="sm">
+          Select a memoir above to explore its concept graph.
         </Text>
       )}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <div
-          ref={containerRef}
-          style={{ flex: 1 }}
-        >
-          {nodes.length > 0 ? (
+
+      <div style={{ display: 'flex', gap: 16, minHeight: 500, flex: 1 }}>
+        <div ref={containerRef} style={{ flex: 1 }}>
+          {filteredNodes.length > 0 ? (
             <ForceGraph2D<MemoirGraphNode>
-              graphData={{ links: edges.map((e) => ({ ...e })), nodes: nodes.map((n) => ({ ...n })) }}
-              linkLabel='label'
+              graphData={{ links: filteredEdges.map((e) => ({ ...e })), nodes: filteredNodes.map((n) => ({ ...n })) }}
+              linkLabel="label"
               nodeColor={(node) => communityColor(node.community_id)}
-              nodeLabel='label'
+              nodeLabel="label"
               onNodeClick={handleNodeClick}
               width={width}
             />
-          ) : (
-            <Text
-              c='dimmed'
-              p='xl'
-            >
-              {selectedMemoirName ? 'No concepts in this memoir.' : 'Select a memoir to view its graph.'}
+          ) : selectedMemoirName && !graphQuery.isLoading ? (
+            <Text c="dimmed" p="xl">
+              No concepts match the current filter.
             </Text>
-          )}
+          ) : null}
         </div>
+
         {currentNode && (
-          <Stack
-            gap='xs'
-            style={{
-              borderLeft: '1px solid var(--mantine-color-default-border)',
-              overflowY: 'auto',
-              padding: 16,
-              width: 300,
-            }}
-          >
-            <Text fw={600}>{currentNode.label}</Text>
-            <Text size='sm'>{currentNode.definition}</Text>
-          </Stack>
+          <SectionCard title={currentNode.label} style={{ width: 280, flexShrink: 0 }}>
+            <Stack gap="xs">
+              <Text size="sm">{currentNode.definition}</Text>
+              {relatedEdges.length > 0 && (
+                <>
+                  <Text fw={500} size="xs" mt="xs">
+                    Relationships
+                  </Text>
+                  {relatedEdges.map((edge) => (
+                    <Group key={edge.id} gap="xs" wrap="nowrap">
+                      <Badge size="xs" variant="light">
+                        {edge.label}
+                      </Badge>
+                      <Text size="xs" c="dimmed">
+                        {edge.source === currentNode.id ? '→' : '←'} {getOtherNodeLabel(edge)}
+                      </Text>
+                    </Group>
+                  ))}
+                </>
+              )}
+              {currentNode.community_id && <Text size="xs" c="dimmed">Community: {currentNode.community_id}</Text>}
+            </Stack>
+          </SectionCard>
         )}
       </div>
-    </div>
+    </Stack>
   )
 }

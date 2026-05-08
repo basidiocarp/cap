@@ -1,4 +1,4 @@
-import { Alert, Stack, Text, Title } from '@mantine/core'
+import { Alert, Divider, Stack, Text, Title } from '@mantine/core'
 
 import type { DriftSignals } from '../../lib/types'
 import { EmptyState } from '../../components/EmptyState'
@@ -119,12 +119,7 @@ export function CanopyPage() {
         >
           <Stack gap='xs'>
             {activeDriftSignals.map((signal) => (
-              <Text
-                key={signal}
-                size='sm'
-              >
-                {signal}
-              </Text>
+              <div key={signal}>{signal}</div>
             ))}
           </Stack>
         </Alert>
@@ -137,67 +132,15 @@ export function CanopyPage() {
         Showing Canopy coordination state{activeProject ? ` for ${activeProject}` : ''}.
       </Text>
 
-      <SectionCard title='Task filters'>
-        <CanopyFilterPanel
-          acknowledgedFilter={acknowledgedFilter}
-          priorityFilter={priorityFilter}
-          searchQuery={searchQuery}
-          severityFilter={severityFilter}
-          sortMode={sortMode}
-          statusFilter={statusFilter}
-          updateSearchParams={updateSearchParams}
-        />
-      </SectionCard>
-
-      <SectionCard title='Saved views'>
-        <CanopySavedViewsSection
-          openSavedView={openSavedView}
-          savedView={savedView}
-          sortMode={sortMode}
-        />
-      </SectionCard>
-
-      <SectionCard title='Operator queues'>
-        <CanopyQueuesSection
-          openQueuePreset={openQueuePreset}
-          queueSnapshots={queueSnapshots}
-          savedView={savedView}
-        />
-      </SectionCard>
-
-      {agentsQuery.data && agentsQuery.data.length > 0 && (
-        <SectionCard title='Active agents'>
-          <CanopyAgentsPanel agents={agentsQuery.data} />
-        </SectionCard>
-      )}
-
-      {knownFactsQuery.data && (
-        <SectionCard title={`Known facts (${knownFactsQuery.data.count})`}>
-          <KnownFactsPanel facts={knownFactsQuery.data.facts} />
-        </SectionCard>
-      )}
-
-      <CanopySummaryMetrics
-        filteredAgents={filteredAgents}
-        filteredHandoffs={filteredHandoffs}
-        filteredTaskAttention={filteredTaskAttention}
-        filteredTasks={filteredTasks}
-        snapshotSlaSummary={snapshotSlaSummary}
+      <CanopyFilterPanel
+        acknowledgedFilter={acknowledgedFilter}
+        priorityFilter={priorityFilter}
+        searchQuery={searchQuery}
+        severityFilter={severityFilter}
+        sortMode={sortMode}
+        statusFilter={statusFilter}
+        updateSearchParams={updateSearchParams}
       />
-
-      <SectionCard title='Operator Snapshot'>
-        <CanopySnapshotBadges
-          filteredAgentAttention={filteredAgentAttention}
-          filteredEvidence={filteredEvidence}
-          filteredHandoffAttention={filteredHandoffAttention}
-          filteredTaskAttention={filteredTaskAttention}
-          snapshotSlaSummary={snapshotSlaSummary}
-        />
-      </SectionCard>
-
-      {showEmptyState && (
-        <EmptyState mt='md'>No tasks yet. Tasks appear here once Canopy records coordination activity for this project.</EmptyState>
-      )}
 
       <CanopyTaskBoard
         deadlineSummaryByTaskId={deadlineSummaryByTaskId}
@@ -215,6 +158,56 @@ export function CanopyPage() {
         statusFilter={statusFilter}
         taskAttentionById={taskAttentionById}
       />
+
+      {showEmptyState && (
+        <EmptyState mt='md'>No tasks yet. Tasks appear here once Canopy records coordination activity for this project.</EmptyState>
+      )}
+
+      <CanopySummaryMetrics
+        filteredAgents={filteredAgents}
+        filteredHandoffs={filteredHandoffs}
+        filteredTaskAttention={filteredTaskAttention}
+        filteredTasks={filteredTasks}
+        snapshotSlaSummary={snapshotSlaSummary}
+      />
+
+      <SectionCard title='Operator shortcuts'>
+        <Stack gap='sm'>
+          <CanopySavedViewsSection
+            openSavedView={openSavedView}
+            savedView={savedView}
+            sortMode={sortMode}
+          />
+          <Divider />
+          <CanopyQueuesSection
+            openQueuePreset={openQueuePreset}
+            queueSnapshots={queueSnapshots}
+            savedView={savedView}
+          />
+        </Stack>
+      </SectionCard>
+
+      {agentsQuery.data && agentsQuery.data.length > 0 && (
+        <SectionCard title='Active agents'>
+          <CanopyAgentsPanel agents={agentsQuery.data} />
+        </SectionCard>
+      )}
+
+      {knownFactsQuery.data && (
+        <SectionCard title={`Known facts (${knownFactsQuery.data.count})`}>
+          <KnownFactsPanel facts={knownFactsQuery.data.facts} />
+        </SectionCard>
+      )}
+
+      <SectionCard title='Operator Snapshot'>
+        <CanopySnapshotBadges
+          filteredAgentAttention={filteredAgentAttention}
+          filteredEvidence={filteredEvidence}
+          filteredHandoffAttention={filteredHandoffAttention}
+          filteredTaskAttention={filteredTaskAttention}
+          snapshotSlaSummary={snapshotSlaSummary}
+        />
+      </SectionCard>
 
       <TaskDetailModal
         agents={availableAgents}
