@@ -7,7 +7,7 @@ import { SectionCard } from '../../components/SectionCard'
 import { summarizeCodexAdapter } from '../../lib/codex'
 import { getAgentRuntimeGuidance, getClaudeLifecycleAdapterEmptyState } from '../../lib/host-guidance'
 import { getHostCoverageView } from '../../lib/readiness'
-import { useHostCoverageStore } from '../../store/host-coverage'
+import { useHostCoverageStore } from '../../stores/host-coverage'
 
 export function StatusAgentRuntimesCard({ status }: { status: EcosystemStatus }) {
   const runtimeGuidance = getAgentRuntimeGuidance()

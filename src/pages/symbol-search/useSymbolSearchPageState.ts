@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from '../../lib/search-params'
 
 import { useProjectContextController, useRhizomeStatus, useSymbolSearch } from '../../lib/queries'
-import { useProjectContextView } from '../../store/project-context'
+import { useProjectContextView } from '../../stores/project-context'
 
 export const SEARCH_EXAMPLES = [
   { description: 'Find all functions', pattern: 'fn ' },

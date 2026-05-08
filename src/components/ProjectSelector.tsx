@@ -3,7 +3,7 @@ import { IconFolder, IconFolderOpen } from '@tabler/icons-react'
 import { useState } from 'react'
 
 import { useProjectContextController, useSwitchProject } from '../lib/queries'
-import { useProjectContextView } from '../store/project-context'
+import { useProjectContextView } from '../stores/project-context'
 
 function basename(path: string): string {
   return path.split('/').pop() ?? path

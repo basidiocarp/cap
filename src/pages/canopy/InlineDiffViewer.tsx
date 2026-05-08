@@ -2,7 +2,7 @@ import { Badge, Box, Code, Group, Stack, Text } from '@mantine/core'
 import { useState } from 'react'
 
 import type { DiffHunk, DiffLine, ParsedDiff } from '../../lib/diff-parser'
-import type { ReviewAnnotation } from '../../store/annotations'
+import type { ReviewAnnotation } from '../../stores/annotations'
 import { hashLines } from '../../lib/diff-parser'
 import { DiffAnnotationPanel } from './DiffAnnotationPanel'
 

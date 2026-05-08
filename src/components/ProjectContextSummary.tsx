@@ -1,6 +1,6 @@
 import { Badge, Group, Stack, Text } from '@mantine/core'
 
-import { useProjectContextView } from '../store/project-context'
+import { useProjectContextView } from '../stores/project-context'
 import { ProjectSelector } from './ProjectSelector'
 
 interface ProjectContextSummaryProps {

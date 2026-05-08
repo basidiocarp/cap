@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { CommandHistory, EcosystemStatus, ProjectInfo, RhizomeStatus, SessionTimelineRecord } from '../../lib/api'
 import { useSessionTimelineViewModel } from '../../pages/sessions/useSessionTimelineViewModel'
-import { useProjectContextStore } from '../../store/project-context'
+import { useProjectContextStore } from '../../stores/project-context'
 
 let mockProject: ProjectInfo | null = {
   active: '/workspace/cap',

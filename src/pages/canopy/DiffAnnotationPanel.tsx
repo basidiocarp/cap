@@ -1,7 +1,7 @@
 import { Button, Card, Group, Select, Stack, Text, Textarea } from '@mantine/core'
 import { useState } from 'react'
 
-import type { ReviewAnnotation } from '../../store/annotations'
+import type { ReviewAnnotation } from '../../stores/annotations'
 
 interface Props {
   anchorHash: string

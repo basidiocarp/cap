@@ -4,7 +4,7 @@ import type { EcosystemStatus } from '../lib/api'
 import type { CodexModeStep } from '../lib/codex'
 import { getCodexPresentationModel } from '../lib/codex'
 import { getHostCoverageView } from '../lib/readiness'
-import { useHostCoverageStore } from '../store/host-coverage'
+import { useHostCoverageStore } from '../stores/host-coverage'
 
 function getStepColor(step: CodexModeStep): string {
   switch (step.status) {

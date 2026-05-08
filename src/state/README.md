@@ -10,7 +10,7 @@ This document clarifies which state layer owns different types of data in Cap.
   
 - **Zustand owns**: selected tab, panel collapse state, filter text, UI preferences, ephemeral form state, and any state with no server-side origin.
   - Benefits: simple local mutations, persistence to localStorage, easy subscription.
-  - Stores live in `src/store/` and `src/stores/`.
+  - Stores live in `src/stores/` and `src/stores/`.
 
 ## Violation Pattern
 
@@ -46,14 +46,14 @@ const useGraphData = () => {
 
 ### ✅ Correct Usage
 
-- **`src/store/annotations.ts`** — ReviewAnnotation list; review comment UI state, client-only ephemeral data
-- **`src/store/host-coverage.ts`** — HostCoverageMode UI view preference, client-only; persisted to localStorage
+- **`src/stores/annotations.ts`** — ReviewAnnotation list; review comment UI state, client-only ephemeral data
+- **`src/stores/host-coverage.ts`** — HostCoverageMode UI view preference, client-only; persisted to localStorage
 - **`src/stores/dashboard-variant-store.ts`** — DashboardVariant UI preference ('operator', 'confident', 'fieldlab'), client-only; persisted to localStorage
 - **`src/stores/memoir-graph-store.ts`** — currentNodeId and selectedMemoirName; UI selection state only
 
 ### ⚠️ Mixed / Migration Target
 
-- **`src/store/project-context.ts`** — activeProject, pendingProject, recentProjects
+- **`src/stores/project-context.ts`** — activeProject, pendingProject, recentProjects
   - ✅ `pendingProject` and UI transition state (isSwitchingProject) are client-only
   - ❌ `activeProject` and `recentProjects` appear to be server-derived and should live in a TanStack Query if they change server-side
   - Status: review for migration if project data becomes a query result

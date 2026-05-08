@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import type { EcosystemStatus } from '../../src/lib/api'
 import { summarizeCodexAdapter } from '../../src/lib/codex'
 import { getEcosystemReadinessModel, getHostCoverageView, getToolQuickActions, resolveHostCoverageMode } from '../../src/lib/readiness'
-import { summarizeHostCoverage, useHostCoverageStore } from '../../src/store/host-coverage'
+import { summarizeHostCoverage, useHostCoverageStore } from '../../src/stores/host-coverage'
 
 function createStatus(): EcosystemStatus {
   return {

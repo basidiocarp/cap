@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom/vitest'
 import { afterEach, beforeEach } from 'vitest'
 
-import { useHostCoverageStore } from '../store/host-coverage'
-import { useProjectContextStore } from '../store/project-context'
+import { useHostCoverageStore } from '../stores/host-coverage'
+import { useProjectContextStore } from '../stores/project-context'
 
 if (typeof window !== 'undefined' && !window.matchMedia) {
   window.matchMedia = (query: string): MediaQueryList => ({

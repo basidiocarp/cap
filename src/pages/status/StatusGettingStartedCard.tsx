@@ -9,7 +9,7 @@ import { StipeActionFeedback } from '../../components/StipeActionFeedback'
 import { getEcosystemReadinessModel } from '../../lib/readiness'
 import { canopyHref, sessionsHref } from '../../lib/routes'
 import { useStipeActionController } from '../../lib/stipe-actions'
-import { useHostCoverageStore } from '../../store/host-coverage'
+import { useHostCoverageStore } from '../../stores/host-coverage'
 
 export function StatusGettingStartedCard({
   onRefresh,

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { rhizomeApi } from '../../lib/api'
 import { useProject, useProjectContextController } from '../../lib/queries/rhizome'
-import { useProjectContextStore } from '../../store/project-context'
+import { useProjectContextStore } from '../../stores/project-context'
 
 function createWrapper() {
   const queryClient = new QueryClient({

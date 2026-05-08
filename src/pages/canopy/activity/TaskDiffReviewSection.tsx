@@ -2,11 +2,11 @@ import { Alert, Badge, Button, Divider, Group, Loader, Stack, Text, TextInput } 
 import { useState } from 'react'
 
 import type { ParsedDiff } from '../../../lib/diff-parser'
-import type { ReviewAnnotation } from '../../../store/annotations'
+import type { ReviewAnnotation } from '../../../stores/annotations'
 import { diffApi } from '../../../lib/api'
 import { parseDiff } from '../../../lib/diff-parser'
 import { useCanopyTaskAction } from '../../../lib/queries/canopy'
-import { useAnnotationStore } from '../../../store/annotations'
+import { useAnnotationStore } from '../../../stores/annotations'
 import { InlineDiffViewer } from '../InlineDiffViewer'
 
 const TASK_OPERATOR_ACTOR = 'operator'

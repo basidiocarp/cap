@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import { useProjectContextStore } from '../../../store/project-context'
+import { useProjectContextStore } from '../../../stores/project-context'
 import { rhizomeApi } from '../../api'
 import { rhizomeKeys } from './keys'
 

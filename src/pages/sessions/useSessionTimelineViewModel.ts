@@ -5,7 +5,7 @@ import { useEcosystemStatusController } from '../../lib/ecosystem-status'
 import { useCommandHistory, useProjectContextController, useRhizomeStatus, useSessionTimeline } from '../../lib/queries'
 import { getEcosystemReadinessModel } from '../../lib/readiness'
 import { useStipeActionController } from '../../lib/stipe-actions'
-import { useProjectContextView } from '../../store/project-context'
+import { useProjectContextView } from '../../stores/project-context'
 import { buildCoverageIssues } from './session-coverage'
 
 export function useSessionTimelineViewModel() {
