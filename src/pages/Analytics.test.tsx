@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { renderWithProviders } from '../test/render'
-import { Analytics } from './Analytics'
+import { AnalyticsPage as Analytics } from './analytics/AnalyticsPage'
 
 vi.mock('../lib/queries', () => ({
   useCommandHistory: () => ({ data: { commands: [], total: 0 } }),

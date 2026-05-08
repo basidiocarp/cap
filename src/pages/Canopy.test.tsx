@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { CanopySnapshot, CanopyTaskDetail, ProjectInfo } from '../lib/api'
 import { renderWithProviders } from '../test/render'
-import { Canopy } from './Canopy'
+import { CanopyPage as Canopy } from './canopy/CanopyPage'
 
 let mockProject: ProjectInfo | null = {
   active: '/workspace/cap',

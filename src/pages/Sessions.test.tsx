@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { CommandHistory, EcosystemStatus, ProjectInfo, RhizomeStatus, SessionTimelineRecord } from '../lib/api'
 import { renderWithProviders } from '../test/render'
-import { Sessions } from './Sessions'
+import { SessionsPage as Sessions } from './sessions/SessionsPage'
 
 let mockProject: ProjectInfo | null = {
   active: '/workspace/cap',

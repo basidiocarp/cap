@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { createRhizomeSymbol, createSymbolDefinition } from '../test/fixtures'
 import { renderWithProviders } from '../test/render'
-import { CodeExplorer } from './CodeExplorer'
+import { CodeExplorerPage as CodeExplorer } from './code-explorer/CodeExplorerPage'
 
 vi.mock('../lib/queries', () => ({
   useDefinition: vi.fn((_file: string, symbol: string) => ({

@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { createConcept, createConceptInspection, createMemoir, createMemoirDetail } from '../test/fixtures'
 import { renderWithProviders } from '../test/render'
-import { Memoirs } from './Memoirs'
+import { MemoirsPage as Memoirs } from './memoirs/MemoirsPage'
 
 vi.mock('../lib/queries', () => {
   const memoirs = [

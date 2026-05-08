@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { EcosystemSettings } from '../lib/api'
 import { renderWithProviders } from '../test/render'
-import { Settings } from './Settings'
+import { SettingsPage as Settings } from './settings/SettingsPage'
 
 const refetchSettings = vi.fn()
 const updateMycelium = vi.fn()

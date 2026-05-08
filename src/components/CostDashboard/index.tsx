@@ -1,8 +1,8 @@
 import { Alert, Card, Grid, Group, Progress, Stack, Text } from '@mantine/core'
 import { useEffect, useState } from 'react'
 
-import type { BudgetStatus, CostSummary } from '../../api/costs'
-import { getBudgetStatus, getCostSummary } from '../../api/costs'
+import type { BudgetStatus, CostSummary } from '../../lib/api/costs'
+import { getBudgetStatus, getCostSummary } from '../../lib/api/costs'
 import { KpiCard } from '../KpiCard'
 
 export function CostDashboard() {
