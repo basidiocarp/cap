@@ -23,6 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
+.design/*
+
 
 !/.plans/
 /.plans/rhizome-integration.md

@@ -23,7 +23,7 @@ export function SectionCard({
       styles={{
         root: {
           overflow: 'visible',
-          backgroundColor: 'var(--color-surface-raised)',
+          backgroundColor: 'var(--mantine-color-dark-6)',
         },
       }}
     >

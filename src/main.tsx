@@ -1,11 +1,8 @@
-import '@fontsource/roboto/400.css'
-import '@fontsource/roboto/500.css'
-import '@fontsource/roboto/700.css'
+import '@fontsource-variable/inter/index.css'
 import '@fontsource-variable/jetbrains-mono/index.css'
 import '@mantine/core/styles.css'
 import '@mantine/charts/styles.css'
 import '@mantine/notifications/styles.css'
-import './styles/tokens.css'
 
 import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
