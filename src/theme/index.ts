@@ -1,5 +1,5 @@
 import type { DefaultMantineColor, MantineColorsTuple } from '@mantine/core'
-import { Button, Card, Text, createTheme, rem } from '@mantine/core'
+import { Button, Card, Text, createTheme, mergeMantineTheme, rem } from '@mantine/core'
 
 // Underground network, growth — teal-green
 const mycelium: MantineColorsTuple = [
@@ -298,3 +298,9 @@ export const theme = createTheme({
     }),
   },
 })
+
+export function mergeThemeOverrides(baseTheme: ReturnType<typeof createTheme>, overrides: Record<string, unknown>) {
+  // biome-ignore lint/suspicious/noExplicitAny: necessary for theme merging
+  // biome-ignore lint/suspicious/noExplicitAny: necessary for theme merging
+  return (mergeMantineTheme as any)(baseTheme, overrides) as ReturnType<typeof createTheme>
+}

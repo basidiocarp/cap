@@ -7,12 +7,13 @@ import '@mantine/notifications/styles.css'
 import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { StrictMode } from 'react'
+import { StrictMode, useMemo } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 
 import { App } from './App'
-import { theme } from './theme'
+import { theme, mergeThemeOverrides } from './theme'
+import { useDashboardVariantStore } from './stores/dashboard-variant-store'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,19 +25,31 @@ const queryClient = new QueryClient({
   },
 })
 
+function ThemedApp() {
+  const accentColor = useDashboardVariantStore((state) => state.accentColor)
+  const dynamicTheme = useMemo(
+    () => mergeThemeOverrides(theme, { primaryColor: accentColor }),
+    [accentColor],
+  )
+
+  return (
+    <MantineProvider
+      defaultColorScheme='dark'
+      theme={dynamicTheme}
+    >
+      <Notifications />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </MantineProvider>
+  )
+}
+
 // biome-ignore lint/style/noNonNullAssertion: root element guaranteed by index.html
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <MantineProvider
-        defaultColorScheme='dark'
-        theme={theme}
-      >
-        <Notifications />
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </MantineProvider>
+      <ThemedApp />
     </QueryClientProvider>
   </StrictMode>
 )

@@ -2,10 +2,15 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 export type DashboardVariant = 'operator' | 'confident' | 'fieldlab'
+export type AccentColor = 'mycelium' | 'spore' | 'substrate' | 'gill'
 
 interface DashboardVariantStore {
   variant: DashboardVariant
   setVariant: (v: DashboardVariant) => void
+  accentColor: AccentColor
+  setAccentColor: (c: AccentColor) => void
+  compactDensity: boolean
+  setCompactDensity: (c: boolean) => void
 }
 
 export const useDashboardVariantStore = create<DashboardVariantStore>()(
@@ -13,6 +18,10 @@ export const useDashboardVariantStore = create<DashboardVariantStore>()(
     (set) => ({
       variant: 'operator',
       setVariant: (variant) => set({ variant }),
+      accentColor: 'mycelium',
+      setAccentColor: (accentColor) => set({ accentColor }),
+      compactDensity: false,
+      setCompactDensity: (compactDensity) => set({ compactDensity }),
     }),
     { name: 'dashboard-variant' },
   ),

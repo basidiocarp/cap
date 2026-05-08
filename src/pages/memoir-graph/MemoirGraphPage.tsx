@@ -1,8 +1,9 @@
 import type { NodeObject } from 'react-force-graph-2d'
-import { Badge, Group, Loader, Select, Stack, Text, TextInput, Title } from '@mantine/core'
-import { IconSearch } from '@tabler/icons-react'
+import { ActionIcon, Badge, Group, Loader, Select, Stack, Text, TextInput, Title } from '@mantine/core'
+import { IconSearch, IconPlus, IconMinus } from '@tabler/icons-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
+import type { ForceGraphMethods } from 'react-force-graph-2d'
 
 import type { MemoirGraphEdge, MemoirGraphNode } from '../../lib/types/hyphae'
 import { ErrorAlert } from '../../components/ErrorAlert'
@@ -31,6 +32,7 @@ export function MemoirGraphPage({ memoirNames }: MemoirGraphPageProps) {
   const [filter, setFilter] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(600)
+  const fgRef = useRef<ForceGraphMethods<NodeObject<MemoirGraphNode>, {}>>(undefined)
 
   // ResizeObserver for container width
   useEffect(() => {
@@ -56,6 +58,19 @@ export function MemoirGraphPage({ memoirNames }: MemoirGraphPageProps) {
     const edges = graphQuery.data?.edges ?? []
     return edges.filter((edge) => filteredNodeIds.has(edge.source) && filteredNodeIds.has(edge.target))
   }, [graphQuery.data?.edges, filteredNodeIds])
+
+  // Add val field for node size based on connectivity
+  const graphNodes = useMemo(() => {
+    const edgeCount = new Map<string, number>()
+    for (const e of filteredEdges) {
+      edgeCount.set(e.source, (edgeCount.get(e.source) ?? 0) + 1)
+      edgeCount.set(e.target, (edgeCount.get(e.target) ?? 0) + 1)
+    }
+    return filteredNodes.map((n) => ({
+      ...n,
+      val: Math.max(1, Math.min(6, edgeCount.get(n.id) ?? 1)),
+    }))
+  }, [filteredNodes, filteredEdges])
 
   // Get current node from data
   const currentNode = useMemo(() => {
@@ -113,16 +128,51 @@ export function MemoirGraphPage({ memoirNames }: MemoirGraphPageProps) {
       )}
 
       <div style={{ display: 'flex', gap: 16, minHeight: 500, flex: 1 }}>
-        <div ref={containerRef} style={{ flex: 1 }}>
+        <div ref={containerRef} style={{ flex: 1, position: 'relative' }}>
           {filteredNodes.length > 0 ? (
-            <ForceGraph2D<MemoirGraphNode>
-              graphData={{ links: filteredEdges.map((e) => ({ ...e })), nodes: filteredNodes.map((n) => ({ ...n })) }}
-              linkLabel="label"
-              nodeColor={(node) => communityColor(node.community_id)}
-              nodeLabel="label"
-              onNodeClick={handleNodeClick}
-              width={width}
-            />
+            <>
+              <ForceGraph2D<MemoirGraphNode>
+                ref={fgRef}
+                graphData={{ links: filteredEdges.map((e) => ({ ...e })), nodes: graphNodes }}
+                linkLabel="label"
+                nodeCanvasObject={(node, ctx) => {
+                  const x = node.x ?? 0
+                  const y = node.y ?? 0
+                  const r = Math.sqrt(Math.max(0, node.val ?? 1)) * 4
+                  const isFresh = node.updated_at
+                    ? Date.now() - new Date(node.updated_at).getTime() < 7 * 24 * 60 * 60 * 1000
+                    : true
+                  ctx.save()
+                  ctx.globalAlpha = isFresh ? 1.0 : 0.5
+                  ctx.beginPath()
+                  ctx.arc(x, y, r, 0, 2 * Math.PI)
+                  ctx.fillStyle = communityColor(node.community_id)
+                  ctx.fill()
+                  ctx.restore()
+                }}
+                nodeCanvasObjectMode={() => 'replace'}
+                nodeLabel="label"
+                onNodeClick={handleNodeClick}
+                width={width}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 16,
+                  right: 16,
+                  display: 'flex',
+                  gap: 8,
+                  zIndex: 10,
+                }}
+              >
+                <ActionIcon onClick={() => fgRef.current?.zoom(1.4, 300)} size="sm" variant="default">
+                  <IconPlus size={14} />
+                </ActionIcon>
+                <ActionIcon onClick={() => fgRef.current?.zoom(0.7, 300)} size="sm" variant="default">
+                  <IconMinus size={14} />
+                </ActionIcon>
+              </div>
+            </>
           ) : selectedMemoirName && !graphQuery.isLoading ? (
             <Text c="dimmed" p="xl">
               No concepts match the current filter.

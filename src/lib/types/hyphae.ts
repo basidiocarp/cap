@@ -151,6 +151,7 @@ export interface MemoirGraphNode {
   id: string
   label: string
   memoir_id: string
+  updated_at?: string
 }
 
 export interface MemoirGraphEdge {
