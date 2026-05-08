@@ -19,6 +19,7 @@ import {
 import { useId } from 'react'
 import { Outlet, NavLink as RouterNavLink, useLocation } from 'react-router-dom'
 
+import { ActivityRail } from './ActivityRail'
 import { NotificationPanel } from './NotificationPanel'
 import { ServiceHealthPanel } from './ServiceHealthPanel'
 
@@ -61,6 +62,7 @@ export function AppLayout() {
 
   return (
     <AppShell
+      aside={{ breakpoint: 'lg', collapsed: { mobile: true }, width: 240 }}
       header={{ height: 56 }}
       navbar={{ breakpoint: 'sm', collapsed: { mobile: !opened }, width: 220 }}
       padding='md'
@@ -134,6 +136,10 @@ export function AppLayout() {
         <ServiceHealthPanel />
         <Outlet />
       </AppShell.Main>
+
+      <AppShell.Aside>
+        <ActivityRail />
+      </AppShell.Aside>
     </AppShell>
   )
 }

@@ -24,12 +24,64 @@ function getTelemetry() {
   }
 }
 
+interface ActivityEvent {
+  id: string
+  ts: number // unix ms
+  kind: 'memory' | 'code' | 'lifecycle' | 'system'
+  tool: string
+  msg: string
+}
+
 const app = new Hono()
 
 app.get('/', (c) => {
   const data = getTelemetry()
   if (!data) return c.json({ error: 'No telemetry available' }, 500)
   return c.json(data)
+})
+
+app.get('/activity/recent', (c) => {
+  // No event-level data available in current telemetry system,
+  // return placeholder events as specified in the handoff
+  const now = Date.now()
+  const events: ActivityEvent[] = [
+    {
+      id: 'evt-1',
+      ts: now - 15_000,
+      kind: 'memory',
+      tool: 'hyphae',
+      msg: 'Stored session memory for debugging workflow',
+    },
+    {
+      id: 'evt-2',
+      ts: now - 45_000,
+      kind: 'code',
+      tool: 'rhizome',
+      msg: 'Scanned 1,243 symbols in codebase',
+    },
+    {
+      id: 'evt-3',
+      ts: now - 120_000,
+      kind: 'lifecycle',
+      tool: 'cortina',
+      msg: 'Session started with task context',
+    },
+    {
+      id: 'evt-4',
+      ts: now - 300_000,
+      kind: 'system',
+      tool: 'mycelium',
+      msg: 'Filtered 8,294 tokens from cargo output',
+    },
+    {
+      id: 'evt-5',
+      ts: now - 600_000,
+      kind: 'memory',
+      tool: 'hyphae',
+      msg: 'Consolidated 42 memories on error patterns',
+    },
+  ]
+  return c.json(events)
 })
 
 export default app
