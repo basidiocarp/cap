@@ -57,7 +57,7 @@ function parseSnapshot(stdout: string): HyphaeStatusSnapshot {
 
 export async function getHyphaeStatusSnapshot(): Promise<HyphaeStatusSnapshot> {
   try {
-    const stdout = await runCli(['activity'])
+    const stdout = await runCli(['activity', '--all-projects'])
     return parseSnapshot(stdout)
   } catch (err) {
     if (err instanceof HyphaeStatusCliError) throw err

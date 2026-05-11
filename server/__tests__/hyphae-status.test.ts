@@ -52,7 +52,7 @@ describe('Hyphae status CLI consumer', () => {
       memoirs: 4,
       memories: 12,
     })
-    expect(runCliMock).toHaveBeenCalledWith(['activity'])
+    expect(runCliMock).toHaveBeenCalledWith(['activity', '--all-projects'])
   })
 
   it('rejects malformed activity payloads', async () => {

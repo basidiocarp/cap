@@ -75,11 +75,24 @@ export function CanopyPage() {
     updateSearchParams,
   } = useCanopyPageState()
 
-  const agentsQuery = useCanopyAgents(activeProject ?? undefined)
-  const knownFactsQuery = useCanopyKnownFacts()
+  // Use isSuccess rather than !isLoading so agents/facts stay enabled across
+  // background refetches — isLoading flips to true on every poll and would
+  // disable these queries mid-request, causing stale-data flickers.
+  const canopyAvailable = snapshotQuery.isSuccess
+  const agentsQuery = useCanopyAgents(activeProject ?? undefined, canopyAvailable)
+  const knownFactsQuery = useCanopyKnownFacts(undefined, canopyAvailable)
 
   if (snapshotQuery.isLoading) {
     return <PageLoader />
+  }
+
+  if (snapshotQuery.isError) {
+    return (
+      <Stack>
+        <Title order={2}>Canopy</Title>
+        <EmptyState mt='md'>Canopy is unavailable. Make sure the Canopy service is running.</EmptyState>
+      </Stack>
+    )
   }
 
   // Check for active drift signals
