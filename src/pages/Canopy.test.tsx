@@ -1632,6 +1632,7 @@ const useCanopySnapshotMock = vi.fn(
     preset?: string
     priorityAtLeast?: string
     project?: string
+    refetchInterval?: number | false
     severityAtLeast?: string
     sort?: string
     view?: string
@@ -1679,6 +1680,7 @@ vi.mock('../lib/queries', () => ({
     preset?: string
     priorityAtLeast?: string
     project?: string
+    refetchInterval?: number | false
     severityAtLeast?: string
     sort?: string
     view?: string
@@ -1789,6 +1791,7 @@ describe('Canopy page', () => {
       preset: 'review_queue',
       priorityAtLeast: undefined,
       project: '/workspace/cap',
+      refetchInterval: 30_000,
       severityAtLeast: undefined,
       sort: 'updated_at',
     })
@@ -1805,6 +1808,7 @@ describe('Canopy page', () => {
       preset: 'critical',
       priorityAtLeast: undefined,
       project: '/workspace/cap',
+      refetchInterval: 30_000,
       severityAtLeast: undefined,
       sort: 'attention',
     })
@@ -1826,6 +1830,7 @@ describe('Canopy page', () => {
       preset: 'review_queue',
       priorityAtLeast: undefined,
       project: '/workspace/cap',
+      refetchInterval: 30_000,
       severityAtLeast: undefined,
       sort: 'status',
     })
@@ -2335,6 +2340,7 @@ describe('Canopy page', () => {
       preset: 'default',
       priorityAtLeast: 'high',
       project: '/workspace/cap',
+      refetchInterval: 30_000,
       severityAtLeast: 'critical',
       sort: 'status',
     })
@@ -2358,6 +2364,7 @@ describe('Canopy page', () => {
       preset: 'default',
       priorityAtLeast: undefined,
       project: '/workspace/cap',
+      refetchInterval: 30_000,
       severityAtLeast: undefined,
       sort: 'status',
     })

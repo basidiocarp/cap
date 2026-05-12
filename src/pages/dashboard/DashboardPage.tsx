@@ -12,6 +12,7 @@ import { useDashboardVariantStore } from '../../stores/dashboard-variant-store'
 import { DashboardConfident } from './variants/DashboardConfident'
 import { DashboardFieldLab } from './variants/DashboardFieldLab'
 import { DashboardOperator } from './variants/DashboardOperator'
+import { LiveAgentsSection } from './LiveAgentsSection'
 
 export function DashboardPage() {
   const [statsQuery, topicsQuery, healthQuery, gainQuery, sessionsQuery] = useQueries({
@@ -20,7 +21,7 @@ export function DashboardPage() {
       { queryFn: () => hyphaeApi.topics(), queryKey: hyphaeKeys.topics() },
       { queryFn: () => hyphaeApi.health(), queryKey: hyphaeKeys.health() },
       { queryFn: () => myceliumApi.gain(), queryKey: myceliumKeys.gain() },
-      { queryFn: () => hyphaeApi.sessions(undefined, 10), queryKey: hyphaeKeys.sessions() },
+      { queryFn: () => hyphaeApi.sessions(undefined, 10), queryKey: hyphaeKeys.sessions(undefined, 10) },
     ],
   })
 
@@ -39,14 +40,15 @@ export function DashboardPage() {
     return <PageLoader />
   }
 
-  const VariantComponent =
-    variant === 'confident' ? DashboardConfident : variant === 'fieldlab' ? DashboardFieldLab : DashboardOperator
+  const VariantComponent = variant === 'confident' ? DashboardConfident : variant === 'fieldlab' ? DashboardFieldLab : DashboardOperator
 
   return (
     <Stack>
       <Title order={2}>Dashboard</Title>
 
       <EcosystemStatusPanel />
+
+      <LiveAgentsSection />
 
       <ErrorAlert
         error={statsQuery.error}

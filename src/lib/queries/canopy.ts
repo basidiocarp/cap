@@ -40,6 +40,7 @@ export function useCanopySnapshot(options?: {
   preset?: string
   priorityAtLeast?: string
   project?: string
+  refetchInterval?: number | false
   severityAtLeast?: string
   sort?: string
   view?: string
@@ -67,6 +68,7 @@ export function useCanopySnapshot(options?: {
       sort: options?.sort,
       view: options?.view,
     }),
+    refetchInterval: options?.refetchInterval,
   })
 }
 
@@ -103,15 +105,18 @@ export function useCanopyHandoffAction() {
   })
 }
 
-export function useCanopyAgents(project?: string) {
+export function useCanopyAgents(options?: { enabled?: boolean; project?: string; refetchInterval?: number | false }) {
   return useQuery({
-    queryFn: () => canopyApi.agents({ project }),
-    queryKey: canopyKeys.agents({ project }),
+    enabled: options?.enabled ?? true,
+    queryFn: () => canopyApi.agents({ project: options?.project }),
+    queryKey: canopyKeys.agents({ project: options?.project }),
+    refetchInterval: options?.refetchInterval,
   })
 }
 
-export function useCanopyKnownFacts(options?: { keys?: string[]; scope?: string; taskId?: string }) {
+export function useCanopyKnownFacts(options?: { keys?: string[]; scope?: string; taskId?: string }, enabled = true) {
   return useQuery({
+    enabled,
     queryFn: () => canopyApi.facts(options),
     queryKey: canopyKeys.facts(options),
   })

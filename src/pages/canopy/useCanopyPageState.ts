@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
-import { useSearchParams } from '../../lib/search-params'
 
 import type { CanopySavedView, CanopySearchParamUpdates } from './canopy-filters'
 import { useCanopySnapshot, useCanopyTaskDetail, useProjectContextController } from '../../lib/queries'
+import { useSearchParams } from '../../lib/search-params'
 import { filterCanopyTasks, groupOperatorActionsByTask, groupTasksByStatus, resolveCanopyViewState } from './canopy-filters'
 import { useCanopyQueueSnapshots } from './useCanopyQueueSnapshots'
 
@@ -19,6 +19,7 @@ export function useCanopyPageState() {
     preset: savedView,
     priorityAtLeast: priorityFilter === 'all' ? undefined : priorityFilter,
     project: activeProject ?? undefined,
+    refetchInterval: 30_000,
     severityAtLeast: severityFilter === 'all' ? undefined : severityFilter,
     sort: sortMode,
   })

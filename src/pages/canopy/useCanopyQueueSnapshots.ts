@@ -128,6 +128,10 @@ export function useCanopyQueueSnapshots(project: string | undefined, enabled = t
   ]
 
   // Zip snapshots with queue definitions
+  if (import.meta.env.DEV && snapshots.length !== CANOPY_QUEUES.length) {
+    console.error(`useCanopyQueueSnapshots: ${snapshots.length} hook calls but ${CANOPY_QUEUES.length} queues — counts must match`)
+  }
+
   return CANOPY_QUEUES.map((queue, index) => ({
     error: snapshots[index]?.error,
     isLoading: snapshots[index]?.isLoading ?? false,

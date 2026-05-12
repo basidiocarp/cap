@@ -79,7 +79,7 @@ export function CanopyPage() {
   // background refetches — isLoading flips to true on every poll and would
   // disable these queries mid-request, causing stale-data flickers.
   const canopyAvailable = snapshotQuery.isSuccess
-  const agentsQuery = useCanopyAgents(activeProject ?? undefined, canopyAvailable)
+  const agentsQuery = useCanopyAgents({ enabled: canopyAvailable, project: activeProject ?? undefined, refetchInterval: 30_000 })
   const knownFactsQuery = useCanopyKnownFacts(undefined, canopyAvailable)
 
   if (snapshotQuery.isLoading) {
