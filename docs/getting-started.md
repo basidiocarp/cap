@@ -41,11 +41,11 @@ Dashboard shows ecosystem health badges (Hyphae ✓/✗, Mycelium ✓/✗, Rhizo
 
 Memories is a browse-first interface. Start with topic cards showing memory count and average weight per topic. Click a topic to see all memories in a table with summary, importance level, weight, keywords, and age. Search memories by FTS (full-text search) or click the "Memories" link from any topic. Click a memory row to open a detail modal showing raw excerpt, topic, weight progress, access count, keywords, created/updated/accessed dates, and related memory IDs.
 
-Memoirs is a concept graph explorer. It lists all knowledge graphs and allows searching across all concepts. Click a memoir to explore its concept graph with interactive visualization. Use the depth slider to control BFS traversal depth (1–4 hops). Node colors represent concept kinds (function, class, interface, module, other). Edge colors show relation types (calls, contains, implements, imports). Click a concept node to inspect it with its full neighborhood.
+Memoirs is a concept graph explorer. It lists all knowledge graphs and allows searching across all concepts. Click a memoir to explore its concept graph with interactive visualization. Use the depth control to set BFS traversal depth (1–4 hops). Node colors represent concept kinds (function, class, interface, module, other). Edge colors show relation types (calls, contains, implements, imports). Click a concept node to inspect it with its full neighborhood.
 
 Analytics is a multi-tab dashboard covering token savings trends, command history, memory health metrics, code intelligence coverage, ecosystem status, telemetry events, and usage/cost analysis. The Token Savings tab shows total tokens saved and per-command breakdown. Command History displays executed commands and their results. Memory Health displays topic health, weight distribution, and consolidation recommendations. Code Intelligence lists indexed languages and symbol counts. Ecosystem shows ecosystem tool status and integration health. Telemetry shows event frequency. Usage/Cost breaks down sessions and API call costs.
 
-Code Explorer is a file tree browser with symbol outline. Navigate the project file tree on the left; click a file to show its symbols (functions, classes, types, constants) on the right. Click a symbol to jump to it in a plain code block view. The Tests and Annotations tabs show test definitions and code comments/annotations. Use "Find References" to see all usages of a selected symbol across the project.
+Code Explorer is a file tree browser with symbol outline. Navigate the project file tree on the left; click a file to show its symbols (functions, classes, types, constants) on the right. Click a symbol to view its definition in a code block. The Tests and Annotations tabs show test definitions and code comments/annotations. Use "Find References" to see all usages of a selected symbol across the project.
 
 Symbol Search is a global cross-project symbol search. Type a symbol name (function, class, type, constant) and see matches across the entire codebase. Results show file path, line number, and symbol kind. Click a result to open the Code Explorer at that symbol's location.
 
@@ -58,7 +58,7 @@ Settings handles configuration and system management. Each tool card shows the r
 - `Env override`: an environment variable selected this path
 - `Platform default`: Cap is using the current OS default path because no override file was found
 
-Mycelium shows config path and integration toggles. Hyphae shows config path, database path, size, and pruning options (set a weight threshold to delete old, fading memories). Rhizome shows config path, auto-export state, and language coverage. LSP Manager lets you install language servers and view their status and version.
+Mycelium shows config path and integration toggles. Hyphae shows config path, database path, size, and pruning options (set a weight threshold to delete old, fading memories). Rhizome shows config path, auto-export state, and language coverage. LSP Manager lets you install language servers and view their status and version information.
 
 ## Troubleshooting
 
@@ -92,7 +92,7 @@ Start in dev mode to get hot reloads:
 npm run dev:all    # Frontend and backend with file watching
 ```
 
-Frontend changes auto-reload in the browser. Backend changes auto-restart via `tsx watch` when running `dev:server` or `dev:all`.
+Frontend changes auto-reload in the browser (Vite HMR). Backend changes trigger automatic restart via `tsx watch` when running `dev:server` or `dev:all`.
 
 Build for production:
 

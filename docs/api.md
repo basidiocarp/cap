@@ -51,13 +51,17 @@ each route group as its own contract.
 |-----------|---------|---------|
 | `canopy` | `GET`, `POST` | Task snapshots, task actions, and handoff actions |
 | `cost` | `GET`, `POST`, `PUT` | Cost entry recording, spend summaries, and budget management |
+| `diff` | `GET` | Diff parsing and analysis |
 | `ecosystem` | `GET` | Annulus ecosystem status |
 | `hyphae` | `GET`, `POST`, `PUT`, `DELETE` | Memory and memoir reads plus mutation endpoints |
 | `lsp` | `GET`, `POST` | Language-server status and install actions |
+| `metrics` | `GET` | Route performance metrics and counters |
 | `mycelium` | `GET` | Gain, history, and analytics reads |
+| `observer` | `GET` | Observability data and metrics |
 | `rhizome` | `GET`, `POST` | Symbol/code intelligence reads, edits, and project switching |
 | `sessions` | `GET`, `POST` | Session timeline events and conversation ID persistence |
 | `settings` | `GET`, `POST`, `PUT` | Settings reads, mode activation, and config writes |
+| `stats` | `GET` | Aggregate statistics |
 | `status` | `GET` | Overall ecosystem status |
 | `telemetry` | `GET` | Telemetry rollup |
 | `usage` | `GET` | Session usage rollups and trends |

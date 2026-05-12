@@ -16,7 +16,7 @@ const app = new Hono()
 // 1. Timing + logging (all requests)
 // 2. CORS (configurable origin)
 // 3. Global error handler (500 on uncaught error)
-// 4. Route registration (13 API namespaces)
+// 4. Route registration (17 API namespaces)
 ```
 
 **Graceful shutdown** on SIGINT/SIGTERM:
@@ -39,13 +39,17 @@ Each route module exports a `Hono` app and is mounted at a namespace:
 ```typescript
 app.route('/api/canopy', canopyRoutes)
 app.route('/api/cost', costsRoutes)
+app.route('/api/diff', diffRoutes)
 app.route('/api/ecosystem', ecosystemRoutes)
 app.route('/api/hyphae', hyphaeRoutes)
 app.route('/api/lsp', lspRoutes)
+app.route('/api/metrics', metricsRoutes)
 app.route('/api/mycelium', myceliumRoutes)
-app.route('/api/sessions', sessionsRoutes)
+app.route('/api/observer', observerRoutes)
 app.route('/api/rhizome', rhizomeRoutes)
+app.route('/api/sessions', sessionsRoutes)
 app.route('/api/settings', settingsRoutes)
+app.route('/api/stats', statsRoutes)
 app.route('/api/status', statusRoutes)
 app.route('/api/telemetry', telemetryRoutes)
 app.route('/api/usage', usageRoutes)
@@ -203,9 +207,9 @@ const Analytics = lazy(() =>
 
 ## Data Fetching Pattern
 
-**Directory**: `src/lib/queries/` (namespace-split modules: `hyphae.ts`, `canopy.ts`, `rhizome.ts`, etc.)
+**Directory**: `src/lib/queries/` (namespace-split modules: `hyphae.ts`, `canopy.ts`, `rhizome.ts`, `lsp.ts`, `settings.ts`, `status.ts`, etc.)
 
-Re-exported from `src/lib/queries.ts` for backward-compatible imports.
+All query hooks are defined in namespace-specific files under `src/lib/queries/` and re-exported from `src/lib/queries.ts` for backward-compatible imports.
 
 Uses TanStack Query with query key factory pattern:
 
@@ -244,9 +248,9 @@ const { mutate } = useMutation({
 
 ## API Client
 
-**Directory**: `src/lib/api/` (namespace-split modules: `hyphae.ts`, `canopy.ts`, `rhizome.ts`, `sessions.ts`, etc.)
+**Directory**: `src/lib/api/` (namespace-split modules: `hyphae.ts`, `canopy.ts`, `rhizome.ts`, `sessions.ts`, `settings.ts`, `lsp.ts`, `status.ts`, `mycelium.ts`, `costs.ts`, `diff.ts`, `stipe.ts`, etc.)
 
-Re-exported from `src/lib/api.ts` for backward-compatible imports.
+All API clients are defined in namespace-specific files under `src/lib/api/` and re-exported from `src/lib/api.ts` for backward-compatible imports.
 
 Typed fetch wrappers for each backend namespace:
 

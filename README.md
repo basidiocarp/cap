@@ -89,6 +89,7 @@ render charts     ◄───   JSON response      ◄───    route result
 | `/` | Dashboard | Memory stats, topic breakdown, and health overview |
 | `/memories` | Memories | Search and filter memory records |
 | `/memoirs` | Memoirs | Explore knowledge graphs and concept links |
+| `/memoir-graph` | Memoir Graph | Interactive visualization of knowledge graphs |
 | `/sessions` | Sessions | Browse and inspect session timelines |
 | `/lessons` | Lessons | Review extracted lessons from past sessions |
 | `/canopy` | Canopy | Task coordination and handoff board |
