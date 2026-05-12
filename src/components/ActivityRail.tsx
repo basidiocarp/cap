@@ -11,9 +11,9 @@ interface ActivityEvent {
 }
 
 const KIND_COLORS: Record<ActivityEvent['kind'], string> = {
-  memory: 'mycelium',
   code: 'spore',
   lifecycle: 'substrate',
+  memory: 'mycelium',
   system: 'chitin',
 }
 
@@ -34,12 +34,12 @@ export function ActivityRail() {
   const [eventCount, setEventCount] = useState(0)
 
   const { data: events = [] } = useQuery({
-    queryKey: ['activity-recent'],
     queryFn: async () => {
       const res = await fetch('/api/telemetry/activity/recent')
       if (!res.ok) throw new Error('Failed to fetch activity')
       return res.json() as Promise<ActivityEvent[]>
     },
+    queryKey: ['activity-recent'],
     refetchInterval: 15_000,
   })
 
@@ -54,78 +54,128 @@ export function ActivityRail() {
       style={{ display: 'flex', flexDirection: 'column' }}
     >
       {/* Header */}
-      <Box p='md' style={{ borderBottom: '1px solid var(--mantine-color-gray-2)' }}>
-        <Group justify='space-between' mb='xs'>
-          <Text fw={600} size='sm'>
+      <Box
+        p='md'
+        style={{ borderBottom: '1px solid var(--mantine-color-gray-2)' }}
+      >
+        <Group
+          justify='space-between'
+          mb='xs'
+        >
+          <Text
+            fw={600}
+            size='sm'
+          >
             Live Activity
           </Text>
-          <Badge color='mycelium' variant='dot' size='xs'>
+          <Badge
+            color='mycelium'
+            size='xs'
+            variant='dot'
+          >
             streaming
           </Badge>
         </Group>
-        <Text size='xs' c='dimmed'>
+        <Text
+          c='dimmed'
+          size='xs'
+        >
           {eventCount} event{eventCount !== 1 ? 's' : ''}
         </Text>
       </Box>
 
       {/* Scrollable Event List */}
       <Box
+        p='md'
         style={{
           flex: 1,
-          overflowY: 'auto',
           overflowX: 'hidden',
+          overflowY: 'auto',
         }}
-        p='md'
       >
-        <Stack gap='sm'>
-          {events.map((event) => (
-            <Box
-              key={event.id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '3px 1fr',
-                gap: '8px',
-                paddingBottom: '8px',
-                borderBottom: '1px solid var(--mantine-color-gray-1)',
-              }}
+        {events.length === 0 ? (
+          <Stack
+            align='center'
+            gap='sm'
+            h='100%'
+            justify='center'
+          >
+            <Text
+              c='dimmed'
+              size='sm'
             >
+              No recent activity
+            </Text>
+          </Stack>
+        ) : (
+          <Stack gap='sm'>
+            {events.map((event) => (
               <Box
+                key={event.id}
                 style={{
-                  width: '3px',
-                  backgroundColor: `var(--mantine-color-${KIND_COLORS[event.kind]}-6)`,
-                  borderRadius: '2px',
+                  borderBottom: '1px solid var(--mantine-color-gray-1)',
+                  display: 'grid',
+                  gap: '8px',
+                  gridTemplateColumns: '3px 1fr',
+                  paddingBottom: '8px',
                 }}
-              />
-              <Stack gap={2}>
-                <Text fw={700} size='xs'>
-                  {event.tool}
-                </Text>
-                <Text size='xs' c='dimmed' style={{ wordBreak: 'break-word' }}>
-                  {event.msg}
-                </Text>
-                <Text size='xs' c='dimmed' ta='right'>
-                  {getRelativeTime(event.ts)}
-                </Text>
-              </Stack>
-            </Box>
-          ))}
-        </Stack>
+              >
+                <Box
+                  style={{
+                    backgroundColor: `var(--mantine-color-${KIND_COLORS[event.kind]}-6)`,
+                    borderRadius: '2px',
+                    width: '3px',
+                  }}
+                />
+                <Stack gap={2}>
+                  <Text
+                    fw={700}
+                    size='xs'
+                  >
+                    {event.tool}
+                  </Text>
+                  <Text
+                    c='dimmed'
+                    size='xs'
+                    style={{ wordBreak: 'break-word' }}
+                  >
+                    {event.msg}
+                  </Text>
+                  <Text
+                    c='dimmed'
+                    size='xs'
+                    ta='right'
+                  >
+                    {getRelativeTime(event.ts)}
+                  </Text>
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        )}
       </Box>
 
       {/* Footer */}
       <Box
         p='md'
         style={{
+          alignItems: 'center',
           borderTop: '1px solid var(--mantine-color-gray-2)',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
         }}
       >
-        <Text size='xs' c='dimmed'>
+        <Text
+          c='dimmed'
+          size='xs'
+        >
           tool calls/min: —
         </Text>
-        <Anchor href='#' size='xs' underline='hover'>
+        <Anchor
+          href='#'
+          size='xs'
+          underline='hover'
+        >
           Open log
         </Anchor>
       </Box>

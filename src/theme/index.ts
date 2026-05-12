@@ -1,5 +1,5 @@
 import type { DefaultMantineColor, MantineColorsTuple } from '@mantine/core'
-import { Button, Card, Text, createTheme, mergeMantineTheme, rem } from '@mantine/core'
+import { Button, Card, createTheme, mergeMantineTheme, rem, Text } from '@mantine/core'
 
 // Underground network, growth — teal-green
 const mycelium: MantineColorsTuple = [
@@ -140,38 +140,20 @@ export type ExtendedCustomColors =
   | 'substrate'
 
 export const theme = createTheme({
-  // Typography
-  fontFamily: 'Inter Variable, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif',
-  fontFamilyMonospace: "'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-  fontSizes: {
-    lg: rem(18),
-    md: rem(16),
-    sm: rem(14),
-    xl: rem(20),
-    xs: rem(12),
-  },
-  fontSmoothing: true,
-  headings: {
-    fontFamily: 'Inter Variable, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif',
-    sizes: {
-      h1: { fontSize: rem(32), fontWeight: '500', lineHeight: rem(40) },
-      h2: { fontSize: rem(26), fontWeight: '500', lineHeight: rem(34) },
-      h3: { fontSize: rem(22), fontWeight: '500', lineHeight: rem(30) },
-      h4: { fontSize: rem(18), fontWeight: '500', lineHeight: rem(26) },
-      h5: { fontSize: rem(16), fontWeight: '500', lineHeight: rem(24) },
-      h6: { fontSize: rem(14), fontWeight: '500', lineHeight: rem(20) },
-    },
-  },
-  lineHeights: {
-    lg: rem(24),
-    md: rem(24),
-    sm: rem(20),
-    xl: rem(28),
-    xs: rem(18),
-  },
+  // Interactions
+  activeClassName: 'mantine-active',
 
   // Colors
   autoContrast: true,
+
+  // Spacing + radius
+  breakpoints: {
+    lg: '75em',
+    md: '62em',
+    sm: '48em',
+    xl: '88em',
+    xs: '36em',
+  },
   colors: {
     chitin,
     decay,
@@ -183,76 +165,18 @@ export const theme = createTheme({
     spore,
     substrate,
   },
-  primaryColor: 'mycelium',
-  primaryShade: {
-    dark: 7,
-    light: 6,
-  },
-
-  // Shadows + gradient
-  defaultGradient: {
-    deg: 135,
-    from: 'mycelium',
-    to: 'spore',
-  },
-  shadows: {
-    lg: '0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25)',
-    md: '0 1px 3px rgba(0, 0, 0, 0.25), 0 4px 16px rgba(0, 0, 0, 0.2)',
-    sm: '0 1px 3px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.15)',
-    xl: '0 1px 3px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.3)',
-    xs: '0 1px 2px rgba(0, 0, 0, 0.15)',
-  },
-
-  // Interactions
-  activeClassName: 'mantine-active',
-  cursorType: 'pointer',
-  focusClassName: '',
-  focusRing: 'auto',
-  respectReducedMotion: true,
-
-  // Spacing + radius
-  breakpoints: {
-    lg: '75em',
-    md: '62em',
-    sm: '48em',
-    xl: '88em',
-    xs: '36em',
-  },
-  defaultRadius: 'sm',
-  radius: {
-    lg: 'calc(1rem * var(--mantine-scale))',
-    md: 'calc(0.5rem * var(--mantine-scale))',
-    sm: 'calc(0.25rem * var(--mantine-scale))',
-    xl: 'calc(2rem * var(--mantine-scale))',
-    xs: 'calc(0.125rem * var(--mantine-scale))',
-  },
-  spacing: {
-    lg: 'calc(1.25rem * var(--mantine-scale))',
-    md: 'calc(1rem * var(--mantine-scale))',
-    sm: 'calc(0.75rem * var(--mantine-scale))',
-    xl: 'calc(2rem * var(--mantine-scale))',
-    xs: 'calc(0.625rem * var(--mantine-scale))',
-  },
-
-  // Semantic shortcuts (JS-side access via useMantineTheme().other.*)
-  other: {
-    borderLight: 'var(--mantine-color-dark-4)',
-    containerPadding: rem(24),
-    textPrimary: 'var(--mantine-color-gray-1)',
-    textSecondary: 'var(--mantine-color-gray-5)',
-  },
 
   // Component defaults
   components: {
+    Button: Button.extend({
+      defaultProps: {
+        radius: 'sm',
+      },
+    }),
     Card: Card.extend({
       defaultProps: {
         padding: 'sm',
         radius: 'md',
-      },
-    }),
-    Button: Button.extend({
-      defaultProps: {
-        radius: 'sm',
       },
     }),
     Text: Text.extend({
@@ -296,6 +220,81 @@ export const theme = createTheme({
         }
       },
     }),
+  },
+  cursorType: 'pointer',
+
+  // Shadows + gradient
+  defaultGradient: {
+    deg: 135,
+    from: 'mycelium',
+    to: 'spore',
+  },
+  defaultRadius: 'sm',
+  focusClassName: '',
+  focusRing: 'auto',
+  // Typography
+  fontFamily: 'Inter Variable, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif',
+  fontFamilyMonospace: "'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  fontSizes: {
+    lg: rem(18),
+    md: rem(16),
+    sm: rem(14),
+    xl: rem(20),
+    xs: rem(12),
+  },
+  fontSmoothing: true,
+  headings: {
+    fontFamily: 'Inter Variable, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif',
+    sizes: {
+      h1: { fontSize: rem(32), fontWeight: '500', lineHeight: rem(40) },
+      h2: { fontSize: rem(26), fontWeight: '500', lineHeight: rem(34) },
+      h3: { fontSize: rem(22), fontWeight: '500', lineHeight: rem(30) },
+      h4: { fontSize: rem(18), fontWeight: '500', lineHeight: rem(26) },
+      h5: { fontSize: rem(16), fontWeight: '500', lineHeight: rem(24) },
+      h6: { fontSize: rem(14), fontWeight: '500', lineHeight: rem(20) },
+    },
+  },
+  lineHeights: {
+    lg: rem(24),
+    md: rem(24),
+    sm: rem(20),
+    xl: rem(28),
+    xs: rem(18),
+  },
+
+  // Semantic shortcuts (JS-side access via useMantineTheme().other.*)
+  other: {
+    borderLight: 'var(--mantine-color-dark-4)',
+    containerPadding: rem(24),
+    textPrimary: 'var(--mantine-color-gray-1)',
+    textSecondary: 'var(--mantine-color-gray-5)',
+  },
+  primaryColor: 'mycelium',
+  primaryShade: {
+    dark: 7,
+    light: 6,
+  },
+  radius: {
+    lg: 'calc(1rem * var(--mantine-scale))',
+    md: 'calc(0.5rem * var(--mantine-scale))',
+    sm: 'calc(0.25rem * var(--mantine-scale))',
+    xl: 'calc(2rem * var(--mantine-scale))',
+    xs: 'calc(0.125rem * var(--mantine-scale))',
+  },
+  respectReducedMotion: true,
+  shadows: {
+    lg: '0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25)',
+    md: '0 1px 3px rgba(0, 0, 0, 0.25), 0 4px 16px rgba(0, 0, 0, 0.2)',
+    sm: '0 1px 3px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.15)',
+    xl: '0 1px 3px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.3)',
+    xs: '0 1px 2px rgba(0, 0, 0, 0.15)',
+  },
+  spacing: {
+    lg: 'calc(1.25rem * var(--mantine-scale))',
+    md: 'calc(1rem * var(--mantine-scale))',
+    sm: 'calc(0.75rem * var(--mantine-scale))',
+    xl: 'calc(2rem * var(--mantine-scale))',
+    xs: 'calc(0.625rem * var(--mantine-scale))',
   },
 })
 

@@ -1,6 +1,6 @@
+import { useRouterState } from '@tanstack/react-router'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useRouterState } from '@tanstack/react-router'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createConcept, createConceptInspection, createMemoir, createMemoirDetail } from '../test/fixtures'

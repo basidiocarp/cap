@@ -41,46 +41,9 @@ app.get('/', (c) => {
 })
 
 app.get('/activity/recent', (c) => {
-  // No event-level data available in current telemetry system,
-  // return placeholder events as specified in the handoff
-  const now = Date.now()
-  const events: ActivityEvent[] = [
-    {
-      id: 'evt-1',
-      ts: now - 15_000,
-      kind: 'memory',
-      tool: 'hyphae',
-      msg: 'Stored session memory for debugging workflow',
-    },
-    {
-      id: 'evt-2',
-      ts: now - 45_000,
-      kind: 'code',
-      tool: 'rhizome',
-      msg: 'Scanned 1,243 symbols in codebase',
-    },
-    {
-      id: 'evt-3',
-      ts: now - 120_000,
-      kind: 'lifecycle',
-      tool: 'cortina',
-      msg: 'Session started with task context',
-    },
-    {
-      id: 'evt-4',
-      ts: now - 300_000,
-      kind: 'system',
-      tool: 'mycelium',
-      msg: 'Filtered 8,294 tokens from cargo output',
-    },
-    {
-      id: 'evt-5',
-      ts: now - 600_000,
-      kind: 'memory',
-      tool: 'hyphae',
-      msg: 'Consolidated 42 memories on error patterns',
-    },
-  ]
+  // No event-level data source is plumbed yet.
+  // Return empty array and let the frontend show an empty state.
+  const events: ActivityEvent[] = []
   return c.json(events)
 })
 

@@ -2,8 +2,8 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
 
-import { AppLayout } from './AppLayout'
 import { renderWithProviders } from '../test/render'
+import { AppLayout } from './AppLayout'
 
 describe('AppLayout', () => {
   it('lets keyboard users toggle the mobile nav with a real button', async () => {

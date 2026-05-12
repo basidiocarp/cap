@@ -1,14 +1,9 @@
-import react from '@vitejs/plugin-react'
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
+import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import tsConfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
-  plugins: [
-    TanStackRouterVite({ routesDirectory: 'src/routes', generatedRouteTree: 'src/routeTree.gen.ts' }),
-    react(),
-    tsConfigPaths(),
-  ],
   build: {
     rolldownOptions: {
       output: {
@@ -40,6 +35,7 @@ export default defineConfig({
       },
     },
   },
+  plugins: [TanStackRouterVite({ generatedRouteTree: 'src/routeTree.gen.ts', routesDirectory: 'src/routes' }), react(), tsConfigPaths()],
   server: {
     proxy: {
       '/api': {

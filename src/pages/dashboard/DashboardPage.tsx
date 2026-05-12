@@ -9,10 +9,10 @@ import { PageLoader } from '../../components/PageLoader'
 import { hyphaeApi, myceliumApi } from '../../lib/api'
 import { hyphaeKeys, myceliumKeys, useEcosystemStatus } from '../../lib/queries'
 import { useDashboardVariantStore } from '../../stores/dashboard-variant-store'
+import { LiveAgentsSection } from './LiveAgentsSection'
 import { DashboardConfident } from './variants/DashboardConfident'
 import { DashboardFieldLab } from './variants/DashboardFieldLab'
 import { DashboardOperator } from './variants/DashboardOperator'
-import { LiveAgentsSection } from './LiveAgentsSection'
 
 export function DashboardPage() {
   const [statsQuery, topicsQuery, healthQuery, gainQuery, sessionsQuery] = useQueries({

@@ -1,15 +1,14 @@
 import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { useCallback, useMemo } from 'react'
 
-type SearchParamsUpdater =
-  | URLSearchParams
-  | Record<string, string>
-  | ((prev: URLSearchParams) => URLSearchParams | Record<string, string>)
+type SearchParamsUpdater = URLSearchParams | Record<string, string> | ((prev: URLSearchParams) => URLSearchParams | Record<string, string>)
 
 function toRecord(params: URLSearchParams | Record<string, string>): Record<string, string> {
   if (params instanceof URLSearchParams) {
     const obj: Record<string, string> = {}
-    params.forEach((v, k) => { obj[k] = v })
+    params.forEach((v, k) => {
+      obj[k] = v
+    })
     return obj
   }
   return params

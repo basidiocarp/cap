@@ -17,10 +17,11 @@ export class WatcherRegistry {
     return [...this.adapters.keys()]
   }
 
-  dispatch(event: CapEvent): void {
+  dispatch(event: CapEvent): number {
     // Route CapEvent to action handlers — stub for now
-    logger.info({ eventType: event.type }, '[watcher-registry] dispatching event')
+    logger.info({ eventType: event.type, event }, '[watcher-registry] dispatching event')
     // Real handlers are follow-on work
+    return 0 // No handlers registered yet
   }
 }
 

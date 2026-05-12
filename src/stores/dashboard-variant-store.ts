@@ -16,13 +16,13 @@ interface DashboardVariantStore {
 export const useDashboardVariantStore = create<DashboardVariantStore>()(
   persist(
     (set) => ({
-      variant: 'operator',
-      setVariant: (variant) => set({ variant }),
       accentColor: 'mycelium',
-      setAccentColor: (accentColor) => set({ accentColor }),
       compactDensity: false,
+      setAccentColor: (accentColor) => set({ accentColor }),
       setCompactDensity: (compactDensity) => set({ compactDensity }),
+      setVariant: (variant) => set({ variant }),
+      variant: 'operator',
     }),
-    { name: 'dashboard-variant' },
-  ),
+    { name: 'dashboard-variant' }
+  )
 )

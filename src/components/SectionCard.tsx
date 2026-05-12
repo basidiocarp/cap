@@ -22,8 +22,8 @@ export function SectionCard({
       data-testid='section-card'
       styles={{
         root: {
-          overflow: 'visible',
           backgroundColor: 'light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6))',
+          overflow: 'visible',
         },
       }}
     >

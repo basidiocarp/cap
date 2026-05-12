@@ -1,8 +1,8 @@
 import { Badge, Stack, Table, Text } from '@mantine/core'
 
 import type { StatusSegment } from '../../lib/types'
-import { useStatusCustomization } from '../../lib/queries/annulus'
 import { SectionCard } from '../../components/SectionCard'
+import { useStatusCustomization } from '../../lib/queries/annulus'
 
 export function StatusCustomizationCard() {
   const { data: customization } = useStatusCustomization()

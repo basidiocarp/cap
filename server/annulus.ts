@@ -125,10 +125,7 @@ function parseSegment(raw: unknown): ResolvedStatusSegment | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
   const s = raw as Record<string, unknown>
   if (typeof s.id !== 'string' || typeof s.enabled !== 'boolean') return null
-  const config =
-    s.config && typeof s.config === 'object' && !Array.isArray(s.config)
-      ? (s.config as Record<string, unknown>)
-      : undefined
+  const config = s.config && typeof s.config === 'object' && !Array.isArray(s.config) ? (s.config as Record<string, unknown>) : undefined
   return { config, enabled: s.enabled, id: s.id }
 }
 
@@ -180,8 +177,7 @@ function parseConfigExportOutput(stdout: string): ResolvedStatusCustomization {
     const m = metaRaw as Record<string, unknown>
     metadata = {
       created_at: typeof m.created_at === 'string' ? m.created_at : undefined,
-      preset_name:
-        m.preset_name === null ? null : typeof m.preset_name === 'string' ? m.preset_name : undefined,
+      preset_name: m.preset_name === null ? null : typeof m.preset_name === 'string' ? m.preset_name : undefined,
       version: typeof m.version === 'string' ? m.version : undefined,
     }
   }

@@ -1,11 +1,11 @@
 import { useDebouncedValue } from '@mantine/hooks'
 import { useEffect, useState } from 'react'
-import { useSearchParams } from '../../lib/search-params'
 
 import type { Memory } from '../../lib/api'
 import type { ReviewFilter } from './memory-utils'
 import { getMemoryReviewState } from '../../lib/memory-review'
 import { useRecall, useSearchGlobal, useTopicMemories, useTopics } from '../../lib/queries'
+import { useSearchParams } from '../../lib/search-params'
 
 export function useMemoriesSearchState() {
   const [searchParams, setSearchParams] = useSearchParams()

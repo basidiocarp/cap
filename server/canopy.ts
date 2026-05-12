@@ -479,6 +479,62 @@ export async function applyTaskAction<T = unknown>(
   if (input.reviewAnnotationComment) args.push('--review-annotation-comment', input.reviewAnnotationComment)
   if (input.reviewAnnotationAnchorHash) args.push('--review-annotation-anchor-hash', input.reviewAnnotationAnchorHash)
 
+  // Try socket first
+  try {
+    const socketParams: Record<string, unknown> = {
+      action: input.action,
+      changed_by: input.changedBy,
+      task_id: taskId,
+    }
+    if (input.actingAgentId) socketParams.acting_agent_id = input.actingAgentId
+    if (input.assignedTo) socketParams.assigned_to = input.assignedTo
+    if (input.priority) socketParams.priority = input.priority
+    if (input.severity) socketParams.severity = input.severity
+    if (input.verificationState) socketParams.verification_state = input.verificationState
+    if (input.blockedReason) socketParams.blocked_reason = input.blockedReason
+    if (input.closureSummary) socketParams.closure_summary = input.closureSummary
+    if (input.ownerNote) socketParams.owner_note = input.ownerNote
+    if (input.clearOwnerNote) socketParams.clear_owner_note = input.clearOwnerNote
+    if (input.note) socketParams.note = input.note
+    if (input.fromAgentId) socketParams.from_agent_id = input.fromAgentId
+    if (input.toAgentId) socketParams.to_agent_id = input.toAgentId
+    if (input.handoffType) socketParams.handoff_type = input.handoffType
+    if (input.handoffSummary) socketParams.handoff_summary = input.handoffSummary
+    if (input.requestedAction) socketParams.requested_action = input.requestedAction
+    if (input.dueAt) socketParams.due_at = input.dueAt
+    if (input.reviewDueAt) socketParams.review_due_at = input.reviewDueAt
+    if (input.expiresAt) socketParams.expires_at = input.expiresAt
+    if (input.authorAgentId) socketParams.author_agent_id = input.authorAgentId
+    if (input.messageType) socketParams.message_type = input.messageType
+    if (input.messageBody) socketParams.message_body = input.messageBody
+    if (input.evidenceSourceKind) socketParams.evidence_source_kind = input.evidenceSourceKind
+    if (input.evidenceSourceRef) socketParams.evidence_source_ref = input.evidenceSourceRef
+    if (input.evidenceLabel) socketParams.evidence_label = input.evidenceLabel
+    if (input.evidenceSummary) socketParams.evidence_summary = input.evidenceSummary
+    if (input.relatedHandoffId) socketParams.related_handoff_id = input.relatedHandoffId
+    if (input.relatedSessionId) socketParams.related_session_id = input.relatedSessionId
+    if (input.relatedMemoryQuery) socketParams.related_memory_query = input.relatedMemoryQuery
+    if (input.relatedSymbol) socketParams.related_symbol = input.relatedSymbol
+    if (input.relatedFile) socketParams.related_file = input.relatedFile
+    if (input.followUpTitle) socketParams.follow_up_title = input.followUpTitle
+    if (input.followUpDescription) socketParams.follow_up_description = input.followUpDescription
+    if (input.relatedTaskId) socketParams.related_task_id = input.relatedTaskId
+    if (input.relationshipRole) socketParams.relationship_role = input.relationshipRole
+    if (input.reviewAnnotationFilePath) socketParams.review_annotation_file_path = input.reviewAnnotationFilePath
+    if (input.reviewAnnotationStartLine != null) socketParams.review_annotation_start_line = input.reviewAnnotationStartLine
+    if (input.reviewAnnotationEndLine != null) socketParams.review_annotation_end_line = input.reviewAnnotationEndLine
+    if (input.reviewAnnotationAction) socketParams.review_annotation_action = input.reviewAnnotationAction
+    if (input.reviewAnnotationComment) socketParams.review_annotation_comment = input.reviewAnnotationComment
+    if (input.reviewAnnotationAnchorHash) socketParams.review_annotation_anchor_hash = input.reviewAnnotationAnchorHash
+
+    const result = await callLocalService('canopy', 'canopy_task_action', socketParams)
+    if (result) {
+      return parseJson<T>(result, 'canopy task action')
+    }
+  } catch (err) {
+    logger.debug({ err }, 'canopy socket unavailable for task action, falling back to CLI')
+  }
+
   const raw = await run(args)
   return parseJson<T>(raw, 'canopy task action')
 }
@@ -497,6 +553,24 @@ export async function applyHandoffAction<T = unknown>(
   }
   if ((input.action === 'accept_handoff' || input.action === 'reject_handoff') && !input.actingAgentId?.trim()) {
     throw new Error(`${input.action} requires an acting_agent_id`)
+  }
+
+  // Try socket first
+  try {
+    const socketParams: Record<string, unknown> = {
+      action: input.action,
+      changed_by: input.changedBy,
+      handoff_id: handoffId,
+    }
+    if (input.actingAgentId) socketParams.acting_agent_id = input.actingAgentId
+    if (input.note) socketParams.note = input.note
+
+    const result = await callLocalService('canopy', 'canopy_handoff_action', socketParams)
+    if (result) {
+      return parseJson<T>(result, 'canopy handoff action')
+    }
+  } catch (err) {
+    logger.debug({ err }, 'canopy socket unavailable for handoff action, falling back to CLI')
   }
 
   const args = ['handoff', 'action', '--handoff-id', handoffId, '--action', input.action, '--changed-by', input.changedBy]

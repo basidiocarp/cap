@@ -1,7 +1,14 @@
 import type { ReactElement, ReactNode } from 'react'
 import { MantineProvider } from '@mantine/core'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { RouterContextProvider, createMemoryHistory, createRootRoute, createRouter, parseSearchWith, stringifySearchWith } from '@tanstack/react-router'
+import {
+  createMemoryHistory,
+  createRootRoute,
+  createRouter,
+  parseSearchWith,
+  RouterContextProvider,
+  stringifySearchWith,
+} from '@tanstack/react-router'
 import { render } from '@testing-library/react'
 
 interface RenderWithProvidersOptions {

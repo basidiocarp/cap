@@ -45,7 +45,7 @@ export function getHyphaeSettings(): {
   resolved_config_path: string
 } {
   const configPath = appConfigPath('hyphae')
-  const defaultDb = appDataPath('hyphae', 'hyphae.db')
+  const defaultDb = appDataPath('basidiocarp', 'hyphae/hyphae.db')
   const dbPath = process.env.HYPHAE_DB ?? defaultDb
   const dbSource = process.env.HYPHAE_DB ? 'env_override' : 'platform_default'
 

@@ -79,11 +79,11 @@ describe('Watchers API', () => {
         })
 
         const res = await app.fetch(req)
-        expect(res.status).toBe(200)
+        expect(res.status).toBe(202)
 
         const json = (await res.json()) as Record<string, unknown>
-        expect(json.success).toBe(true)
-        expect(json.event).toBe('dashboard_update')
+        expect(json.status).toBe('no_handlers_registered')
+        expect(json.event_type).toBe('dashboard_update')
       } finally {
         if (originalSecret !== undefined) {
           process.env.CAP_WEBHOOK_SECRET = originalSecret
@@ -147,10 +147,10 @@ describe('Watchers API', () => {
         })
 
         const res = await app.fetch(req)
-        expect(res.status).toBe(200)
+        expect(res.status).toBe(202)
 
         const json = (await res.json()) as Record<string, unknown>
-        expect(json.success).toBe(true)
+        expect(json.status).toBe('no_handlers_registered')
       } finally {
         if (originalSecret !== undefined) {
           process.env.CAP_WEBHOOK_SECRET = originalSecret
@@ -242,10 +242,10 @@ describe('Watchers API', () => {
         })
 
         const res = await app.fetch(req)
-        expect(res.status).toBe(200)
+        expect(res.status).toBe(202)
 
         const json = (await res.json()) as Record<string, unknown>
-        expect(json.success).toBe(true)
+        expect(json.status).toBe('no_handlers_registered')
       } finally {
         if (originalSecret !== undefined) {
           process.env.CAP_GITHUB_SECRET = originalSecret
@@ -309,10 +309,10 @@ describe('Watchers API', () => {
         })
 
         const res = await app.fetch(req)
-        expect(res.status).toBe(200)
+        expect(res.status).toBe(202)
 
         const json = (await res.json()) as Record<string, unknown>
-        expect(json.success).toBe(true)
+        expect(json.status).toBe('no_handlers_registered')
       } finally {
         if (originalSecret !== undefined) {
           process.env.CAP_GITHUB_SECRET = originalSecret

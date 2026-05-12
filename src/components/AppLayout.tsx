@@ -37,9 +37,9 @@ const NAV_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { icon: IconDashboard, label: 'Dashboard', path: '/' },
       { icon: IconBrain, label: 'Memories', path: '/memories' },
-      { icon: IconNetwork, label: 'Memoirs', path: '/memoirs', badge: true },
+      { badge: true, icon: IconNetwork, label: 'Memoirs', path: '/memoirs' },
       { icon: IconHierarchy2, label: 'Memoir Graph', path: '/memoir-graph' },
-      { icon: IconHistory, label: 'Sessions', path: '/sessions', badge: true },
+      { badge: true, icon: IconHistory, label: 'Sessions', path: '/sessions' },
       { icon: IconBulb, label: 'Lessons', path: '/lessons' },
     ],
     label: 'Memory',
@@ -48,7 +48,7 @@ const NAV_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { icon: IconCode, label: 'Code Explorer', path: '/code' },
       { icon: IconSearch, label: 'Symbols', path: '/symbols' },
-      { icon: IconBug, label: 'Diagnostics', path: '/diagnostics', alert: true },
+      { alert: true, icon: IconBug, label: 'Diagnostics', path: '/diagnostics' },
     ],
     label: 'Code',
   },
@@ -100,7 +100,11 @@ export function AppLayout() {
             >
               cap
             </Title>
-            <Indicator color='green' position='middle-end' size={7} />
+            <Indicator
+              color='green'
+              position='middle-end'
+              size={7}
+            />
             <Text
               c='dimmed'
               size='sm'
@@ -137,20 +141,63 @@ export function AppLayout() {
                   component={Link}
                   key={item.path}
                   label={item.label}
-                  leftSection={item.alert ? <Indicator color='red' size={6}><item.icon size={18} /></Indicator> : <item.icon size={18} />}
-                  rightSection={item.badge ? <Badge size='xs' variant='light'>—</Badge> : undefined}
+                  leftSection={
+                    item.alert ? (
+                      <Indicator
+                        color='red'
+                        size={6}
+                      >
+                        <item.icon size={18} />
+                      </Indicator>
+                    ) : (
+                      <item.icon size={18} />
+                    )
+                  }
+                  rightSection={
+                    item.badge ? (
+                      <Badge
+                        size='xs'
+                        variant='light'
+                      >
+                        —
+                      </Badge>
+                    ) : undefined
+                  }
                   to={item.path}
                 />
               ))}
             </div>
           ))}
         </div>
-        <Box p='xs' style={{ borderTop: '1px solid var(--mantine-color-dark-4)' }}>
-          <Group gap='xs' wrap='nowrap'>
-            <Avatar color='mycelium' radius='xl' size='sm'>A</Avatar>
+        <Box
+          p='xs'
+          style={{ borderTop: '1px solid var(--mantine-color-dark-4)' }}
+        >
+          <Group
+            gap='xs'
+            wrap='nowrap'
+          >
+            <Avatar
+              color='mycelium'
+              radius='xl'
+              size='sm'
+            >
+              A
+            </Avatar>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size='xs' truncate>Claude Sonnet</Text>
-              <Text c='dimmed' size='xs'>session · —</Text>
+              <Text
+                fw={500}
+                size='xs'
+                truncate
+              >
+                Claude Sonnet
+              </Text>
+              <Text
+                c='dimmed'
+                size='xs'
+              >
+                session · —
+              </Text>
             </div>
           </Group>
         </Box>

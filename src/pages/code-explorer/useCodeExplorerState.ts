@@ -1,10 +1,10 @@
 import { useDisclosure } from '@mantine/hooks'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from '../../lib/search-params'
 
 import { useFileTreeState } from '../../hooks/useFileTreeState'
 import { useDefinition, useExports, useFileSummary, useProjectContextController, useRhizomeStatus, useSymbols } from '../../lib/queries'
 import { memoirsHref, memoriesHref, symbolSearchHref } from '../../lib/routes'
+import { useSearchParams } from '../../lib/search-params'
 import { useProjectContextView } from '../../stores/project-context'
 import { parseCodeExplorerUrlState, toDisplaySymbols, writeCodeExplorerUrlState } from './code-explorer-url-state'
 import { isCodeFile } from './code-file-utils'

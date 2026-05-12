@@ -8,17 +8,11 @@ interface SparklineProps {
   width?: number
 }
 
-export function Sparkline({
-  data,
-  color = 'var(--mantine-color-mycelium-5)',
-  fill = true,
-  height = 36,
-  width = 200,
-}: SparklineProps) {
+export function Sparkline({ data, color = 'var(--mantine-color-mycelium-5)', fill = true, height = 36, width = 200 }: SparklineProps) {
   const gradId = useId()
 
   const { linePath, areaPath } = useMemo(() => {
-    if (data.length < 2) return { linePath: '', areaPath: '' }
+    if (data.length < 2) return { areaPath: '', linePath: '' }
     const max = Math.max(...data)
     const min = Math.min(...data)
     const range = max - min || 1
@@ -29,8 +23,8 @@ export function Sparkline({
     })
     const d = pts.map(([x, y], i) => (i === 0 ? `M${x},${y}` : `L${x},${y}`)).join(' ')
     return {
-      linePath: d,
       areaPath: `${d} L${width},${height} L0,${height} Z`,
+      linePath: d,
     }
   }, [data, width, height])
 
@@ -44,13 +38,37 @@ export function Sparkline({
       viewBox={`0 0 ${width} ${height}`}
     >
       <defs>
-        <linearGradient id={gradId} x1='0' x2='0' y1='0' y2='1'>
-          <stop offset='0%' stopColor={color} stopOpacity={0.35} />
-          <stop offset='100%' stopColor={color} stopOpacity={0} />
+        <linearGradient
+          id={gradId}
+          x1='0'
+          x2='0'
+          y1='0'
+          y2='1'
+        >
+          <stop
+            offset='0%'
+            stopColor={color}
+            stopOpacity={0.35}
+          />
+          <stop
+            offset='100%'
+            stopColor={color}
+            stopOpacity={0}
+          />
         </linearGradient>
       </defs>
-      {fill && <path d={areaPath} fill={`url(#${gradId})`} />}
-      <path d={linePath} fill='none' stroke={color} strokeWidth={1.6} />
+      {fill && (
+        <path
+          d={areaPath}
+          fill={`url(#${gradId})`}
+        />
+      )}
+      <path
+        d={linePath}
+        fill='none'
+        stroke={color}
+        strokeWidth={1.6}
+      />
     </svg>
   )
 }

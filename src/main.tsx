@@ -19,7 +19,10 @@ function ThemedApp() {
   const accentColor = useDashboardVariantStore((s) => s.accentColor)
   const dynamicTheme = mergeThemeOverrides(theme, { primaryColor: accentColor })
   return (
-    <MantineProvider defaultColorScheme='dark' theme={dynamicTheme}>
+    <MantineProvider
+      defaultColorScheme='dark'
+      theme={dynamicTheme}
+    >
       <Notifications />
       <RouterProvider router={router} />
     </MantineProvider>

@@ -1,9 +1,8 @@
-import type { NodeObject } from 'react-force-graph-2d'
+import type { ForceGraphMethods, NodeObject } from 'react-force-graph-2d'
 import { ActionIcon, Badge, Group, Loader, Select, Stack, Text, TextInput, Title } from '@mantine/core'
-import { IconSearch, IconPlus, IconMinus } from '@tabler/icons-react'
+import { IconMinus, IconPlus, IconSearch } from '@tabler/icons-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
-import type { ForceGraphMethods } from 'react-force-graph-2d'
 
 import type { MemoirGraphEdge, MemoirGraphNode } from '../../lib/types/hyphae'
 import { ErrorAlert } from '../../components/ErrorAlert'
@@ -94,14 +93,21 @@ export function MemoirGraphPage({ memoirNames }: MemoirGraphPageProps) {
   }
 
   return (
-    <Stack gap="md" h="100%" p="md">
+    <Stack
+      gap='md'
+      h='100%'
+      p='md'
+    >
       <Title order={2}>Memoir Graph</Title>
 
-      <Group gap="md" wrap="nowrap">
+      <Group
+        gap='md'
+        wrap='nowrap'
+      >
         <Select
           data={memoirNames}
           onChange={(value) => setSelectedMemoirName(value)}
-          placeholder="Select a memoir…"
+          placeholder='Select a memoir…'
           searchable
           style={{ minWidth: 200 }}
           value={selectedMemoirName}
@@ -110,38 +116,44 @@ export function MemoirGraphPage({ memoirNames }: MemoirGraphPageProps) {
           <TextInput
             leftSection={<IconSearch size={14} />}
             onChange={(e) => setFilter(e.currentTarget.value)}
-            placeholder="Filter concepts…"
-            value={filter}
+            placeholder='Filter concepts…'
             style={{ flex: 1 }}
+            value={filter}
           />
         )}
       </Group>
 
-      <ErrorAlert error={graphQuery.error} title="Failed to load graph" />
+      <ErrorAlert
+        error={graphQuery.error}
+        title='Failed to load graph'
+      />
 
-      {graphQuery.isLoading && <Loader size="sm" />}
+      {graphQuery.isLoading && <Loader size='sm' />}
 
       {!selectedMemoirName && (
-        <Text c="dimmed" size="sm">
+        <Text
+          c='dimmed'
+          size='sm'
+        >
           Select a memoir above to explore its concept graph.
         </Text>
       )}
 
-      <div style={{ display: 'flex', gap: 16, minHeight: 500, flex: 1 }}>
-        <div ref={containerRef} style={{ flex: 1, position: 'relative' }}>
+      <div style={{ display: 'flex', flex: 1, gap: 16, minHeight: 500 }}>
+        <div
+          ref={containerRef}
+          style={{ flex: 1, position: 'relative' }}
+        >
           {filteredNodes.length > 0 ? (
             <>
               <ForceGraph2D<MemoirGraphNode>
-                ref={fgRef}
                 graphData={{ links: filteredEdges.map((e) => ({ ...e })), nodes: graphNodes }}
-                linkLabel="label"
+                linkLabel='label'
                 nodeCanvasObject={(node, ctx) => {
                   const x = node.x ?? 0
                   const y = node.y ?? 0
                   const r = Math.sqrt(Math.max(0, node.val ?? 1)) * 4
-                  const isFresh = node.updated_at
-                    ? Date.now() - new Date(node.updated_at).getTime() < 7 * 24 * 60 * 60 * 1000
-                    : true
+                  const isFresh = node.updated_at ? Date.now() - new Date(node.updated_at).getTime() < 7 * 24 * 60 * 60 * 1000 : true
                   ctx.save()
                   ctx.globalAlpha = isFresh ? 1.0 : 0.5
                   ctx.beginPath()
@@ -151,57 +163,93 @@ export function MemoirGraphPage({ memoirNames }: MemoirGraphPageProps) {
                   ctx.restore()
                 }}
                 nodeCanvasObjectMode={() => 'replace'}
-                nodeLabel="label"
+                nodeLabel='label'
                 onNodeClick={handleNodeClick}
+                ref={fgRef}
                 width={width}
               />
               <div
                 style={{
-                  position: 'absolute',
                   bottom: 16,
-                  right: 16,
                   display: 'flex',
                   gap: 8,
+                  position: 'absolute',
+                  right: 16,
                   zIndex: 10,
                 }}
               >
-                <ActionIcon onClick={() => fgRef.current?.zoom(1.4, 300)} size="sm" variant="default">
+                <ActionIcon
+                  onClick={() => fgRef.current?.zoom(1.4, 300)}
+                  size='sm'
+                  variant='default'
+                >
                   <IconPlus size={14} />
                 </ActionIcon>
-                <ActionIcon onClick={() => fgRef.current?.zoom(0.7, 300)} size="sm" variant="default">
+                <ActionIcon
+                  onClick={() => fgRef.current?.zoom(0.7, 300)}
+                  size='sm'
+                  variant='default'
+                >
                   <IconMinus size={14} />
                 </ActionIcon>
               </div>
             </>
           ) : selectedMemoirName && !graphQuery.isLoading ? (
-            <Text c="dimmed" p="xl">
+            <Text
+              c='dimmed'
+              p='xl'
+            >
               No concepts match the current filter.
             </Text>
           ) : null}
         </div>
 
         {currentNode && (
-          <SectionCard title={currentNode.label} style={{ width: 280, flexShrink: 0 }}>
-            <Stack gap="xs">
-              <Text size="sm">{currentNode.definition}</Text>
+          <SectionCard
+            style={{ flexShrink: 0, width: 280 }}
+            title={currentNode.label}
+          >
+            <Stack gap='xs'>
+              <Text size='sm'>{currentNode.definition}</Text>
               {relatedEdges.length > 0 && (
                 <>
-                  <Text fw={500} size="xs" mt="xs">
+                  <Text
+                    fw={500}
+                    mt='xs'
+                    size='xs'
+                  >
                     Relationships
                   </Text>
                   {relatedEdges.map((edge) => (
-                    <Group key={edge.id} gap="xs" wrap="nowrap">
-                      <Badge size="xs" variant="light">
+                    <Group
+                      gap='xs'
+                      key={edge.id}
+                      wrap='nowrap'
+                    >
+                      <Badge
+                        size='xs'
+                        variant='light'
+                      >
                         {edge.label}
                       </Badge>
-                      <Text size="xs" c="dimmed">
+                      <Text
+                        c='dimmed'
+                        size='xs'
+                      >
                         {edge.source === currentNode.id ? '→' : '←'} {getOtherNodeLabel(edge)}
                       </Text>
                     </Group>
                   ))}
                 </>
               )}
-              {currentNode.community_id && <Text size="xs" c="dimmed">Community: {currentNode.community_id}</Text>}
+              {currentNode.community_id && (
+                <Text
+                  c='dimmed'
+                  size='xs'
+                >
+                  Community: {currentNode.community_id}
+                </Text>
+              )}
             </Stack>
           </SectionCard>
         )}

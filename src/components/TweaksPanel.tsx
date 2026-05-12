@@ -1,21 +1,20 @@
 import { ActionIcon, Drawer, Group, SegmentedControl, Stack, Switch, Text, Tooltip, useMantineColorScheme } from '@mantine/core'
-import { IconSettings2 } from '@tabler/icons-react'
 import { useDisclosure } from '@mantine/hooks'
+import { IconSettings2 } from '@tabler/icons-react'
 
 import type { AccentColor, DashboardVariant } from '../stores/dashboard-variant-store'
 import { useDashboardVariantStore } from '../stores/dashboard-variant-store'
 
 const accentColorMap: Record<AccentColor, string> = {
+  gill: '#f76c6c',
   mycelium: '#20c997',
   spore: '#845ef7',
   substrate: '#ffc107',
-  gill: '#f76c6c',
 }
 
 export function TweaksPanel() {
   const [opened, { open, close }] = useDisclosure(false)
-  const { variant, setVariant, accentColor, setAccentColor, compactDensity, setCompactDensity } =
-    useDashboardVariantStore()
+  const { variant, setVariant, accentColor, setAccentColor, compactDensity, setCompactDensity } = useDashboardVariantStore()
   const { colorScheme, setColorScheme } = useMantineColorScheme()
 
   const handleCompactDensity = (value: boolean) => {
@@ -32,17 +31,27 @@ export function TweaksPanel() {
       >
         <IconSettings2 size={20} />
       </div>
-      <Drawer onClose={close} opened={opened} position='right' size='sm' title='Dev Tweaks'>
+      <Drawer
+        onClose={close}
+        opened={opened}
+        position='right'
+        size='sm'
+        title='Dev Tweaks'
+      >
         <Stack gap='md'>
           <div>
-            <Text fw={500} mb='xs' size='sm'>
+            <Text
+              fw={500}
+              mb='xs'
+              size='sm'
+            >
               Dashboard Variant
             </Text>
             <SegmentedControl
               data={[
-                { value: 'operator', label: 'Operator' },
-                { value: 'confident', label: 'Confident' },
-                { value: 'fieldlab', label: 'Field Lab' },
+                { label: 'Operator', value: 'operator' },
+                { label: 'Confident', value: 'confident' },
+                { label: 'Field Lab', value: 'fieldlab' },
               ]}
               fullWidth
               onChange={(v) => setVariant(v as DashboardVariant)}
@@ -51,7 +60,11 @@ export function TweaksPanel() {
           </div>
 
           <div>
-            <Text fw={500} mb='xs' size='sm'>
+            <Text
+              fw={500}
+              mb='xs'
+              size='sm'
+            >
               Theme
             </Text>
             <SegmentedControl
@@ -66,7 +79,11 @@ export function TweaksPanel() {
           </div>
 
           <div>
-            <Text fw={500} mb='xs' size='sm'>
+            <Text
+              fw={500}
+              mb='xs'
+              size='sm'
+            >
               Accent Color
             </Text>
             <Group>
@@ -86,7 +103,11 @@ export function TweaksPanel() {
           </div>
 
           <div>
-            <Text fw={500} mb='xs' size='sm'>
+            <Text
+              fw={500}
+              mb='xs'
+              size='sm'
+            >
               Compact Density
             </Text>
             <Switch
@@ -96,7 +117,11 @@ export function TweaksPanel() {
           </div>
 
           <div>
-            <Text fw={500} mb='xs' size='sm'>
+            <Text
+              fw={500}
+              mb='xs'
+              size='sm'
+            >
               Live Data
             </Text>
             <Tooltip label='Coming soon'>

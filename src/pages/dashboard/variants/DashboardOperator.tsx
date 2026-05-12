@@ -1,7 +1,8 @@
 import { Badge, Grid, Group, Progress, SimpleGrid, Stack, Table, Text } from '@mantine/core'
 
+import type { Anomaly } from '../../../components/AnomalyList'
 import type { EcosystemStatus, GainResult, HealthResult, SessionRecord, Stats, TopicSummary } from '../../../lib/api'
-import { AnomalyList, type Anomaly } from '../../../components/AnomalyList'
+import { AnomalyList } from '../../../components/AnomalyList'
 import { HealthStrip } from '../../../components/HealthStrip'
 import { KpiCard } from '../../../components/KpiCard'
 import { SectionCard } from '../../../components/SectionCard'
@@ -15,14 +16,7 @@ export interface DashboardVariantProps {
   sessions: SessionRecord[]
 }
 
-export function DashboardOperator({
-  gain,
-  stats,
-  topics,
-  health,
-  ecosystemStatus,
-  sessions,
-}: DashboardVariantProps) {
+export function DashboardOperator({ gain, stats, topics, health, ecosystemStatus, sessions }: DashboardVariantProps) {
   const avgSavingsPct = gain?.avg_savings_pct ?? gain?.summary?.avg_savings_pct ?? null
 
   const toolsStatus = [
@@ -32,7 +26,7 @@ export function DashboardOperator({
   ]
 
   const PLACEHOLDER_ANOMALIES: Anomaly[] = [
-    { id: '1', severity: 'warn', title: 'Hyphae index stale', detail: 'Last indexed 4 hours ago — search recall may be degraded.' },
+    { detail: 'Last indexed 4 hours ago — search recall may be degraded.', id: '1', severity: 'warn', title: 'Hyphae index stale' },
   ]
 
   const sparkData = Array.from({ length: 7 }, (_, i) => Math.max(0, (avgSavingsPct ?? 0) * (0.7 + i * 0.05)))
@@ -40,17 +34,40 @@ export function DashboardOperator({
   return (
     <Stack gap='sm'>
       {/* Health Strip */}
-      <HealthStrip tools={toolsStatus} tokensSaved={gain?.summary?.total_saved ?? undefined} />
+      <HealthStrip
+        tokensSaved={gain?.summary?.total_saved ?? undefined}
+        tools={toolsStatus}
+      />
 
       {/* Anomaly List */}
       <AnomalyList anomalies={PLACEHOLDER_ANOMALIES} />
 
       {/* Row 1: KPI Tiles */}
-      <SimpleGrid cols={{ base: 2, sm: 4 }} spacing='xs'>
-        <KpiCard accent='mycelium.7' label='Memories' value={String(stats.total_memories)} sparkData={sparkData} />
-        <KpiCard accent='spore.6' label='Topics' value={String(stats.total_topics)} />
-        <KpiCard accent='substrate.6' label='Avg Weight' value={stats.avg_weight?.toFixed(3) ?? '—'} />
-        <KpiCard accent='fruiting.6' label='Token Savings' value={avgSavingsPct !== null ? `${avgSavingsPct.toFixed(1)}%` : '—'} />
+      <SimpleGrid
+        cols={{ base: 2, sm: 4 }}
+        spacing='xs'
+      >
+        <KpiCard
+          accent='mycelium.7'
+          label='Memories'
+          sparkData={sparkData}
+          value={String(stats.total_memories)}
+        />
+        <KpiCard
+          accent='spore.6'
+          label='Topics'
+          value={String(stats.total_topics)}
+        />
+        <KpiCard
+          accent='substrate.6'
+          label='Avg Weight'
+          value={stats.avg_weight?.toFixed(3) ?? '—'}
+        />
+        <KpiCard
+          accent='fruiting.6'
+          label='Token Savings'
+          value={avgSavingsPct !== null ? `${avgSavingsPct.toFixed(1)}%` : '—'}
+        />
       </SimpleGrid>
 
       {/* Row 2: Topics and Health */}
@@ -90,7 +107,10 @@ export function DashboardOperator({
                 </Table.Tbody>
               </Table>
             ) : (
-              <Text c='dimmed' size='sm'>
+              <Text
+                c='dimmed'
+                size='sm'
+              >
                 No topics yet
               </Text>
             )}
@@ -103,21 +123,36 @@ export function DashboardOperator({
               <Stack gap='sm'>
                 {health.map((item) => (
                   <div key={item.topic}>
-                    <Group justify='space-between' mb={4}>
+                    <Group
+                      justify='space-between'
+                      mb={4}
+                    >
                       <Text size='sm'>{item.topic}</Text>
                       <Group gap='xs'>
                         {item.critical_count > 0 && (
-                          <Badge color='gill' size='xs' variant='light'>
+                          <Badge
+                            color='gill'
+                            size='xs'
+                            variant='light'
+                          >
                             {item.critical_count} critical
                           </Badge>
                         )}
                         {item.high_count > 0 && (
-                          <Badge color='fruiting' size='xs' variant='light'>
+                          <Badge
+                            color='fruiting'
+                            size='xs'
+                            variant='light'
+                          >
                             {item.high_count} high
                           </Badge>
                         )}
                         {item.low_weight_count > 0 && (
-                          <Badge color='substrate' size='xs' variant='light'>
+                          <Badge
+                            color='substrate'
+                            size='xs'
+                            variant='light'
+                          >
                             {item.low_weight_count} fading
                           </Badge>
                         )}
@@ -131,7 +166,10 @@ export function DashboardOperator({
                 ))}
               </Stack>
             ) : (
-              <Text c='dimmed' size='sm'>
+              <Text
+                c='dimmed'
+                size='sm'
+              >
                 No health data
               </Text>
             )}
@@ -142,13 +180,22 @@ export function DashboardOperator({
       {/* Row 3: Ecosystem Status */}
       {ecosystemStatus && (
         <Group gap='xs'>
-          <Badge color={ecosystemStatus.mycelium.available ? 'mycelium' : 'red'} variant='light'>
+          <Badge
+            color={ecosystemStatus.mycelium.available ? 'mycelium' : 'red'}
+            variant='light'
+          >
             Mycelium {ecosystemStatus.mycelium.available ? '✓' : '✗'}
           </Badge>
-          <Badge color={ecosystemStatus.hyphae.available ? 'substrate' : 'red'} variant='light'>
+          <Badge
+            color={ecosystemStatus.hyphae.available ? 'substrate' : 'red'}
+            variant='light'
+          >
             Hyphae {ecosystemStatus.hyphae.available ? '✓' : '✗'}
           </Badge>
-          <Badge color={ecosystemStatus.rhizome.available ? 'fruiting' : 'red'} variant='light'>
+          <Badge
+            color={ecosystemStatus.rhizome.available ? 'fruiting' : 'red'}
+            variant='light'
+          >
             Rhizome {ecosystemStatus.rhizome.available ? '✓' : '✗'}
           </Badge>
         </Group>
@@ -175,7 +222,11 @@ export function DashboardOperator({
                     <Text size='sm'>—</Text>
                   </Table.Td>
                   <Table.Td>
-                    <Badge color={session.status === 'completed' ? 'mycelium' : 'gray'} size='xs' variant='light'>
+                    <Badge
+                      color={session.status === 'completed' ? 'mycelium' : 'gray'}
+                      size='xs'
+                      variant='light'
+                    >
                       {session.status}
                     </Badge>
                   </Table.Td>
@@ -184,7 +235,10 @@ export function DashboardOperator({
             </Table.Tbody>
           </Table>
         ) : (
-          <Text c='dimmed' size='sm'>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
             No sessions yet
           </Text>
         )}

@@ -67,7 +67,14 @@ app.post('/webhook', async (c) => {
     }
 
     const capEvent = adapter.transform(rawEvent)
-    registry.dispatch(capEvent)
+    const handlerCount = registry.dispatch(capEvent)
+
+    if (handlerCount === 0) {
+      return c.json(
+        { status: 'no_handlers_registered', event_type: capEvent.type },
+        202
+      )
+    }
 
     return c.json({ event: capEvent.type, success: true })
   } catch (err) {
@@ -120,7 +127,14 @@ app.post('/github', async (c) => {
     }
 
     const capEvent = adapter.transform(rawEvent)
-    registry.dispatch(capEvent)
+    const handlerCount = registry.dispatch(capEvent)
+
+    if (handlerCount === 0) {
+      return c.json(
+        { status: 'no_handlers_registered', event_type: capEvent.type },
+        202
+      )
+    }
 
     return c.json({ event: capEvent.type, success: true })
   } catch (err) {

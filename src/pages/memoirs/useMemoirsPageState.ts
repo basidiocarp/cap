@@ -1,7 +1,7 @@
 import { useDeferredValue, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from '../../lib/search-params'
 
 import { useMemoir, useMemoirInspect, useMemoirs } from '../../lib/queries'
+import { useSearchParams } from '../../lib/search-params'
 import { DEFAULT_MEMOIR_PAGE, readMemoirUrlState, writeMemoirUrlState } from './memoir-url-state'
 
 const CONCEPTS_PAGE_SIZE = 200

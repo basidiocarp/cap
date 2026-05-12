@@ -1,4 +1,5 @@
 import { createRouter, parseSearchWith, stringifySearchWith } from '@tanstack/react-router'
+
 import { routeTree } from './routeTree.gen'
 
 // Use plain-string search param serialization (no JSON encoding).

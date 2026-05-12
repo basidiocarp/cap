@@ -30,8 +30,8 @@ export function LiveAgentsSection() {
       <Stack gap='xs'>
         {agents.map((agent) => (
           <Group
-            key={agent.agent_id}
             justify='space-between'
+            key={agent.agent_id}
           >
             <div>
               <Text

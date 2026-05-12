@@ -1,8 +1,8 @@
 import type { RefObject } from 'react'
 import { Badge, Button, Group, Loader, ScrollArea, SegmentedControl, Stack, Table, Text, Tooltip, UnstyledButton } from '@mantine/core'
 import { IconArrowLeft } from '@tabler/icons-react'
-import { lazy, Suspense } from 'react'
 import { Link } from '@tanstack/react-router'
+import { lazy, Suspense } from 'react'
 
 import type { ConceptInspection } from '../../lib/api'
 import { SectionCard } from '../../components/SectionCard'

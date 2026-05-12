@@ -1,19 +1,13 @@
 import { Badge, Card, Group, Progress, SimpleGrid, Stack, Table, Text, Timeline, Title } from '@mantine/core'
 
+import type { Anomaly } from '../../../components/AnomalyList'
 import type { DashboardVariantProps } from './DashboardOperator'
-import { AnomalyList, type Anomaly } from '../../../components/AnomalyList'
+import { AnomalyList } from '../../../components/AnomalyList'
 import { HealthStrip } from '../../../components/HealthStrip'
 import { KpiCard } from '../../../components/KpiCard'
 import { SectionCard } from '../../../components/SectionCard'
 
-export function DashboardConfident({
-  gain,
-  stats,
-  topics,
-  health,
-  ecosystemStatus,
-  sessions,
-}: DashboardVariantProps) {
+export function DashboardConfident({ gain, stats, topics, health, ecosystemStatus, sessions }: DashboardVariantProps) {
   const avgSavingsPct = gain?.avg_savings_pct ?? gain?.summary?.avg_savings_pct ?? null
 
   const toolsStatus = [
@@ -23,7 +17,7 @@ export function DashboardConfident({
   ]
 
   const PLACEHOLDER_ANOMALIES: Anomaly[] = [
-    { id: '1', severity: 'warn', title: 'Hyphae index stale', detail: 'Last indexed 4 hours ago — search recall may be degraded.' },
+    { detail: 'Last indexed 4 hours ago — search recall may be degraded.', id: '1', severity: 'warn', title: 'Hyphae index stale' },
   ]
 
   const sparkData = Array.from({ length: 7 }, (_, i) => Math.max(0, (avgSavingsPct ?? 0) * (0.7 + i * 0.05)))
@@ -31,45 +25,103 @@ export function DashboardConfident({
   return (
     <Stack gap='xl'>
       {/* Health Strip */}
-      <HealthStrip tools={toolsStatus} tokensSaved={gain?.summary?.total_saved ?? undefined} />
+      <HealthStrip
+        tokensSaved={gain?.summary?.total_saved ?? undefined}
+        tools={toolsStatus}
+      />
 
       {/* Anomaly List */}
       <AnomalyList anomalies={PLACEHOLDER_ANOMALIES} />
 
       {/* Hero Section */}
-      <Card padding='xl' radius='lg' withBorder>
-        <Text c='dimmed' size='sm' mb='xs'>
+      <Card
+        padding='xl'
+        radius='lg'
+        withBorder
+      >
+        <Text
+          c='dimmed'
+          mb='xs'
+          size='sm'
+        >
           avg token savings
         </Text>
-        <Title c='mycelium.6' fz={64} order={1}>
+        <Title
+          c='mycelium.6'
+          fz={64}
+          order={1}
+        >
           {avgSavingsPct !== null ? `${avgSavingsPct.toFixed(1)}%` : '—'}
         </Title>
-        <Text c='dimmed' size='sm'>
+        <Text
+          c='dimmed'
+          size='sm'
+        >
           across {stats.total_memories} memories in {stats.total_topics} topics
         </Text>
       </Card>
 
       {/* Stats Grid */}
-      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing='lg'>
-        <KpiCard accent='mycelium.7' label='Memories' value={String(stats.total_memories)} sparkData={sparkData} />
-        <KpiCard accent='spore.6' label='Topics' value={String(stats.total_topics)} />
-        <KpiCard accent='substrate.6' label='Avg Weight' value={stats.avg_weight?.toFixed(3) ?? '—'} />
+      <SimpleGrid
+        cols={{ base: 1, sm: 3 }}
+        spacing='lg'
+      >
+        <KpiCard
+          accent='mycelium.7'
+          label='Memories'
+          sparkData={sparkData}
+          value={String(stats.total_memories)}
+        />
+        <KpiCard
+          accent='spore.6'
+          label='Topics'
+          value={String(stats.total_topics)}
+        />
+        <KpiCard
+          accent='substrate.6'
+          label='Avg Weight'
+          value={stats.avg_weight?.toFixed(3) ?? '—'}
+        />
       </SimpleGrid>
 
       {/* Topics Section with Timeline */}
       <SectionCard title='Active Topics'>
         {topics.length > 0 ? (
-          <Timeline active={-1} bulletSize={24} lineWidth={2}>
+          <Timeline
+            active={-1}
+            bulletSize={24}
+            lineWidth={2}
+          >
             {topics.slice(0, 6).map((topic) => (
-              <Timeline.Item bullet={<div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: topic.avg_weight > 0.7 ? '#e3f2ff' : topic.avg_weight > 0.4 ? '#fff3e0' : '#ffebee' }} />} key={topic.topic} title={topic.topic}>
-                <Text c='dimmed' mt={4} size='sm'>
+              <Timeline.Item
+                bullet={
+                  <div
+                    style={{
+                      backgroundColor: topic.avg_weight > 0.7 ? '#e3f2ff' : topic.avg_weight > 0.4 ? '#fff3e0' : '#ffebee',
+                      borderRadius: '50%',
+                      height: '12px',
+                      width: '12px',
+                    }}
+                  />
+                }
+                key={topic.topic}
+                title={topic.topic}
+              >
+                <Text
+                  c='dimmed'
+                  mt={4}
+                  size='sm'
+                >
                   {topic.count} memories
                 </Text>
               </Timeline.Item>
             ))}
           </Timeline>
         ) : (
-          <Text c='dimmed' size='sm'>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
             No topics yet
           </Text>
         )}
@@ -81,23 +133,41 @@ export function DashboardConfident({
           <Stack gap='md'>
             {health.map((item) => (
               <div key={item.topic}>
-                <Group justify='space-between' mb={8}>
-                  <Text fw={500} size='sm'>
+                <Group
+                  justify='space-between'
+                  mb={8}
+                >
+                  <Text
+                    fw={500}
+                    size='sm'
+                  >
                     {item.topic}
                   </Text>
                   <Group gap='xs'>
                     {item.critical_count > 0 && (
-                      <Badge color='gill' size='xs' variant='light'>
+                      <Badge
+                        color='gill'
+                        size='xs'
+                        variant='light'
+                      >
                         {item.critical_count} critical
                       </Badge>
                     )}
                     {item.high_count > 0 && (
-                      <Badge color='fruiting' size='xs' variant='light'>
+                      <Badge
+                        color='fruiting'
+                        size='xs'
+                        variant='light'
+                      >
                         {item.high_count} high
                       </Badge>
                     )}
                     {item.low_weight_count > 0 && (
-                      <Badge color='substrate' size='xs' variant='light'>
+                      <Badge
+                        color='substrate'
+                        size='xs'
+                        variant='light'
+                      >
                         {item.low_weight_count} fading
                       </Badge>
                     )}
@@ -112,7 +182,10 @@ export function DashboardConfident({
             ))}
           </Stack>
         ) : (
-          <Text c='dimmed' size='sm'>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
             No health data
           </Text>
         )}
@@ -121,13 +194,22 @@ export function DashboardConfident({
       {/* Ecosystem Status */}
       {ecosystemStatus && (
         <Group gap='xs'>
-          <Badge color={ecosystemStatus.mycelium.available ? 'mycelium' : 'red'} variant='light'>
+          <Badge
+            color={ecosystemStatus.mycelium.available ? 'mycelium' : 'red'}
+            variant='light'
+          >
             Mycelium {ecosystemStatus.mycelium.available ? '✓' : '✗'}
           </Badge>
-          <Badge color={ecosystemStatus.hyphae.available ? 'substrate' : 'red'} variant='light'>
+          <Badge
+            color={ecosystemStatus.hyphae.available ? 'substrate' : 'red'}
+            variant='light'
+          >
             Hyphae {ecosystemStatus.hyphae.available ? '✓' : '✗'}
           </Badge>
-          <Badge color={ecosystemStatus.rhizome.available ? 'fruiting' : 'red'} variant='light'>
+          <Badge
+            color={ecosystemStatus.rhizome.available ? 'fruiting' : 'red'}
+            variant='light'
+          >
             Rhizome {ecosystemStatus.rhizome.available ? '✓' : '✗'}
           </Badge>
         </Group>
@@ -154,7 +236,11 @@ export function DashboardConfident({
                     <Text size='sm'>—</Text>
                   </Table.Td>
                   <Table.Td>
-                    <Badge color={session.status === 'completed' ? 'mycelium' : 'gray'} size='xs' variant='light'>
+                    <Badge
+                      color={session.status === 'completed' ? 'mycelium' : 'gray'}
+                      size='xs'
+                      variant='light'
+                    >
                       {session.status}
                     </Badge>
                   </Table.Td>
@@ -163,7 +249,10 @@ export function DashboardConfident({
             </Table.Tbody>
           </Table>
         ) : (
-          <Text c='dimmed' size='sm'>
+          <Text
+            c='dimmed'
+            size='sm'
+          >
             No sessions yet
           </Text>
         )}

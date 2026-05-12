@@ -1,8 +1,8 @@
 import { useDebouncedValue } from '@mantine/hooks'
 import { useEffect, useState } from 'react'
-import { useSearchParams } from '../../lib/search-params'
 
 import { useProjectContextController, useRhizomeStatus, useSymbolSearch } from '../../lib/queries'
+import { useSearchParams } from '../../lib/search-params'
 import { useProjectContextView } from '../../stores/project-context'
 
 export const SEARCH_EXAMPLES = [
