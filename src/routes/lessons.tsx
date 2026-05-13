@@ -1,4 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
+
+import { LessonsPage } from '../pages/lessons/LessonsPage'
+
 export const Route = createFileRoute('/lessons')({
-  component: () => import('../pages/lessons/LessonsPage').then((m) => ({ default: m.LessonsPage })),
+  component: LessonsPage,
 })

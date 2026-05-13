@@ -7,7 +7,7 @@ import ForceGraph2D from 'react-force-graph-2d'
 import type { MemoirGraphEdge, MemoirGraphNode } from '../../lib/types/hyphae'
 import { ErrorAlert } from '../../components/ErrorAlert'
 import { SectionCard } from '../../components/SectionCard'
-import { useMemoirGraph } from '../../lib/queries'
+import { useMemoirs, useMemoirGraph } from '../../lib/queries'
 import { useMemoirGraphStore } from '../../stores/memoir-graph-store'
 
 const COMMUNITY_COLORS = ['#4dabf7', '#ff6b6b', '#69db7c', '#ffd43b', '#cc5de8', '#ff922b', '#20c997', '#f783ac']
@@ -21,11 +21,9 @@ function communityColor(communityId: string | null | undefined): string {
   return COMMUNITY_COLORS[Math.abs(hash) % COMMUNITY_COLORS.length]
 }
 
-interface MemoirGraphPageProps {
-  memoirNames: string[]
-}
-
-export function MemoirGraphPage({ memoirNames }: MemoirGraphPageProps) {
+export function MemoirGraphPage() {
+  const { data: memoirList = [] } = useMemoirs()
+  const memoirNames = memoirList.map((m) => m.name)
   const { currentNodeId, selectedMemoirName, setCurrentNodeId, setSelectedMemoirName } = useMemoirGraphStore()
   const graphQuery = useMemoirGraph(selectedMemoirName ?? '')
   const [filter, setFilter] = useState('')

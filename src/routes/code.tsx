@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { CodeExplorerPage } from '../pages/code-explorer/CodeExplorerPage'
+
 export const Route = createFileRoute('/code')({
-  component: () => import('../pages/code-explorer/CodeExplorerPage').then((m) => ({ default: m.CodeExplorerPage })),
+  component: CodeExplorerPage,
 })

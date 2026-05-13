@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { SymbolSearchPage } from '../pages/symbol-search/SymbolSearchPage'
+
 export const Route = createFileRoute('/symbols')({
-  component: () => import('../pages/symbol-search/SymbolSearchPage').then((m) => ({ default: m.SymbolSearchPage })),
+  component: SymbolSearchPage,
 })

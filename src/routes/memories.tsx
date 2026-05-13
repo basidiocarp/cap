@@ -1,4 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
+
+import { MemoriesPage } from '../pages/memories/MemoriesPage'
+
 export const Route = createFileRoute('/memories')({
-  component: () => import('../pages/memories/MemoriesPage').then((m) => ({ default: m.MemoriesPage })),
+  component: MemoriesPage,
 })

@@ -1,4 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
+
+import { Onboard } from '../pages/Onboard'
+
 export const Route = createFileRoute('/onboard')({
-  component: () => import('../pages/Onboard').then((m) => ({ default: m.Onboard })),
+  component: Onboard,
 })

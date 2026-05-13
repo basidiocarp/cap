@@ -670,7 +670,7 @@ export async function getAgents<T = unknown>(options?: { projectRoot?: string })
     }
 
     // Fall back to CLI
-    const args = ['agent', 'list', '--format', 'json']
+    const args = ['agent', 'list']
     if (options?.projectRoot) args.push('--project-root', options.projectRoot)
 
     const raw = await run(args)

@@ -1,4 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
+
+import { SessionsPage } from '../pages/sessions/SessionsPage'
+
 export const Route = createFileRoute('/sessions')({
-  component: () => import('../pages/sessions/SessionsPage').then((m) => ({ default: m.SessionsPage })),
+  component: SessionsPage,
 })
