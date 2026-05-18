@@ -5,13 +5,19 @@ import { join } from 'node:path'
 import type { SessionUsage } from './types.ts'
 import { parseSessionUsage } from './parse.ts'
 
-function collectSessionFiles(root: string, files: string[] = []): string[] {
+function collectSessionFiles(
+  root: string,
+  files: string[] = [],
+  depth = 0,
+  maxDepth = 10,
+): string[] {
+  if (depth > maxDepth) return files
   if (!existsSync(root)) return files
 
   for (const entry of readdirSync(root, { withFileTypes: true })) {
     const filePath = join(root, entry.name)
     if (entry.isDirectory()) {
-      collectSessionFiles(filePath, files)
+      collectSessionFiles(filePath, files, depth + 1, maxDepth)
       continue
     }
 

@@ -18,10 +18,21 @@ export class WatcherRegistry {
   }
 
   dispatch(event: CapEvent): number {
-    // Route CapEvent to action handlers — stub for now
-    logger.info({ eventType: event.type, event }, '[watcher-registry] dispatching event')
-    // Real handlers are follow-on work
-    return 0 // No handlers registered yet
+    // Iterate registered adapters and attempt to dispatch to handlers.
+    // Adapters are transformers (validate + transform), not event handlers.
+    // Real event handlers are follow-on work; currently no handlers are registered.
+    let dispatched = 0
+    for (const adapter of this.adapters.values()) {
+      try {
+        logger.debug({ adapter: adapter.name, eventType: event.type }, '[watcher-registry] processing event')
+        // When real handlers are added, call them here.
+        // For now, adapters have already transformed the event; nothing more to do.
+      } catch (err) {
+        logger.error({ err, adapter: adapter.name, eventType: event.type }, '[watcher-registry] adapter error')
+      }
+    }
+    logger.info({ eventType: event.type, dispatchedCount: dispatched }, '[watcher-registry] dispatch complete')
+    return dispatched
   }
 }
 
