@@ -132,6 +132,7 @@ export type {
   UsageAggregate,
   UsageTrend,
 } from './types'
+export type { NodeRunStatus, WorkflowRunStatus, WorkflowSummary } from './types/workflows'
 export {
   annulusApi,
   canopyApi,
@@ -145,4 +146,5 @@ export {
   statusApi,
   stipeApi,
   usageApi,
+  workflowsApi,
 } from './api/index'

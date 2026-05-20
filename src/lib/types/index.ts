@@ -137,3 +137,4 @@ export type {
 } from './status'
 export type { AggregateTelemetry, CommandUsage, FileActivity, SessionsByDay, ToolUsage } from './telemetry'
 export type { SessionUsage, UsageAggregate, UsageTrend } from './usage'
+export type { NodeRunStatus, WorkflowRunStatus, WorkflowSummary } from './workflows'

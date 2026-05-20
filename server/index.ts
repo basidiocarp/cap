@@ -24,6 +24,7 @@ import statusRoutes from './routes/status.ts'
 import telemetryRoutes from './routes/telemetry.ts'
 import usageRoutes from './routes/usage.ts'
 import watcherRoutes from './routes/watchers.ts'
+import workflowsRoutes from './routes/workflows.ts'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // API Key Authentication Middleware
@@ -142,6 +143,7 @@ export function createApp(boundHost = process.env.CAP_HOST ?? '127.0.0.1'): Hono
   app.route('/api/telemetry', telemetryRoutes)
   app.route('/api/usage', usageRoutes)
   app.route('/api/watchers', watcherRoutes)
+  app.route('/api/workflows', workflowsRoutes)
 
   app.get('/api/health', (c) => c.json({ status: 'ok' }))
   app.get('/api/client-config', (c) => c.json({ authRequired: !!getApiKey() }))
