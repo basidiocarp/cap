@@ -5,12 +5,7 @@ import { join } from 'node:path'
 import type { SessionUsage } from './types.ts'
 import { parseSessionUsage } from './parse.ts'
 
-function collectSessionFiles(
-  root: string,
-  files: string[] = [],
-  depth = 0,
-  maxDepth = 10,
-): string[] {
+function collectSessionFiles(root: string, files: string[] = [], depth = 0, maxDepth = 10): string[] {
   if (depth > maxDepth) return files
   if (!existsSync(root)) return files
 

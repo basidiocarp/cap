@@ -16,6 +16,7 @@ import {
   IconSearch,
   IconSettings,
   IconSitemap,
+  IconTerminal,
 } from '@tabler/icons-react'
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { useId } from 'react'
@@ -60,6 +61,7 @@ const NAV_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
       { icon: IconSitemap, label: 'Workflows', path: '/workflows' },
       { icon: IconChartBar, label: 'Analytics', path: '/analytics' },
       { icon: IconHeartbeat, label: 'Status', path: '/status' },
+      { icon: IconTerminal, label: 'Statusline', path: '/statusline' },
       { icon: IconSettings, label: 'Settings', path: '/settings' },
     ],
     label: 'System',

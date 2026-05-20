@@ -21,6 +21,7 @@ import sessionsRoutes from './routes/sessions.ts'
 import settingsRoutes from './routes/settings.ts'
 import statsRoutes from './routes/stats.ts'
 import statusRoutes from './routes/status.ts'
+import statuslineRoutes from './routes/statusline.ts'
 import telemetryRoutes from './routes/telemetry.ts'
 import usageRoutes from './routes/usage.ts'
 import watcherRoutes from './routes/watchers.ts'
@@ -140,6 +141,7 @@ export function createApp(boundHost = process.env.CAP_HOST ?? '127.0.0.1'): Hono
   app.route('/api/observer', observerRoutes)
   app.route('/api/stats', statsRoutes)
   app.route('/api/status', statusRoutes)
+  app.route('/api/statusline', statuslineRoutes)
   app.route('/api/telemetry', telemetryRoutes)
   app.route('/api/usage', usageRoutes)
   app.route('/api/watchers', watcherRoutes)

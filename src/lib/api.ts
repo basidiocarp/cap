@@ -133,6 +133,7 @@ export type {
   UsageTrend,
 } from './types'
 export type { NodeRunStatus, WorkflowRunStatus, WorkflowSummary } from './types/workflows'
+export type { StatuslineConfig, StatuslineSaveResult, StatuslineSegment } from './api/statusline'
 export {
   annulusApi,
   canopyApi,
@@ -144,6 +145,7 @@ export {
   sessionsApi,
   settingsApi,
   statusApi,
+  statuslineApi,
   stipeApi,
   usageApi,
   workflowsApi,

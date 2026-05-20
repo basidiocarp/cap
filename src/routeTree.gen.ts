@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkflowsRouteImport } from './routes/workflows'
 import { Route as SymbolsRouteImport } from './routes/symbols'
+import { Route as StatuslineRouteImport } from './routes/statusline'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SessionsRouteImport } from './routes/sessions'
@@ -24,9 +26,19 @@ import { Route as CanopyRouteImport } from './routes/canopy'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as IndexRouteImport } from './routes/index'
 
+const WorkflowsRoute = WorkflowsRouteImport.update({
+  id: '/workflows',
+  path: '/workflows',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SymbolsRoute = SymbolsRouteImport.update({
   id: '/symbols',
   path: '/symbols',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatuslineRoute = StatuslineRouteImport.update({
+  id: '/statusline',
+  path: '/statusline',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatusRoute = StatusRouteImport.update({
@@ -109,7 +121,9 @@ export interface FileRoutesByFullPath {
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
+  '/statusline': typeof StatuslineRoute
   '/symbols': typeof SymbolsRoute
+  '/workflows': typeof WorkflowsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -125,7 +139,9 @@ export interface FileRoutesByTo {
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
+  '/statusline': typeof StatuslineRoute
   '/symbols': typeof SymbolsRoute
+  '/workflows': typeof WorkflowsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -142,7 +158,9 @@ export interface FileRoutesById {
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
   '/status': typeof StatusRoute
+  '/statusline': typeof StatuslineRoute
   '/symbols': typeof SymbolsRoute
+  '/workflows': typeof WorkflowsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -160,7 +178,9 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/settings'
     | '/status'
+    | '/statusline'
     | '/symbols'
+    | '/workflows'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -176,7 +196,9 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/settings'
     | '/status'
+    | '/statusline'
     | '/symbols'
+    | '/workflows'
   id:
     | '__root__'
     | '/'
@@ -192,7 +214,9 @@ export interface FileRouteTypes {
     | '/sessions'
     | '/settings'
     | '/status'
+    | '/statusline'
     | '/symbols'
+    | '/workflows'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -209,16 +233,32 @@ export interface RootRouteChildren {
   SessionsRoute: typeof SessionsRoute
   SettingsRoute: typeof SettingsRoute
   StatusRoute: typeof StatusRoute
+  StatuslineRoute: typeof StatuslineRoute
   SymbolsRoute: typeof SymbolsRoute
+  WorkflowsRoute: typeof WorkflowsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/workflows': {
+      id: '/workflows'
+      path: '/workflows'
+      fullPath: '/workflows'
+      preLoaderRoute: typeof WorkflowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/symbols': {
       id: '/symbols'
       path: '/symbols'
       fullPath: '/symbols'
       preLoaderRoute: typeof SymbolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/statusline': {
+      id: '/statusline'
+      path: '/statusline'
+      fullPath: '/statusline'
+      preLoaderRoute: typeof StatuslineRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/status': {
@@ -329,7 +369,9 @@ const rootRouteChildren: RootRouteChildren = {
   SessionsRoute: SessionsRoute,
   SettingsRoute: SettingsRoute,
   StatusRoute: StatusRoute,
+  StatuslineRoute: StatuslineRoute,
   SymbolsRoute: SymbolsRoute,
+  WorkflowsRoute: WorkflowsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

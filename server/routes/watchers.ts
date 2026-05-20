@@ -70,10 +70,7 @@ app.post('/webhook', async (c) => {
     const handlerCount = registry.dispatch(capEvent)
 
     if (handlerCount === 0) {
-      return c.json(
-        { status: 'no_handlers_registered', event_type: capEvent.type },
-        202
-      )
+      return c.json({ event_type: capEvent.type, status: 'no_handlers_registered' }, 202)
     }
 
     return c.json({ event: capEvent.type, success: true })
@@ -130,10 +127,7 @@ app.post('/github', async (c) => {
     const handlerCount = registry.dispatch(capEvent)
 
     if (handlerCount === 0) {
-      return c.json(
-        { status: 'no_handlers_registered', event_type: capEvent.type },
-        202
-      )
+      return c.json({ event_type: capEvent.type, status: 'no_handlers_registered' }, 202)
     }
 
     return c.json({ event: capEvent.type, success: true })
