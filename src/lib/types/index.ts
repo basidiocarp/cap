@@ -126,6 +126,7 @@ export type {
   SessionTimelineRecord,
 } from './sessions'
 export type { EcosystemSettings, LspInstallResult, LspLanguageStatus, LspStatusResult, Mode, ModeConfig, PruneResult } from './settings'
+export type { JournalEntry, Snapshot, SnapshotCard } from './snapshot'
 export type {
   AgentRuntimeStatus,
   CodexNotifyStatus,

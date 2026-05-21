@@ -13,6 +13,7 @@ import { Route as WorkflowsRouteImport } from './routes/workflows'
 import { Route as SymbolsRouteImport } from './routes/symbols'
 import { Route as StatuslineRouteImport } from './routes/statusline'
 import { Route as StatusRouteImport } from './routes/status'
+import { Route as SnapshotRouteImport } from './routes/snapshot'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SessionsRouteImport } from './routes/sessions'
 import { Route as OnboardRouteImport } from './routes/onboard'
@@ -44,6 +45,11 @@ const StatuslineRoute = StatuslineRouteImport.update({
 const StatusRoute = StatusRouteImport.update({
   id: '/status',
   path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SnapshotRoute = SnapshotRouteImport.update({
+  id: '/snapshot',
+  path: '/snapshot',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/onboard': typeof OnboardRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
+  '/snapshot': typeof SnapshotRoute
   '/status': typeof StatusRoute
   '/statusline': typeof StatuslineRoute
   '/symbols': typeof SymbolsRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/onboard': typeof OnboardRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
+  '/snapshot': typeof SnapshotRoute
   '/status': typeof StatusRoute
   '/statusline': typeof StatuslineRoute
   '/symbols': typeof SymbolsRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/onboard': typeof OnboardRoute
   '/sessions': typeof SessionsRoute
   '/settings': typeof SettingsRoute
+  '/snapshot': typeof SnapshotRoute
   '/status': typeof StatusRoute
   '/statusline': typeof StatuslineRoute
   '/symbols': typeof SymbolsRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/onboard'
     | '/sessions'
     | '/settings'
+    | '/snapshot'
     | '/status'
     | '/statusline'
     | '/symbols'
@@ -195,6 +205,7 @@ export interface FileRouteTypes {
     | '/onboard'
     | '/sessions'
     | '/settings'
+    | '/snapshot'
     | '/status'
     | '/statusline'
     | '/symbols'
@@ -213,6 +224,7 @@ export interface FileRouteTypes {
     | '/onboard'
     | '/sessions'
     | '/settings'
+    | '/snapshot'
     | '/status'
     | '/statusline'
     | '/symbols'
@@ -232,6 +244,7 @@ export interface RootRouteChildren {
   OnboardRoute: typeof OnboardRoute
   SessionsRoute: typeof SessionsRoute
   SettingsRoute: typeof SettingsRoute
+  SnapshotRoute: typeof SnapshotRoute
   StatusRoute: typeof StatusRoute
   StatuslineRoute: typeof StatuslineRoute
   SymbolsRoute: typeof SymbolsRoute
@@ -266,6 +279,13 @@ declare module '@tanstack/react-router' {
       path: '/status'
       fullPath: '/status'
       preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/snapshot': {
+      id: '/snapshot'
+      path: '/snapshot'
+      fullPath: '/snapshot'
+      preLoaderRoute: typeof SnapshotRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -368,6 +388,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardRoute: OnboardRoute,
   SessionsRoute: SessionsRoute,
   SettingsRoute: SettingsRoute,
+  SnapshotRoute: SnapshotRoute,
   StatusRoute: StatusRoute,
   StatuslineRoute: StatuslineRoute,
   SymbolsRoute: SymbolsRoute,

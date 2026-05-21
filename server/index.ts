@@ -19,6 +19,7 @@ import observerRoutes from './routes/observer.ts'
 import rhizomeRoutes from './routes/rhizome.ts'
 import sessionsRoutes from './routes/sessions.ts'
 import settingsRoutes from './routes/settings.ts'
+import snapshotRoutes from './routes/snapshot.ts'
 import statsRoutes from './routes/stats.ts'
 import statusRoutes from './routes/status.ts'
 import statuslineRoutes from './routes/statusline.ts'
@@ -139,6 +140,7 @@ export function createApp(boundHost = process.env.CAP_HOST ?? '127.0.0.1'): Hono
   app.route('/api/settings', settingsRoutes)
   app.route('/api/metrics', metricsRoutes)
   app.route('/api/observer', observerRoutes)
+  app.route('/api/snapshot', snapshotRoutes)
   app.route('/api/stats', statsRoutes)
   app.route('/api/status', statusRoutes)
   app.route('/api/statusline', statuslineRoutes)
