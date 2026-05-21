@@ -1,4 +1,5 @@
 export type { DiffResponse } from './api/index'
+export type { StatuslineConfig, StatuslineSaveResult, StatuslineSegment } from './api/statusline'
 export type {
   StipeDoctorCheck,
   StipeDoctorReport,
@@ -133,7 +134,6 @@ export type {
   UsageTrend,
 } from './types'
 export type { NodeRunStatus, WorkflowRunStatus, WorkflowSummary } from './types/workflows'
-export type { StatuslineConfig, StatuslineSaveResult, StatuslineSegment } from './api/statusline'
 export {
   annulusApi,
   canopyApi,

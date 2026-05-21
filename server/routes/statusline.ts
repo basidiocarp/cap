@@ -45,14 +45,14 @@ const DEFAULT_SEGMENTS: StatuslineSegment[] = [
 
 // Annulus SeparatorStyle enum variants (lowercase serde names)
 const SEPARATOR_TOML_TO_DISPLAY: Record<string, string> = {
+  none: '',
   pipe: ' │ ',
   space: '  ',
-  none: '',
 }
 const SEPARATOR_DISPLAY_TO_TOML: Record<string, string> = {
-  ' │ ': 'pipe',
-  '  ': 'space',
   '': 'none',
+  '  ': 'space',
+  ' │ ': 'pipe',
 }
 
 // Display string shown in the UI and used for preview rendering
