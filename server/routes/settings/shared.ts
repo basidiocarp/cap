@@ -2,7 +2,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 
 import { createCliRunner } from '../../lib/cli.ts'
-import { HYPHAE_BIN } from '../../lib/config.ts'
+import { HYPHAE_BIN, STIPE_BIN } from '../../lib/config.ts'
 import { callLocalService } from '../../lib/local-service.ts'
 import { logger } from '../../logger.ts'
 
@@ -32,7 +32,7 @@ export function buildStipeArgs(action: AllowedStipeAction): string[] {
 }
 
 export async function runStipe(args: string[]): Promise<string> {
-  const { stdout } = await exec('stipe', args, {
+  const { stdout } = await exec(STIPE_BIN, args, {
     env: { ...process.env, NO_COLOR: '1' },
     timeout: 30_000,
   })
