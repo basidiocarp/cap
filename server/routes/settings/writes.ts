@@ -6,6 +6,20 @@ import { logger } from '../../logger.ts'
 import { getHyphaeSettings, getMyceliumSettings, getRhizomeSettings, readRawToml } from './config.ts'
 import { runHyphae } from './shared.ts'
 
+// Module-level write serializer: prevents concurrent writes to the same config file from racing.
+// Each config path gets its own promise chain; new writes queue after previous ones complete.
+const configWriteQueues = new Map<string, Promise<void>>()
+
+function withSerializedWrite(path: string, fn: () => void): Promise<void> {
+  const prior = configWriteQueues.get(path) ?? Promise.resolve()
+  const next = prior.then(fn).catch((err) => {
+    throw err
+  })
+  const safe = next.catch(() => {}) // store error-safe version so unhandled rejections don't leak
+  configWriteQueues.set(path, safe)
+  return next // return original so caller sees errors
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -146,25 +160,33 @@ export function registerWriteRoutes(app: Hono) {
         return c.json({ error: 'embedding_model must be a non-empty string' }, 400)
       }
 
-      const configPath = appConfigPath('hyphae')
-      const configDir = appConfigDir('hyphae')
-
-      mkdirSync(configDir, { recursive: true })
-
-      let existing = readRawToml(configPath) ?? ''
-
-      if (body.embedding_model !== undefined) {
-        existing = upsertTomlScalar(existing, 'embedding_model', body.embedding_model)
-      }
+      // Validate similarity_threshold early, outside the critical section
       if (body.similarity_threshold !== undefined) {
         const threshold = Number(body.similarity_threshold)
         if (!Number.isFinite(threshold) || threshold < 0 || threshold > 1) {
           return c.json({ error: 'similarity_threshold must be a number between 0 and 1' }, 400)
         }
-        existing = upsertTomlScalar(existing, 'similarity_threshold', threshold)
       }
 
-      writeFileSync(configPath, `${existing.trim()}\n`, 'utf-8')
+      const configPath = appConfigPath('hyphae')
+      const configDir = appConfigDir('hyphae')
+
+      mkdirSync(configDir, { recursive: true })
+
+      // Serialize the read-modify-write to prevent concurrent requests from clobbering each other
+      await withSerializedWrite(configPath, () => {
+        let existing = readRawToml(configPath) ?? ''
+
+        if (body.embedding_model !== undefined) {
+          existing = upsertTomlScalar(existing, 'embedding_model', body.embedding_model as string)
+        }
+        if (body.similarity_threshold !== undefined) {
+          const threshold = Number(body.similarity_threshold)
+          existing = upsertTomlScalar(existing, 'similarity_threshold', threshold)
+        }
+
+        writeFileSync(configPath, `${existing.trim()}\n`, 'utf-8')
+      })
 
       return c.json(getHyphaeSettings())
     } catch (err) {
