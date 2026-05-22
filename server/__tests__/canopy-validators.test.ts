@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { CANOPY_NOTIFICATION_EVENT_TYPES, parseNotificationRow } from '../canopy.ts'
+import { CANOPY_NOTIFICATION_EVENT_TYPES, parseNotificationRow, validateProjectRoot } from '../canopy.ts'
 import { validateHandoffAction, validateTaskAction } from '../lib/canopy-validators'
 
 describe('Task action validators', () => {
@@ -522,5 +522,59 @@ describe('Notification event_type enum (F2.9)', () => {
   it('parseNotificationRow returns null for empty event_type', () => {
     const result = parseNotificationRow({ ...baseRow, event_type: '' })
     expect(result).toBeNull()
+  })
+})
+
+describe('validateProjectRoot (path traversal protection)', () => {
+  it('accepts valid project path', () => {
+    expect(() => validateProjectRoot('valid/project')).not.toThrow()
+  })
+
+  it('accepts simple project name without slashes', () => {
+    expect(() => validateProjectRoot('myproject')).not.toThrow()
+  })
+
+  it('accepts deeply nested valid path', () => {
+    expect(() => validateProjectRoot('path/to/deep/project')).not.toThrow()
+  })
+
+  it('rejects path traversal with ..', () => {
+    expect(() => validateProjectRoot('../../../etc/passwd')).toThrow('Invalid project path')
+  })
+
+  it('rejects .. at the beginning', () => {
+    expect(() => validateProjectRoot('../evil')).toThrow('Invalid project path')
+  })
+
+  it('rejects .. in the middle', () => {
+    expect(() => validateProjectRoot('some/../evil')).toThrow('Invalid project path')
+  })
+
+  it('rejects URL-encoded path traversal %2e%2e', () => {
+    expect(() => validateProjectRoot('%2e%2e/%2e%2e/etc')).toThrow('Invalid project path')
+  })
+
+  it('rejects URL-encoded path traversal lowercase %2e%2e', () => {
+    expect(() => validateProjectRoot('%2e%2e/passwd')).toThrow('Invalid project path')
+  })
+
+  it('rejects backslash traversal (Windows-style)', () => {
+    expect(() => validateProjectRoot('..\\evil')).toThrow('Invalid project path')
+  })
+
+  it('rejects empty string', () => {
+    expect(() => validateProjectRoot('')).toThrow('Invalid project path')
+  })
+
+  it('rejects whitespace-only string', () => {
+    expect(() => validateProjectRoot('   ')).toThrow('Invalid project path')
+  })
+
+  it('rejects tab and newline characters', () => {
+    expect(() => validateProjectRoot('\t\n')).toThrow('Invalid project path')
+  })
+
+  it('rejects malformed URL encoding', () => {
+    expect(() => validateProjectRoot('%ZZ')).toThrow('Invalid project path')
   })
 })

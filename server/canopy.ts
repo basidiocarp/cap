@@ -142,6 +142,29 @@ const run = createCliRunner(CANOPY_BIN, 'canopy')
 const CANOPY_API_SCHEMA_VERSION = '1.0'
 const EVIDENCE_REF_SCHEMA_VERSION = '1.0'
 
+export function validateProjectRoot(projectRoot: string): void {
+  // URL-decode to catch %2e%2e attacks
+  let decoded: string
+  try {
+    decoded = decodeURIComponent(projectRoot)
+  } catch {
+    throw new Error('Invalid project path')
+  }
+  // Block .. traversal in any segment
+  const segments = decoded.split('/')
+  if (segments.some(seg => seg === '..')) {
+    throw new Error('Invalid project path')
+  }
+  // Block backslash traversal (Windows-style)
+  if (decoded.includes('\\')) {
+    throw new Error('Invalid project path')
+  }
+  // Block empty string
+  if (!decoded.trim()) {
+    throw new Error('Invalid project path')
+  }
+}
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : null
 }
@@ -213,6 +236,11 @@ export async function getSnapshot<T = unknown>(options?: {
   sort?: string
   view?: string
 }): Promise<T> {
+  // Validate project root if provided
+  if (options?.projectRoot) {
+    validateProjectRoot(options.projectRoot)
+  }
+
   // Validate and normalize options
   const view = options?.view && ALLOWED_VIEWS.has(options.view) ? options.view : undefined
   const sort = options?.sort && ALLOWED_SORTS.has(options.sort) ? options.sort : undefined
@@ -655,6 +683,11 @@ export async function getKnownFacts(options?: {
 
 export async function getAgents<T = unknown>(options?: { projectRoot?: string }): Promise<T[]> {
   try {
+    // Validate project root if provided
+    if (options?.projectRoot) {
+      validateProjectRoot(options.projectRoot)
+    }
+
     // Try socket first
     try {
       const socketParams: Record<string, unknown> = {}

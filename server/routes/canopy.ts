@@ -12,6 +12,7 @@ import {
   validateHandoffAction,
   validateTaskAction,
 } from '../lib/canopy-validators.ts'
+import { validateProjectRoot } from '../canopy.ts'
 import { logger } from '../logger.ts'
 
 const app = new Hono()
@@ -43,6 +44,15 @@ app.get('/snapshot', async (c) => {
   const rawSeverityAtLeast = c.req.query('severity_at_least')
   const rawView = c.req.query('view')
   const rawProject = c.req.query('project') || undefined
+
+  // Validate project path early if provided
+  if (rawProject) {
+    try {
+      validateProjectRoot(rawProject)
+    } catch {
+      return c.json({ error: 'Invalid project path' }, 400)
+    }
+  }
 
   const snapshotOpts = {
     acknowledged: rawAcknowledged && ALLOWED_ACKNOWLEDGED.has(rawAcknowledged) ? rawAcknowledged : undefined,
@@ -124,8 +134,19 @@ app.post('/handoffs/:handoffId/actions', async (c) => {
 })
 
 app.get('/agents', async (c) => {
+  const rawProject = c.req.query('project')
+
+  // Validate project path early if provided
+  if (rawProject) {
+    try {
+      validateProjectRoot(rawProject)
+    } catch {
+      return c.json({ error: 'Invalid project path' }, 400)
+    }
+  }
+
   try {
-    return c.json(await canopy.getAgents({ projectRoot: c.req.query('project') || undefined }))
+    return c.json(await canopy.getAgents({ projectRoot: rawProject || undefined }))
   } catch (err) {
     return c.json({ error: err instanceof Error ? err.message : 'Failed to get Canopy agents' }, 500)
   }
