@@ -2634,7 +2634,7 @@ describe('Canopy page', () => {
       follow_up_title: 'Track rollout cleanups',
       taskId: 'task-1',
     })
-  }, 60_000)
+  }, 30_000)
 
   it('forwards explicit review decision and closeout actions from the task detail modal', async () => {
     const user = userEvent.setup()
