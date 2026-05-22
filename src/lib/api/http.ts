@@ -1,11 +1,11 @@
 const BASE = '/api'
 
-let _apiKey: string | null = typeof localStorage !== 'undefined' ? localStorage.getItem('cap:apiKey') : null
+let _apiKey: string | null = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('cap:apiKey') : null
 
 export function setApiKey(key: string): void {
   _apiKey = key
-  if (typeof localStorage !== 'undefined') {
-    localStorage.setItem('cap:apiKey', key)
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem('cap:apiKey', key)
   }
 }
 
@@ -55,6 +55,14 @@ async function request<T>(path: string, init: RequestInit = {}, params?: Record<
       return request<T>(path, init, params, true)
     }
     throw new Error('Authorization required')
+  }
+
+  if (res.status === 403) {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('cap:apiKey')
+    }
+    _apiKey = null
+    throw new Error('API key is invalid or expired')
   }
 
   if (!res.ok) {
