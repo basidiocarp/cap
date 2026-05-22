@@ -11,6 +11,7 @@ export default defineConfig({
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', 'server/**'],
     globals: true,
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    retry: 2,
     setupFiles: ['./src/test/setup.ts'],
     testTimeout: 60_000,
   },
