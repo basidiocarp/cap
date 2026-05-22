@@ -1,11 +1,13 @@
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
-const cargoAvailable = spawnSync('cargo', ['--version'], { stdio: 'pipe' }).status === 0
+const testDir = dirname(fileURLToPath(import.meta.url))
+const hyphaeRoot = resolve(testDir, '../../../hyphae')
+const cargoAvailable = spawnSync('cargo', ['--version'], { stdio: 'pipe' }).status === 0 && existsSync(hyphaeRoot)
 
 let hyphaeBin = 'hyphae'
 
@@ -22,8 +24,6 @@ interface ContractConsumers {
   getSessions: typeof import('../hyphae/sessions.ts').getSessions
 }
 
-const testDir = dirname(fileURLToPath(import.meta.url))
-const hyphaeRoot = resolve(testDir, '../../../hyphae')
 const hyphaeTarget = join(hyphaeRoot, 'target', 'debug', process.platform === 'win32' ? 'hyphae.exe' : 'hyphae')
 
 let consumers: ContractConsumers

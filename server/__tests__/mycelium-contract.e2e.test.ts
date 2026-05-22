@@ -1,11 +1,13 @@
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
-const cargoAvailable = spawnSync('cargo', ['--version'], { stdio: 'pipe' }).status === 0
+const testDir = dirname(fileURLToPath(import.meta.url))
+const myceliumRoot = resolve(testDir, '../../../mycelium')
+const cargoAvailable = spawnSync('cargo', ['--version'], { stdio: 'pipe' }).status === 0 && existsSync(myceliumRoot)
 
 let myceliumBin = 'mycelium'
 
@@ -19,8 +21,6 @@ interface ContractConsumers {
   getCommandHistory: typeof import('../mycelium/history.ts').getCommandHistory
 }
 
-const testDir = dirname(fileURLToPath(import.meta.url))
-const myceliumRoot = resolve(testDir, '../../../mycelium')
 const myceliumTarget = join(myceliumRoot, 'target', 'debug', process.platform === 'win32' ? 'mycelium.exe' : 'mycelium')
 
 let consumers: ContractConsumers
