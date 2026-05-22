@@ -32,6 +32,7 @@ export function Sparkline({ data, color = 'var(--mantine-color-mycelium-5)', fil
 
   return (
     <svg
+      aria-hidden='true'
       height={height}
       preserveAspectRatio='none'
       style={{ display: 'block', width: '100%' }}

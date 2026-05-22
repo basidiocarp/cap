@@ -71,6 +71,7 @@ function seedFixture() {
 
 describe.runIf(cargoAvailable).sequential('Cap to Mycelium live contract', () => {
   beforeAll(async () => {
+    if (!cargoAvailable) return
     tmpRoot = mkdtempSync(join(tmpdir(), 'cap-mycelium-contract-'))
     dbPath = join(tmpRoot, 'history.db')
     projectRoot = join(tmpRoot, 'repo')

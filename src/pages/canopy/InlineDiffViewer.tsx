@@ -65,7 +65,7 @@ function HunkView({
         const isSelected = selectedLine?.hunkIdx === hunkIdx && selectedLine?.lineIdx === lineIdx
 
         return (
-          <Box key={lineIdx}>
+          <Box key={`${line.oldLineNo ?? 'n'}-${line.newLineNo ?? 'n'}`}>
             <Group
               bg={isSelected ? 'var(--mantine-color-dark-5)' : lineColor(line.type)}
               gap={0}
@@ -154,7 +154,7 @@ export function InlineDiffViewer({ diff, onAnnotate, taskAnnotations }: Props) {
     <Stack gap='xs'>
       <Code block>{diff.filePath}</Code>
       {diff.hunks.map((hunk, hunkIdx) => (
-        <Box key={hunkIdx}>
+        <Box key={hunk.header}>
           <HunkView
             annotations={taskAnnotations.filter((a) => a.filePath === diff.filePath)}
             hunk={hunk}

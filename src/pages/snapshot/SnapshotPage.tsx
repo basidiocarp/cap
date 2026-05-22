@@ -151,10 +151,10 @@ export function SnapshotPage() {
       {snapshot?.journal && snapshot.journal.length > 0 ? (
         <Stack gap='sm'>
           <Title order={4}>Recent Activity</Title>
-          {snapshot.journal.map((entry, i) => (
+          {snapshot.journal.map((entry) => (
             <Text
               c='dimmed'
-              key={i}
+              key={`${entry.at}-${entry.card_id}`}
               size='sm'
             >
               {entry.at} — {entry.card_id}: {entry.from_status} → {entry.to_status}

@@ -129,6 +129,7 @@ function seedFixture() {
 
 describe.runIf(cargoAvailable).sequential('Cap to Hyphae live contract', () => {
   beforeAll(async () => {
+    if (!cargoAvailable) return
     tmpRoot = mkdtempSync(join(tmpdir(), 'cap-hyphae-contract-'))
     const dbPath = join(tmpRoot, 'hyphae.db')
     configPath = join(tmpRoot, 'config.toml')

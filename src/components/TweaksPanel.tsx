@@ -24,13 +24,24 @@ export function TweaksPanel() {
 
   return (
     <>
-      <div
+      <button
         onClick={open}
-        style={{ bottom: 16, cursor: 'pointer', opacity: 0.6, position: 'fixed', right: 16, zIndex: 1000 }}
+        style={{
+          background: 'none',
+          border: 'none',
+          bottom: 16,
+          cursor: 'pointer',
+          opacity: 0.6,
+          padding: 0,
+          position: 'fixed',
+          right: 16,
+          zIndex: 1000,
+        }}
         title='Open tweaks panel'
+        type='button'
       >
         <IconSettings2 size={20} />
-      </div>
+      </button>
       <Drawer
         onClose={close}
         opened={opened}
