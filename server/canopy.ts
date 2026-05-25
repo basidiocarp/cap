@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 import Database from 'better-sqlite3'
 
 import {
@@ -71,11 +72,6 @@ function openReadOnly(): Database.Database {
   return new Database(CANOPY_DB, { fileMustExist: true, readonly: true })
 }
 
-function openReadWrite(): Database.Database {
-  if (!existsSync(CANOPY_DB)) throw new Error(`no such file: ${CANOPY_DB}`)
-  return new Database(CANOPY_DB, { fileMustExist: true })
-}
-
 export function parseNotificationRow(row: RawNotificationRow): CanopyNotificationRow | null {
   if (!CANOPY_NOTIFICATION_EVENT_TYPES.has(row.event_type)) {
     logger.warn({ event_type: row.event_type, notification_id: row.notification_id }, 'Unknown notification event_type')
@@ -121,21 +117,11 @@ export function listNotifications(limit = 20): CanopyNotificationRow[] {
 }
 
 export function markNotificationRead(id: string): void {
-  const db = openReadWrite()
-  try {
-    db.prepare(`UPDATE notifications SET seen = 1 WHERE notification_id = ?`).run(id)
-  } finally {
-    db.close()
-  }
+  spawnSync(CANOPY_BIN, ['notification', 'mark-read', id], { stdio: 'ignore' })
 }
 
 export function markAllNotificationsRead(): void {
-  const db = openReadWrite()
-  try {
-    db.prepare(`UPDATE notifications SET seen = 1 WHERE seen = 0`).run()
-  } finally {
-    db.close()
-  }
+  spawnSync(CANOPY_BIN, ['notification', 'mark-all-read'], { stdio: 'ignore' })
 }
 
 const run = createCliRunner(CANOPY_BIN, 'canopy')
