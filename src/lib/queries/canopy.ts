@@ -126,7 +126,7 @@ export function useCanopyNotifications() {
   return useQuery({
     queryFn: () => canopyApi.notifications(),
     queryKey: canopyKeys.notifications(),
-    refetchInterval: 10_000,
+    refetchInterval: () => (document.hidden ? false : 10_000),
   })
 }
 
