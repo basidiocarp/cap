@@ -189,6 +189,10 @@ function validateCanopySnapshot(payload: unknown): void {
   validateEvidenceRefs(payload, 'canopy api snapshot')
 }
 
+// Intentionally shallow: only top-level required fields are checked. The 50+
+// nested fields inside `task`, `attention`, and `sla_summary` are passed through
+// unguarded — the frontend must degrade gracefully when optional nested fields
+// are absent rather than depending on this validator as a deep contract check.
 function validateCanopyTaskDetail(payload: unknown): void {
   const record = asRecord(payload)
   if (

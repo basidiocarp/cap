@@ -37,7 +37,7 @@ function createUrl(path: string, params?: Record<string, string>): URL {
   return url
 }
 
-async function request<T>(path: string, init: RequestInit = {}, params?: Record<string, string>, _isRetry = false): Promise<T> {
+async function request<T>(path: string, init: RequestInit = {}, params?: Record<string, string>): Promise<T> {
   const headers: Record<string, string> = { ...((init.headers as Record<string, string>) || {}) }
   if (_apiKey) {
     headers.Authorization = `Bearer ${_apiKey}`
@@ -48,12 +48,7 @@ async function request<T>(path: string, init: RequestInit = {}, params?: Record<
     headers,
   })
 
-  if (res.status === 401 && !_isRetry) {
-    const key = (globalThis as { prompt?: (msg: string) => string | null }).prompt?.('Enter the Cap API key:') ?? null
-    if (key) {
-      setApiKey(key)
-      return request<T>(path, init, params, true)
-    }
+  if (res.status === 401) {
     throw new Error('Authorization required')
   }
 

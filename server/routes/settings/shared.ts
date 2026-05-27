@@ -55,7 +55,8 @@ function isRepairAction(value: unknown): boolean {
     (typeof value.description === 'string' || value.description === null) &&
     typeof value.label === 'string' &&
     Array.isArray(value.args) &&
-    typeof value.tier === 'string'
+    typeof value.tier === 'string' &&
+    ('action_key' in value ? value.action_key === null || typeof value.action_key === 'string' : true)
   )
 }
 

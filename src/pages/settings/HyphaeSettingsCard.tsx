@@ -71,7 +71,7 @@ export function HyphaeSettingsCard({ settings }: { settings: EcosystemSettings['
             color='mycelium'
             title='Prune complete'
           >
-            {prune.data.message} ({prune.data.pruned} pruned)
+            {prune.data.pruned} memories pruned
           </Alert>
         )}
         {prune.isError && (

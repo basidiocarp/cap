@@ -181,4 +181,25 @@ describe('Canopy CLI consumer', () => {
     const { getTaskDetail } = await import('../canopy.ts')
     await expect(getTaskDetail('task-1')).rejects.toThrow('Invalid payload from canopy api task')
   })
+
+  // Validation is intentionally shallow: only top-level required fields are checked.
+  // Nested fields inside task, attention, and sla_summary are not validated — the
+  // frontend must degrade gracefully when optional nested fields are absent.
+  it('accepts task detail where nested objects contain only required top-level fields (no inner fields)', async () => {
+    const minimalPayload = {
+      allowed_actions: [],
+      attention: {},
+      evidence: [],
+      schema_version: '1.0',
+      sla_summary: {},
+      task: {},
+    }
+    runCliMock.mockResolvedValue(JSON.stringify(minimalPayload))
+
+    const { getTaskDetail } = await import('../canopy.ts')
+    await expect(getTaskDetail('task-1')).resolves.toMatchObject({
+      schema_version: '1.0',
+      task: {},
+    })
+  })
 })

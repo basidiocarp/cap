@@ -39,7 +39,7 @@ export interface ModeConfig {
 }
 
 export interface PruneResult {
-  message: string
+  ok: boolean
   pruned: number
 }
 

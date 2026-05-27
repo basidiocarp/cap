@@ -11,6 +11,6 @@ export function useEcosystemStatus(enabled = true) {
     enabled,
     queryFn: () => statusApi.ecosystem(),
     queryKey: statusKeys.ecosystem(),
-    refetchInterval: 30_000,
+    refetchInterval: 35_000,
   })
 }

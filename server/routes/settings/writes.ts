@@ -63,10 +63,11 @@ export function registerWriteRoutes(app: Hono) {
       }
 
       const stdout = await runHyphae(args)
+      logger.debug({ stdout }, 'hyphae prune raw output')
       const match = stdout.match(/pruned\s+(\d+)/i)
       const pruned = match ? Number.parseInt(match[1], 10) : 0
 
-      return c.json({ message: match ? stdout : stdout, pruned })
+      return c.json({ ok: true, pruned })
     } catch (err) {
       logger.error({ err }, 'Prune failed')
       return c.json({ error: 'Prune operation failed' }, 500)
