@@ -16,6 +16,7 @@ export const hyphaeKeys = {
   memoirSearchAll: (q: string) => ['hyphae', 'memoirSearchAll', q] as const,
   memoirs: () => ['hyphae', 'memoirs'] as const,
   memory: (id: string) => ['hyphae', 'memory', id] as const,
+  memoryIndex: () => ['hyphae', 'memoryIndex'] as const,
   recall: (q: string, topic?: string, limit?: number) => ['hyphae', 'recall', q, topic, limit] as const,
   searchGlobal: (q: string, limit?: number) => ['hyphae', 'searchGlobal', q, limit] as const,
   sessions: (project?: string, limit?: number) => ['hyphae', 'sessions', project, limit] as const,
@@ -149,6 +150,13 @@ export function useIngestionSources() {
   return useQuery({
     queryFn: () => hyphaeApi.sources(),
     queryKey: hyphaeKeys.sources(),
+  })
+}
+
+export function useMemoryIndex() {
+  return useQuery({
+    queryFn: () => hyphaeApi.memoryIndex(),
+    queryKey: hyphaeKeys.memoryIndex(),
   })
 }
 

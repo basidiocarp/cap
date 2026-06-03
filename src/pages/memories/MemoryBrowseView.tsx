@@ -6,6 +6,7 @@ import { ActionEmptyState } from '../../components/ActionEmptyState'
 import { PageLoader } from '../../components/PageLoader'
 import { timeAgo } from '../../lib/time'
 import { DocumentsSection } from './DocumentsSection'
+import { FileMemorySection } from './FileMemorySection'
 import { topicColor, topicIcon, weightColor } from './memory-utils'
 
 export function MemoryBrowseView({
@@ -116,6 +117,8 @@ export function MemoryBrowseView({
       ) : null}
 
       {!topicsLoading && topics.length > 0 ? <DocumentsSection /> : null}
+
+      <FileMemorySection />
     </>
   )
 }

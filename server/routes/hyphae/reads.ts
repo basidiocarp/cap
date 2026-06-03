@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 
 import * as hyphae from '../../hyphae.ts'
 import { clampParam, requireQuery } from '../../lib/params.ts'
+import { readMemoryIndex } from '../../memory-index.ts'
 
 const app = new Hono()
 
@@ -268,6 +269,14 @@ app.get('/context', async (c) => {
     return c.json(result)
   } catch {
     return c.json({ error: 'Hyphae gather-context unavailable' }, 502)
+  }
+})
+
+app.get('/memory-index', async (c) => {
+  try {
+    return c.json(await readMemoryIndex(c.req.query('project_root') ?? undefined))
+  } catch {
+    return c.json({ error: 'Hyphae memory index unavailable' }, 502)
   }
 })
 

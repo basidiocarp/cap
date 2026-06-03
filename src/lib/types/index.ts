@@ -84,6 +84,8 @@ export type {
   MemoirGraphEdge,
   MemoirGraphNode,
   Memory,
+  MemoryEntry,
+  MemoryIndex,
   Stats,
   TopicSummary,
 } from './hyphae'

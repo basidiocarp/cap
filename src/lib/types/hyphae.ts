@@ -29,6 +29,19 @@ export interface TopicSummary {
   oldest: string
 }
 
+export interface MemoryEntry {
+  title: string
+  file: string
+  hook: string
+  lineNumber: number
+}
+
+export interface MemoryIndex {
+  rawMarkdown: string
+  entries: MemoryEntry[]
+  orphanFiles: string[]
+}
+
 export interface Stats {
   total_memories: number
   total_topics: number

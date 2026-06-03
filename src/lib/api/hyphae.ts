@@ -11,6 +11,7 @@ import type {
   MemoirDetail,
   MemoirGraphData,
   Memory,
+  MemoryIndex,
   SessionRecord,
   SessionTimelineRecord,
   Stats,
@@ -49,6 +50,7 @@ export const hyphaeApi = {
   memoirSearchAll: (q: string) => get<Concept[]>('/hyphae/memoirs/search-all', { q }),
   memoirs: () => get<Memoir[]>('/hyphae/memoirs'),
   memory: (id: string) => get<Memory>(`/hyphae/memories/${encodeURIComponent(id)}`),
+  memoryIndex: () => get<MemoryIndex>('/hyphae/memory-index'),
   recall: (q: string, topic?: string, limit?: number) =>
     get<Memory[]>('/hyphae/recall', { limit: limit ? String(limit) : '', q, topic: topic ?? '' }),
   searchGlobal: (q: string, limit?: number) => get<Memory[]>('/hyphae/search-global', { limit: limit ? String(limit) : '', q }),
