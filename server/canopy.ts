@@ -1,5 +1,5 @@
-import { existsSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
+import { existsSync } from 'node:fs'
 import Database from 'better-sqlite3'
 
 import {
@@ -138,7 +138,7 @@ export function validateProjectRoot(projectRoot: string): void {
   }
   // Block .. traversal in any segment
   const segments = decoded.split('/')
-  if (segments.some(seg => seg === '..')) {
+  if (segments.some((seg) => seg === '..')) {
     throw new Error('Invalid project path')
   }
   // Block backslash traversal (Windows-style)
