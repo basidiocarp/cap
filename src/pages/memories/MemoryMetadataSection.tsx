@@ -6,8 +6,9 @@ import { SectionCard } from '../../components/SectionCard'
 import { getMemoryReviewState } from '../../lib/memory-review'
 import { timeAgo } from '../../lib/time'
 import { getKeywords, getRelatedIds, reviewColor, reviewLabel, topicColor, weightColor } from './memory-utils'
+import { renderWithWikilinks } from './memory-wikilinks'
 
-export function MemoryMetadataSection({ detail }: { detail: Memory }) {
+export function MemoryMetadataSection({ detail, onWikilinkClick = () => {} }: { detail: Memory; onWikilinkClick?: (target: string) => void }) {
   const review = getMemoryReviewState(detail)
 
   return (
@@ -37,7 +38,7 @@ export function MemoryMetadataSection({ detail }: { detail: Memory }) {
           c='gray.2'
           size='sm'
         >
-          {detail.summary}
+          {renderWithWikilinks(detail.summary, onWikilinkClick)}
         </Text>
       </SectionCard>
 
@@ -54,7 +55,7 @@ export function MemoryMetadataSection({ detail }: { detail: Memory }) {
             block
             style={{ maxHeight: 200, overflow: 'auto' }}
           >
-            {detail.raw_excerpt}
+            {renderWithWikilinks(detail.raw_excerpt, onWikilinkClick)}
           </Code>
         </div>
       ) : null}

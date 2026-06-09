@@ -104,6 +104,10 @@ export function MemoriesPage() {
         <MemoryDetailModal
           memory={selectedMemory}
           onClose={() => setSelectedMemory(null)}
+          onWikilinkClick={(target) => {
+            setSelectedMemory(null)
+            updateSearchState({ q: target, review: 'all', topic: null })
+          }}
         />
       ) : null}
     </Stack>

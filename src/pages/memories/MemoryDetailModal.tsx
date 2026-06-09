@@ -6,7 +6,7 @@ import { MemoryActionsSection } from './MemoryActionsSection'
 import { MemoryMetadataSection } from './MemoryMetadataSection'
 import { useMemoryDetailActions } from './useMemoryDetailActions'
 
-export function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose: () => void }) {
+export function MemoryDetailModal({ memory, onClose, onWikilinkClick }: { memory: Memory; onClose: () => void; onWikilinkClick?: (target: string) => void }) {
   const memoryActions = useMemoryDetailActions(memory, onClose)
   const { detail } = memoryActions
 
@@ -30,7 +30,7 @@ export function MemoryDetailModal({ memory, onClose }: { memory: Memory; onClose
       }
     >
       <Stack gap='md'>
-        <MemoryMetadataSection detail={detail} />
+        <MemoryMetadataSection detail={detail} onWikilinkClick={onWikilinkClick} />
         <MemoryActionsSection {...memoryActions} />
       </Stack>
     </Modal>
