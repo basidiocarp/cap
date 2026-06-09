@@ -1,5 +1,5 @@
-import { Anchor } from '@mantine/core'
 import type { ReactNode } from 'react'
+import { Anchor } from '@mantine/core'
 
 /**
  * Renders text with clickable wikilink tokens [[target]].
@@ -14,9 +14,9 @@ export function renderWithWikilinks(text: string, onNavigate: (target: string) =
   // memory slugs are generated and never contain `]`, so this is safe.
   const regex = /\[\[([^\]]*)\]\]/g
   let lastIndex = 0
-  let match: RegExpExecArray | null
+  let match = regex.exec(text)
 
-  while ((match = regex.exec(text)) !== null) {
+  while (match !== null) {
     // Add text before the match
     if (match.index > lastIndex) {
       parts.push(text.substring(lastIndex, match.index))
@@ -30,10 +30,10 @@ export function renderWithWikilinks(text: string, onNavigate: (target: string) =
       // positional key is stable for this render — React's documented-safe case.
       parts.push(
         <Anchor
+          component='button'
           key={parts.length}
-          component="button"
           onClick={() => onNavigate(target)}
-          type="button"
+          type='button'
         >
           {target}
         </Anchor>
@@ -44,6 +44,7 @@ export function renderWithWikilinks(text: string, onNavigate: (target: string) =
     }
 
     lastIndex = match.index + match[0].length
+    match = regex.exec(text)
   }
 
   // Add remaining text after last match

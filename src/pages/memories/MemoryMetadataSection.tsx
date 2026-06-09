@@ -8,7 +8,13 @@ import { timeAgo } from '../../lib/time'
 import { getKeywords, getRelatedIds, reviewColor, reviewLabel, topicColor, weightColor } from './memory-utils'
 import { renderWithWikilinks } from './memory-wikilinks'
 
-export function MemoryMetadataSection({ detail, onWikilinkClick = () => {} }: { detail: Memory; onWikilinkClick?: (target: string) => void }) {
+export function MemoryMetadataSection({
+  detail,
+  onWikilinkClick = () => {},
+}: {
+  detail: Memory
+  onWikilinkClick?: (target: string) => void
+}) {
   const review = getMemoryReviewState(detail)
 
   return (
