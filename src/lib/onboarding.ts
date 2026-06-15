@@ -233,7 +233,7 @@ export function summarizeOnboarding(status: EcosystemStatus, repairPlan?: StipeR
 }
 
 export function failingDoctorChecks(repairPlan?: StipeRepairPlan): StipeDoctorCheck[] {
-  return repairPlan?.doctor.checks.filter((check) => !check.passed) ?? []
+  return repairPlan?.doctor.checks.filter((check) => !check.passed && !check.suppressed) ?? []
 }
 
 export function initPlanSteps(repairPlan?: StipeRepairPlan): StipeInitStep[] {

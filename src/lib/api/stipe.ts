@@ -21,6 +21,7 @@ export interface StipeDoctorCheck {
   name: string
   passed: boolean
   repair_actions?: StipeRepairAction[]
+  suppressed?: boolean
 }
 
 export interface StipeDoctorReport {

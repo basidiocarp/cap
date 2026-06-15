@@ -79,6 +79,7 @@ function isDoctorCheck(value: unknown): boolean {
     typeof value.name === 'string' &&
     (typeof value.message === 'string' || value.message === null) &&
     typeof value.passed === 'boolean' &&
+    (value.suppressed === undefined || typeof value.suppressed === 'boolean') &&
     (value.repair_actions === undefined || (Array.isArray(value.repair_actions) && value.repair_actions.every(isRepairAction)))
   )
 }

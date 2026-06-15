@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { failingDoctorChecks } from '../../src/lib/onboarding.ts'
 import { parseStipeDoctorReport, parseStipeInitPlan } from '../routes/settings/shared.ts'
 
 describe('Stipe contract parsers', () => {
@@ -246,5 +247,107 @@ describe('Stipe contract parsers', () => {
     ) as Record<string, unknown>
 
     expect(parsed.schema_version).toBe('1.0')
+  })
+
+  it('accepts suppressed checks and excludes them from failingDoctorChecks', () => {
+    const wirePayload = {
+      checks: [
+        { message: 'Hyphae database found', name: 'hyphae database', passed: true },
+        {
+          message: 'rhizome not installed; suppressed by operator',
+          name: 'rhizome MCP startup',
+          passed: false,
+          repair_actions: [
+            {
+              action_key: 'init',
+              args: ['init'],
+              command: 'stipe init',
+              description: 'Repair shared MCP state',
+              label: 'Run stipe init',
+              tier: 'primary',
+            },
+          ],
+          suppressed: true,
+        },
+      ],
+      healthy: true,
+      repair_actions: [
+        {
+          action_key: 'init',
+          args: ['init'],
+          command: 'stipe init',
+          description: 'Repair shared MCP state',
+          label: 'Run stipe init',
+          tier: 'primary',
+        },
+      ],
+      schema_version: '1.0',
+      summary: 'All checks passing (1 suppressed).',
+    }
+
+    const parsed = parseStipeDoctorReport(JSON.stringify(wirePayload)) as Record<string, unknown>
+    expect(parsed.schema_version).toBe('1.0')
+    expect((parsed.checks as Array<Record<string, unknown>>)[1].suppressed).toBe(true)
+
+    const repairPlan = {
+      doctor: parsed,
+      init_plan: {
+        detected_clients: [],
+        dry_run: true,
+        repair_actions: [],
+        schema_version: '1.0',
+        selected_hosts: [],
+        steps: [],
+      },
+    }
+    const failing = failingDoctorChecks(repairPlan as unknown as Parameters<typeof failingDoctorChecks>[0])
+    expect(failing).not.toContainEqual(expect.objectContaining({ name: 'rhizome MCP startup' }))
+    // Fixture has one passing check and one suppressed failing check, so nothing should surface.
+    // Asserting exact length makes this non-vacuous: a broken cast returning [] for an unrelated
+    // reason would still fail the positive coverage in the companion test below.
+    expect(failing).toHaveLength(0)
+  })
+
+  it('includes failing checks with suppressed=false and with the key absent (old stipe)', () => {
+    const wirePayload = {
+      checks: [
+        // new stipe, explicitly not suppressed
+        {
+          message: 'Hyphae database not found',
+          name: 'hyphae database',
+          passed: false,
+          repair_actions: [],
+          suppressed: false,
+        },
+        // old stipe binary: emits no `suppressed` key at all — the real INV2 wire shape
+        {
+          message: 'mycelium not installed',
+          name: 'mycelium install',
+          passed: false,
+          repair_actions: [],
+        },
+      ],
+      healthy: false,
+      repair_actions: [],
+      schema_version: '1.0',
+      summary: '2 checks need attention.',
+    }
+
+    const parsed = parseStipeDoctorReport(JSON.stringify(wirePayload)) as Record<string, unknown>
+    const repairPlan = {
+      doctor: parsed,
+      init_plan: {
+        detected_clients: [],
+        dry_run: true,
+        repair_actions: [],
+        schema_version: '1.0',
+        selected_hosts: [],
+        steps: [],
+      },
+    }
+    const failing = failingDoctorChecks(repairPlan as unknown as Parameters<typeof failingDoctorChecks>[0])
+    expect(failing).toContainEqual(expect.objectContaining({ name: 'hyphae database' }))
+    expect(failing).toContainEqual(expect.objectContaining({ name: 'mycelium install' }))
+    expect(failing).toHaveLength(2)
   })
 })
